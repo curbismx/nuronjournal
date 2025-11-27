@@ -3,13 +3,13 @@ import { useEffect, useRef } from 'react';
 interface AudioWaveformProps {
   isRecording: boolean;
   audioLevel: number;
+  recordingTime: number;
 }
 
-const AudioWaveform = ({ isRecording, audioLevel }: AudioWaveformProps) => {
+const AudioWaveform = ({ isRecording, audioLevel, recordingTime }: AudioWaveformProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const barsRef = useRef<number[]>([]);
-  const positionRef = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -19,40 +19,38 @@ const AudioWaveform = ({ isRecording, audioLevel }: AudioWaveformProps) => {
     if (!ctx) return;
 
     const numBars = 40;
-    if (barsRef.current.length === 0) {
-      barsRef.current = Array(numBars).fill(0);
-    }
+    const barWidth = 4;
+    const gap = 8;
+    const maxHeight = canvas.height;
 
     const animate = () => {
-      if (!isRecording) return;
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Update bars array with new audio level
-      barsRef.current.shift();
-      const randomVariation = Math.random() * 0.3;
-      const barHeight = Math.max(0.2, Math.min(1, audioLevel + randomVariation));
-      barsRef.current.push(barHeight);
+      // Number of bars to show based on recording time (one per second)
+      const barsToShow = Math.min(recordingTime, numBars);
 
-      // Draw bars
-      const barWidth = 4;
-      const gap = 8;
-      const maxHeight = canvas.height;
-
-      barsRef.current.forEach((height, index) => {
-        const x = index * (barWidth + gap);
-        const h = height * maxHeight * 0.8;
+      // Draw bars from left to right
+      for (let i = 0; i < barsToShow; i++) {
+        const x = i * (barWidth + gap);
+        
+        // Create animated height for each bar
+        const randomVariation = Math.sin(Date.now() * 0.003 + i * 0.5) * 0.3;
+        const barHeight = isRecording ? Math.max(0.3, Math.min(1, audioLevel + randomVariation + 0.2)) : 0.3;
+        
+        const h = barHeight * maxHeight * 0.8;
         const y = (maxHeight - h) / 2;
 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.fillRect(x, y, barWidth, h);
-      });
+      }
 
       animationRef.current = requestAnimationFrame(animate);
     };
 
     if (isRecording) {
       animate();
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
     return () => {
@@ -60,7 +58,7 @@ const AudioWaveform = ({ isRecording, audioLevel }: AudioWaveformProps) => {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isRecording, audioLevel]);
+  }, [isRecording, audioLevel, recordingTime]);
 
   return (
     <canvas
