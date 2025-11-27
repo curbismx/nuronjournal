@@ -487,7 +487,7 @@ const Note = () => {
   return (
     <div className="fixed inset-0 flex flex-col bg-journal-header">
       {/* Fixed dark header */}
-      <header className="flex-shrink-0 bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] h-[120px] z-30">
+      <header className="flex-shrink-0 bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] h-[150px] z-30">
         <div className="flex items-center justify-between mb-auto">
           <Button
             variant="ghost"
@@ -498,7 +498,7 @@ const Note = () => {
           </Button>
           <div className="flex-1" />
         </div>
-        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px] mt-4">
+        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px] mt-[46px]">
           {monthYear}
         </h1>
       </header>
@@ -506,7 +506,7 @@ const Note = () => {
       {/* Scrollable content area */}
       <div 
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto bg-journal-content rounded-t-[30px] -mt-1"
+        className="flex-1 overflow-y-auto bg-journal-content rounded-t-[30px]"
         style={{ 
           WebkitOverflowScrolling: 'touch',
           paddingBottom: '180px'
