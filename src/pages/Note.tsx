@@ -38,6 +38,7 @@ const Note = () => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isRewriting, setIsRewriting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [noteContent, setNoteContent] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -109,9 +110,12 @@ const Note = () => {
           if (final) {
             setTranscribedText((prev) => {
               const newText = prev + final;
-              // Update the contentEditable div
+              // Update the contentEditable div preserving any images
               if (textContentRef.current) {
-                textContentRef.current.textContent = newText;
+                // Append text while preserving HTML content
+                const currentHtml = textContentRef.current.innerHTML;
+                textContentRef.current.innerHTML = currentHtml + final;
+                setNoteContent(textContentRef.current.innerHTML);
               }
               // Generate title when we have enough text (first 10+ words)
               if (newText.trim().split(/\s+/).length >= 10 && noteTitle === 'Note Title') {
@@ -124,8 +128,11 @@ const Note = () => {
             setInterimText(interim);
             // Show interim text in the div
             if (textContentRef.current) {
-              const baseText = transcribedText;
-              textContentRef.current.textContent = baseText + interim;
+              const currentHtml = noteContent || textContentRef.current.innerHTML;
+              const tempDiv = document.createElement('div');
+              tempDiv.innerHTML = currentHtml;
+              const textContent = tempDiv.textContent || '';
+              textContentRef.current.innerHTML = currentHtml + `<span class="opacity-60">${interim}</span>`;
             }
           }
         };
@@ -350,43 +357,27 @@ const Note = () => {
         .from('note-images')
         .getPublicUrl(filePath);
 
-      // Insert actual image element
+      // Insert image HTML into the content
       if (textContentRef.current) {
         const selection = window.getSelection();
         const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
         
-        // Create wrapper for image
-        const wrapper = document.createElement('div');
-        wrapper.className = 'my-4';
-        
-        // Create image element
-        const img = document.createElement('img');
-        img.src = publicUrl;
-        img.className = 'max-w-full h-auto rounded-lg';
-        img.alt = 'Uploaded image';
-        wrapper.appendChild(img);
+        const imageHtml = `<br><img src="${publicUrl}" class="max-w-full h-auto my-4 rounded-lg" alt="Uploaded image"><br>`;
         
         if (range && textContentRef.current.contains(range.commonAncestorContainer)) {
-          // Insert at cursor position
-          range.deleteContents();
-          range.insertNode(wrapper);
-          
-          // Add line break after image
-          const lineBreak = document.createElement('br');
-          range.setStartAfter(wrapper);
-          range.insertNode(lineBreak);
-          range.setStartAfter(lineBreak);
-          range.collapse(true);
-          selection?.removeAllRanges();
-          selection?.addRange(range);
+          // Insert at cursor
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = imageHtml;
+          while (tempDiv.firstChild) {
+            range.insertNode(tempDiv.firstChild);
+          }
         } else {
           // Insert at end
-          textContentRef.current.appendChild(document.createElement('br'));
-          textContentRef.current.appendChild(wrapper);
-          textContentRef.current.appendChild(document.createElement('br'));
+          textContentRef.current.innerHTML += imageHtml;
         }
         
-        // Update state
+        // Save the full HTML content
+        setNoteContent(textContentRef.current.innerHTML);
         setTranscribedText(textContentRef.current.textContent || '');
       }
 
@@ -559,24 +550,36 @@ const Note = () => {
           contentEditable
           suppressContentEditableWarning
           onInput={(e) => {
+            const html = e.currentTarget.innerHTML;
             const text = e.currentTarget.textContent || '';
             if (text !== 'Start speaking to transcribe...') {
+              setNoteContent(html);
               setTranscribedText(text);
             }
           }}
           onFocus={(e) => {
             if (e.currentTarget.textContent === 'Start speaking to transcribe...') {
-              e.currentTarget.textContent = '';
+              e.currentTarget.innerHTML = '';
             }
           }}
           onBlur={(e) => {
             const text = e.currentTarget.textContent || '';
             if (!text.trim() && !isRecording) {
-              e.currentTarget.textContent = 'Start speaking to transcribe...';
+              e.currentTarget.innerHTML = 'Start speaking to transcribe...';
+              setNoteContent('');
               setTranscribedText('');
             }
           }}
-        />
+          dangerouslySetInnerHTML={
+            !transcribedText && !noteContent && !isRecording
+              ? { __html: 'Start speaking to transcribe...' }
+              : undefined
+          }
+        >
+          {(noteContent || transcribedText) && !interimText && (
+            <span dangerouslySetInnerHTML={{ __html: noteContent || transcribedText }} />
+          )}
+        </div>
       </main>
 
       {/* Recording Control - Two States */}
