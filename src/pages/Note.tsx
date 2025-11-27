@@ -37,10 +37,12 @@ const Note = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isRewriting, setIsRewriting] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const textContentRef = useRef<HTMLDivElement | null>(null);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -380,12 +382,40 @@ const Note = () => {
     return () => clearInterval(interval);
   }, [isRecording, isPaused]);
 
-  // Auto-scroll to bottom when text updates
+  // Auto-scroll to bottom when text updates (only when not manually editing)
   useEffect(() => {
-    if (textContentRef.current) {
+    if (textContentRef.current && document.activeElement !== textContentRef.current) {
       textContentRef.current.scrollTop = textContentRef.current.scrollHeight;
     }
   }, [transcribedText, interimText]);
+
+  // Handle title editing
+  useEffect(() => {
+    if (isEditingTitle && titleInputRef.current) {
+      titleInputRef.current.focus();
+      titleInputRef.current.select();
+    }
+  }, [isEditingTitle]);
+
+  const handleTitleClick = () => {
+    setIsEditingTitle(true);
+  };
+
+  const handleTitleBlur = () => {
+    setIsEditingTitle(false);
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      setIsEditingTitle(false);
+    }
+  };
+
+  const handleTextInput = (e: React.FormEvent<HTMLDivElement>) => {
+    const newText = e.currentTarget.textContent || '';
+    setTranscribedText(newText);
+  };
 
   const handleBack = () => {
     stopRecording();
@@ -434,16 +464,36 @@ const Note = () => {
             </div>
           </div>
 
-          <h2 className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2">{noteTitle}</h2>
+          {isEditingTitle ? (
+            <input
+              ref={titleInputRef}
+              type="text"
+              value={noteTitle}
+              onChange={(e) => setNoteTitle(e.target.value)}
+              onBlur={handleTitleBlur}
+              onKeyDown={handleTitleKeyDown}
+              className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2 bg-transparent border-none outline-none w-full"
+            />
+          ) : (
+            <h2 
+              onClick={handleTitleClick}
+              className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2 cursor-text"
+            >
+              {noteTitle}
+            </h2>
+          )}
         </div>
 
-        {/* Text Content - ONLY this scrolls */}
+        {/* Text Content - ONLY this scrolls - Editable */}
         <div 
           ref={textContentRef}
-          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px]"
+          contentEditable={true}
+          onInput={handleTextInput}
+          suppressContentEditableWarning={true}
+          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none"
           style={{ marginBottom: '120px' }}
         >
-          {transcribedText || (isRecording ? '' : 'Start speaking to transcribe...')}
+          {transcribedText || 'Start speaking to transcribe...'}
           {interimText && <span className="opacity-60">{interimText}</span>}
         </div>
       </main>
