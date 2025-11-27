@@ -25,14 +25,14 @@ const Note = () => {
 
   const startRecording = async () => {
     try {
-      // Get microphone audio
-      const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
-      // Get system audio (screen/tab audio)
-      const systemStream = await navigator.mediaDevices.getDisplayMedia({ 
-        audio: true,
-        video: false 
-      });
+      // Request both streams simultaneously to maintain user gesture context
+      const [micStream, systemStream] = await Promise.all([
+        navigator.mediaDevices.getUserMedia({ audio: true }),
+        navigator.mediaDevices.getDisplayMedia({ 
+          audio: true,
+          video: false 
+        })
+      ]);
       
       // Create audio context to merge streams
       audioContextRef.current = new AudioContext({ sampleRate: 24000 });
