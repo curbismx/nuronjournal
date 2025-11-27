@@ -497,14 +497,16 @@ const Note = () => {
       {/* Scrollable content area */}
       <div 
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto overscroll-y-auto bg-journal-content rounded-t-[30px]"
+        className="flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto"
         style={{ 
           WebkitOverflowScrolling: 'touch',
+          overscrollBehaviorY: 'auto',
           minHeight: 0
         }}
       >
-        {/* Date and weather */}
-        <div className="px-8 pt-8 pb-2">
+        <div style={{ minHeight: 'calc(100% + 1px)' }}>
+          {/* Date and weather */}
+          <div className="px-8 pt-8 pb-2">
           <div className="flex items-start gap-4 mb-4">
             <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">{dayNumber}</div>
             <div className="flex flex-col">
@@ -554,6 +556,8 @@ const Note = () => {
         
         {/* Spacer to prevent content from being hidden behind bottom controls */}
         <div className="h-[160px] flex-shrink-0" />
+        <div className="h-[1px]" />
+        </div>
       </div>
 
       {/* Fixed bottom controls */}
