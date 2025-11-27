@@ -20,6 +20,7 @@ import rewriteButton2 from '@/assets/rewrite-2.png';
 import shareButton2 from '@/assets/share-2.png';
 import recordMedium from '@/assets/record-medium.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
+import { Share } from '@capacitor/share';
 
 const Note = () => {
   const navigate = useNavigate();
@@ -490,6 +491,18 @@ const Note = () => {
     navigate('/');
   };
 
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        title: noteTitle,
+        text: transcribedText,
+        dialogTitle: 'Share Note',
+      });
+    } catch (error) {
+      console.error('Share error:', error);
+    }
+  };
+
   const today = new Date();
   const dayNumber = today.getDate();
   const dayName = today.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
@@ -661,7 +674,10 @@ const Note = () => {
           >
             <img src={rewriteButton2} alt="Rewrite" className="h-auto" />
           </button>
-          <button className="flex flex-col items-center gap-2">
+          <button 
+            onClick={handleShare}
+            className="flex flex-col items-center gap-2"
+          >
             <img src={shareButton2} alt="Share" className="h-auto" />
           </button>
           <button 
