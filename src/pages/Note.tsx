@@ -353,33 +353,12 @@ const Note = () => {
   };
 
   useEffect(() => {
-    // Prevent body scroll on mobile - more aggressive approach
-    const originalStyle = {
-      overflow: document.body.style.overflow,
-      position: document.body.style.position,
-      width: document.body.style.width,
-      height: document.body.style.height,
-      touchAction: document.body.style.touchAction,
-    };
-    
+    // Prevent body scroll on mobile - but allow text area scrolling
+    const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    document.body.style.height = '100%';
-    document.body.style.touchAction = 'none';
-    
-    // Also prevent scroll on document root
-    document.documentElement.style.overflow = 'hidden';
-    document.documentElement.style.touchAction = 'none';
     
     return () => {
-      document.body.style.overflow = originalStyle.overflow;
-      document.body.style.position = originalStyle.position;
-      document.body.style.width = originalStyle.width;
-      document.body.style.height = originalStyle.height;
-      document.body.style.touchAction = originalStyle.touchAction;
-      document.documentElement.style.overflow = '';
-      document.documentElement.style.touchAction = '';
+      document.body.style.overflow = originalOverflow;
     };
   }, []);
 
