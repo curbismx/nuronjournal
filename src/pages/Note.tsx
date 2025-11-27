@@ -486,7 +486,7 @@ const Note = () => {
   return (
     <>
       {/* LAYER 1: Dark Header - Completely Fixed */}
-      <header className="fixed top-0 left-0 right-0 z-30 bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] h-[120px]">
+      <header className="fixed top-0 left-0 right-0 z-30 bg-journal-header pl-[30px] pt-[20px] pr-4 pb-[30px] h-[120px]">
         <div className="flex items-center justify-between mb-auto">
           <Button
             variant="ghost"
