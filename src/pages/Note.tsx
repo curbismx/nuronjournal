@@ -254,6 +254,9 @@ const Note = () => {
   };
 
   useEffect(() => {
+    // Automatically start recording when page loads
+    startRecording();
+    
     return () => {
       stopRecording();
     };
