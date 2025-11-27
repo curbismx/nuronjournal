@@ -25,7 +25,7 @@ const AudioWaveform = ({ isRecording, audioLevel, recordingTime }: AudioWaveform
     canvas.height = rect.height;
 
     const barWidth = 3;
-    const gap = 8;
+    const gap = 4;
     const maxHeight = canvas.height;
 
     // Add a new bar every second
