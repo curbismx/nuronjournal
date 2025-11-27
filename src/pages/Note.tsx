@@ -506,7 +506,7 @@ const Note = () => {
       {/* LAYER 2: Card Header (date, title) - Fixed below dark header */}
       <div className="fixed top-[120px] left-0 right-0 z-20 bg-journal-content rounded-t-[30px] px-8 pt-8 pb-4">
         <div className="flex items-start gap-4 mb-4">
-          <div className="text-[60px] font-outfit font-bold leading-none text-[hsl(0,0%,0%)]">{dayNumber}</div>
+          <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(0,0%,0%)]">{dayNumber}</div>
           <div className="flex flex-col">
             <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(0,0%,0%)] mt-[2px]">{dayName}</div>
             {weather && (
