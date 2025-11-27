@@ -50,6 +50,9 @@ const Note = () => {
 
   const startRecording = async () => {
     try {
+      // Set recording state immediately
+      setIsRecording(true);
+      
       // Request microphone
       const micStream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
@@ -176,9 +179,9 @@ const Note = () => {
       };
 
       mediaRecorder.start(3000);
-      setIsRecording(true);
     } catch (error) {
       console.error('Error starting recording:', error);
+      setIsRecording(false);
     }
   };
 
