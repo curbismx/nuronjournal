@@ -28,7 +28,7 @@ const Index = () => {
       {/* Month Selector */}
       <div className="bg-journal-header pl-[30px] pr-[30px] pb-[30px] h-[100px] flex items-end justify-between gap-4">
         <h1 className="text-journal-header-foreground text-[36px] font-outfit font-light tracking-wider leading-none">
-          NOVEMBER 2025
+          {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase()}
         </h1>
         <img src={expandIcon} alt="Expand" className="h-[30px] w-auto mb-[3px]" />
       </div>
