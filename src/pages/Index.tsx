@@ -8,10 +8,9 @@ const Index = () => {
       <header className="bg-journal-header px-4 py-6 flex items-center justify-between">
         <Button 
           variant="ghost" 
-          size="icon"
-          className="text-journal-header-foreground hover:bg-journal-header-foreground/10"
+          className="text-journal-header-foreground hover:bg-journal-header-foreground/10 p-2 h-auto w-auto"
         >
-          <Settings className="h-[120px] w-[120px]" />
+          <Settings size={120} />
         </Button>
         
         <div className="flex-1" />
