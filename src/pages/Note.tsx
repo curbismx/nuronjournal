@@ -291,7 +291,7 @@ const Note = () => {
       <main className="flex-1 bg-journal-content rounded-t-[30px] -mt-0 px-8 pt-8 pb-32">
         <div className="flex items-start gap-4 mb-6">
           <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(0,0%,0%)]">{dayNumber}</div>
-          <div className="text-[18px] font-outfit font-light tracking-wide text-[hsl(0,0%,0%)]">{dayName}</div>
+          <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(0,0%,0%)]">{dayName}</div>
         </div>
 
         <h2 className="text-[20px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2">{noteTitle}</h2>
