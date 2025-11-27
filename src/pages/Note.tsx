@@ -29,9 +29,12 @@ const Note = () => {
   const [recordingTime, setRecordingTime] = useState(0);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [weather, setWeather] = useState<{ temp: number; WeatherIcon: React.ComponentType<any> } | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const textContentRef = useRef<HTMLDivElement | null>(null);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -158,6 +161,13 @@ const Note = () => {
         }
       };
 
+      mediaRecorder.onstop = () => {
+        // Create audio blob from chunks
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+      };
+
       mediaRecorder.start(3000);
       setIsRecording(true);
     } catch (error) {
@@ -228,6 +238,26 @@ const Note = () => {
     // Generate title from the full transcribed text after stopping
     if (transcribedText && transcribedText.trim().length > 10) {
       generateTitle(transcribedText);
+    }
+  };
+
+  const togglePlayback = () => {
+    if (!audioUrl) return;
+    
+    if (!audioPlayerRef.current) {
+      audioPlayerRef.current = new Audio(audioUrl);
+      audioPlayerRef.current.onended = () => {
+        setIsPlaying(false);
+      };
+    }
+    
+    if (isPlaying) {
+      audioPlayerRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioPlayerRef.current.currentTime = 0; // Start from beginning
+      audioPlayerRef.current.play();
+      setIsPlaying(true);
     }
   };
 
@@ -432,12 +462,12 @@ const Note = () => {
                 <div className="relative">
                   <Button
                     variant="ghost"
-                    onClick={resumeRecording}
+                    onClick={togglePlayback}
                     className="hover:bg-white/10 p-0 h-auto w-auto"
                   >
-                    <img src={playIcon} alt="Play" className="w-[40px] h-[40px]" />
+                    <img src={isPlaying ? pauseIcon : playIcon} alt={isPlaying ? "Pause" : "Play"} className="w-[40px] h-[40px]" />
                   </Button>
-                  <span className="absolute top-[45px] left-1/2 -translate-x-1/2 text-white font-outfit text-[12px] font-light whitespace-nowrap">PLAY</span>
+                  <span className="absolute top-[45px] left-1/2 -translate-x-1/2 text-white font-outfit text-[12px] font-light whitespace-nowrap">{isPlaying ? "PAUSE" : "PLAY"}</span>
                 </div>
               </div>
 
