@@ -184,7 +184,7 @@ const Note = () => {
             onClick={handleBack}
             className="text-journal-header-foreground hover:bg-journal-header-foreground/10 p-0 h-auto w-auto"
           >
-            <img src={backIcon} alt="Back" className="w-[40px] h-[40px]" />
+            <img src={backIcon} alt="Back" className="w-[30px] h-[30px]" />
           </Button>
           <div className="flex-1" />
         </div>
