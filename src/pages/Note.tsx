@@ -38,6 +38,7 @@ const Note = () => {
   const [weather, setWeather] = useState<{ temp: number; WeatherIcon: React.ComponentType<any> } | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isRewriting, setIsRewriting] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const textContentRef = useRef<HTMLDivElement | null>(null);
@@ -287,6 +288,43 @@ const Note = () => {
     }
   };
 
+  const rewriteText = async () => {
+    if (!transcribedText || transcribedText.trim().length === 0) {
+      toast({
+        title: "No text to rewrite",
+        description: "Please record some text first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsRewriting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('rewrite-text', {
+        body: { text: transcribedText },
+      });
+
+      if (error) throw error;
+
+      if (data.rewrittenText) {
+        setTranscribedText(data.rewrittenText);
+        toast({
+          title: "Text rewritten",
+          description: "Your text has been improved and corrected",
+        });
+      }
+    } catch (error) {
+      console.error('Rewrite error:', error);
+      toast({
+        title: "Rewrite failed",
+        description: error instanceof Error ? error.message : "Failed to rewrite text",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRewriting(false);
+    }
+  };
+
   useEffect(() => {
     // Auto-start recording ONLY if coming from start page with autostart parameter
     const shouldAutoStart = searchParams.get('autostart') === 'true';
@@ -483,7 +521,11 @@ const Note = () => {
           <button className="flex flex-col items-center gap-2">
             <img src={imageButton2} alt="Image" className="h-auto" />
           </button>
-          <button className="flex flex-col items-center gap-2">
+          <button 
+            onClick={rewriteText}
+            disabled={isRewriting}
+            className="flex flex-col items-center gap-2 disabled:opacity-50"
+          >
             <img src={rewriteButton2} alt="Rewrite" className="h-auto" />
           </button>
           <button className="flex flex-col items-center gap-2">
