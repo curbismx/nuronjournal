@@ -190,6 +190,10 @@ const Note = () => {
   const resumeRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
       mediaRecorderRef.current.resume();
+      
+      // Add a line break before resuming transcription
+      setTranscribedText((prev) => prev ? prev + '\n\n' : prev);
+      
       if (recognitionRef.current) {
         try {
           recognitionRef.current.start();
