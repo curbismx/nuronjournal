@@ -500,7 +500,6 @@ const Note = () => {
         className="flex-1 overflow-y-auto overscroll-y-auto bg-journal-content rounded-t-[30px]"
         style={{ 
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '180px',
           minHeight: 0
         }}
       >
@@ -538,9 +537,12 @@ const Note = () => {
             onChange={(e) => {
               setTranscribedText(e.target.value);
               transcribedTextRef.current = e.target.value;
+              e.target.style.height = 'auto';
+              e.target.style.height = e.target.scrollHeight + 'px';
             }}
             placeholder="Start speaking to transcribe..."
-            className="w-full min-h-[400px] resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0"
+            className="w-full resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
+            style={{ minHeight: '100px' }}
             readOnly={isRecording}
           />
           {interimText && isRecording && (
@@ -549,6 +551,9 @@ const Note = () => {
             </span>
           )}
         </div>
+        
+        {/* Spacer to prevent content from being hidden behind bottom controls */}
+        <div className="h-[160px] flex-shrink-0" />
       </div>
 
       {/* Fixed bottom controls */}
