@@ -335,9 +335,43 @@ const Note = () => {
         .from('note-images')
         .getPublicUrl(filePath);
 
-      // Insert image into text
-      const imageTag = `\n\n![image](${publicUrl})\n\n`;
-      setTranscribedText(prev => prev + imageTag);
+      // Insert actual image element
+      if (textContentRef.current) {
+        const selection = window.getSelection();
+        const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
+        
+        // Create image element
+        const img = document.createElement('img');
+        img.src = publicUrl;
+        img.className = 'max-w-full h-auto my-4 rounded-lg';
+        img.alt = 'Uploaded image';
+        
+        // Create line breaks
+        const lineBreakBefore = document.createElement('br');
+        const lineBreakAfter = document.createElement('br');
+        
+        if (range && textContentRef.current.contains(range.commonAncestorContainer)) {
+          // Insert at cursor position
+          range.deleteContents();
+          range.insertNode(lineBreakAfter);
+          range.insertNode(img);
+          range.insertNode(lineBreakBefore);
+          
+          // Move cursor after image
+          range.setStartAfter(lineBreakAfter);
+          range.collapse(true);
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+        } else {
+          // Insert at end
+          textContentRef.current.appendChild(lineBreakBefore);
+          textContentRef.current.appendChild(img);
+          textContentRef.current.appendChild(lineBreakAfter);
+        }
+        
+        // Update state to reflect changes
+        setTranscribedText(textContentRef.current.innerText);
+      }
 
     } catch (error) {
       console.error('Image upload error:', error);
@@ -485,14 +519,23 @@ const Note = () => {
         {/* Text Content - ONLY this scrolls */}
         <div 
           ref={textContentRef}
-          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none whitespace-pre-wrap"
+          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none"
           style={{ marginBottom: '120px' }}
           contentEditable
           suppressContentEditableWarning
-          onBlur={(e) => setTranscribedText(e.currentTarget.textContent || '')}
+          onInput={(e) => setTranscribedText(e.currentTarget.innerText)}
+          dangerouslySetInnerHTML={
+            transcribedText || interimText 
+              ? undefined 
+              : { __html: isRecording ? '' : 'Start speaking to transcribe...' }
+          }
         >
-          {transcribedText || (isRecording ? '' : 'Start speaking to transcribe...')}
-          {interimText && <span className="opacity-60">{interimText}</span>}
+          {(transcribedText || interimText) && (
+            <>
+              {transcribedText}
+              {interimText && <span className="opacity-60">{interimText}</span>}
+            </>
+          )}
         </div>
       </main>
 
