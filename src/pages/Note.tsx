@@ -126,16 +126,14 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          // Only restart if recording and not paused (with a small delay to check state)
-          setTimeout(() => {
-            if (recognitionRef.current && !isPaused && isRecording) {
-              try {
-                recognition.start();
-              } catch (e) {
-                console.log('Recognition restart failed:', e);
-              }
+          // Only restart if still recording and not paused
+          if (isRecording && !isPaused && recognitionRef.current) {
+            try {
+              recognitionRef.current.start();
+            } catch (e) {
+              console.log('Recognition restart failed:', e);
             }
-          }, 100);
+          }
         };
 
         try {
@@ -188,20 +186,26 @@ const Note = () => {
 
   const pauseRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      // Immediately stop recognition and capture any interim text
-      if (recognitionRef.current) {
-        // Force any interim text to become final
-        setTranscribedText(prev => prev + (interimText ? ' ' + interimText : ''));
-        setInterimText('');
-        recognitionRef.current.stop();
-      }
-      
-      // Then pause recording and update states
-      mediaRecorderRef.current.pause();
+      // Update states FIRST to prevent recognition restart
       setIsPaused(true);
       setHasBeenPaused(true);
-      setAudioLevel(0);
       setIsTranscribing(false);
+      
+      // Then stop recognition and capture any interim text
+      if (recognitionRef.current) {
+        setTranscribedText(prev => prev + (interimText ? ' ' + interimText : ''));
+        setInterimText('');
+        try {
+          recognitionRef.current.stop();
+          recognitionRef.current = null;
+        } catch (e) {
+          console.log('Recognition stop error:', e);
+        }
+      }
+      
+      // Finally pause recording
+      mediaRecorderRef.current.pause();
+      setAudioLevel(0);
     }
   };
 
@@ -214,10 +218,53 @@ const Note = () => {
       mediaRecorderRef.current.resume();
       setIsPaused(false);
       
-      // Restart speech recognition
-      if (recognitionRef.current) {
+      // Recreate and restart speech recognition
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = (event: any) => {
+          let interim = '';
+          let final = '';
+          
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              final += transcript + ' ';
+            } else {
+              interim += transcript;
+            }
+          }
+          
+          if (final) {
+            setTranscribedText((prev) => prev + final);
+            setInterimText('');
+          } else {
+            setInterimText(interim);
+          }
+        };
+
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+        };
+
+        recognition.onend = () => {
+          if (isRecording && !isPaused && recognitionRef.current) {
+            try {
+              recognitionRef.current.start();
+            } catch (e) {
+              console.log('Recognition restart failed:', e);
+            }
+          }
+        };
+
         try {
-          recognitionRef.current.start();
+          recognition.start();
+          recognitionRef.current = recognition;
           setIsTranscribing(true);
         } catch (e) {
           console.log('Failed to resume recognition:', e);
@@ -227,17 +274,24 @@ const Note = () => {
   };
 
   const stopRecording = () => {
+    // Set states first to prevent restarts
+    setIsRecording(false);
+    setIsPaused(false);
+    setHasBeenPaused(false);
+    setIsTranscribing(false);
+    setAudioLevel(0);
+    setRecordingTime(0);
+    
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      } catch (e) {
+        console.log('Recognition stop error:', e);
+      }
+    }
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      setIsPaused(false);
-      setHasBeenPaused(false);
-      setAudioLevel(0);
-      setRecordingTime(0);
-    }
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      setIsTranscribing(false);
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
