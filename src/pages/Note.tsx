@@ -68,8 +68,6 @@ const Note = () => {
       
       // Store microphone track
       streamRef.current = micStream;
-      
-      toast({ title: 'Recording started', description: 'Capturing microphone audio' });
 
       // Set up Web Speech API for transcription
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -110,13 +108,6 @@ const Note = () => {
 
         recognition.onerror = (event: any) => {
           console.error('Speech recognition error:', event.error);
-          if (event.error !== 'no-speech' && event.error !== 'aborted') {
-            toast({ 
-              title: 'Transcription error', 
-              description: event.error, 
-              variant: 'destructive' 
-            });
-          }
         };
 
         recognition.onend = () => {
@@ -138,11 +129,7 @@ const Note = () => {
           console.error('Failed to start recognition:', e);
         }
       } else {
-        toast({ 
-          title: 'Speech recognition unavailable', 
-          description: 'Your browser does not support speech recognition',
-          variant: 'destructive'
-        });
+        console.log('Speech recognition unavailable');
       }
 
       // Start visualizing audio levels
@@ -172,11 +159,6 @@ const Note = () => {
       setIsRecording(true);
     } catch (error) {
       console.error('Error starting recording:', error);
-      toast({ 
-        title: 'Recording failed', 
-        description: error instanceof Error ? error.message : 'Failed to access microphone',
-        variant: 'destructive'
-      });
     }
   };
 
