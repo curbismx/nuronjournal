@@ -49,6 +49,7 @@ const Note = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
   const shouldRestartRecognition = useRef(false);
+  const transcribedTextRef = useRef('');
 
   const startRecording = async () => {
     try {
@@ -110,7 +111,8 @@ const Note = () => {
           if (final) {
             setTranscribedText((prev) => {
               const newText = prev + final;
-              // Generate title when we have enough text (first 10+ words)
+              transcribedTextRef.current = newText;
+              // Generate title when we have enough text
               if (newText.trim().split(/\s+/).length >= 10 && noteTitle === 'Note Title') {
                 generateTitle(newText);
               }
@@ -171,7 +173,12 @@ const Note = () => {
       };
 
       mediaRecorder.onstop = () => {
-        // Create audio blob from chunks
+        // Clean up old blob URL to prevent memory leak
+        if (audioUrl) {
+          URL.revokeObjectURL(audioUrl);
+        }
+        
+        // Create new audio blob
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const url = URL.createObjectURL(audioBlob);
         setAudioUrl(url);
@@ -207,7 +214,11 @@ const Note = () => {
 
   const resumeRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
-      setTranscribedText((prev) => prev.trim() ? prev.trim() + '\n\n' : prev);
+      setTranscribedText((prev) => {
+        const newText = prev.trim() ? prev.trim() + '\n\n' : prev;
+        transcribedTextRef.current = newText;
+        return newText;
+      });
       mediaRecorderRef.current.resume();
       setIsPaused(false);
       shouldRestartRecognition.current = true;
@@ -233,7 +244,11 @@ const Note = () => {
           }
           
           if (final) {
-            setTranscribedText((prev) => prev + final);
+            setTranscribedText((prev) => {
+              const newText = prev + final;
+              transcribedTextRef.current = newText;
+              return newText;
+            });
             setInterimText('');
           } else {
             setInterimText(interim);
@@ -292,8 +307,9 @@ const Note = () => {
       audioContextRef.current.close();
     }
     
-    if (transcribedText && transcribedText.trim().length > 10) {
-      generateTitle(transcribedText);
+    // Use ref to get current text, not stale closure
+    if (transcribedTextRef.current && transcribedTextRef.current.trim().length > 10) {
+      generateTitle(transcribedTextRef.current);
     }
   };
 
@@ -323,7 +339,10 @@ const Note = () => {
         body: { text },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Title generation error:', error);
+        return;
+      }
 
       if (data.title) {
         setNoteTitle(data.title);
@@ -388,19 +407,29 @@ const Note = () => {
   }, []);
 
   useEffect(() => {
+    transcribedTextRef.current = transcribedText;
+  }, [transcribedText]);
+
+  useEffect(() => {
     // Auto-start recording ONLY if coming from start page with autostart parameter
     const shouldAutoStart = searchParams.get('autostart') === 'true';
     if (shouldAutoStart && !isRecording) {
       startRecording();
     }
-    
+  }, [searchParams]);
+
+  useEffect(() => {
     return () => {
+      // Clean up blob URL on unmount
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
       // Cleanup when component unmounts
       if (isRecording) {
         stopRecording();
       }
     };
-  }, []);
+  }, [audioUrl]);
 
   useEffect(() => {
     // Fetch weather data
@@ -595,7 +624,7 @@ const Note = () => {
               </div>
 
               <div className="flex-1 h-[60px] ml-6 min-w-0">
-                <AudioWaveform isRecording={isRecording && !isPaused} audioLevel={audioLevel} recordingTime={recordingTime} />
+                <AudioWaveform isRecording={isRecording && !isPaused} audioLevel={audioLevel} recordingTime={recordingTime} hasBeenPaused={hasBeenPaused} />
               </div>
 
               <div className="text-white font-outfit text-[16px] font-light flex-shrink-0 ml-4">

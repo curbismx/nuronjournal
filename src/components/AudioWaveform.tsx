@@ -4,9 +4,10 @@ interface AudioWaveformProps {
   isRecording: boolean;
   audioLevel: number;
   recordingTime: number;
+  hasBeenPaused?: boolean;
 }
 
-const AudioWaveform = ({ isRecording, audioLevel, recordingTime }: AudioWaveformProps) => {
+const AudioWaveform = ({ isRecording, audioLevel, recordingTime, hasBeenPaused = false }: AudioWaveformProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const barsRef = useRef<number[]>([]);
@@ -36,8 +37,8 @@ const AudioWaveform = ({ isRecording, audioLevel, recordingTime }: AudioWaveform
       lastRecordingTimeRef.current = recordingTime;
     }
 
-    // Reset when recording stops
-    if (!isRecording && barsRef.current.length > 0) {
+    // Reset only when truly stopped (not during pause)
+    if (!isRecording && !hasBeenPaused && barsRef.current.length > 0) {
       barsRef.current = [];
       lastRecordingTimeRef.current = 0;
     }
@@ -66,7 +67,7 @@ const AudioWaveform = ({ isRecording, audioLevel, recordingTime }: AudioWaveform
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isRecording, audioLevel, recordingTime]);
+  }, [isRecording, audioLevel, recordingTime, hasBeenPaused]);
 
   return (
     <canvas
