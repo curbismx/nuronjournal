@@ -334,9 +334,9 @@ const Note = () => {
   const monthYear = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-hidden">
-      {/* Header - Fixed */}
-      <header className="bg-journal-header pl-[30px] pt-[50px] pr-4 pb-[30px] flex flex-col h-[170px] flex-shrink-0">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      {/* Header - Fixed at top */}
+      <header className="bg-journal-header pl-[30px] pt-[50px] pr-4 pb-[30px] flex flex-col flex-shrink-0">
         <div className="flex items-center justify-between mb-auto">
           <Button
             variant="ghost"
@@ -353,9 +353,9 @@ const Note = () => {
         </h1>
       </header>
 
-      {/* Content - Scrollable */}
-      <main className="flex-1 bg-journal-content rounded-t-[30px] -mt-0 flex flex-col min-h-0">
-        {/* Date and Title - Sticky */}
+      {/* Content Area with rounded top */}
+      <main className="flex-1 bg-journal-content rounded-t-[30px] flex flex-col min-h-0 overflow-hidden">
+        {/* Date and Title - Static, not scrolling */}
         <div className="px-8 pt-8 pb-4 flex-shrink-0">
           <div className="flex items-start gap-4 mb-6">
             <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(0,0%,0%)]">{dayNumber}</div>
@@ -373,10 +373,11 @@ const Note = () => {
           <h2 className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2">{noteTitle}</h2>
         </div>
 
-        {/* Text Content - Scrollable */}
+        {/* Text Content - ONLY this scrolls */}
         <div 
           ref={textContentRef}
-          className="flex-1 overflow-y-auto px-8 pb-[168px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0"
+          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0"
+          style={{ marginBottom: isRecording ? '138px' : '120px' }}
         >
           {transcribedText || (isRecording ? '' : 'Start speaking to transcribe...')}
           {interimText && <span className="opacity-60">{interimText}</span>}
