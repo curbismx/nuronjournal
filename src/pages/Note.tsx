@@ -247,6 +247,12 @@ const Note = () => {
   };
 
   useEffect(() => {
+    // Auto-start recording ONLY if coming from start page with autostart parameter
+    const shouldAutoStart = searchParams.get('autostart') === 'true';
+    if (shouldAutoStart && !isRecording) {
+      startRecording();
+    }
+    
     return () => {
       // Cleanup when component unmounts
       if (isRecording) {
