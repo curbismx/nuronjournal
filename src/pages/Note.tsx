@@ -526,34 +526,44 @@ const Note = () => {
         />
       </div>
 
-      {/* Scrollable Text Content ONLY */}
+      {/* Scrollable Text Content ONLY - Outer wrapper clips overflow */}
       <div 
-        className="fixed left-0 right-0 z-30 bg-journal-content overflow-y-auto px-8 pb-[30px]"
+        className="fixed left-0 right-0 z-30 overflow-hidden"
         style={{ 
           top: 'calc(150px + 180px)', 
-          bottom: '160px',
-          WebkitOverflowScrolling: 'touch',
-          overscrollBehavior: 'contain'
+          bottom: '160px'
         }}
       >
-        <textarea
-          ref={textContentRef as any}
-          value={transcribedText}
-          onChange={(e) => {
-            setTranscribedText(e.target.value);
-            transcribedTextRef.current = e.target.value;
+        {/* Inner scrollable container */}
+        <div 
+          className="h-full overflow-y-auto bg-journal-content px-8"
+          style={{ 
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain'
           }}
-          placeholder="Start speaking to transcribe..."
-          className="w-full h-full min-h-[300px] resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] placeholder:text-[hsl(0,0%,60%)]"
-          readOnly={isRecording}
-        />
-        {interimText && isRecording && (
-          <div className="sticky bottom-0 left-0 right-0 px-0 pb-4 pointer-events-none">
-            <span className="text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,40%)]">
-              {interimText}
-            </span>
+        >
+          {/* Add padding-top for breathing room */}
+          <div className="pt-4 pb-[30px]">
+            <textarea
+              ref={textContentRef as any}
+              value={transcribedText}
+              onChange={(e) => {
+                setTranscribedText(e.target.value);
+                transcribedTextRef.current = e.target.value;
+              }}
+              placeholder="Start speaking to transcribe..."
+              className="w-full h-full min-h-[300px] resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] placeholder:text-[hsl(0,0%,60%)]"
+              readOnly={isRecording}
+            />
+            {interimText && isRecording && (
+              <div className="sticky bottom-0 left-0 right-0 pb-4 pointer-events-none">
+                <span className="text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,40%)]">
+                  {interimText}
+                </span>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Fixed Recording Controls at Bottom - Two States */}
