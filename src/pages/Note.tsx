@@ -416,7 +416,7 @@ const Note = () => {
         {/* Text Content - ONLY this scrolls */}
         <div 
           ref={textContentRef}
-          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0"
+          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px]"
           style={{ marginBottom: '120px' }}
         >
           {transcribedText || (isRecording ? '' : 'Start speaking to transcribe...')}
