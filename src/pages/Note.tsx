@@ -22,6 +22,7 @@ const Note = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [hasBeenPaused, setHasBeenPaused] = useState(false);
   const [transcribedText, setTranscribedText] = useState('');
+  const [interimText, setInterimText] = useState('');
   const [noteTitle, setNoteTitle] = useState('Note Title');
   const [audioLevel, setAudioLevel] = useState(0);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -79,20 +80,23 @@ const Note = () => {
         recognition.maxAlternatives = 1;
 
         recognition.onresult = (event: any) => {
-          let interimTranscript = '';
-          let finalTranscript = '';
+          let interim = '';
+          let final = '';
           
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const transcript = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-              finalTranscript += transcript + ' ';
+              final += transcript + ' ';
             } else {
-              interimTranscript += transcript;
+              interim += transcript;
             }
           }
           
-          if (finalTranscript) {
-            setTranscribedText((prev) => prev + finalTranscript);
+          if (final) {
+            setTranscribedText((prev) => prev + final);
+            setInterimText('');
+          } else {
+            setInterimText(interim);
           }
         };
 
@@ -354,6 +358,7 @@ const Note = () => {
 
         <div className="text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] -mt-[5px]">
           {transcribedText || 'Start speaking to transcribe...'}
+          {interimText && <span className="opacity-60">{interimText}</span>}
         </div>
       </main>
 
