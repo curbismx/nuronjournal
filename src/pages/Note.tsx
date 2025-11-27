@@ -63,18 +63,8 @@ const Note = () => {
 
       mediaRecorder.start(3000); // Collect data every 3 seconds
       setIsRecording(true);
-
-      toast({
-        title: 'Recording started',
-        description: 'Speak clearly for best transcription results',
-      });
     } catch (error) {
       console.error('Error starting recording:', error);
-      toast({
-        title: 'Error',
-        description: 'Could not access microphone',
-        variant: 'destructive',
-      });
     }
   };
 
@@ -132,11 +122,6 @@ const Note = () => {
       };
     } catch (error) {
       console.error('Transcription error:', error);
-      toast({
-        title: 'Transcription failed',
-        description: 'Could not transcribe audio',
-        variant: 'destructive',
-      });
     }
   };
 
