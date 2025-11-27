@@ -188,7 +188,7 @@ const Note = () => {
 
         <h2 className="text-[20px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2">{noteTitle}</h2>
 
-        <div className="text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,0%)]">
+        <div className="text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] -mt-[5px]">
           {transcribedText || 'Start speaking to transcribe...'}
         </div>
       </main>
