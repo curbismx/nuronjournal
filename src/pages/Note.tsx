@@ -389,6 +389,21 @@ const Note = () => {
   };
 
   useEffect(() => {
+    // Prevent body scroll on mobile
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+    };
+  }, []);
+
+  useEffect(() => {
     // Auto-start recording ONLY if coming from start page with autostart parameter
     const shouldAutoStart = searchParams.get('autostart') === 'true';
     if (shouldAutoStart && !isRecording) {
