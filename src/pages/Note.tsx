@@ -504,7 +504,7 @@ const Note = () => {
       </header>
 
       {/* LAYER 2: Card Header (date, title) - Fixed below dark header */}
-      <div className="fixed top-[150px] left-0 right-0 z-20 bg-journal-content rounded-t-[30px] px-8 pt-3.5 pb-4">
+      <div className="fixed top-[150px] left-0 right-0 z-20 bg-journal-content rounded-t-[30px] px-8 pt-3.5 pb-4 shadow-[0_10px_0_0_hsl(69,24%,94%)]">
         <div className="flex items-start gap-4 mb-4">
           <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">{dayNumber}</div>
           <div className="flex flex-col">
@@ -529,12 +529,11 @@ const Note = () => {
       </div>
 
       {/* LAYER 3: Scrollable Text Area - Fixed position with internal scroll */}
-      <div className="fixed top-[295px] bottom-[160px] left-0 right-0 z-10 bg-journal-content overflow-hidden">
+      <div className="fixed top-[265px] bottom-[160px] left-0 right-0 z-10 bg-journal-content overflow-hidden">
         <div 
           className="h-full overflow-y-auto px-8 pb-8"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
-          <div className="h-[20px] flex-shrink-0" />
           <textarea
             ref={textContentRef as any}
             value={transcribedText}
@@ -543,7 +542,7 @@ const Note = () => {
               transcribedTextRef.current = e.target.value;
             }}
             placeholder="Start speaking to transcribe..."
-            className="w-full min-h-[calc(100%-20px)] resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)]"
+            className="w-full min-h-full resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)]"
             readOnly={isRecording}
           />
         </div>
