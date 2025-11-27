@@ -5,6 +5,7 @@ import expandIcon from "@/assets/expand.png";
 import recordBig from "@/assets/recordbig-2.png";
 import plusBig from "@/assets/plusbig.png";
 import tapToRecord from "@/assets/01.png";
+import createFirst from "@/assets/02.png";
 
 const Index = () => {
   return (
@@ -41,9 +42,12 @@ const Index = () => {
           </div>
 
           {/* Plus Button */}
-          <button className="hover:scale-105 transition-transform">
-            <img src={plusBig} alt="Add Note" className="w-[60px] h-[60px]" />
-          </button>
+          <div className="flex flex-col items-center">
+            <button className="hover:scale-105 transition-transform">
+              <img src={plusBig} alt="Add Note" className="w-[60px] h-[60px]" />
+            </button>
+            <img src={createFirst} alt="Create note first instruction" className="w-[420px] mt-4" />
+          </div>
         </div>
       </main>
     </div>
