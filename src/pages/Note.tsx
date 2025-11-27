@@ -536,7 +536,7 @@ const Note = () => {
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           <textarea
-            value={transcribedText}
+            value={transcribedText + (isRecording && interimText ? interimText : '')}
             onChange={(e) => {
               setTranscribedText(e.target.value);
               transcribedTextRef.current = e.target.value;
@@ -546,13 +546,6 @@ const Note = () => {
             readOnly={isRecording}
           />
         </div>
-        {interimText && isRecording && (
-          <div className="absolute bottom-4 left-8 right-8 pointer-events-none">
-            <span className="text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,40%)]">
-              {interimText}
-            </span>
-          </div>
-        )}
       </div>
 
       {/* LAYER 4: Bottom fill to cover gap */}
