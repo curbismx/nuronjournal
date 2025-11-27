@@ -37,6 +37,8 @@ const Note = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isRewriting, setIsRewriting] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const textContentRef = useRef<HTMLDivElement | null>(null);
@@ -311,6 +313,42 @@ const Note = () => {
     }
   };
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    try {
+      // Upload to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `note-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('notes')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('notes')
+        .getPublicUrl(filePath);
+
+      // Insert image into text
+      const imageTag = `\n\n![image](${publicUrl})\n\n`;
+      setTranscribedText(prev => prev + imageTag);
+
+    } catch (error) {
+      console.error('Image upload error:', error);
+    } finally {
+      setIsUploadingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   useEffect(() => {
     // Auto-start recording ONLY if coming from start page with autostart parameter
     const shouldAutoStart = searchParams.get('autostart') === 'true';
@@ -434,14 +472,24 @@ const Note = () => {
             </div>
           </div>
 
-          <h2 className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2">{noteTitle}</h2>
+          <h2 
+            className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2 outline-none"
+            contentEditable
+            suppressContentEditableWarning
+            onBlur={(e) => setNoteTitle(e.currentTarget.textContent || 'Note Title')}
+          >
+            {noteTitle}
+          </h2>
         </div>
 
         {/* Text Content - ONLY this scrolls */}
         <div 
           ref={textContentRef}
-          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px]"
+          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none whitespace-pre-wrap"
           style={{ marginBottom: '120px' }}
+          contentEditable
+          suppressContentEditableWarning
+          onBlur={(e) => setTranscribedText(e.currentTarget.textContent || '')}
         >
           {transcribedText || (isRecording ? '' : 'Start speaking to transcribe...')}
           {interimText && <span className="opacity-60">{interimText}</span>}
@@ -504,7 +552,18 @@ const Note = () => {
       ) : (
         /* STATE 2: 4 medium buttons when stopped */
         <div className="fixed bottom-[30px] left-[30px] right-[30px] flex justify-between items-center gap-[10px]">
-          <button className="flex flex-col items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploadingImage}
+            className="flex flex-col items-center gap-2 disabled:opacity-50"
+          >
             <img src={imageButton2} alt="Image" className="h-auto" />
           </button>
           <button 
