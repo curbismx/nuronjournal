@@ -398,25 +398,28 @@ const Note = () => {
                 <Button
                   variant="ghost"
                   onClick={resumeRecording}
-                  className="hover:bg-white/10 p-0 h-auto w-auto"
+                  className="hover:bg-white/10 p-0 h-auto w-auto flex flex-col items-center gap-2"
                 >
                   <img src={recordMoreIcon} alt="Record More" className="w-[40px] h-[40px]" />
+                  <span className="text-white font-outfit text-[12px] font-light">REC</span>
                 </Button>
                 
                 <Button
                   variant="ghost"
                   onClick={stopRecording}
-                  className="hover:bg-white/10 p-0 h-auto w-auto"
+                  className="hover:bg-white/10 p-0 h-auto w-auto flex flex-col items-center gap-2"
                 >
                   <img src={stopIcon} alt="Stop" className="w-[40px] h-[40px]" />
+                  <span className="text-white font-outfit text-[12px] font-light">STOP</span>
                 </Button>
                 
                 <Button
                   variant="ghost"
                   onClick={resumeRecording}
-                  className="hover:bg-white/10 p-0 h-auto w-auto"
+                  className="hover:bg-white/10 p-0 h-auto w-auto flex flex-col items-center gap-2"
                 >
                   <img src={playIcon} alt="Play" className="w-[40px] h-[40px]" />
+                  <span className="text-white font-outfit text-[12px] font-light">PLAY</span>
                 </Button>
               </div>
             )}
