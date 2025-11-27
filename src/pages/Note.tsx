@@ -140,7 +140,7 @@ const Note = () => {
       // Audio visualization
       const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
       const updateAudioLevel = () => {
-        if (analyserRef.current && recognitionRef.current) {
+        if (analyserRef.current && isRecordingRef.current && !isPausedRef.current) {
           analyserRef.current.getByteFrequencyData(dataArray);
           const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
           setAudioLevel(average / 255);
