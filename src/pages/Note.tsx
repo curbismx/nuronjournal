@@ -111,10 +111,7 @@ const Note = () => {
               const newText = prev + final;
               // Update the contentEditable div
               if (textContentRef.current) {
-                const currentContent = textContentRef.current.textContent || '';
-                if (!currentContent.includes(final.trim())) {
-                  textContentRef.current.textContent = newText;
-                }
+                textContentRef.current.textContent = newText;
               }
               // Generate title when we have enough text (first 10+ words)
               if (newText.trim().split(/\s+/).length >= 10 && noteTitle === 'Note Title') {
@@ -125,8 +122,8 @@ const Note = () => {
             setInterimText('');
           } else {
             setInterimText(interim);
-            // Show interim text without affecting the main content
-            if (textContentRef.current && !final) {
+            // Show interim text in the div
+            if (textContentRef.current) {
               const baseText = transcribedText;
               textContentRef.current.textContent = baseText + interim;
             }
@@ -418,6 +415,13 @@ const Note = () => {
     };
   }, []);
 
+  // Set initial placeholder text
+  useEffect(() => {
+    if (textContentRef.current && !transcribedText && !isRecording) {
+      textContentRef.current.textContent = 'Start speaking to transcribe...';
+    }
+  }, [transcribedText, isRecording]);
+
   useEffect(() => {
     // Fetch weather data
     const fetchWeather = async () => {
@@ -554,11 +558,10 @@ const Note = () => {
           style={{ marginBottom: '120px' }}
           contentEditable
           suppressContentEditableWarning
-          onBlur={(e) => {
+          onInput={(e) => {
             const text = e.currentTarget.textContent || '';
-            setTranscribedText(text);
-            if (!text.trim() && !isRecording) {
-              e.currentTarget.textContent = 'Start speaking to transcribe...';
+            if (text !== 'Start speaking to transcribe...') {
+              setTranscribedText(text);
             }
           }}
           onFocus={(e) => {
@@ -566,10 +569,14 @@ const Note = () => {
               e.currentTarget.textContent = '';
             }
           }}
-        >
-          {transcribedText || (isRecording ? '' : 'Start speaking to transcribe...')}
-          {interimText && <span className="opacity-60">{interimText}</span>}
-        </div>
+          onBlur={(e) => {
+            const text = e.currentTarget.textContent || '';
+            if (!text.trim() && !isRecording) {
+              e.currentTarget.textContent = 'Start speaking to transcribe...';
+              setTranscribedText('');
+            }
+          }}
+        />
       </main>
 
       {/* Recording Control - Two States */}
