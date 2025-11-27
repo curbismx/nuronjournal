@@ -19,7 +19,7 @@ const AudioWaveform = ({ isRecording, audioLevel, recordingTime }: AudioWaveform
     if (!ctx) return;
 
     const numBars = 40;
-    const barWidth = 4;
+    const barWidth = 8;
     const gap = 8;
     const maxHeight = canvas.height;
 
