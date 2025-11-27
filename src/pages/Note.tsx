@@ -33,37 +33,25 @@ const Note = () => {
 
   const startRecording = async () => {
     try {
-      // Request microphone first
-      const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Request microphone
+      const micStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          sampleRate: 24000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
       
-      // Try to get system audio (optional)
-      let systemAudioTrack: MediaStreamTrack | null = null;
-      try {
-        const systemStream = await navigator.mediaDevices.getDisplayMedia({ 
-          audio: true,
-          video: {
-            width: 1,
-            height: 1,
-            frameRate: 1
-          }
-        });
-        
-        systemAudioTrack = systemStream.getAudioTracks()[0];
-        
-        // Stop video track immediately as we don't need it
-        systemStream.getVideoTracks().forEach(track => track.stop());
-      } catch (displayError) {
-        console.log('System audio not available, using microphone only:', displayError);
-      }
-      
-      // Create audio context to merge streams
+      // Create audio context
       audioContextRef.current = new AudioContext({ sampleRate: 24000 });
       const audioContext = audioContextRef.current;
       
-      // Create destination to merge audio
+      // Create destination to handle audio
       const destination = audioContext.createMediaStreamDestination();
       
-      // Always connect microphone
+      // Connect microphone
       const micSource = audioContext.createMediaStreamSource(micStream);
       micSource.connect(destination);
       
@@ -72,26 +60,10 @@ const Note = () => {
       analyserRef.current.fftSize = 256;
       micSource.connect(analyserRef.current);
       
-      // Connect system audio if available
-      if (systemAudioTrack) {
-        const systemSource = audioContext.createMediaStreamSource(
-          new MediaStream([systemAudioTrack])
-        );
-        systemSource.connect(destination);
-        systemSource.connect(analyserRef.current);
-        
-        // Store both tracks
-        streamRef.current = new MediaStream([
-          ...micStream.getTracks(),
-          systemAudioTrack
-        ]);
-        
-        toast({ title: 'Recording started', description: 'Capturing microphone and system audio' });
-      } else {
-        // Store only microphone track
-        streamRef.current = micStream;
-        toast({ title: 'Recording started', description: 'Capturing microphone audio only' });
-      }
+      // Store microphone track
+      streamRef.current = micStream;
+      
+      toast({ title: 'Recording started', description: 'Capturing microphone audio' });
 
       // Set up Web Speech API for transcription
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -100,6 +72,7 @@ const Note = () => {
         recognition.continuous = true;
         recognition.interimResults = false;
         recognition.lang = 'en-US';
+        recognition.maxAlternatives = 1;
 
         recognition.onresult = (event: any) => {
           for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -113,7 +86,6 @@ const Note = () => {
         recognition.onerror = (event: any) => {
           console.error('Speech recognition error:', event.error);
           if (event.error !== 'no-speech' && event.error !== 'aborted') {
-            setIsTranscribing(false);
             toast({ 
               title: 'Transcription error', 
               description: event.error, 
@@ -123,7 +95,7 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          // Restart if still recording
+          // Restart if still recording and not paused
           if (isRecording && !isPaused) {
             try {
               recognition.start();
@@ -133,9 +105,13 @@ const Note = () => {
           }
         };
 
-        recognition.start();
-        recognitionRef.current = recognition;
-        setIsTranscribing(true);
+        try {
+          recognition.start();
+          recognitionRef.current = recognition;
+          setIsTranscribing(true);
+        } catch (e) {
+          console.error('Failed to start recognition:', e);
+        }
       } else {
         toast({ 
           title: 'Speech recognition unavailable', 
@@ -156,7 +132,7 @@ const Note = () => {
       };
       updateAudioLevel();
 
-      // Use the merged stream for recording (in case we want to save the audio later)
+      // Use the stream for recording
       const mediaRecorder = new MediaRecorder(destination.stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -173,7 +149,7 @@ const Note = () => {
       console.error('Error starting recording:', error);
       toast({ 
         title: 'Recording failed', 
-        description: error instanceof Error ? error.message : 'Failed to access audio devices',
+        description: error instanceof Error ? error.message : 'Failed to access microphone',
         variant: 'destructive'
       });
     }
