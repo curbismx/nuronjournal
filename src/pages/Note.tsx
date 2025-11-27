@@ -122,10 +122,15 @@ const Note = () => {
               const newText = prev + final;
               // Update the contentEditable div preserving any images
               if (textContentRef.current) {
-                // Append text while preserving HTML content
-                const currentHtml = textContentRef.current.innerHTML;
-                textContentRef.current.innerHTML = currentHtml + final;
-                setNoteContent(textContentRef.current.innerHTML);
+                // Get current HTML, but remove placeholder if present
+                let currentHtml = textContentRef.current.innerHTML;
+                if (currentHtml === 'Start speaking to transcribe...') {
+                  currentHtml = '';
+                }
+                // Append the new text
+                const updatedHtml = currentHtml + final;
+                textContentRef.current.innerHTML = updatedHtml;
+                setNoteContent(updatedHtml);
               }
               // Generate title when we have enough text (first 10+ words)
               if (newText.trim().split(/\s+/).length >= 10 && noteTitle === 'Note Title') {
@@ -137,11 +142,19 @@ const Note = () => {
           } else {
             setInterimText(interim);
             // Show interim text in the div
-            if (textContentRef.current) {
-              const currentHtml = noteContent || textContentRef.current.innerHTML;
+            if (textContentRef.current && interim) {
+              let currentHtml = textContentRef.current.innerHTML;
+              // Remove placeholder if present
+              if (currentHtml === 'Start speaking to transcribe...') {
+                currentHtml = '';
+              }
+              // Remove any previous interim span
               const tempDiv = document.createElement('div');
               tempDiv.innerHTML = currentHtml;
-              const textContent = tempDiv.textContent || '';
+              const interimSpans = tempDiv.querySelectorAll('span.opacity-60');
+              interimSpans.forEach(span => span.remove());
+              currentHtml = tempDiv.innerHTML;
+              // Add new interim text
               textContentRef.current.innerHTML = currentHtml + `<span class="opacity-60">${interim}</span>`;
             }
           }
@@ -428,16 +441,7 @@ const Note = () => {
     }
   }, []);
 
-  // Update content when transcription happens
-  useEffect(() => {
-    if (textContentRef.current && transcribedText && isRecording) {
-      const currentHtml = textContentRef.current.innerHTML;
-      // Only update if it doesn't already contain the text
-      if (!currentHtml.includes(transcribedText.slice(-20))) {
-        textContentRef.current.innerHTML = noteContent || transcribedText;
-      }
-    }
-  }, [transcribedText, noteContent, isRecording]);
+  // Don't automatically update content - let speech recognition handle it directly
 
   useEffect(() => {
     // Fetch weather data
