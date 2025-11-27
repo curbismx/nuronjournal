@@ -32,6 +32,7 @@ const Note = () => {
   const [transcribedText, setTranscribedText] = useState('');
   const [interimText, setInterimText] = useState('');
   const [noteTitle, setNoteTitle] = useState('Note Title');
+  const [isTitleEditing, setIsTitleEditing] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [recordingTime, setRecordingTime] = useState(0);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -510,14 +511,34 @@ const Note = () => {
             </div>
           </div>
 
-          <h2 className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2">{noteTitle}</h2>
+          <h2 
+            className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2 outline-none focus:ring-2 focus:ring-journal-header/20 rounded px-1 -mx-1"
+            contentEditable={!isRecording}
+            suppressContentEditableWarning
+            onBlur={(e) => setNoteTitle(e.currentTarget.textContent || 'Note Title')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                e.currentTarget.blur();
+              }
+            }}
+          >
+            {noteTitle}
+          </h2>
         </div>
 
         {/* Text Content - ONLY this scrolls */}
         <div 
           ref={textContentRef}
-          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px]"
+          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none focus:ring-2 focus:ring-journal-header/20 rounded"
           style={{ marginBottom: '120px' }}
+          contentEditable={!isRecording}
+          suppressContentEditableWarning
+          onBlur={(e) => {
+            if (!isRecording) {
+              setTranscribedText(e.currentTarget.textContent || '');
+            }
+          }}
         >
           {transcribedText || (isRecording ? '' : 'Start speaking to transcribe...')}
           {interimText && <span className="opacity-60">{interimText}</span>}
