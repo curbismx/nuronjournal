@@ -477,7 +477,7 @@ const Note = () => {
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
       {/* Header - Fixed at top */}
-      <header className="bg-journal-header pl-[30px] pt-[50px] pr-4 pb-[30px] flex flex-col flex-shrink-0 h-[170px]">
+      <header className="bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] flex flex-col flex-shrink-0 h-[170px]">
         <div className="flex items-center justify-between mb-auto">
           <Button
             variant="ghost"
