@@ -25,15 +25,41 @@ const Note = () => {
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-
+      // Get microphone audio
+      const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Get system audio (screen/tab audio)
+      const systemStream = await navigator.mediaDevices.getDisplayMedia({ 
+        audio: true,
+        video: false 
+      });
+      
+      // Create audio context to merge streams
+      audioContextRef.current = new AudioContext({ sampleRate: 24000 });
+      const audioContext = audioContextRef.current;
+      
+      // Create sources from both streams
+      const micSource = audioContext.createMediaStreamSource(micStream);
+      const systemSource = audioContext.createMediaStreamSource(systemStream);
+      
+      // Create destination to merge audio
+      const destination = audioContext.createMediaStreamDestination();
+      
+      // Connect both sources to destination
+      micSource.connect(destination);
+      systemSource.connect(destination);
+      
       // Set up audio analysis for visualization
-      audioContextRef.current = new AudioContext();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      source.connect(analyserRef.current);
+      analyserRef.current = audioContext.createAnalyser();
       analyserRef.current.fftSize = 256;
+      micSource.connect(analyserRef.current);
+      systemSource.connect(analyserRef.current);
+      
+      // Store both streams for cleanup
+      streamRef.current = new MediaStream([
+        ...micStream.getTracks(),
+        ...systemStream.getTracks()
+      ]);
 
       // Start visualizing audio levels
       const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
@@ -47,7 +73,8 @@ const Note = () => {
       };
       updateAudioLevel();
 
-      const mediaRecorder = new MediaRecorder(stream);
+      // Use the merged stream for recording
+      const mediaRecorder = new MediaRecorder(destination.stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -64,8 +91,15 @@ const Note = () => {
 
       mediaRecorder.start(3000);
       setIsRecording(true);
+      
+      toast({ title: 'Recording started', description: 'Capturing microphone and system audio' });
     } catch (error) {
       console.error('Error starting recording:', error);
+      toast({ 
+        title: 'Recording failed', 
+        description: error instanceof Error ? error.message : 'Failed to access audio devices',
+        variant: 'destructive'
+      });
     }
   };
 
