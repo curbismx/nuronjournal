@@ -354,7 +354,7 @@ const Note = () => {
       </header>
 
       {/* Content - Scrollable */}
-      <main className="flex-1 bg-journal-content rounded-t-[30px] -mt-0 flex flex-col overflow-hidden">
+      <main className="flex-1 bg-journal-content rounded-t-[30px] -mt-0 flex flex-col min-h-0">
         {/* Date and Title - Sticky */}
         <div className="px-8 pt-8 pb-4 flex-shrink-0">
           <div className="flex items-start gap-4 mb-6">
@@ -376,7 +376,7 @@ const Note = () => {
         {/* Text Content - Scrollable */}
         <div 
           ref={textContentRef}
-          className="flex-1 overflow-y-auto px-8 pb-[170px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)]"
+          className="flex-1 overflow-y-auto px-8 pb-[168px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0"
         >
           {transcribedText || (isRecording ? '' : 'Start speaking to transcribe...')}
           {interimText && <span className="opacity-60">{interimText}</span>}
