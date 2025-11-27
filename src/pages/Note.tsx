@@ -420,22 +420,22 @@ const Note = () => {
       {/* Recording Control - Always 4 buttons at bottom */}
       <div className="fixed bottom-[30px] left-0 right-0 flex justify-between items-center px-[30px]">
         <button className="flex flex-col items-center gap-2">
-          <img src={imageButton} alt="Image" className="w-auto h-[60px]" />
+          <img src={imageButton} alt="Image" className="w-[60px] h-[60px]" />
         </button>
         <button className="flex flex-col items-center gap-2">
-          <img src={rewriteButton} alt="Rewrite" className="w-auto h-[60px]" />
+          <img src={rewriteButton} alt="Rewrite" className="w-[60px] h-[60px]" />
         </button>
         <button className="flex flex-col items-center gap-2">
-          <img src={shareButton} alt="Share" className="w-auto h-[60px]" />
+          <img src={shareButton} alt="Share" className="w-[60px] h-[60px]" />
         </button>
         <button 
           onClick={!isRecording ? startRecording : (isPaused ? resumeRecording : pauseRecording)} 
           className="flex flex-col items-center gap-2"
         >
           <img 
-            src={!isRecording ? recordButtonNew : (isPaused ? recordButtonNew : pauseButton2)} 
-            alt={!isRecording ? "Record" : (isPaused ? "Record" : "Pause")} 
-            className="w-auto h-[60px]" 
+            src={isRecording && !isPaused ? pauseButton2 : recordButtonNew} 
+            alt={isRecording && !isPaused ? "Pause" : "Record"} 
+            className="w-[60px] h-[60px]" 
           />
         </button>
       </div>
