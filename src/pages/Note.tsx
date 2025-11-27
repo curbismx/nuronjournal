@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import AudioWaveform from '@/components/AudioWaveform';
 import backIcon from '@/assets/back.png';
 import pauseIcon from '@/assets/pause.png';
+import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 const Note = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const Note = () => {
   const [audioLevel, setAudioLevel] = useState(0);
   const [recordingTime, setRecordingTime] = useState(0);
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [weather, setWeather] = useState<{ temp: number; icon: string } | null>(null);
+  const [weather, setWeather] = useState<{ temp: number; WeatherIcon: React.ComponentType<any> } | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -263,21 +264,21 @@ const Note = () => {
             );
             const data = await response.json();
             
-            // Map weather codes to simple icons
+            // Map weather codes to Lucide icons
             const weatherCode = data.current.weather_code;
-            let icon = '☀️'; // default sunny
+            let WeatherIcon = Sun; // default sunny
             
-            if (weatherCode >= 61 && weatherCode <= 67) icon = '🌧️'; // rain
-            else if (weatherCode >= 71 && weatherCode <= 77) icon = '❄️'; // snow
-            else if (weatherCode >= 80 && weatherCode <= 82) icon = '🌧️'; // showers
-            else if (weatherCode >= 51 && weatherCode <= 57) icon = '🌦️'; // drizzle
-            else if (weatherCode >= 2 && weatherCode <= 3) icon = '⛅'; // partly cloudy
-            else if (weatherCode === 45 || weatherCode === 48) icon = '🌫️'; // fog
-            else if (weatherCode >= 95) icon = '⛈️'; // thunderstorm
+            if (weatherCode >= 61 && weatherCode <= 67) WeatherIcon = CloudRain; // rain
+            else if (weatherCode >= 71 && weatherCode <= 77) WeatherIcon = CloudSnow; // snow
+            else if (weatherCode >= 80 && weatherCode <= 82) WeatherIcon = CloudRain; // showers
+            else if (weatherCode >= 51 && weatherCode <= 57) WeatherIcon = CloudDrizzle; // drizzle
+            else if (weatherCode >= 2 && weatherCode <= 3) WeatherIcon = Cloud; // partly cloudy
+            else if (weatherCode === 45 || weatherCode === 48) WeatherIcon = CloudFog; // fog
+            else if (weatherCode >= 95) WeatherIcon = CloudLightning; // thunderstorm
             
             setWeather({
               temp: Math.round(data.current.temperature_2m),
-              icon
+              WeatherIcon
             });
           },
           (error) => {
@@ -340,7 +341,7 @@ const Note = () => {
             <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(0,0%,0%)] mt-[2px]">{dayName}</div>
             {weather && (
               <div className="flex items-center gap-1.5 mt-1">
-                <span className="text-[24px] grayscale">{weather.icon}</span>
+                <weather.WeatherIcon size={20} className="text-[hsl(0,0%,0%)]" />
                 <span className="text-[16px] font-outfit font-light text-[hsl(0,0%,0%)]">{weather.temp}°C</span>
               </div>
             )}
