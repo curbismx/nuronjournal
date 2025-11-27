@@ -370,7 +370,7 @@ const Note = () => {
             <img src={shareButton} alt="Share" className="w-auto h-[60px]" />
           </button>
           <button onClick={startRecording} className="flex flex-col items-center gap-2">
-            <img src={recordButton} alt="Record" className="w-auto h-[80px]" />
+            <img src={recordButton} alt="Record" className="w-auto h-[60px]" />
           </button>
         </div>
       ) : (
