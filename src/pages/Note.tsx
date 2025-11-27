@@ -527,10 +527,10 @@ const Note = () => {
           </div>
 
           <h2 
-            className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2 outline-none focus:ring-2 focus:ring-journal-header/20 rounded px-1 -mx-1"
+            className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2 outline-none"
             contentEditable={!isRecording}
             suppressContentEditableWarning
-            onBlur={(e) => setNoteTitle(e.currentTarget.textContent || 'Note Title')}
+            onInput={(e) => setNoteTitle(e.currentTarget.textContent || 'Note Title')}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -549,20 +549,21 @@ const Note = () => {
             className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none"
             style={{ marginBottom: '120px', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
           >
-            {transcribedText}
+            {transcribedText || <span className="text-[hsl(0,0%,60%)]">Start speaking to transcribe...</span>}
             {interimText && <span className="opacity-60">{interimText}</span>}
           </div>
         ) : (
           <div 
             ref={textContentRef}
-            className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none"
+            className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none empty:before:content-['Start_speaking_to_transcribe...'] empty:before:text-[hsl(0,0%,60%)]"
             style={{ marginBottom: '120px', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
             contentEditable
             suppressContentEditableWarning
-            onBlur={(e) => setTranscribedText(e.currentTarget.textContent || '')}
+            onInput={(e) => setTranscribedText(e.currentTarget.textContent || '')}
             onFocus={() => window.scrollTo(0, 0)}
-            dangerouslySetInnerHTML={{ __html: transcribedText || '<span style="color: hsl(0,0%,60%)">Start speaking to transcribe...</span>' }}
-          />
+          >
+            {transcribedText}
+          </div>
         )}
       </main>
 
