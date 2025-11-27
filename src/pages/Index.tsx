@@ -1,5 +1,6 @@
-import { Settings, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import settingsIcon from "@/assets/settings.png";
 
 const Index = () => {
   return (
@@ -8,9 +9,9 @@ const Index = () => {
       <header className="bg-journal-header px-4 py-6 flex items-center justify-between">
         <Button 
           variant="ghost" 
-          className="text-journal-header-foreground hover:bg-journal-header-foreground/10 p-2 h-auto w-auto [&_svg]:!w-[30px] [&_svg]:!h-[30px]"
+          className="text-journal-header-foreground hover:bg-journal-header-foreground/10 p-2 h-auto w-auto"
         >
-          <Settings />
+          <img src={settingsIcon} alt="Settings" className="w-[30px] h-[30px]" />
         </Button>
         
         <div className="flex-1" />
