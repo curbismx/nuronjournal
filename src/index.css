@@ -40,7 +40,7 @@ All colors MUST be HSL.
     --radius: 0.5rem;
 
     /* Journal specific tokens */
-    --journal-header: 0 0% 0%;
+    --journal-header: 0 0% 18%;
     --journal-header-foreground: 0 0% 100%;
     --journal-content: 40 20% 96%;
   }
@@ -74,7 +74,7 @@ All colors MUST be HSL.
     --input: 0 0% 15%;
     --ring: 0 0% 100%;
 
-    --journal-header: 0 0% 0%;
+    --journal-header: 0 0% 18%;
     --journal-header-foreground: 0 0% 100%;
     --journal-content: 0 0% 5%;
   }
