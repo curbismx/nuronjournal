@@ -16,12 +16,14 @@ const Note = () => {
   const [noteTitle, setNoteTitle] = useState('Note Title');
   const [audioLevel, setAudioLevel] = useState(0);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const recognitionRef = useRef<any>(null);
 
   const startRecording = async () => {
     try {
@@ -85,6 +87,62 @@ const Note = () => {
         toast({ title: 'Recording started', description: 'Capturing microphone audio only' });
       }
 
+      // Set up Web Speech API for transcription
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onresult = (event: any) => {
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+              const transcript = event.results[i][0].transcript;
+              setTranscribedText((prev) => prev + transcript + ' ');
+              
+              // Generate title from first substantial text
+              if (transcribedText.length < 50 && transcript.length > 20) {
+                generateTitle(transcript);
+              }
+            }
+          }
+        };
+
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          if (event.error !== 'no-speech' && event.error !== 'aborted') {
+            setIsTranscribing(false);
+            toast({ 
+              title: 'Transcription error', 
+              description: event.error, 
+              variant: 'destructive' 
+            });
+          }
+        };
+
+        recognition.onend = () => {
+          // Restart if still recording
+          if (isRecording && !isPaused) {
+            try {
+              recognition.start();
+            } catch (e) {
+              console.log('Recognition restart failed:', e);
+            }
+          }
+        };
+
+        recognition.start();
+        recognitionRef.current = recognition;
+        setIsTranscribing(true);
+      } else {
+        toast({ 
+          title: 'Speech recognition unavailable', 
+          description: 'Your browser does not support speech recognition',
+          variant: 'destructive'
+        });
+      }
+
       // Start visualizing audio levels
       const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
       const updateAudioLevel = () => {
@@ -97,7 +155,7 @@ const Note = () => {
       };
       updateAudioLevel();
 
-      // Use the merged stream for recording
+      // Use the merged stream for recording (in case we want to save the audio later)
       const mediaRecorder = new MediaRecorder(destination.stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -106,11 +164,6 @@ const Note = () => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await transcribeAudio(audioBlob);
       };
 
       mediaRecorder.start(3000);
@@ -128,14 +181,26 @@ const Note = () => {
   const pauseRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.pause();
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
       setIsPaused(true);
       setAudioLevel(0);
+      setIsTranscribing(false);
     }
   };
 
   const resumeRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
       mediaRecorderRef.current.resume();
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.start();
+          setIsTranscribing(true);
+        } catch (e) {
+          console.log('Failed to resume recognition:', e);
+        }
+      }
       setIsPaused(false);
     }
   };
@@ -148,38 +213,15 @@ const Note = () => {
       setAudioLevel(0);
       setRecordingTime(0);
     }
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsTranscribing(false);
+    }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
     }
     if (audioContextRef.current) {
       audioContextRef.current.close();
-    }
-  };
-
-  const transcribeAudio = async (audioBlob: Blob) => {
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
-
-        const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-          body: { audio: base64Audio },
-        });
-
-        if (error) throw error;
-
-        if (data.text) {
-          setTranscribedText(prev => prev + ' ' + data.text);
-          
-          if (!transcribedText && data.text.length > 20) {
-            generateTitle(data.text);
-          }
-        }
-      };
-    } catch (error) {
-      console.error('Transcription error:', error);
-      toast({ title: 'Transcription failed', description: 'Please try again', variant: 'destructive' });
     }
   };
 
