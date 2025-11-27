@@ -12,7 +12,7 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="fixed inset-0 bg-background flex flex-col overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Header */}
       <header className="bg-journal-header pl-[30px] pt-[50px] pr-4 pb-6 flex items-center justify-between h-[100px]">
         <Button 

@@ -85,7 +85,11 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
-  body {
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
     @apply bg-background text-foreground;
   }
 }

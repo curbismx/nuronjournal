@@ -476,11 +476,11 @@ const Note = () => {
   const monthYear = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
 
   return (
-    <div className="fixed inset-0 bg-background flex flex-col overflow-hidden touch-none">
-      {/* Header - Fixed at top */}
+    <div className="fixed inset-0 bg-background flex flex-col">
+      {/* Fixed Header - Dark Background */}
       <header 
-        className="bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] flex flex-col flex-shrink-0 h-[150px] touch-none"
-        onTouchMove={(e) => e.preventDefault()}
+        className="fixed top-0 left-0 right-0 z-50 bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] h-[150px]"
+        style={{ touchAction: 'none' }}
       >
         <div className="flex items-center justify-between mb-auto">
           <Button
@@ -498,66 +498,68 @@ const Note = () => {
         </h1>
       </header>
 
-      {/* Content Area with rounded top */}
-      <main className="flex-1 bg-journal-content rounded-t-[30px] flex flex-col min-h-0 overflow-hidden touch-none">
-        {/* Date and Title - Static, not scrolling */}
-        <div 
-          className="px-8 pt-8 pb-4 flex-shrink-0 touch-none"
-          onTouchMove={(e) => e.preventDefault()}
-        >
-          <div className="flex items-start gap-4 mb-6">
-            <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(0,0%,0%)]">{dayNumber}</div>
-            <div className="flex flex-col">
-              <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(0,0%,0%)] mt-[2px]">{dayName}</div>
-              {weather && (
-                <div className="flex items-center gap-1.5 mt-1">
-                  <weather.WeatherIcon size={20} className="text-[hsl(0,0%,0%)]" />
-                  <span className="text-[16px] font-outfit font-light text-[hsl(0,0%,0%)]">{weather.temp}°C</span>
-                </div>
-              )}
-            </div>
+      {/* Fixed Content Card Header (Date & Title) */}
+      <div 
+        className="fixed top-[150px] left-0 right-0 z-40 bg-journal-content rounded-t-[30px] px-8 pt-8 pb-4"
+        style={{ touchAction: 'none' }}
+      >
+        <div className="flex items-start gap-4 mb-6">
+          <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(0,0%,0%)]">{dayNumber}</div>
+          <div className="flex flex-col">
+            <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(0,0%,0%)] mt-[2px]">{dayName}</div>
+            {weather && (
+              <div className="flex items-center gap-1.5 mt-1">
+                <weather.WeatherIcon size={20} className="text-[hsl(0,0%,0%)]" />
+                <span className="text-[16px] font-outfit font-light text-[hsl(0,0%,0%)]">{weather.temp}°C</span>
+              </div>
+            )}
           </div>
-
-          <input
-            type="text"
-            value={noteTitle}
-            onChange={(e) => setNoteTitle(e.target.value || 'Note Title')}
-            disabled={isRecording}
-            className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2 outline-none bg-transparent border-none w-full disabled:opacity-100"
-            placeholder="Note Title"
-          />
         </div>
 
-        {/* Text Content - ONLY this scrolls */}
-        <div 
-          className="flex-1 overflow-y-auto px-8 pb-[30px] min-h-0 -mt-[15px] relative"
-          style={{ marginBottom: '120px', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
-        >
-          <textarea
-            ref={textContentRef as any}
-            value={transcribedText}
-            onChange={(e) => {
-              setTranscribedText(e.target.value);
-              transcribedTextRef.current = e.target.value;
-            }}
-            placeholder="Start speaking to transcribe..."
-            className="w-full h-full min-h-[300px] resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] placeholder:text-[hsl(0,0%,60%)]"
-            readOnly={isRecording}
-          />
-          {interimText && isRecording && (
-            <div className="absolute bottom-0 left-0 right-0 px-8 pb-4 pointer-events-none">
-              <span className="text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,40%)]">
-                {interimText}
-              </span>
-            </div>
-          )}
-        </div>
-      </main>
+        <input
+          type="text"
+          value={noteTitle}
+          onChange={(e) => setNoteTitle(e.target.value || 'Note Title')}
+          disabled={isRecording}
+          className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2 outline-none bg-transparent border-none w-full disabled:opacity-100"
+          placeholder="Note Title"
+        />
+      </div>
 
-      {/* Recording Control - Two States */}
+      {/* Scrollable Text Content ONLY */}
+      <div 
+        className="fixed left-0 right-0 z-30 bg-journal-content overflow-y-auto px-8 pb-[30px]"
+        style={{ 
+          top: 'calc(150px + 180px)', 
+          bottom: '160px',
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain'
+        }}
+      >
+        <textarea
+          ref={textContentRef as any}
+          value={transcribedText}
+          onChange={(e) => {
+            setTranscribedText(e.target.value);
+            transcribedTextRef.current = e.target.value;
+          }}
+          placeholder="Start speaking to transcribe..."
+          className="w-full h-full min-h-[300px] resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] placeholder:text-[hsl(0,0%,60%)]"
+          readOnly={isRecording}
+        />
+        {interimText && isRecording && (
+          <div className="sticky bottom-0 left-0 right-0 px-0 pb-4 pointer-events-none">
+            <span className="text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,40%)]">
+              {interimText}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Fixed Recording Controls at Bottom - Two States */}
       {isRecording ? (
         /* STATE 1: Big red box with recording controls */
-        <div className="fixed bottom-[30px] left-1/2 -translate-x-1/2 w-[calc(100%-60px)] max-w-[600px]">
+        <div className="fixed bottom-[30px] left-1/2 -translate-x-1/2 w-[calc(100%-60px)] max-w-[600px] z-50" style={{ touchAction: 'none' }}>
           <div className="bg-[hsl(4,73%,62%)] rounded-[20px] p-6 h-[108px]">
             <div className="flex items-center gap-4 h-full relative">
               <div className="flex items-center gap-[30px]">
@@ -609,7 +611,7 @@ const Note = () => {
         </div>
       ) : (
         /* STATE 2: 4 medium buttons when stopped */
-        <div className="fixed bottom-[30px] left-[30px] right-[30px] flex justify-between items-center gap-[10px]">
+        <div className="fixed bottom-[30px] left-[30px] right-[30px] flex justify-between items-center gap-[10px] z-50" style={{ touchAction: 'none' }}>
           <button className="flex flex-col items-center gap-2">
             <img src={imageButton2} alt="Image" className="h-auto" />
           </button>
