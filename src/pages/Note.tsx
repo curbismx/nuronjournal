@@ -48,11 +48,15 @@ const Note = () => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
+  const isRecordingRef = useRef(false);
+  const isPausedRef = useRef(false);
 
   const startRecording = async () => {
     try {
       // Set recording state immediately
       setIsRecording(true);
+      isRecordingRef.current = true;
+      isPausedRef.current = false;
       
       // Request microphone
       const micStream = await navigator.mediaDevices.getUserMedia({ 
@@ -126,8 +130,8 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          // Only restart if still recording and not paused
-          if (isRecording && !isPaused && recognitionRef.current) {
+          // Only restart if still recording and not paused (use refs to avoid closure issues)
+          if (isRecordingRef.current && !isPausedRef.current && recognitionRef.current) {
             try {
               recognitionRef.current.start();
             } catch (e) {
@@ -188,6 +192,7 @@ const Note = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       // Update states FIRST to prevent recognition restart
       setIsPaused(true);
+      isPausedRef.current = true;
       setHasBeenPaused(true);
       setIsTranscribing(false);
       
@@ -217,6 +222,7 @@ const Note = () => {
       // Resume media recorder
       mediaRecorderRef.current.resume();
       setIsPaused(false);
+      isPausedRef.current = false;
       
       // Recreate and restart speech recognition
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -253,7 +259,7 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          if (isRecording && !isPaused && recognitionRef.current) {
+          if (isRecordingRef.current && !isPausedRef.current && recognitionRef.current) {
             try {
               recognitionRef.current.start();
             } catch (e) {
@@ -276,7 +282,9 @@ const Note = () => {
   const stopRecording = () => {
     // Set states first to prevent restarts
     setIsRecording(false);
+    isRecordingRef.current = false;
     setIsPaused(false);
+    isPausedRef.current = false;
     setHasBeenPaused(false);
     setIsTranscribing(false);
     setAudioLevel(0);
