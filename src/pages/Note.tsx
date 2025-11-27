@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import AudioWaveform from '@/components/AudioWaveform';
 import backIcon from '@/assets/back.png';
@@ -24,6 +25,7 @@ import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightnin
 const Note = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { toast } = useToast();
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [hasBeenPaused, setHasBeenPaused] = useState(false);
@@ -46,7 +48,6 @@ const Note = () => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
-  const isRecognitionActiveRef = useRef(false);
 
   const startRecording = async () => {
     try {
@@ -125,13 +126,11 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          isRecognitionActiveRef.current = false;
-          // Only restart if recording and not paused
+          // Only restart if recording and not paused (with a small delay to check state)
           setTimeout(() => {
-            if (recognitionRef.current && !isPaused && isRecording && !isRecognitionActiveRef.current) {
+            if (recognitionRef.current && !isPaused && isRecording) {
               try {
                 recognition.start();
-                isRecognitionActiveRef.current = true;
               } catch (e) {
                 console.log('Recognition restart failed:', e);
               }
@@ -142,7 +141,6 @@ const Note = () => {
         try {
           recognition.start();
           recognitionRef.current = recognition;
-          isRecognitionActiveRef.current = true;
           setIsTranscribing(true);
         } catch (e) {
           console.error('Failed to start recognition:', e);
@@ -196,7 +194,6 @@ const Note = () => {
         setTranscribedText(prev => prev + (interimText ? ' ' + interimText : ''));
         setInterimText('');
         recognitionRef.current.stop();
-        isRecognitionActiveRef.current = false;
       }
       
       // Then pause recording and update states
@@ -218,10 +215,9 @@ const Note = () => {
       setIsPaused(false);
       
       // Restart speech recognition
-      if (recognitionRef.current && !isRecognitionActiveRef.current) {
+      if (recognitionRef.current) {
         try {
           recognitionRef.current.start();
-          isRecognitionActiveRef.current = true;
           setIsTranscribing(true);
         } catch (e) {
           console.log('Failed to resume recognition:', e);
@@ -241,7 +237,6 @@ const Note = () => {
     }
     if (recognitionRef.current) {
       recognitionRef.current.stop();
-      isRecognitionActiveRef.current = false;
       setIsTranscribing(false);
     }
     if (streamRef.current) {
@@ -295,7 +290,11 @@ const Note = () => {
 
   const rewriteText = async () => {
     if (!transcribedText || transcribedText.trim().length === 0) {
-      console.log('No text to rewrite');
+      toast({
+        title: "No text to rewrite",
+        description: "Please record some text first",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -309,10 +308,18 @@ const Note = () => {
 
       if (data.rewrittenText) {
         setTranscribedText(data.rewrittenText);
-        console.log('Text rewritten successfully');
+        toast({
+          title: "Text rewritten",
+          description: "Your text has been improved and corrected",
+        });
       }
     } catch (error) {
       console.error('Rewrite error:', error);
+      toast({
+        title: "Rewrite failed",
+        description: error instanceof Error ? error.message : "Failed to rewrite text",
+        variant: "destructive",
+      });
     } finally {
       setIsRewriting(false);
     }
@@ -445,20 +452,13 @@ const Note = () => {
         </div>
 
         {/* Text Content - ONLY this scrolls */}
-        <div className="flex-1 overflow-y-auto px-8 pb-[30px] min-h-0 -mt-[15px]" style={{ marginBottom: '120px' }}>
-          <textarea
-            ref={textContentRef as any}
-            value={transcribedText}
-            onChange={(e) => setTranscribedText(e.target.value)}
-            placeholder="Start speaking to transcribe..."
-            className="w-full h-full min-h-[200px] resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] placeholder:text-[hsl(0,0%,60%)]"
-            style={{ caretColor: 'hsl(0,0%,0%)' }}
-          />
-          {interimText && isRecording && (
-            <span className="text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,40%)] pointer-events-none">
-              {interimText}
-            </span>
-          )}
+        <div 
+          ref={textContentRef}
+          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px]"
+          style={{ marginBottom: '120px' }}
+        >
+          {transcribedText || (isRecording ? '' : 'Start speaking to transcribe...')}
+          {interimText && <span className="opacity-60">{interimText}</span>}
         </div>
       </main>
 
