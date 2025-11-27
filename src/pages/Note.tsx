@@ -336,11 +336,6 @@ const Note = () => {
 
   const rewriteText = async () => {
     if (!transcribedText || transcribedText.trim().length === 0) {
-      toast({
-        title: "No text to rewrite",
-        description: "Please record some text first",
-        variant: "destructive",
-      });
       return;
     }
 
@@ -354,18 +349,9 @@ const Note = () => {
 
       if (data.rewrittenText) {
         setTranscribedText(data.rewrittenText);
-        toast({
-          title: "Text rewritten",
-          description: "Your text has been improved and corrected",
-        });
       }
     } catch (error) {
       console.error('Rewrite error:', error);
-      toast({
-        title: "Rewrite failed",
-        description: error instanceof Error ? error.message : "Failed to rewrite text",
-        variant: "destructive",
-      });
     } finally {
       setIsRewriting(false);
     }
