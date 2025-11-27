@@ -17,6 +17,7 @@ const Note = () => {
   const [audioLevel, setAudioLevel] = useState(0);
   const [recordingTime, setRecordingTime] = useState(0);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [weather, setWeather] = useState<{ temp: number; icon: string } | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -248,6 +249,50 @@ const Note = () => {
   }, []);
 
   useEffect(() => {
+    // Fetch weather data
+    const fetchWeather = async () => {
+      try {
+        // Get user's location
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            
+            // Fetch weather from Open-Meteo (free, no API key)
+            const response = await fetch(
+              `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&temperature_unit=celsius`
+            );
+            const data = await response.json();
+            
+            // Map weather codes to simple icons
+            const weatherCode = data.current.weather_code;
+            let icon = '☀️'; // default sunny
+            
+            if (weatherCode >= 61 && weatherCode <= 67) icon = '🌧️'; // rain
+            else if (weatherCode >= 71 && weatherCode <= 77) icon = '❄️'; // snow
+            else if (weatherCode >= 80 && weatherCode <= 82) icon = '🌧️'; // showers
+            else if (weatherCode >= 51 && weatherCode <= 57) icon = '🌦️'; // drizzle
+            else if (weatherCode >= 2 && weatherCode <= 3) icon = '⛅'; // partly cloudy
+            else if (weatherCode === 45 || weatherCode === 48) icon = '🌫️'; // fog
+            else if (weatherCode >= 95) icon = '⛈️'; // thunderstorm
+            
+            setWeather({
+              temp: Math.round(data.current.temperature_2m),
+              icon
+            });
+          },
+          (error) => {
+            console.error('Geolocation error:', error);
+          }
+        );
+      } catch (error) {
+        console.error('Weather fetch error:', error);
+      }
+    };
+    
+    fetchWeather();
+  }, []);
+
+  useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isRecording && !isPaused) {
       interval = setInterval(() => {
@@ -291,6 +336,12 @@ const Note = () => {
       <main className="flex-1 bg-journal-content rounded-t-[30px] -mt-0 px-8 pt-8 pb-32">
         <div className="flex items-start gap-4 mb-6">
           <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(0,0%,0%)]">{dayNumber}</div>
+          {weather && (
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-[32px]">{weather.icon}</span>
+              <span className="text-[20px] font-outfit font-light text-[hsl(0,0%,0%)]">{weather.temp}°C</span>
+            </div>
+          )}
           <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(0,0%,0%)] mt-[2px]">{dayName}</div>
         </div>
 
