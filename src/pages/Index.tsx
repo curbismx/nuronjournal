@@ -6,7 +6,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-journal-content flex flex-col">
       {/* Header */}
-      <header className="bg-journal-header px-4 py-6 flex items-center justify-between">
+      <header className="bg-journal-header px-4 py-6 flex items-center justify-between h-[100px]">
         <Button 
           variant="ghost" 
           className="text-journal-header-foreground hover:bg-journal-header-foreground/10 p-2 h-auto w-auto"
@@ -18,7 +18,7 @@ const Index = () => {
       </header>
 
       {/* Month Selector */}
-      <div className="bg-journal-header px-4 pb-8">
+      <div className="bg-journal-header px-4 pb-8 h-[100px] flex items-center">
         <Button 
           variant="ghost" 
           className="text-journal-header-foreground hover:bg-journal-header-foreground/10 text-2xl font-light tracking-wider p-0 h-auto"
