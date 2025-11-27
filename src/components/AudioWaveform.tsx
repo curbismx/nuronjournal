@@ -28,9 +28,11 @@ const AudioWaveform = ({ isRecording, audioLevel, recordingTime }: AudioWaveform
     const gap = 4;
     const maxHeight = canvas.height;
 
-    // Add a new bar every second
+    // Add a new bar every second with some variation
     if (isRecording && recordingTime > lastRecordingTimeRef.current) {
-      barsRef.current.push(audioLevel);
+      // Add random variation to make it more like a waveform
+      const variation = Math.random() * 0.4 - 0.2;
+      barsRef.current.push(audioLevel + variation);
       lastRecordingTimeRef.current = recordingTime;
     }
 
@@ -46,8 +48,8 @@ const AudioWaveform = ({ isRecording, audioLevel, recordingTime }: AudioWaveform
       // Draw each captured bar
       barsRef.current.forEach((level, i) => {
         const x = i * (barWidth + gap);
-        const barHeight = Math.max(0.3, Math.min(1, level + 0.2));
-        const h = barHeight * maxHeight * 0.8;
+        const barHeight = Math.max(0.2, Math.min(1, level + 0.3));
+        const h = barHeight * maxHeight;
         const y = (maxHeight - h) / 2;
 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
