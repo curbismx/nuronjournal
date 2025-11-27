@@ -419,7 +419,7 @@ const Note = () => {
                 </div>
               </div>
 
-              <div className="flex-1 h-[40px] ml-6 min-w-0">
+              <div className="flex-1 h-[60px] ml-6 min-w-0">
                 <AudioWaveform isRecording={isRecording && !isPaused} audioLevel={audioLevel} recordingTime={recordingTime} />
               </div>
 
