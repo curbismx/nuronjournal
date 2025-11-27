@@ -1,6 +1,7 @@
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import settingsIcon from "@/assets/settings.png";
+import expandIcon from "@/assets/expand.png";
 
 const Index = () => {
   return (
@@ -18,13 +19,14 @@ const Index = () => {
       </header>
 
       {/* Month Selector */}
-      <div className="bg-journal-header pl-[30px] pr-4 pb-[30px] h-[100px] flex items-end">
+      <div className="bg-journal-header pl-[30px] pr-[30px] pb-[30px] h-[100px] flex items-end justify-between">
         <Button 
           variant="ghost" 
           className="text-journal-header-foreground hover:bg-journal-header-foreground/10 text-[36px] font-outfit font-light tracking-wider p-0 h-auto"
         >
           NOVEMBER 2025
         </Button>
+        <img src={expandIcon} alt="Expand" className="w-[30px] h-[30px]" />
       </div>
 
       {/* Content Card */}
