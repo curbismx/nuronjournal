@@ -486,7 +486,7 @@ const Note = () => {
   return (
     <>
       {/* LAYER 1: Dark Header - Completely Fixed */}
-      <header className="fixed top-0 left-0 right-0 z-30 bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] h-[120px]">
+      <header className="fixed top-0 left-0 right-0 z-30 bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] h-[150px]">
         <div className="flex items-center justify-between mb-auto">
           <Button
             variant="ghost"
@@ -498,13 +498,13 @@ const Note = () => {
           <div className="flex-1" />
         </div>
         
-        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px] mt-4">
+        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px] mt-[46px]">
           {monthYear}
         </h1>
       </header>
 
       {/* LAYER 2: Card Header (date, title) - Fixed below dark header */}
-      <div className="fixed top-[120px] left-0 right-0 z-20 bg-journal-content rounded-t-[30px] px-8 pt-3.5 pb-4">
+      <div className="fixed top-[150px] left-0 right-0 z-20 bg-journal-content rounded-t-[30px] px-8 pt-3.5 pb-4">
         <div className="flex items-start gap-4 mb-4">
           <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">{dayNumber}</div>
           <div className="flex flex-col">
@@ -529,7 +529,7 @@ const Note = () => {
       </div>
 
       {/* LAYER 3: Scrollable Text Area - Fixed position with internal scroll */}
-      <div className="fixed top-[265px] bottom-[160px] left-0 right-0 z-10 bg-journal-content overflow-hidden">
+      <div className="fixed top-[295px] bottom-[160px] left-0 right-0 z-10 bg-journal-content overflow-hidden">
         <div 
           className="h-full overflow-y-auto px-8 pb-8"
           style={{ WebkitOverflowScrolling: 'touch' }}
