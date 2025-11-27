@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import AudioWaveform from '@/components/AudioWaveform';
 import backIcon from '@/assets/back.png';
@@ -18,7 +17,6 @@ import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightnin
 const Note = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { toast } = useToast();
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [hasBeenPaused, setHasBeenPaused] = useState(false);
