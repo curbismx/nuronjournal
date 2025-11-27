@@ -400,38 +400,38 @@ const Note = () => {
                 </div>
               </>
             ) : (
-              <div className="flex items-center gap-[30px]">
-                <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center justify-center gap-[30px] w-full">
+                <div className="flex flex-col items-center">
                   <Button
                     variant="ghost"
                     onClick={resumeRecording}
-                    className="hover:bg-white/10 p-0 h-auto w-auto"
+                    className="hover:bg-white/10 p-0 h-[40px] w-[40px]"
                   >
                     <img src={recordMoreIcon} alt="Record More" className="w-[40px] h-[40px]" />
                   </Button>
-                  <span className="text-white font-outfit text-[12px] font-light">REC</span>
+                  <span className="text-white font-outfit text-[12px] font-light mt-1">REC</span>
                 </div>
                 
-                <div className="flex flex-col items-center gap-1">
+                <div className="flex flex-col items-center">
                   <Button
                     variant="ghost"
                     onClick={stopRecording}
-                    className="hover:bg-white/10 p-0 h-auto w-auto"
+                    className="hover:bg-white/10 p-0 h-[40px] w-[40px]"
                   >
                     <img src={stopIcon} alt="Stop" className="w-[40px] h-[40px]" />
                   </Button>
-                  <span className="text-white font-outfit text-[12px] font-light">STOP</span>
+                  <span className="text-white font-outfit text-[12px] font-light mt-1">STOP</span>
                 </div>
                 
-                <div className="flex flex-col items-center gap-1">
+                <div className="flex flex-col items-center">
                   <Button
                     variant="ghost"
                     onClick={resumeRecording}
-                    className="hover:bg-white/10 p-0 h-auto w-auto"
+                    className="hover:bg-white/10 p-0 h-[40px] w-[40px]"
                   >
                     <img src={playIcon} alt="Play" className="w-[40px] h-[40px]" />
                   </Button>
-                  <span className="text-white font-outfit text-[12px] font-light">PLAY</span>
+                  <span className="text-white font-outfit text-[12px] font-light mt-1">PLAY</span>
                 </div>
               </div>
             )}
