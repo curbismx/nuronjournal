@@ -10,6 +10,7 @@ const AudioWaveform = ({ isRecording, audioLevel, recordingTime }: AudioWaveform
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const barsRef = useRef<number[]>([]);
+  const lastRecordingTimeRef = useRef<number>(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -18,41 +19,40 @@ const AudioWaveform = ({ isRecording, audioLevel, recordingTime }: AudioWaveform
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const numBars = 40;
     const barWidth = 3;
     const gap = 8;
     const maxHeight = canvas.height;
 
-    const animate = () => {
+    // Add a new bar every second
+    if (isRecording && recordingTime > lastRecordingTimeRef.current) {
+      barsRef.current.push(audioLevel);
+      lastRecordingTimeRef.current = recordingTime;
+    }
+
+    // Reset when recording stops
+    if (!isRecording && barsRef.current.length > 0) {
+      barsRef.current = [];
+      lastRecordingTimeRef.current = 0;
+    }
+
+    const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw all bars with animated heights
-      for (let i = 0; i < numBars; i++) {
+      // Draw each captured bar
+      barsRef.current.forEach((level, i) => {
         const x = i * (barWidth + gap);
-        
-        // Create animated height for each bar
-        const randomVariation = Math.sin(Date.now() * 0.003 + i * 0.5) * 0.3;
-        const barHeight = isRecording ? Math.max(0.3, Math.min(1, audioLevel + randomVariation + 0.2)) : 0.3;
-        
+        const barHeight = Math.max(0.3, Math.min(1, level + 0.2));
         const h = barHeight * maxHeight * 0.8;
         const y = (maxHeight - h) / 2;
 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        
-        // Draw rounded rectangle
         ctx.beginPath();
         ctx.roundRect(x, y, barWidth, h, 1.5);
         ctx.fill();
-      }
-
-      animationRef.current = requestAnimationFrame(animate);
+      });
     };
 
-    if (isRecording) {
-      animate();
-    } else {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
+    draw();
 
     return () => {
       if (animationRef.current) {
