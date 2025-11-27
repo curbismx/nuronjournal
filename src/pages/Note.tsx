@@ -479,7 +479,7 @@ const Note = () => {
         </div>
       ) : (
         /* STATE 2: 4 medium buttons when stopped */
-        <div className="fixed bottom-[30px] left-[30px] right-[30px] flex justify-between items-center">
+        <div className="fixed bottom-[30px] left-[30px] right-[30px] flex justify-between items-center gap-[10px]">
           <button className="flex flex-col items-center gap-2">
             <img src={imageButton2} alt="Image" className="h-auto" />
           </button>
