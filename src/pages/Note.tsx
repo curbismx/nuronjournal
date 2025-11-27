@@ -15,6 +15,7 @@ const Note = () => {
   const [transcribedText, setTranscribedText] = useState('');
   const [noteTitle, setNoteTitle] = useState('Note Title');
   const [audioLevel, setAudioLevel] = useState(0);
+  const [recordingTime, setRecordingTime] = useState(0);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -89,6 +90,7 @@ const Note = () => {
       setIsRecording(false);
       setIsPaused(false);
       setAudioLevel(0);
+      setRecordingTime(0);
     }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -149,6 +151,16 @@ const Note = () => {
     };
   }, []);
 
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRecording && !isPaused) {
+      interval = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isRecording, isPaused]);
+
   const handleBack = () => {
     stopRecording();
     navigate('/');
@@ -205,7 +217,11 @@ const Note = () => {
           </Button>
           
           <div className="flex-1 h-[60px]">
-            <AudioWaveform isRecording={isRecording && !isPaused} audioLevel={audioLevel} />
+            <AudioWaveform isRecording={isRecording && !isPaused} audioLevel={audioLevel} recordingTime={recordingTime} />
+          </div>
+
+          <div className="text-white font-outfit text-[16px] font-light flex-shrink-0">
+            {Math.floor(recordingTime / 60).toString().padStart(2, '0')}:{(recordingTime % 60).toString().padStart(2, '0')}
           </div>
         </div>
       </div>
