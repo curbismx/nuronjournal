@@ -335,13 +335,15 @@ const Note = () => {
       {/* Content */}
       <main className="flex-1 bg-journal-content rounded-t-[30px] -mt-0 px-8 pt-8 pb-32">
         <div className="flex items-start gap-4 mb-6">
-          <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(0,0%,0%)]">{dayNumber}</div>
-          {weather && (
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-[32px]">{weather.icon}</span>
-              <span className="text-[20px] font-outfit font-light text-[hsl(0,0%,0%)]">{weather.temp}°C</span>
-            </div>
-          )}
+          <div className="flex flex-col items-start">
+            <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(0,0%,0%)]">{dayNumber}</div>
+            {weather && (
+              <div className="flex items-center gap-1.5 -mt-1">
+                <span className="text-[24px] grayscale">{weather.icon}</span>
+                <span className="text-[16px] font-outfit font-light text-[hsl(0,0%,0%)]">{weather.temp}°C</span>
+              </div>
+            )}
+          </div>
           <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(0,0%,0%)] mt-[2px]">{dayName}</div>
         </div>
 
