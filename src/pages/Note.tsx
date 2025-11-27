@@ -394,7 +394,7 @@ const Note = () => {
                 </div>
               </>
             ) : (
-              <div className="flex items-center gap-[10px]">
+              <div className="flex items-center gap-[30px]">
                 <Button
                   variant="ghost"
                   onClick={resumeRecording}
