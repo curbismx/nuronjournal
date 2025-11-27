@@ -424,28 +424,83 @@ const Note = () => {
         </div>
       </main>
 
-      {/* Recording Control - Always 4 buttons at bottom */}
-      <div className="fixed bottom-[30px] left-0 right-0 flex justify-between items-center px-[30px]">
-        <button className="flex flex-col items-center gap-2">
-          <img src={imageButton2} alt="Image" className="h-auto" />
-        </button>
-        <button className="flex flex-col items-center gap-2">
-          <img src={rewriteButton2} alt="Rewrite" className="h-auto" />
-        </button>
-        <button className="flex flex-col items-center gap-2">
-          <img src={shareButton2} alt="Share" className="h-auto" />
-        </button>
-        <button 
-          onClick={!isRecording ? startRecording : (isPaused ? resumeRecording : pauseRecording)} 
-          className="flex flex-col items-center gap-2"
-        >
-          <img 
-            src={isRecording && !isPaused ? pauseButton2 : recordMedium} 
-            alt={isRecording && !isPaused ? "Pause" : "Record"} 
-            className="h-auto" 
-          />
-        </button>
-      </div>
+      {/* Recording Control - Two States */}
+      {isRecording ? (
+        /* STATE 1: Big red box with recording controls */
+        <div className="fixed bottom-[30px] left-1/2 -translate-x-1/2 w-[calc(100%-60px)] max-w-[600px]">
+          <div className="bg-[hsl(4,73%,62%)] rounded-[20px] p-6 h-[108px]">
+            <div className="flex items-center gap-4 h-full relative">
+              <div className="flex items-center gap-[30px]">
+                <div className="relative">
+                  <Button
+                    variant="ghost"
+                    onClick={isPaused ? resumeRecording : pauseRecording}
+                    className="hover:bg-white/10 p-0 h-auto w-auto"
+                  >
+                    <img src={isPaused ? recordMoreIcon : pauseIcon} alt={isPaused ? "Record More" : "Pause"} className="w-[40px] h-[40px]" />
+                  </Button>
+                  <span className="absolute top-[45px] left-1/2 -translate-x-1/2 text-white font-outfit text-[12px] font-light whitespace-nowrap">
+                    {isPaused ? "REC" : "PAUSE"}
+                  </span>
+                </div>
+                
+                <div className="relative">
+                  <Button
+                    variant="ghost"
+                    onClick={stopRecording}
+                    className="hover:bg-white/10 p-0 h-auto w-auto"
+                  >
+                    <img src={stopIcon} alt="Stop" className="w-[40px] h-[40px]" />
+                  </Button>
+                  <span className="absolute top-[45px] left-1/2 -translate-x-1/2 text-white font-outfit text-[12px] font-light whitespace-nowrap">STOP</span>
+                </div>
+                
+                <div className="relative">
+                  <Button
+                    variant="ghost"
+                    onClick={togglePlayback}
+                    className="hover:bg-white/10 p-0 h-auto w-auto"
+                  >
+                    <img src={isPlaying ? pauseIcon : playIcon} alt={isPlaying ? "Pause" : "Play"} className="w-[40px] h-[40px]" />
+                  </Button>
+                  <span className="absolute top-[45px] left-1/2 -translate-x-1/2 text-white font-outfit text-[12px] font-light whitespace-nowrap">{isPlaying ? "PAUSE" : "PLAY"}</span>
+                </div>
+              </div>
+
+              <div className="flex-1 h-[60px] ml-6 min-w-0">
+                <AudioWaveform isRecording={isRecording && !isPaused} audioLevel={audioLevel} recordingTime={recordingTime} />
+              </div>
+
+              <div className="text-white font-outfit text-[16px] font-light flex-shrink-0 ml-4">
+                {Math.floor(recordingTime / 60).toString().padStart(2, '0')}:{(recordingTime % 60).toString().padStart(2, '0')}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* STATE 2: 4 medium buttons when stopped */
+        <div className="fixed bottom-[30px] left-[30px] right-[30px] flex justify-between items-center">
+          <button className="flex flex-col items-center gap-2">
+            <img src={imageButton2} alt="Image" className="h-auto" />
+          </button>
+          <button className="flex flex-col items-center gap-2">
+            <img src={rewriteButton2} alt="Rewrite" className="h-auto" />
+          </button>
+          <button className="flex flex-col items-center gap-2">
+            <img src={shareButton2} alt="Share" className="h-auto" />
+          </button>
+          <button 
+            onClick={startRecording} 
+            className="flex flex-col items-center gap-2"
+          >
+            <img 
+              src={recordMedium} 
+              alt="Record" 
+              className="h-auto" 
+            />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
