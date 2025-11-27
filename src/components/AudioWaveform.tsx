@@ -19,9 +19,10 @@ const AudioWaveform = ({ isRecording, audioLevel, recordingTime }: AudioWaveform
     if (!ctx) return;
 
     const numBars = 40;
-    const barWidth = 8;
+    const barWidth = 3;
     const gap = 8;
     const maxHeight = canvas.height;
+    const borderRadius = 1.5; // Half of barWidth for rounded caps
 
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -41,7 +42,11 @@ const AudioWaveform = ({ isRecording, audioLevel, recordingTime }: AudioWaveform
         const y = (maxHeight - h) / 2;
 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.fillRect(x, y, barWidth, h);
+        
+        // Draw rounded rectangle
+        ctx.beginPath();
+        ctx.roundRect(x, y, barWidth, h, borderRadius);
+        ctx.fill();
       }
 
       animationRef.current = requestAnimationFrame(animate);
