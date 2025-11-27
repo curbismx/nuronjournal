@@ -32,7 +32,7 @@ const Note = () => {
   const [isRewriting, setIsRewriting] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const textContentRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -468,8 +468,8 @@ const Note = () => {
 
   // Auto-scroll to bottom when text updates
   useEffect(() => {
-    if (textContentRef.current) {
-      textContentRef.current.scrollTop = textContentRef.current.scrollHeight;
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
     }
   }, [transcribedText, interimText]);
 
@@ -531,11 +531,11 @@ const Note = () => {
       {/* LAYER 3: Scrollable Text Area - Fixed position with internal scroll */}
       <div className="fixed top-[295px] bottom-[160px] left-0 right-0 z-10 bg-journal-content overflow-hidden">
         <div 
+          ref={scrollContainerRef}
           className="h-full overflow-y-auto px-8 pb-8"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           <textarea
-            ref={textContentRef as any}
             value={transcribedText}
             onChange={(e) => {
               setTranscribedText(e.target.value);
