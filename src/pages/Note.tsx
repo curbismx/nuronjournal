@@ -166,22 +166,20 @@ const Note = () => {
 
   const pauseRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      // Set paused state first to prevent recognition restart
+      // Immediately stop recognition and capture any interim text
+      if (recognitionRef.current) {
+        // Force any interim text to become final
+        setTranscribedText(prev => prev + (interimText ? ' ' + interimText : ''));
+        setInterimText('');
+        recognitionRef.current.stop();
+      }
+      
+      // Then pause recording and update states
+      mediaRecorderRef.current.pause();
       setIsPaused(true);
       setHasBeenPaused(true);
       setAudioLevel(0);
       setIsTranscribing(false);
-      
-      mediaRecorderRef.current.pause();
-      
-      // Stop recognition after a small delay to capture final results
-      if (recognitionRef.current) {
-        setTimeout(() => {
-          if (recognitionRef.current) {
-            recognitionRef.current.stop();
-          }
-        }, 100);
-      }
     }
   };
 
@@ -249,12 +247,6 @@ const Note = () => {
   };
 
   useEffect(() => {
-    // Auto-start recording if coming from start page
-    const shouldAutoStart = searchParams.get('autostart') === 'true';
-    if (shouldAutoStart && !isRecording) {
-      startRecording();
-    }
-    
     return () => {
       // Cleanup when component unmounts
       if (isRecording) {
