@@ -50,11 +50,13 @@ const Note = () => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
+  const isActivelyRecordingRef = useRef(false);
 
   const startRecording = async () => {
     try {
       // Set recording state immediately
       setIsRecording(true);
+      isActivelyRecordingRef.current = true;
       
       // Clear placeholder text immediately
       if (textContentRef.current) {
@@ -178,9 +180,9 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          // Restart recognition if we're still recording (not paused, not stopped)
+          // Restart recognition if we're still in recording mode
           setTimeout(() => {
-            if (mediaRecorderRef.current?.state === 'recording' && !isPaused) {
+            if (isActivelyRecordingRef.current && !isPaused) {
               try {
                 recognition.start();
               } catch (e) {
@@ -240,6 +242,9 @@ const Note = () => {
 
   const pauseRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      // Stop active recording flag
+      isActivelyRecordingRef.current = false;
+      
       // Immediately stop recognition and capture any interim text
       if (recognitionRef.current) {
         // Force any interim text to become final
@@ -259,6 +264,9 @@ const Note = () => {
 
   const resumeRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
+      // Re-enable active recording
+      isActivelyRecordingRef.current = true;
+      
       // Add line break before resuming
       setTranscribedText((prev) => {
         const newText = prev.trim() ? prev.trim() + '\n\n' : prev;
@@ -285,6 +293,9 @@ const Note = () => {
   };
 
   const stopRecording = () => {
+    // Stop active recording flag
+    isActivelyRecordingRef.current = false;
+    
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
