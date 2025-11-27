@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import AudioWaveform from '@/components/AudioWaveform';
 import backIcon from '@/assets/back.png';
@@ -25,7 +24,6 @@ import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightnin
 const Note = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { toast } = useToast();
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [hasBeenPaused, setHasBeenPaused] = useState(false);
@@ -290,11 +288,7 @@ const Note = () => {
 
   const rewriteText = async () => {
     if (!transcribedText || transcribedText.trim().length === 0) {
-      toast({
-        title: "No text to rewrite",
-        description: "Please record some text first",
-        variant: "destructive",
-      });
+      console.log('No text to rewrite');
       return;
     }
 
@@ -308,18 +302,10 @@ const Note = () => {
 
       if (data.rewrittenText) {
         setTranscribedText(data.rewrittenText);
-        toast({
-          title: "Text rewritten",
-          description: "Your text has been improved and corrected",
-        });
+        console.log('Text rewritten successfully');
       }
     } catch (error) {
       console.error('Rewrite error:', error);
-      toast({
-        title: "Rewrite failed",
-        description: error instanceof Error ? error.message : "Failed to rewrite text",
-        variant: "destructive",
-      });
     } finally {
       setIsRewriting(false);
     }
