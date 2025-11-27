@@ -49,15 +49,10 @@ const Note = () => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
-  const isRecordingRef = useRef(false);
-  const isPausedRef = useRef(false);
 
   const startRecording = async () => {
     try {
-      // Set recording state immediately
       setIsRecording(true);
-      isRecordingRef.current = true;
-      isPausedRef.current = false;
       
       // Request microphone
       const micStream = await navigator.mediaDevices.getUserMedia({ 
@@ -131,13 +126,17 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          // Only restart if still recording and not paused (use refs to avoid closure issues)
-          if (isRecordingRef.current && !isPausedRef.current && recognitionRef.current) {
-            try {
-              recognitionRef.current.start();
-            } catch (e) {
-              console.log('Recognition restart failed:', e);
-            }
+          // Don't restart if we're paused or stopped
+          if (isRecording && !isPaused) {
+            setTimeout(() => {
+              if (recognitionRef.current) {
+                try {
+                  recognitionRef.current.start();
+                } catch (e) {
+                  console.log('Recognition restart failed:', e);
+                }
+              }
+            }, 100);
           }
         };
 
@@ -191,48 +190,32 @@ const Note = () => {
 
   const pauseRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      // Update states FIRST to prevent recognition restart
       setIsPaused(true);
-      isPausedRef.current = true;
       setHasBeenPaused(true);
-      setIsTranscribing(false);
       
-      // Then stop recognition and capture any interim text
       if (recognitionRef.current) {
-        setTranscribedText(prev => prev + (interimText ? ' ' + interimText : ''));
-        setInterimText('');
-        try {
-          recognitionRef.current.stop();
-          recognitionRef.current = null;
-        } catch (e) {
-          console.log('Recognition stop error:', e);
-        }
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
       }
       
-      // Finally pause recording
       mediaRecorderRef.current.pause();
       setAudioLevel(0);
+      setIsTranscribing(false);
     }
   };
 
   const resumeRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
-      // Add line break before resuming
       setTranscribedText((prev) => prev.trim() ? prev.trim() + '\n\n' : prev);
-      
-      // Resume media recorder
       mediaRecorderRef.current.resume();
       setIsPaused(false);
-      isPausedRef.current = false;
       
-      // Recreate and restart speech recognition
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = 'en-US';
-        recognition.maxAlternatives = 1;
 
         recognition.onresult = (event: any) => {
           let interim = '';
@@ -260,12 +243,16 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          if (isRecordingRef.current && !isPausedRef.current && recognitionRef.current) {
-            try {
-              recognitionRef.current.start();
-            } catch (e) {
-              console.log('Recognition restart failed:', e);
-            }
+          if (isRecording && !isPaused) {
+            setTimeout(() => {
+              if (recognitionRef.current) {
+                try {
+                  recognitionRef.current.start();
+                } catch (e) {
+                  console.log('Recognition restart failed:', e);
+                }
+              }
+            }, 100);
           }
         };
 
@@ -281,11 +268,8 @@ const Note = () => {
   };
 
   const stopRecording = () => {
-    // Set states first to prevent restarts
     setIsRecording(false);
-    isRecordingRef.current = false;
     setIsPaused(false);
-    isPausedRef.current = false;
     setHasBeenPaused(false);
     setIsTranscribing(false);
     setAudioLevel(0);
@@ -309,7 +293,6 @@ const Note = () => {
       audioContextRef.current.close();
     }
     
-    // Generate title from the full transcribed text after stopping
     if (transcribedText && transcribedText.trim().length > 10) {
       generateTitle(transcribedText);
     }
@@ -565,28 +548,22 @@ const Note = () => {
         </div>
 
         {/* Text Content - ONLY this scrolls */}
-        {isRecording ? (
-          <div 
-            ref={textContentRef}
-            className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none"
-            style={{ marginBottom: '120px', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
-          >
-            {transcribedText || <span className="text-[hsl(0,0%,60%)]">Start speaking to transcribe...</span>}
-            {interimText && <span className="opacity-60">{interimText}</span>}
-          </div>
-        ) : (
-          <div 
-            ref={textContentRef}
-            className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none empty:before:content-['Start_speaking_to_transcribe...'] empty:before:text-[hsl(0,0%,60%)]"
-            style={{ marginBottom: '120px', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
-            contentEditable
-            suppressContentEditableWarning
-            onInput={(e) => setTranscribedText(e.currentTarget.textContent || '')}
-            onFocus={() => window.scrollTo(0, 0)}
-          >
-            {transcribedText}
-          </div>
-        )}
+        <div 
+          ref={textContentRef}
+          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none"
+          style={{ marginBottom: '120px', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+          contentEditable={!isRecording}
+          suppressContentEditableWarning
+          onBlur={(e) => {
+            if (!isRecording) {
+              setTranscribedText(e.currentTarget.textContent || '');
+            }
+          }}
+          onFocus={() => window.scrollTo(0, 0)}
+        >
+          {transcribedText || (!isRecording && 'Start speaking to transcribe...')}
+          {interimText && <span className="opacity-60">{interimText}</span>}
+        </div>
       </main>
 
       {/* Recording Control - Two States */}
