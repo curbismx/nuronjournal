@@ -400,17 +400,37 @@ const Note = () => {
   }, []);
 
   useEffect(() => {
+    // Store audioUrl in a ref for cleanup
+    const urlToCleanup = audioUrl;
+    
     return () => {
-      // Clean up blob URL on unmount
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
-      // Cleanup when component unmounts
-      if (isRecording) {
-        stopRecording();
+      // Clean up blob URL when it changes or on unmount
+      if (urlToCleanup) {
+        URL.revokeObjectURL(urlToCleanup);
       }
     };
   }, [audioUrl]);
+
+  // Separate cleanup for recording on unmount only
+  useEffect(() => {
+    return () => {
+      if (isRecordingRef.current) {
+        if (recognitionRef.current) {
+          recognitionRef.current.stop();
+          recognitionRef.current = null;
+        }
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+          mediaRecorderRef.current.stop();
+        }
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+        }
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+        }
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // Fetch weather data
