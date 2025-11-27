@@ -33,6 +33,7 @@ const Note = () => {
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const textContentRef = useRef<HTMLTextAreaElement | null>(null);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -484,9 +485,9 @@ const Note = () => {
   const monthYear = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
 
   return (
-    <>
-      {/* LAYER 1: Dark Header - Only Fixed Element */}
-      <header className="fixed top-0 left-0 right-0 z-30 bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] h-[150px]">
+    <div className="fixed inset-0 flex flex-col bg-journal-header">
+      {/* Fixed dark header */}
+      <header className="flex-shrink-0 bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] h-[120px] z-30">
         <div className="flex items-center justify-between mb-auto">
           <Button
             variant="ghost"
@@ -497,20 +498,22 @@ const Note = () => {
           </Button>
           <div className="flex-1" />
         </div>
-        
-        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px] mt-[46px]">
+        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px] mt-4">
           {monthYear}
         </h1>
       </header>
 
-      {/* LAYER 2: Unified Scrollable Container - Everything scrolls together */}
+      {/* Scrollable content area */}
       <div 
         ref={scrollContainerRef}
-        className="fixed top-[150px] bottom-[160px] left-0 right-0 z-10 bg-journal-content rounded-t-[30px] overflow-y-scroll"
-        style={{ WebkitOverflowScrolling: 'touch' }}
+        className="flex-1 overflow-y-auto bg-journal-content rounded-t-[30px] -mt-1"
+        style={{ 
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '180px'
+        }}
       >
-        <div className="px-8 pt-3.5 pb-[200px]">
-          {/* Date and Weather */}
+        {/* Date and weather */}
+        <div className="px-8 pt-8 pb-2">
           <div className="flex items-start gap-4 mb-4">
             <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">{dayNumber}</div>
             <div className="flex flex-col">
@@ -530,35 +533,33 @@ const Note = () => {
             value={noteTitle}
             onChange={(e) => setNoteTitle(e.target.value || 'Note Title')}
             disabled={isRecording}
-            className="text-[28px] font-outfit font-semibold text-[hsl(0,0%,25%)] outline-none bg-transparent border-none w-full disabled:opacity-100 focus:outline-none focus:ring-0 shadow-none -mt-[10px] mb-4"
+            className="text-[28px] font-outfit font-semibold text-[hsl(0,0%,25%)] outline-none bg-transparent border-none w-full disabled:opacity-100 mb-4 focus:outline-none focus:ring-0"
             placeholder="Note Title"
           />
+        </div>
 
-          {/* Text Content */}
-          <div className="min-h-[600px]">
-            <textarea
-              value={transcribedText}
-              onChange={(e) => {
-                setTranscribedText(e.target.value);
-                transcribedTextRef.current = e.target.value;
-              }}
-              placeholder="Start speaking to transcribe..."
-              className="w-full min-h-[600px] resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)]"
-              readOnly={isRecording}
-            />
-            {interimText && isRecording && (
-              <span className="text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,60%)] italic">
-                {interimText}
-              </span>
-            )}
-          </div>
+        {/* Body text */}
+        <div className="px-8">
+          <textarea
+            ref={textContentRef}
+            value={transcribedText}
+            onChange={(e) => {
+              setTranscribedText(e.target.value);
+              transcribedTextRef.current = e.target.value;
+            }}
+            placeholder="Start speaking to transcribe..."
+            className="w-full min-h-[400px] resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0"
+            readOnly={isRecording}
+          />
+          {interimText && isRecording && (
+            <span className="text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,60%)] italic">
+              {interimText}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* LAYER 3: Bottom fill to cover gap */}
-      <div className="fixed bottom-0 left-0 right-0 h-[160px] z-5 bg-journal-content" />
-
-      {/* LAYER 5: Recording Controls - Fixed at bottom */}
+      {/* Fixed bottom controls */}
       {isRecording ? (
         <div className="fixed bottom-[30px] left-1/2 -translate-x-1/2 w-[calc(100%-60px)] max-w-[600px] z-40">
           <div className="bg-[hsl(4,73%,62%)] rounded-[20px] p-6 h-[108px]">
@@ -637,7 +638,7 @@ const Note = () => {
           </button>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
