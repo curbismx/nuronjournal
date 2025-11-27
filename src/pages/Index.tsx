@@ -49,7 +49,10 @@ const Index = () => {
 
           {/* Plus Button */}
           <div className="flex flex-col items-center">
-            <button className="hover:scale-105 transition-transform">
+            <button 
+              onClick={() => navigate('/note')}
+              className="hover:scale-105 transition-transform"
+            >
               <img src={plusBig} alt="Add Note" className="w-[60px] h-[60px]" />
             </button>
             <img src={createFirst} alt="Create note first instruction" className="w-[420px] mt-4" />
