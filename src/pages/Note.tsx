@@ -448,11 +448,17 @@ const Note = () => {
         <div className="flex-1 overflow-y-auto px-8 pb-[30px] min-h-0 -mt-[15px]" style={{ marginBottom: '120px' }}>
           <textarea
             ref={textContentRef as any}
-            value={transcribedText + (interimText ? interimText : '')}
+            value={transcribedText}
             onChange={(e) => setTranscribedText(e.target.value)}
             placeholder="Start speaking to transcribe..."
             className="w-full h-full min-h-[200px] resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] placeholder:text-[hsl(0,0%,60%)]"
+            style={{ caretColor: 'hsl(0,0%,0%)' }}
           />
+          {interimText && isRecording && (
+            <span className="text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,40%)] pointer-events-none">
+              {interimText}
+            </span>
+          )}
         </div>
       </main>
 
