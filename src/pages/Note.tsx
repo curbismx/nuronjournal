@@ -21,6 +21,7 @@ const Note = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const recognitionRef = useRef<any>(null);
 
   const startRecording = async () => {
     try {
@@ -46,6 +47,42 @@ const Note = () => {
       };
       updateAudioLevel();
 
+      // Set up Web Speech API
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onresult = (event: any) => {
+          let finalTranscript = '';
+
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript + ' ';
+            }
+          }
+
+          if (finalTranscript) {
+            setTranscribedText((prev) => prev + finalTranscript);
+          }
+        };
+
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          if (event.error !== 'no-speech') {
+            toast({ title: 'Transcription error', description: event.error, variant: 'destructive' });
+          }
+        };
+
+        recognition.start();
+        recognitionRef.current = recognition;
+      } else {
+        toast({ title: 'Error', description: 'Speech recognition not supported in this browser', variant: 'destructive' });
+      }
+
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -56,12 +93,7 @@ const Note = () => {
         }
       };
 
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await transcribeAudio(audioBlob);
-      };
-
-      mediaRecorder.start(3000); // Collect data every 3 seconds
+      mediaRecorder.start(3000);
       setIsRecording(true);
     } catch (error) {
       console.error('Error starting recording:', error);
@@ -71,6 +103,9 @@ const Note = () => {
   const pauseRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.pause();
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
       setIsPaused(true);
       setAudioLevel(0);
     }
@@ -79,6 +114,9 @@ const Note = () => {
   const resumeRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
       mediaRecorderRef.current.resume();
+      if (recognitionRef.current) {
+        recognitionRef.current.start();
+      }
       setIsPaused(false);
     }
   };
@@ -90,38 +128,19 @@ const Note = () => {
       setIsPaused(false);
       setAudioLevel(0);
     }
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
     }
     if (audioContextRef.current) {
       audioContextRef.current.close();
     }
-  };
-
-  const transcribeAudio = async (audioBlob: Blob) => {
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
-
-        const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-          body: { audio: base64Audio },
-        });
-
-        if (error) throw error;
-
-        if (data.text) {
-          setTranscribedText(prev => prev + ' ' + data.text);
-          
-          // Generate title if this is the first transcription
-          if (!transcribedText && data.text.length > 20) {
-            generateTitle(data.text);
-          }
-        }
-      };
-    } catch (error) {
-      console.error('Transcription error:', error);
+    
+    // Generate title after stopping
+    if (transcribedText && transcribedText.length > 20) {
+      generateTitle(transcribedText);
     }
   };
 
