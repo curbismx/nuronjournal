@@ -374,7 +374,7 @@ const Note = () => {
         </div>
       ) : (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[calc(100%-64px)] max-w-[600px]">
-          <div className="bg-[hsl(4,73%,62%)] rounded-[20px] p-6 flex items-center gap-4 min-h-[92px]">
+          <div className="bg-[hsl(4,73%,62%)] rounded-[20px] p-6 flex items-center gap-4 h-[108px]">
             {!isPaused ? (
               <>
                 <Button
