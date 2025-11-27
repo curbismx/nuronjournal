@@ -42,8 +42,12 @@ const Note = () => {
   const transcribedTextRef = useRef('');
   const isRecordingRef = useRef(false);
   const isPausedRef = useRef(false);
+  const autoStartHandledRef = useRef(false);
 
   const startRecording = async () => {
+    // Prevent double-starting
+    if (isRecordingRef.current) return;
+    
     try {
       setIsRecording(true);
       isRecordingRef.current = true;
@@ -358,9 +362,13 @@ const Note = () => {
   }, [transcribedText]);
 
   useEffect(() => {
+    // Prevent autostart from running multiple times
+    if (autoStartHandledRef.current) return;
+    
     // Only auto-start if explicitly requested with autostart=true
     const shouldAutoStart = searchParams.get('autostart') === 'true';
     if (shouldAutoStart) {
+      autoStartHandledRef.current = true;
       // Clear the URL parameter without navigating (prevents race condition)
       window.history.replaceState({}, '', '/note');
       // Small delay to ensure component is fully mounted
