@@ -25,57 +25,65 @@ const Note = () => {
 
   const startRecording = async () => {
     try {
-      // Request both streams simultaneously to maintain user gesture context
-      const [micStream, systemStream] = await Promise.all([
-        navigator.mediaDevices.getUserMedia({ audio: true }),
-        navigator.mediaDevices.getDisplayMedia({ 
+      // Request microphone first
+      const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Try to get system audio (optional)
+      let systemAudioTrack: MediaStreamTrack | null = null;
+      try {
+        const systemStream = await navigator.mediaDevices.getDisplayMedia({ 
           audio: true,
           video: {
             width: 1,
             height: 1,
             frameRate: 1
           }
-        })
-      ]);
+        });
+        
+        systemAudioTrack = systemStream.getAudioTracks()[0];
+        
+        // Stop video track immediately as we don't need it
+        systemStream.getVideoTracks().forEach(track => track.stop());
+      } catch (displayError) {
+        console.log('System audio not available, using microphone only:', displayError);
+      }
       
       // Create audio context to merge streams
       audioContextRef.current = new AudioContext({ sampleRate: 24000 });
       const audioContext = audioContextRef.current;
       
-      // Get only audio tracks from system stream
-      const systemAudioTrack = systemStream.getAudioTracks()[0];
-      
-      if (!systemAudioTrack) {
-        throw new Error('No audio track found in system stream. Make sure to share audio when selecting a tab/window.');
-      }
-      
-      // Create sources from both audio streams
-      const micSource = audioContext.createMediaStreamSource(micStream);
-      const systemSource = audioContext.createMediaStreamSource(
-        new MediaStream([systemAudioTrack])
-      );
-      
       // Create destination to merge audio
       const destination = audioContext.createMediaStreamDestination();
       
-      // Connect both sources to destination
+      // Always connect microphone
+      const micSource = audioContext.createMediaStreamSource(micStream);
       micSource.connect(destination);
-      systemSource.connect(destination);
       
       // Set up audio analysis for visualization
       analyserRef.current = audioContext.createAnalyser();
       analyserRef.current.fftSize = 256;
       micSource.connect(analyserRef.current);
-      systemSource.connect(analyserRef.current);
       
-      // Store audio tracks for cleanup
-      streamRef.current = new MediaStream([
-        ...micStream.getTracks(),
-        systemAudioTrack
-      ]);
-
-      // Stop video track immediately as we don't need it
-      systemStream.getVideoTracks().forEach(track => track.stop());
+      // Connect system audio if available
+      if (systemAudioTrack) {
+        const systemSource = audioContext.createMediaStreamSource(
+          new MediaStream([systemAudioTrack])
+        );
+        systemSource.connect(destination);
+        systemSource.connect(analyserRef.current);
+        
+        // Store both tracks
+        streamRef.current = new MediaStream([
+          ...micStream.getTracks(),
+          systemAudioTrack
+        ]);
+        
+        toast({ title: 'Recording started', description: 'Capturing microphone and system audio' });
+      } else {
+        // Store only microphone track
+        streamRef.current = micStream;
+        toast({ title: 'Recording started', description: 'Capturing microphone audio only' });
+      }
 
       // Start visualizing audio levels
       const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
@@ -107,8 +115,6 @@ const Note = () => {
 
       mediaRecorder.start(3000);
       setIsRecording(true);
-      
-      toast({ title: 'Recording started', description: 'Capturing microphone and system audio' });
     } catch (error) {
       console.error('Error starting recording:', error);
       toast({ 
