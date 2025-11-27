@@ -530,7 +530,18 @@ const Note = () => {
             className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2 outline-none"
             contentEditable
             suppressContentEditableWarning
-            onBlur={(e) => setNoteTitle(e.currentTarget.textContent || 'Note Title')}
+            onBlur={(e) => {
+              const text = e.currentTarget.textContent || 'Note Title';
+              setNoteTitle(text);
+              if (!text.trim()) {
+                e.currentTarget.textContent = 'Note Title';
+              }
+            }}
+            onFocus={(e) => {
+              if (e.currentTarget.textContent === 'Note Title') {
+                e.currentTarget.textContent = '';
+              }
+            }}
           >
             {noteTitle}
           </h2>
@@ -543,8 +554,22 @@ const Note = () => {
           style={{ marginBottom: '120px' }}
           contentEditable
           suppressContentEditableWarning
-          onBlur={(e) => setTranscribedText(e.currentTarget.textContent || '')}
-        />
+          onBlur={(e) => {
+            const text = e.currentTarget.textContent || '';
+            setTranscribedText(text);
+            if (!text.trim() && !isRecording) {
+              e.currentTarget.textContent = 'Start speaking to transcribe...';
+            }
+          }}
+          onFocus={(e) => {
+            if (e.currentTarget.textContent === 'Start speaking to transcribe...') {
+              e.currentTarget.textContent = '';
+            }
+          }}
+        >
+          {transcribedText || (isRecording ? '' : 'Start speaking to transcribe...')}
+          {interimText && <span className="opacity-60">{interimText}</span>}
+        </div>
       </main>
 
       {/* Recording Control - Two States */}
