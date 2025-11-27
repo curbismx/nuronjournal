@@ -16,6 +16,7 @@ const Note = () => {
   const { toast } = useToast();
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [hasBeenPaused, setHasBeenPaused] = useState(false);
   const [transcribedText, setTranscribedText] = useState('');
   const [noteTitle, setNoteTitle] = useState('Note Title');
   const [audioLevel, setAudioLevel] = useState(0);
@@ -185,6 +186,7 @@ const Note = () => {
         recognitionRef.current.stop();
       }
       setIsPaused(true);
+      setHasBeenPaused(true);
       setAudioLevel(0);
       setIsTranscribing(false);
     }
@@ -214,6 +216,7 @@ const Note = () => {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       setIsPaused(false);
+      setHasBeenPaused(false);
       setAudioLevel(0);
       setRecordingTime(0);
     }
@@ -375,7 +378,7 @@ const Note = () => {
       ) : (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[calc(100%-64px)] max-w-[600px]">
           <div className="bg-[hsl(4,73%,62%)] rounded-[20px] p-6 flex items-center gap-4 h-[108px]">
-            {!isPaused ? (
+            {!hasBeenPaused ? (
               <>
                 <Button
                   variant="ghost"
