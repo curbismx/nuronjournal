@@ -498,10 +498,13 @@ const Note = () => {
         </h1>
       </header>
 
-      {/* Fixed Content Card Header (Date & Title) */}
+      {/* Fixed Content Card Header (Date & Title) - MUST have solid background */}
       <div 
-        className="fixed top-[150px] left-0 right-0 z-40 bg-journal-content rounded-t-[30px] px-8 pt-8 pb-4"
-        style={{ touchAction: 'none' }}
+        className="fixed top-[150px] left-0 right-0 z-40 rounded-t-[30px] px-8 pt-8 pb-4"
+        style={{ 
+          touchAction: 'none',
+          backgroundColor: 'hsl(var(--journal-content))'
+        }}
       >
         <div className="flex items-start gap-4 mb-6">
           <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(0,0%,0%)]">{dayNumber}</div>
@@ -528,18 +531,21 @@ const Note = () => {
 
       {/* Scrollable Text Content ONLY - Outer wrapper clips overflow */}
       <div 
-        className="fixed left-0 right-0 z-30 overflow-hidden"
+        className="fixed left-0 right-0 z-30"
         style={{ 
           top: 'calc(150px + 180px)', 
-          bottom: '160px'
+          bottom: '160px',
+          overflow: 'hidden'
         }}
       >
         {/* Inner scrollable container */}
         <div 
-          className="h-full overflow-y-auto bg-journal-content px-8"
+          className="h-full px-8"
           style={{ 
+            overflowY: 'auto',
             WebkitOverflowScrolling: 'touch',
-            overscrollBehavior: 'contain'
+            overscrollBehavior: 'contain',
+            backgroundColor: 'hsl(var(--journal-content))'
           }}
         >
           {/* Add padding-top for breathing room */}
