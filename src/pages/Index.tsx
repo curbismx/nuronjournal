@@ -2,6 +2,8 @@ import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import settingsIcon from "@/assets/settings.png";
 import expandIcon from "@/assets/expand.png";
+import recordBig from "@/assets/recordbig.png";
+import plusBig from "@/assets/plusbig.png";
 
 const Index = () => {
   return (
@@ -27,8 +29,28 @@ const Index = () => {
       </div>
 
       {/* Content Card */}
-      <main className="flex-1 bg-journal-content rounded-t-[30px] -mt-0">
-        {/* Empty state - will be populated with journal entries */}
+      <main className="flex-1 bg-journal-content rounded-t-[30px] -mt-0 flex flex-col items-center justify-center px-8">
+        <div className="flex flex-col items-center gap-12">
+          {/* Record Button Section */}
+          <div className="flex flex-col items-center gap-6">
+            <p className="text-muted-foreground text-center text-lg">
+              tap to record your voice<br />note and we'll do the rest!
+            </p>
+            <button className="hover:scale-105 transition-transform">
+              <img src={recordBig} alt="Record" className="w-[200px] h-[200px]" />
+            </button>
+          </div>
+
+          {/* Plus Button Section */}
+          <div className="flex flex-col items-center gap-6">
+            <button className="hover:scale-105 transition-transform">
+              <img src={plusBig} alt="Add Note" className="w-[60px] h-[60px]" />
+            </button>
+            <p className="text-muted-foreground text-center text-lg">
+              or create the note first and record later
+            </p>
+          </div>
+        </div>
       </main>
     </div>
   );
