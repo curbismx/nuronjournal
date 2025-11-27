@@ -1,12 +1,37 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Settings, ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-journal-content flex flex-col">
+      {/* Header */}
+      <header className="bg-journal-header px-4 py-6 flex items-center justify-between">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          className="text-journal-header-foreground hover:bg-journal-header-foreground/10"
+        >
+          <Settings className="h-6 w-6" />
+        </Button>
+        
+        <div className="flex-1" />
+      </header>
+
+      {/* Month Selector */}
+      <div className="bg-journal-header px-4 pb-8">
+        <Button 
+          variant="ghost" 
+          className="text-journal-header-foreground hover:bg-journal-header-foreground/10 text-2xl font-light tracking-wider p-0 h-auto"
+        >
+          NOVEMBER 2025
+          <ChevronDown className="ml-2 h-5 w-5" />
+        </Button>
       </div>
+
+      {/* Content Area */}
+      <main className="flex-1 bg-journal-content">
+        {/* Empty state - will be populated with journal entries */}
+      </main>
     </div>
   );
 };
