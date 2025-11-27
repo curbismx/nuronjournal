@@ -53,11 +53,20 @@ const Note = () => {
 
   const startRecording = async () => {
     try {
+      // Clear placeholder text immediately
+      if (textContentRef.current) {
+        const currentText = textContentRef.current.textContent || '';
+        if (currentText === 'Start speaking to transcribe...') {
+          textContentRef.current.innerHTML = '';
+          setNoteContent('');
+        }
+      }
+      
       // Set recording state immediately
       setIsRecording(true);
       
       // Request microphone
-      const micStream = await navigator.mediaDevices.getUserMedia({ 
+      const micStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: 24000,
           channelCount: 1,
@@ -140,19 +149,24 @@ const Note = () => {
 
         recognition.onerror = (event: any) => {
           console.error('Speech recognition error:', event.error);
+          // Don't restart on error
+          if (event.error === 'aborted' || event.error === 'no-speech') {
+            return;
+          }
         };
 
         recognition.onend = () => {
-          // Only restart if recording and not paused (with a small delay to check state)
-          setTimeout(() => {
-            if (recognitionRef.current && !isPaused && isRecording) {
-              try {
-                recognition.start();
-              } catch (e) {
-                console.log('Recognition restart failed:', e);
-              }
+          // Only restart if still actively recording and not paused
+          // Check the actual mediaRecorder state to be sure
+          if (recognitionRef.current && 
+              mediaRecorderRef.current && 
+              mediaRecorderRef.current.state === 'recording') {
+            try {
+              recognition.start();
+            } catch (e) {
+              console.log('Recognition restart skipped:', e);
             }
-          }, 100);
+          }
         };
 
         try {
@@ -407,12 +421,12 @@ const Note = () => {
     };
   }, []);
 
-  // Set initial placeholder text
+  // Set initial placeholder text only on mount
   useEffect(() => {
-    if (textContentRef.current && !transcribedText && !noteContent && !isRecording) {
+    if (textContentRef.current && !transcribedText && !noteContent) {
       textContentRef.current.innerHTML = 'Start speaking to transcribe...';
     }
-  }, [transcribedText, noteContent, isRecording]);
+  }, []);
 
   // Update content when transcription happens
   useEffect(() => {
