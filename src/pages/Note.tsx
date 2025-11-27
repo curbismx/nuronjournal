@@ -20,7 +20,6 @@ import rewriteButton2 from '@/assets/rewrite-2.png';
 import shareButton2 from '@/assets/share-2.png';
 import recordMedium from '@/assets/record-medium.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
-import { Share } from '@capacitor/share';
 
 const Note = () => {
   const navigate = useNavigate();
@@ -38,9 +37,6 @@ const Note = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isRewriting, setIsRewriting] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [noteContent, setNoteContent] = useState('');
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const textContentRef = useRef<HTMLDivElement | null>(null);
@@ -50,26 +46,14 @@ const Note = () => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
-  const isActivelyRecordingRef = useRef(false);
 
   const startRecording = async () => {
     try {
       // Set recording state immediately
       setIsRecording(true);
-      isActivelyRecordingRef.current = true;
-      
-      // Clear placeholder text immediately
-      if (textContentRef.current) {
-        const currentText = textContentRef.current.textContent?.trim() || '';
-        if (currentText === 'Start speaking to transcribe...') {
-          textContentRef.current.innerHTML = '';
-          setNoteContent('');
-          setTranscribedText('');
-        }
-      }
       
       // Request microphone
-      const micStream = await navigator.mediaDevices.getUserMedia({
+      const micStream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           sampleRate: 24000,
           channelCount: 1,
@@ -123,25 +107,6 @@ const Note = () => {
           if (final) {
             setTranscribedText((prev) => {
               const newText = prev + final;
-              // Update the contentEditable div preserving any images
-              if (textContentRef.current) {
-                // Get current HTML and check if it's the placeholder
-                let currentHtml = textContentRef.current.innerHTML;
-                const currentText = textContentRef.current.textContent?.trim() || '';
-                if (currentText === 'Start speaking to transcribe...') {
-                  currentHtml = '';
-                }
-                // Remove any interim spans before adding final text
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = currentHtml;
-                const interimSpans = tempDiv.querySelectorAll('span.opacity-60');
-                interimSpans.forEach(span => span.remove());
-                currentHtml = tempDiv.innerHTML;
-                // Append the new text
-                const updatedHtml = currentHtml + final;
-                textContentRef.current.innerHTML = updatedHtml;
-                setNoteContent(updatedHtml);
-              }
               // Generate title when we have enough text (first 10+ words)
               if (newText.trim().split(/\s+/).length >= 10 && noteTitle === 'Note Title') {
                 generateTitle(newText);
@@ -151,38 +116,17 @@ const Note = () => {
             setInterimText('');
           } else {
             setInterimText(interim);
-            // Show interim text in the div
-            if (textContentRef.current && interim) {
-              let currentHtml = textContentRef.current.innerHTML;
-              const currentText = textContentRef.current.textContent?.trim() || '';
-              // Remove placeholder if present
-              if (currentText === 'Start speaking to transcribe...') {
-                currentHtml = '';
-              }
-              // Remove any previous interim span
-              const tempDiv = document.createElement('div');
-              tempDiv.innerHTML = currentHtml;
-              const interimSpans = tempDiv.querySelectorAll('span.opacity-60');
-              interimSpans.forEach(span => span.remove());
-              currentHtml = tempDiv.innerHTML;
-              // Add new interim text
-              textContentRef.current.innerHTML = currentHtml + `<span class="opacity-60">${interim}</span>`;
-            }
           }
         };
 
         recognition.onerror = (event: any) => {
           console.error('Speech recognition error:', event.error);
-          // Don't restart on error
-          if (event.error === 'aborted' || event.error === 'no-speech') {
-            return;
-          }
         };
 
         recognition.onend = () => {
-          // Restart recognition if we're still in recording mode
+          // Only restart if recording and not paused (with a small delay to check state)
           setTimeout(() => {
-            if (isActivelyRecordingRef.current && !isPaused) {
+            if (recognitionRef.current && !isPaused && isRecording) {
               try {
                 recognition.start();
               } catch (e) {
@@ -242,9 +186,6 @@ const Note = () => {
 
   const pauseRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      // Stop active recording flag
-      isActivelyRecordingRef.current = false;
-      
       // Immediately stop recognition and capture any interim text
       if (recognitionRef.current) {
         // Force any interim text to become final
@@ -264,17 +205,8 @@ const Note = () => {
 
   const resumeRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
-      // Re-enable active recording
-      isActivelyRecordingRef.current = true;
-      
       // Add line break before resuming
-      setTranscribedText((prev) => {
-        const newText = prev.trim() ? prev.trim() + '\n\n' : prev;
-        if (textContentRef.current) {
-          textContentRef.current.textContent = newText;
-        }
-        return newText;
-      });
+      setTranscribedText((prev) => prev.trim() ? prev.trim() + '\n\n' : prev);
       
       // Resume media recorder
       mediaRecorderRef.current.resume();
@@ -293,9 +225,6 @@ const Note = () => {
   };
 
   const stopRecording = () => {
-    // Stop active recording flag
-    isActivelyRecordingRef.current = false;
-    
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
@@ -382,62 +311,6 @@ const Note = () => {
     }
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsUploadingImage(true);
-    try {
-      // Upload to Supabase Storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `note-images/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('note-images')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('note-images')
-        .getPublicUrl(filePath);
-
-      // Insert image HTML into the content
-      if (textContentRef.current) {
-        const selection = window.getSelection();
-        const range = selection?.rangeCount ? selection.getRangeAt(0) : null;
-        
-        const imageHtml = `<br><img src="${publicUrl}" class="max-w-full h-auto my-4 rounded-lg" alt="Uploaded image"><br>`;
-        
-        if (range && textContentRef.current.contains(range.commonAncestorContainer)) {
-          // Insert at cursor
-          const tempDiv = document.createElement('div');
-          tempDiv.innerHTML = imageHtml;
-          while (tempDiv.firstChild) {
-            range.insertNode(tempDiv.firstChild);
-          }
-        } else {
-          // Insert at end
-          textContentRef.current.innerHTML += imageHtml;
-        }
-        
-        // Save the full HTML content
-        setNoteContent(textContentRef.current.innerHTML);
-        setTranscribedText(textContentRef.current.textContent || '');
-      }
-
-    } catch (error) {
-      console.error('Image upload error:', error);
-    } finally {
-      setIsUploadingImage(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
   useEffect(() => {
     // Auto-start recording ONLY if coming from start page with autostart parameter
     const shouldAutoStart = searchParams.get('autostart') === 'true';
@@ -452,15 +325,6 @@ const Note = () => {
       }
     };
   }, []);
-
-  // Set initial placeholder text only on mount
-  useEffect(() => {
-    if (textContentRef.current && !transcribedText && !noteContent) {
-      textContentRef.current.innerHTML = 'Start speaking to transcribe...';
-    }
-  }, []);
-
-  // Don't automatically update content - let speech recognition handle it directly
 
   useEffect(() => {
     // Fetch weather data
@@ -528,18 +392,6 @@ const Note = () => {
     navigate('/');
   };
 
-  const handleShare = async () => {
-    try {
-      await Share.share({
-        title: noteTitle,
-        text: transcribedText,
-        dialogTitle: 'Share Note',
-      });
-    } catch (error) {
-      console.error('Share error:', error);
-    }
-  };
-
   const today = new Date();
   const dayNumber = today.getDate();
   const dayName = today.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
@@ -582,56 +434,18 @@ const Note = () => {
             </div>
           </div>
 
-          <h2 
-            className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2 outline-none"
-            contentEditable
-            suppressContentEditableWarning
-            onBlur={(e) => {
-              const text = e.currentTarget.textContent || 'Note Title';
-              setNoteTitle(text);
-              if (!text.trim()) {
-                e.currentTarget.textContent = 'Note Title';
-              }
-            }}
-            onFocus={(e) => {
-              if (e.currentTarget.textContent === 'Note Title') {
-                e.currentTarget.textContent = '';
-              }
-            }}
-          >
-            {noteTitle}
-          </h2>
+          <h2 className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2">{noteTitle}</h2>
         </div>
 
         {/* Text Content - ONLY this scrolls */}
         <div 
           ref={textContentRef}
-          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none whitespace-pre-wrap"
+          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px]"
           style={{ marginBottom: '120px' }}
-          contentEditable
-          suppressContentEditableWarning
-          onInput={(e) => {
-            const html = e.currentTarget.innerHTML;
-            const text = e.currentTarget.textContent || '';
-            if (text !== 'Start speaking to transcribe...') {
-              setNoteContent(html);
-              setTranscribedText(text);
-            }
-          }}
-          onFocus={(e) => {
-            if (e.currentTarget.textContent === 'Start speaking to transcribe...') {
-              e.currentTarget.innerHTML = '';
-            }
-          }}
-          onBlur={(e) => {
-            const text = e.currentTarget.textContent || '';
-            if (!text.trim() && !isRecording) {
-              e.currentTarget.innerHTML = 'Start speaking to transcribe...';
-              setNoteContent('');
-              setTranscribedText('');
-            }
-          }}
-        />
+        >
+          {transcribedText || (isRecording ? '' : 'Start speaking to transcribe...')}
+          {interimText && <span className="opacity-60">{interimText}</span>}
+        </div>
       </main>
 
       {/* Recording Control - Two States */}
@@ -690,18 +504,7 @@ const Note = () => {
       ) : (
         /* STATE 2: 4 medium buttons when stopped */
         <div className="fixed bottom-[30px] left-[30px] right-[30px] flex justify-between items-center gap-[10px]">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="hidden"
-          />
-          <button 
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploadingImage}
-            className="flex flex-col items-center gap-2 disabled:opacity-50"
-          >
+          <button className="flex flex-col items-center gap-2">
             <img src={imageButton2} alt="Image" className="h-auto" />
           </button>
           <button 
@@ -711,10 +514,7 @@ const Note = () => {
           >
             <img src={rewriteButton2} alt="Rewrite" className="h-auto" />
           </button>
-          <button 
-            onClick={handleShare}
-            className="flex flex-col items-center gap-2"
-          >
+          <button className="flex flex-col items-center gap-2">
             <img src={shareButton2} alt="Share" className="h-auto" />
           </button>
           <button 
