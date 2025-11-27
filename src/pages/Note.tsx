@@ -6,6 +6,9 @@ import { supabase } from '@/integrations/supabase/client';
 import AudioWaveform from '@/components/AudioWaveform';
 import backIcon from '@/assets/back.png';
 import pauseIcon from '@/assets/pause.png';
+import recordMoreIcon from '@/assets/recordmore.png';
+import stopIcon from '@/assets/stop.png';
+import playIcon from '@/assets/play.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 const Note = () => {
@@ -372,21 +375,51 @@ const Note = () => {
       ) : (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[calc(100%-64px)] max-w-[600px]">
           <div className="bg-[hsl(4,73%,62%)] rounded-[20px] p-6 flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={isPaused ? resumeRecording : pauseRecording}
-              className="hover:bg-white/10 p-0 h-auto w-auto flex-shrink-0"
-            >
-              <img src={pauseIcon} alt="Pause" className="w-[40px] h-[40px]" />
-            </Button>
-            
-            <div className="flex-1 h-[60px]">
-              <AudioWaveform isRecording={isRecording && !isPaused} audioLevel={audioLevel} recordingTime={recordingTime} />
-            </div>
+            {!isPaused ? (
+              <>
+                <Button
+                  variant="ghost"
+                  onClick={pauseRecording}
+                  className="hover:bg-white/10 p-0 h-auto w-auto flex-shrink-0"
+                >
+                  <img src={pauseIcon} alt="Pause" className="w-[40px] h-[40px]" />
+                </Button>
+                
+                <div className="flex-1 h-[60px]">
+                  <AudioWaveform isRecording={isRecording && !isPaused} audioLevel={audioLevel} recordingTime={recordingTime} />
+                </div>
 
-            <div className="text-white font-outfit text-[16px] font-light flex-shrink-0">
-              {Math.floor(recordingTime / 60).toString().padStart(2, '0')}:{(recordingTime % 60).toString().padStart(2, '0')}
-            </div>
+                <div className="text-white font-outfit text-[16px] font-light flex-shrink-0">
+                  {Math.floor(recordingTime / 60).toString().padStart(2, '0')}:{(recordingTime % 60).toString().padStart(2, '0')}
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center gap-[10px] w-full justify-center">
+                <Button
+                  variant="ghost"
+                  onClick={resumeRecording}
+                  className="hover:bg-white/10 p-0 h-auto w-auto"
+                >
+                  <img src={recordMoreIcon} alt="Record More" className="w-[40px] h-[40px]" />
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  onClick={stopRecording}
+                  className="hover:bg-white/10 p-0 h-auto w-auto"
+                >
+                  <img src={stopIcon} alt="Stop" className="w-[40px] h-[40px]" />
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  onClick={resumeRecording}
+                  className="hover:bg-white/10 p-0 h-auto w-auto"
+                >
+                  <img src={playIcon} alt="Play" className="w-[40px] h-[40px]" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}
