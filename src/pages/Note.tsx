@@ -325,14 +325,14 @@ const Note = () => {
       const filePath = `note-images/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('notes')
+        .from('note-images')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('notes')
+        .from('note-images')
         .getPublicUrl(filePath);
 
       // Insert image into text
