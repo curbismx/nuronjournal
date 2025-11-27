@@ -2,7 +2,7 @@ import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import settingsIcon from "@/assets/settings.png";
 import expandIcon from "@/assets/expand.png";
-import recordBig from "@/assets/recordbig.png";
+import recordBig from "@/assets/recordbig-2.png";
 import plusBig from "@/assets/plusbig.png";
 
 const Index = () => {
