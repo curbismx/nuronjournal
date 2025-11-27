@@ -526,7 +526,7 @@ const Note = () => {
             value={noteTitle}
             onChange={(e) => setNoteTitle(e.target.value || 'Note Title')}
             disabled={isRecording}
-            className="text-[28px] font-outfit font-semibold text-[hsl(0,0%,25%)] outline-none bg-transparent border-none w-full disabled:opacity-100 mb-4 focus:outline-none focus:ring-0 -mt-[10px]"
+            className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] outline-none bg-transparent border-none w-full disabled:opacity-100 mb-4 focus:outline-none focus:ring-0 -mt-[10px]"
             placeholder="Note Title"
           />
         </div>
@@ -543,12 +543,12 @@ const Note = () => {
               e.target.style.height = e.target.scrollHeight + 'px';
             }}
             placeholder="Start speaking to transcribe..."
-            className="w-full resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
+            className="w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
             style={{ minHeight: '100px' }}
             readOnly={isRecording}
           />
           {interimText && isRecording && (
-            <span className="text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,60%)] italic">
+            <span className="text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,60%)] italic">
               {interimText}
             </span>
           )}
