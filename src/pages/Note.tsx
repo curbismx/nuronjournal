@@ -70,16 +70,25 @@ const Note = () => {
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
-        recognition.interimResults = false;
+        recognition.interimResults = true; // Enable real-time transcription
         recognition.lang = 'en-US';
         recognition.maxAlternatives = 1;
 
         recognition.onresult = (event: any) => {
+          let interimTranscript = '';
+          let finalTranscript = '';
+          
           for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-              const transcript = event.results[i][0].transcript;
-              setTranscribedText((prev) => prev + transcript + ' ');
+              finalTranscript += transcript + ' ';
+            } else {
+              interimTranscript += transcript;
             }
+          }
+          
+          if (finalTranscript) {
+            setTranscribedText((prev) => prev + finalTranscript);
           }
         };
 
