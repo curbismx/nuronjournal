@@ -26,7 +26,7 @@ const Index = () => {
         >
           NOVEMBER 2025
         </Button>
-        <img src={expandIcon} alt="Expand" className="w-[30px] h-[30px]" />
+        <img src={expandIcon} alt="Expand" className="h-[30px] w-auto" />
       </div>
 
       {/* Content Card */}
