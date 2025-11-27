@@ -177,24 +177,22 @@ const Note = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-journal-header pl-[30px] pt-[50px] pr-4 pb-6 flex items-center justify-between h-[100px]">
-        <Button
-          variant="ghost"
-          onClick={handleBack}
-          className="text-journal-header-foreground hover:bg-journal-header-foreground/10 p-0 h-auto w-auto"
-        >
-          <img src={backIcon} alt="Back" className="w-[40px] h-[40px]" />
-        </Button>
+      <header className="bg-journal-header pl-[30px] pt-[50px] pr-4 pb-[30px] flex flex-col h-[150px]">
+        <div className="flex items-center justify-between mb-auto">
+          <Button
+            variant="ghost"
+            onClick={handleBack}
+            className="text-journal-header-foreground hover:bg-journal-header-foreground/10 p-0 h-auto w-auto"
+          >
+            <img src={backIcon} alt="Back" className="w-[40px] h-[40px]" />
+          </Button>
+          <div className="flex-1" />
+        </div>
         
-        <div className="flex-1" />
-      </header>
-
-      {/* Month Selector */}
-      <div className="bg-journal-header pl-[30px] pr-[30px] pb-[30px] h-[100px] flex items-end justify-between gap-4">
-        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none">
+        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
           {monthYear}
         </h1>
-      </div>
+      </header>
 
       {/* Content */}
       <main className="flex-1 bg-journal-content rounded-t-[30px] -mt-0 px-8 pt-8 pb-32">
