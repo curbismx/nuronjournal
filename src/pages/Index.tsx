@@ -6,7 +6,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-journal-header px-4 py-6 flex items-center justify-between h-[100px]">
+      <header className="bg-journal-header pl-[30px] pt-[50px] pr-4 pb-6 flex items-center justify-between h-[100px]">
         <Button 
           variant="ghost" 
           className="text-journal-header-foreground hover:bg-journal-header-foreground/10 p-2 h-auto w-auto"
