@@ -42,7 +42,7 @@ All colors MUST be HSL.
     /* Journal specific tokens */
     --journal-header: 0 0% 18%;
     --journal-header-foreground: 0 0% 100%;
-    --journal-content: 0 0% 98%;
+    --journal-content: 69 24% 94%;
   }
 
   .dark {
