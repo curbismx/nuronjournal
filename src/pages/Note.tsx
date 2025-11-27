@@ -544,20 +544,27 @@ const Note = () => {
 
         {/* Text Content - ONLY this scrolls */}
         <div 
-          ref={textContentRef}
-          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none"
+          className="flex-1 overflow-y-auto px-8 pb-[30px] min-h-0 -mt-[15px] relative"
           style={{ marginBottom: '120px', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
-          contentEditable={!isRecording}
-          suppressContentEditableWarning
-          onBlur={(e) => {
-            if (!isRecording) {
-              setTranscribedText(e.currentTarget.textContent || '');
-            }
-          }}
-          onFocus={() => window.scrollTo(0, 0)}
         >
-          {transcribedText || (!isRecording && 'Start speaking to transcribe...')}
-          {interimText && <span className="opacity-60">{interimText}</span>}
+          <textarea
+            ref={textContentRef as any}
+            value={transcribedText}
+            onChange={(e) => {
+              setTranscribedText(e.target.value);
+              transcribedTextRef.current = e.target.value;
+            }}
+            placeholder="Start speaking to transcribe..."
+            className="w-full h-full min-h-[300px] resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] placeholder:text-[hsl(0,0%,60%)]"
+            readOnly={isRecording}
+          />
+          {interimText && isRecording && (
+            <div className="absolute bottom-0 left-0 right-0 px-8 pb-4 pointer-events-none">
+              <span className="text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,40%)]">
+                {interimText}
+              </span>
+            </div>
+          )}
         </div>
       </main>
 
