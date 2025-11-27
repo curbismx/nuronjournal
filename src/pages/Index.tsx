@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import settingsIcon from "@/assets/settings.png";
@@ -8,6 +9,8 @@ import tapToRecord from "@/assets/01.png";
 import createFirst from "@/assets/02.png";
 
 const Index = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -36,7 +39,10 @@ const Index = () => {
           {/* Record Button */}
           <div className="flex flex-col items-center">
             <img src={tapToRecord} alt="Tap to record instruction" className="w-[280px] mb-4" />
-            <button className="hover:scale-105 transition-transform">
+            <button 
+              onClick={() => navigate('/note')}
+              className="hover:scale-105 transition-transform"
+            >
               <img src={recordBig} alt="Record" className="w-[200px] h-[200px]" />
             </button>
           </div>
