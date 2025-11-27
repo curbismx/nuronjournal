@@ -32,7 +32,6 @@ const Note = () => {
   const [transcribedText, setTranscribedText] = useState('');
   const [interimText, setInterimText] = useState('');
   const [noteTitle, setNoteTitle] = useState('Note Title');
-  const [isTitleEditing, setIsTitleEditing] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [recordingTime, setRecordingTime] = useState(0);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -49,14 +48,12 @@ const Note = () => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
-  const isRecordingRef = useRef(false);
-  const isPausedRef = useRef(false);
+  const shouldRestartRecognition = useRef(false);
 
   const startRecording = async () => {
     try {
       setIsRecording(true);
-      isRecordingRef.current = true;
-      isPausedRef.current = false;
+      shouldRestartRecognition.current = true;
       
       // Request microphone
       const micStream = await navigator.mediaDevices.getUserMedia({ 
@@ -130,17 +127,12 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          // Use refs to avoid closure issues
-          if (isRecordingRef.current && !isPausedRef.current) {
-            setTimeout(() => {
-              if (recognitionRef.current && isRecordingRef.current && !isPausedRef.current) {
-                try {
-                  recognitionRef.current.start();
-                } catch (e) {
-                  console.log('Recognition restart failed:', e);
-                }
-              }
-            }, 100);
+          if (shouldRestartRecognition.current) {
+            try {
+              recognition.start();
+            } catch (e) {
+              console.log('Recognition restart failed:', e);
+            }
           }
         };
 
@@ -194,12 +186,16 @@ const Note = () => {
 
   const pauseRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      isPausedRef.current = true;
+      shouldRestartRecognition.current = false;
       setIsPaused(true);
       setHasBeenPaused(true);
       
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.log('Recognition stop error:', e);
+        }
         recognitionRef.current = null;
       }
       
@@ -213,8 +209,8 @@ const Note = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
       setTranscribedText((prev) => prev.trim() ? prev.trim() + '\n\n' : prev);
       mediaRecorderRef.current.resume();
-      isPausedRef.current = false;
       setIsPaused(false);
+      shouldRestartRecognition.current = true;
       
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
@@ -249,16 +245,12 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          if (isRecordingRef.current && !isPausedRef.current) {
-            setTimeout(() => {
-              if (recognitionRef.current && isRecordingRef.current && !isPausedRef.current) {
-                try {
-                  recognitionRef.current.start();
-                } catch (e) {
-                  console.log('Recognition restart failed:', e);
-                }
-              }
-            }, 100);
+          if (shouldRestartRecognition.current) {
+            try {
+              recognition.start();
+            } catch (e) {
+              console.log('Recognition restart failed:', e);
+            }
           }
         };
 
@@ -274,8 +266,7 @@ const Note = () => {
   };
 
   const stopRecording = () => {
-    isRecordingRef.current = false;
-    isPausedRef.current = false;
+    shouldRestartRecognition.current = false;
     setIsRecording(false);
     setIsPaused(false);
     setHasBeenPaused(false);
@@ -286,10 +277,10 @@ const Note = () => {
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-        recognitionRef.current = null;
       } catch (e) {
         console.log('Recognition stop error:', e);
       }
+      recognitionRef.current = null;
     }
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
