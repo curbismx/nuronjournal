@@ -529,7 +529,7 @@ const Note = () => {
       </div>
 
       {/* LAYER 3: Scrollable Text Area - Fixed position with internal scroll */}
-      <div className="fixed top-[290px] bottom-[160px] left-0 right-0 z-10 bg-journal-content overflow-hidden">
+      <div className="fixed top-[270px] bottom-[160px] left-0 right-0 z-10 bg-journal-content overflow-hidden">
         <div 
           className="h-full overflow-y-auto px-8 pb-8"
           style={{ WebkitOverflowScrolling: 'touch' }}
