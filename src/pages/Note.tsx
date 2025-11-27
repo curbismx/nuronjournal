@@ -530,7 +530,7 @@ const Note = () => {
         {/* Text Content - ONLY this scrolls */}
         <div 
           ref={textContentRef}
-          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none focus:ring-2 focus:ring-journal-header/20 rounded"
+          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none"
           style={{ marginBottom: '120px' }}
           contentEditable={!isRecording}
           suppressContentEditableWarning
