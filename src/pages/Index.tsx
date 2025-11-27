@@ -11,7 +11,7 @@ const Index = () => {
           size="icon"
           className="text-journal-header-foreground hover:bg-journal-header-foreground/10"
         >
-          <Settings className="h-[60px] w-[60px]" />
+          <Settings className="h-[120px] w-[120px]" />
         </Button>
         
         <div className="flex-1" />
