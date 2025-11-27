@@ -53,17 +53,18 @@ const Note = () => {
 
   const startRecording = async () => {
     try {
+      // Set recording state immediately
+      setIsRecording(true);
+      
       // Clear placeholder text immediately
       if (textContentRef.current) {
-        const currentText = textContentRef.current.textContent || '';
+        const currentText = textContentRef.current.textContent?.trim() || '';
         if (currentText === 'Start speaking to transcribe...') {
           textContentRef.current.innerHTML = '';
           setNoteContent('');
+          setTranscribedText('');
         }
       }
-      
-      // Set recording state immediately
-      setIsRecording(true);
       
       // Request microphone
       const micStream = await navigator.mediaDevices.getUserMedia({
@@ -122,11 +123,18 @@ const Note = () => {
               const newText = prev + final;
               // Update the contentEditable div preserving any images
               if (textContentRef.current) {
-                // Get current HTML, but remove placeholder if present
+                // Get current HTML and check if it's the placeholder
                 let currentHtml = textContentRef.current.innerHTML;
-                if (currentHtml === 'Start speaking to transcribe...') {
+                const currentText = textContentRef.current.textContent?.trim() || '';
+                if (currentText === 'Start speaking to transcribe...') {
                   currentHtml = '';
                 }
+                // Remove any interim spans before adding final text
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = currentHtml;
+                const interimSpans = tempDiv.querySelectorAll('span.opacity-60');
+                interimSpans.forEach(span => span.remove());
+                currentHtml = tempDiv.innerHTML;
                 // Append the new text
                 const updatedHtml = currentHtml + final;
                 textContentRef.current.innerHTML = updatedHtml;
@@ -144,8 +152,9 @@ const Note = () => {
             // Show interim text in the div
             if (textContentRef.current && interim) {
               let currentHtml = textContentRef.current.innerHTML;
+              const currentText = textContentRef.current.textContent?.trim() || '';
               // Remove placeholder if present
-              if (currentHtml === 'Start speaking to transcribe...') {
+              if (currentText === 'Start speaking to transcribe...') {
                 currentHtml = '';
               }
               // Remove any previous interim span
@@ -169,17 +178,16 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          // Only restart if still actively recording and not paused
-          // Check the actual mediaRecorder state to be sure
-          if (recognitionRef.current && 
-              mediaRecorderRef.current && 
-              mediaRecorderRef.current.state === 'recording') {
-            try {
-              recognition.start();
-            } catch (e) {
-              console.log('Recognition restart skipped:', e);
+          // Restart recognition if we're still recording (not paused, not stopped)
+          setTimeout(() => {
+            if (mediaRecorderRef.current?.state === 'recording' && !isPaused) {
+              try {
+                recognition.start();
+              } catch (e) {
+                console.log('Recognition restart failed:', e);
+              }
             }
-          }
+          }, 100);
         };
 
         try {
