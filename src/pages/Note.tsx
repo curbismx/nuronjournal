@@ -543,29 +543,27 @@ const Note = () => {
         </div>
 
         {/* Text Content - ONLY this scrolls */}
-        <div 
-          ref={textContentRef}
-          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none"
-          style={{ marginBottom: '120px', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
-          contentEditable={!isRecording}
-          suppressContentEditableWarning
-          onBlur={(e) => {
-            if (!isRecording) {
-              setTranscribedText(e.currentTarget.textContent || '');
-            }
-          }}
-          onFocus={(e) => {
-            window.scrollTo(0, 0);
-          }}
-          dangerouslySetInnerHTML={isRecording ? undefined : { __html: transcribedText || '<span style="color: hsl(0,0%,60%)">Start speaking to transcribe...</span>' }}
-        >
-          {isRecording && (
-            <>
-              {transcribedText}
-              {interimText && <span className="opacity-60">{interimText}</span>}
-            </>
-          )}
-        </div>
+        {isRecording ? (
+          <div 
+            ref={textContentRef}
+            className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none"
+            style={{ marginBottom: '120px', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+          >
+            {transcribedText}
+            {interimText && <span className="opacity-60">{interimText}</span>}
+          </div>
+        ) : (
+          <div 
+            ref={textContentRef}
+            className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none"
+            style={{ marginBottom: '120px', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+            contentEditable
+            suppressContentEditableWarning
+            onBlur={(e) => setTranscribedText(e.currentTarget.textContent || '')}
+            onFocus={() => window.scrollTo(0, 0)}
+            dangerouslySetInnerHTML={{ __html: transcribedText || '<span style="color: hsl(0,0%,60%)">Start speaking to transcribe...</span>' }}
+          />
+        )}
       </main>
 
       {/* Recording Control - Two States */}
