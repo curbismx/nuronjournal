@@ -18,8 +18,8 @@ serve(async (req) => {
       throw new Error('No audio data provided');
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
+    const apiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!apiKey) {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
@@ -40,7 +40,7 @@ serve(async (req) => {
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: formData,
     });
