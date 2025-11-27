@@ -129,9 +129,9 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          if (shouldRestartRecognition.current) {
+          if (shouldRestartRecognition.current && recognitionRef.current) {
             try {
-              recognition.start();
+              recognitionRef.current.start();
             } catch (e) {
               console.log('Recognition restart failed:', e);
             }
@@ -260,9 +260,9 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          if (shouldRestartRecognition.current) {
+          if (shouldRestartRecognition.current && recognitionRef.current) {
             try {
-              recognition.start();
+              recognitionRef.current.start();
             } catch (e) {
               console.log('Recognition restart failed:', e);
             }
