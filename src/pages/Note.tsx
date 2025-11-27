@@ -479,10 +479,10 @@ const Note = () => {
     <div className="fixed inset-0 bg-journal-content flex flex-col">
       {/* Fixed Header - Dark Background */}
       <header 
-        className="fixed top-0 left-0 right-0 z-50 bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] h-[150px]"
-        style={{ touchAction: 'none' }}
+        className="fixed top-0 left-0 right-0 z-50 bg-journal-header pl-[30px] pt-[30px] pr-4 h-[150px]"
+        style={{ touchAction: 'none', position: 'relative' }}
       >
-        <div className="flex items-center justify-between mb-auto">
+        <div className="flex items-center justify-between">
           <Button
             variant="ghost"
             onClick={handleBack}
@@ -493,7 +493,7 @@ const Note = () => {
           <div className="flex-1" />
         </div>
         
-        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
+        <h1 className="absolute bottom-[30px] left-[30px] right-[30px] text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
           {monthYear}
         </h1>
       </header>
