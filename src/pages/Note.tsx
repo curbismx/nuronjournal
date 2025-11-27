@@ -359,7 +359,7 @@ const Note = () => {
 
       {/* Recording Control */}
       {!isRecording ? (
-        <div className="fixed bottom-[30px] left-0 right-0 flex justify-evenly items-center px-[30px]">
+        <div className="fixed bottom-[30px] left-0 right-0 flex justify-between items-center px-[30px]">
           <button className="flex flex-col items-center gap-2">
             <img src={imageButton} alt="Image" className="w-auto h-[60px]" />
           </button>
