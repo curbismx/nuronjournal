@@ -523,7 +523,7 @@ const Note = () => {
           value={noteTitle}
           onChange={(e) => setNoteTitle(e.target.value || 'Note Title')}
           disabled={isRecording}
-          className="text-[28px] font-outfit font-semibold text-[hsl(0,0%,0%)] outline-none bg-transparent border-none w-full disabled:opacity-100 focus:outline-none focus:ring-0 shadow-none"
+          className="text-[28px] font-outfit font-semibold text-[hsl(0,0%,25%)] outline-none bg-transparent border-none w-full disabled:opacity-100 focus:outline-none focus:ring-0 shadow-none"
           placeholder="Note Title"
         />
       </div>
@@ -542,7 +542,7 @@ const Note = () => {
               transcribedTextRef.current = e.target.value;
             }}
             placeholder="Start speaking to transcribe..."
-            className="w-full min-h-full resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] placeholder:text-[hsl(0,0%,60%)]"
+            className="w-full min-h-full resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)]"
             readOnly={isRecording}
           />
         </div>
