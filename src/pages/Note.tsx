@@ -381,7 +381,7 @@ const Note = () => {
       ) : (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[calc(100%-64px)] max-w-[600px]">
           <div className="bg-[hsl(4,73%,62%)] rounded-[20px] p-6 h-[108px]">
-            {!hasBeenPaused ? (
+            {!isPaused ? (
               <div className="flex items-center gap-4 h-full">
                 <Button
                   variant="ghost"
