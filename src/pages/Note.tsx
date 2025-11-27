@@ -102,11 +102,6 @@ const Note = () => {
             if (event.results[i].isFinal) {
               const transcript = event.results[i][0].transcript;
               setTranscribedText((prev) => prev + transcript + ' ');
-              
-              // Generate title from first substantial text
-              if (transcribedText.length < 50 && transcript.length > 20) {
-                generateTitle(transcript);
-              }
             }
           }
         };
@@ -224,6 +219,11 @@ const Note = () => {
     }
     if (audioContextRef.current) {
       audioContextRef.current.close();
+    }
+    
+    // Generate title from the full transcribed text after stopping
+    if (transcribedText && transcribedText.trim().length > 10) {
+      generateTitle(transcribedText);
     }
   };
 
