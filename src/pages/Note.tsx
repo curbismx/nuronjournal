@@ -475,9 +475,9 @@ const Note = () => {
   const monthYear = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
 
   return (
-    <div className="h-screen w-screen bg-background flex flex-col fixed inset-0 overflow-hidden">
+    <div className="h-screen w-screen bg-background flex flex-col overflow-hidden">
       {/* Header - Fixed at top */}
-      <header className="bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] flex flex-col flex-shrink-0 h-[150px] relative z-10 w-full">
+      <header className="bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] flex flex-col flex-shrink-0 h-[150px]">
         <div className="flex items-center justify-between mb-auto">
           <Button
             variant="ghost"
