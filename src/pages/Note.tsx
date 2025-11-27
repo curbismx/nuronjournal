@@ -162,7 +162,7 @@ const Note = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-journal-header pl-[30px] pt-[50px] pr-4 pb-[30px] flex flex-col h-[200px]">
+      <header className="bg-journal-header pl-[30px] pt-[50px] pr-4 pb-[30px] flex flex-col h-[170px]">
         <div className="flex items-center justify-between mb-auto">
           <Button
             variant="ghost"
