@@ -49,10 +49,14 @@ const Note = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
   const transcribedTextRef = useRef('');
+  const isRecordingRef = useRef(false);
+  const isPausedRef = useRef(false);
 
   const startRecording = async () => {
     try {
       setIsRecording(true);
+      isRecordingRef.current = true;
+      isPausedRef.current = false;
       
       const micStream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
@@ -116,13 +120,15 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          // Only restart if the recognition ref is still valid
-          if (recognitionRef.current === recognition) {
-            try {
-              recognition.start();
-            } catch (e) {
-              // Don't log - this is expected when manually stopping
-            }
+          // Use refs to avoid stale closure
+          if (recognitionRef.current === recognition && isRecordingRef.current && !isPausedRef.current) {
+            setTimeout(() => {
+              try {
+                recognition.start();
+              } catch (e) {
+                // Ignore
+              }
+            }, 100);
           }
         };
 
@@ -172,6 +178,7 @@ const Note = () => {
 
   const pauseRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      isPausedRef.current = true;
       setIsPaused(true);
       setHasBeenPaused(true);
       
@@ -195,6 +202,7 @@ const Note = () => {
         return newText;
       });
       mediaRecorderRef.current.resume();
+      isPausedRef.current = false;
       setIsPaused(false);
       
       // Restart speech recognition
@@ -235,12 +243,14 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          if (recognitionRef.current === recognition) {
-            try {
-              recognition.start();
-            } catch (e) {
-              // Expected when stopping
-            }
+          if (recognitionRef.current === recognition && isRecordingRef.current && !isPausedRef.current) {
+            setTimeout(() => {
+              try {
+                recognition.start();
+              } catch (e) {
+                // Ignore
+              }
+            }, 100);
           }
         };
 
@@ -252,6 +262,8 @@ const Note = () => {
   };
 
   const stopRecording = () => {
+    isRecordingRef.current = false;
+    isPausedRef.current = false;
     setIsRecording(false);
     setIsPaused(false);
     setHasBeenPaused(false);
