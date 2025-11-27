@@ -46,6 +46,7 @@ const Note = () => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const recognitionRef = useRef<any>(null);
+  const isRecognitionActiveRef = useRef(false);
 
   const startRecording = async () => {
     try {
@@ -124,11 +125,13 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          // Only restart if recording and not paused (with a small delay to check state)
+          isRecognitionActiveRef.current = false;
+          // Only restart if recording and not paused
           setTimeout(() => {
-            if (recognitionRef.current && !isPaused && isRecording) {
+            if (recognitionRef.current && !isPaused && isRecording && !isRecognitionActiveRef.current) {
               try {
                 recognition.start();
+                isRecognitionActiveRef.current = true;
               } catch (e) {
                 console.log('Recognition restart failed:', e);
               }
@@ -139,6 +142,7 @@ const Note = () => {
         try {
           recognition.start();
           recognitionRef.current = recognition;
+          isRecognitionActiveRef.current = true;
           setIsTranscribing(true);
         } catch (e) {
           console.error('Failed to start recognition:', e);
@@ -192,6 +196,7 @@ const Note = () => {
         setTranscribedText(prev => prev + (interimText ? ' ' + interimText : ''));
         setInterimText('');
         recognitionRef.current.stop();
+        isRecognitionActiveRef.current = false;
       }
       
       // Then pause recording and update states
@@ -213,9 +218,10 @@ const Note = () => {
       setIsPaused(false);
       
       // Restart speech recognition
-      if (recognitionRef.current) {
+      if (recognitionRef.current && !isRecognitionActiveRef.current) {
         try {
           recognitionRef.current.start();
+          isRecognitionActiveRef.current = true;
           setIsTranscribing(true);
         } catch (e) {
           console.log('Failed to resume recognition:', e);
@@ -235,6 +241,7 @@ const Note = () => {
     }
     if (recognitionRef.current) {
       recognitionRef.current.stop();
+      isRecognitionActiveRef.current = false;
       setIsTranscribing(false);
     }
     if (streamRef.current) {
