@@ -348,15 +348,6 @@ const Note = () => {
     }
   };
 
-  useEffect(() => {
-    // Prevent body scroll on mobile - but allow text area scrolling
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, []);
 
   useEffect(() => {
     transcribedTextRef.current = transcribedText;
@@ -485,7 +476,7 @@ const Note = () => {
   const monthYear = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-journal-header">
+    <div className="fixed inset-0 flex flex-col bg-journal-header overflow-hidden">
       {/* Fixed dark header */}
       <header className="flex-shrink-0 bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] h-[150px] z-30">
         <div className="flex items-center justify-between mb-auto">
@@ -506,10 +497,11 @@ const Note = () => {
       {/* Scrollable content area */}
       <div 
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto bg-journal-content rounded-t-[30px]"
+        className="flex-1 overflow-y-auto overscroll-y-auto bg-journal-content rounded-t-[30px]"
         style={{ 
           WebkitOverflowScrolling: 'touch',
-          paddingBottom: '180px'
+          paddingBottom: '180px',
+          minHeight: 0
         }}
       >
         {/* Date and weather */}
