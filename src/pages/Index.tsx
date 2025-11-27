@@ -24,7 +24,6 @@ const Index = () => {
           className="text-journal-header-foreground hover:bg-journal-header-foreground/10 text-[36px] font-outfit font-light tracking-wider p-0 h-auto"
         >
           NOVEMBER 2025
-          <ChevronDown className="ml-2 h-5 w-5" />
         </Button>
       </div>
 
