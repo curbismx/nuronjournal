@@ -19,6 +19,11 @@ const AudioWaveform = ({ isRecording, audioLevel, recordingTime }: AudioWaveform
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Set canvas size to match display size
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+
     const barWidth = 3;
     const gap = 8;
     const maxHeight = canvas.height;
@@ -64,8 +69,6 @@ const AudioWaveform = ({ isRecording, audioLevel, recordingTime }: AudioWaveform
   return (
     <canvas
       ref={canvasRef}
-      width={480}
-      height={60}
       className="w-full h-full"
     />
   );
