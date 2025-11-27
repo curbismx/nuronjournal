@@ -371,7 +371,7 @@ const Note = () => {
         <h2 className="text-[28px] font-outfit font-semibold mb-4 text-[hsl(0,0%,0%)] -mt-2">{noteTitle}</h2>
 
         <div className="text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] -mt-[5px]">
-          {transcribedText || 'Start speaking to transcribe...'}
+          {transcribedText || (isRecording ? '' : 'Start speaking to transcribe...')}
           {interimText && <span className="opacity-60">{interimText}</span>}
         </div>
       </main>
