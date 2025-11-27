@@ -545,22 +545,23 @@ const Note = () => {
         {/* Text Content - ONLY this scrolls */}
         <div 
           ref={textContentRef}
-          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none"
+          className="flex-1 overflow-y-auto px-8 pb-[30px] text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,0%)] min-h-0 -mt-[15px] outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-[hsl(0,0%,60%)]"
           style={{ marginBottom: '120px', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
           contentEditable={!isRecording}
           suppressContentEditableWarning
-          onBlur={(e) => {
+          data-placeholder={isRecording ? '' : 'Start speaking to transcribe...'}
+          onInput={(e) => {
             if (!isRecording) {
-              setTranscribedText(e.currentTarget.textContent || '');
+              const text = e.currentTarget.textContent || '';
+              setTranscribedText(text);
             }
           }}
           onFocus={(e) => {
             // Prevent viewport scroll on focus
-            e.preventDefault();
             window.scrollTo(0, 0);
           }}
         >
-          {transcribedText || (isRecording ? '' : 'Start speaking to transcribe...')}
+          {transcribedText}
           {interimText && <span className="opacity-60">{interimText}</span>}
         </div>
       </main>
