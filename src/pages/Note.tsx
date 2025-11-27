@@ -111,14 +111,16 @@ const Note = () => {
         };
 
         recognition.onend = () => {
-          // Restart if still recording and not paused
-          if (isRecording && !isPaused) {
-            try {
-              recognition.start();
-            } catch (e) {
-              console.log('Recognition restart failed:', e);
+          // Only restart if recording and not paused (with a small delay to check state)
+          setTimeout(() => {
+            if (recognitionRef.current && !isPaused && isRecording) {
+              try {
+                recognition.start();
+              } catch (e) {
+                console.log('Recognition restart failed:', e);
+              }
             }
-          }
+          }, 100);
         };
 
         try {
@@ -164,25 +166,36 @@ const Note = () => {
 
   const pauseRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.pause();
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
+      // Set paused state first to prevent recognition restart
       setIsPaused(true);
       setHasBeenPaused(true);
       setAudioLevel(0);
       setIsTranscribing(false);
+      
+      mediaRecorderRef.current.pause();
+      
+      // Stop recognition after a small delay to capture final results
+      if (recognitionRef.current) {
+        setTimeout(() => {
+          if (recognitionRef.current) {
+            recognitionRef.current.stop();
+          }
+        }, 100);
+      }
     }
   };
 
   const resumeRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
-      mediaRecorderRef.current.resume();
+      // Add line break before resuming
+      setTranscribedText((prev) => prev.trim() ? prev.trim() + '\n\n' : prev);
       
+      // Resume media recorder
+      mediaRecorderRef.current.resume();
+      setIsPaused(false);
+      
+      // Restart speech recognition
       if (recognitionRef.current) {
-        // Add line break before starting new recognition
-        setTranscribedText((prev) => prev ? prev + '\n\n' : prev);
-        
         try {
           recognitionRef.current.start();
           setIsTranscribing(true);
@@ -190,7 +203,6 @@ const Note = () => {
           console.log('Failed to resume recognition:', e);
         }
       }
-      setIsPaused(false);
     }
   };
 
