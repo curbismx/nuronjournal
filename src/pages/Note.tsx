@@ -506,10 +506,10 @@ const Note = () => {
       {/* LAYER 2: Unified Scrollable Container - Everything scrolls together */}
       <div 
         ref={scrollContainerRef}
-        className="fixed top-[150px] bottom-[160px] left-0 right-0 z-10 bg-journal-content rounded-t-[30px] overflow-y-auto"
+        className="fixed top-[150px] bottom-[160px] left-0 right-0 z-10 bg-journal-content rounded-t-[30px] overflow-y-scroll"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        <div className="px-8 pt-3.5 pb-8">
+        <div className="px-8 pt-3.5 pb-[200px]">
           {/* Date and Weather */}
           <div className="flex items-start gap-4 mb-4">
             <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">{dayNumber}</div>
@@ -535,7 +535,7 @@ const Note = () => {
           />
 
           {/* Text Content */}
-          <div className="min-h-[400px]">
+          <div className="min-h-[600px]">
             <textarea
               value={transcribedText}
               onChange={(e) => {
@@ -543,7 +543,7 @@ const Note = () => {
                 transcribedTextRef.current = e.target.value;
               }}
               placeholder="Start speaking to transcribe..."
-              className="w-full min-h-[400px] resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)]"
+              className="w-full min-h-[600px] resize-none bg-transparent border-none outline-none text-[18px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)]"
               readOnly={isRecording}
             />
             {interimText && isRecording && (
