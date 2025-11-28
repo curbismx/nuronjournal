@@ -6,6 +6,7 @@ import backIcon from '@/assets/back.png';
 import imageButton2 from '@/assets/image-2.png';
 import rewriteButton2 from '@/assets/rewrite-2.png';
 import shareButton2 from '@/assets/share-2.png';
+import threeDotsIcon from '@/assets/3dots.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 const Note = () => {
@@ -169,9 +170,12 @@ const Note = () => {
           </Button>
           <div className="flex-1" />
         </div>
-        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px] mt-[41px]">
-          {monthYear}
-        </h1>
+        <div className="flex items-center justify-between mt-[41px]">
+          <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none">
+            {monthYear}
+          </h1>
+          <img src={threeDotsIcon} alt="Menu" className="w-[24px] h-[24px] mr-[30px]" />
+        </div>
       </header>
 
       {/* Scrollable content area */}
