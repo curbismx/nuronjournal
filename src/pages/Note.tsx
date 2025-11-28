@@ -3,9 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import backIcon from '@/assets/back.png';
-import imageButton2 from '@/assets/image-2.png';
-import rewriteButton2 from '@/assets/rewrite-2.png';
-import shareButton2 from '@/assets/share-2.png';
 import threeDotsIcon from '@/assets/3dots.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
@@ -15,7 +12,6 @@ const Note = () => {
   const [noteTitle, setNoteTitle] = useState('Note Title');
   const [weather, setWeather] = useState<{ temp: number; WeatherIcon: React.ComponentType<any> } | null>(null);
   const [isRewriting, setIsRewriting] = useState(false);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const textContentRef = useRef<HTMLTextAreaElement | null>(null);
@@ -113,39 +109,6 @@ const Note = () => {
     }
   }, [noteContent, noteTitle]);
 
-  useEffect(() => {
-    // Detect keyboard on iOS/Android
-    const handleResize = () => {
-      // If visual viewport is smaller than window, keyboard is likely open
-      if (window.visualViewport) {
-        const keyboardOpen = window.visualViewport.height < window.innerHeight * 0.75;
-        setKeyboardVisible(keyboardOpen);
-      }
-    };
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-      window.visualViewport.addEventListener('scroll', handleResize);
-    }
-    
-    // Also listen for focus events as backup
-    const handleFocus = () => setKeyboardVisible(true);
-    const handleBlur = () => {
-      setTimeout(() => setKeyboardVisible(false), 100);
-    };
-    
-    document.addEventListener('focusin', handleFocus);
-    document.addEventListener('focusout', handleBlur);
-
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-        window.visualViewport.removeEventListener('scroll', handleResize);
-      }
-      document.removeEventListener('focusin', handleFocus);
-      document.removeEventListener('focusout', handleBlur);
-    };
-  }, []);
 
   const handleBack = () => {
     navigate('/');
@@ -248,31 +211,12 @@ const Note = () => {
           />
         </div>
         
-        {/* Spacer to prevent content from being hidden behind bottom controls */}
-        <div className={keyboardVisible ? "h-[60px] flex-shrink-0" : "h-[120px] flex-shrink-0"} />
+        {/* Spacer */}
+        <div className="h-[40px] flex-shrink-0" />
         <div className="h-[1px]" />
         </div>
       </div>
 
-      {/* Fixed bottom controls */}
-      <div 
-        className="fixed left-[30px] right-[30px] z-40 flex justify-between items-center gap-[10px] transition-all duration-300"
-        style={{ bottom: keyboardVisible ? '10px' : '30px' }}
-      >
-        <button className="flex flex-col items-center gap-2">
-          <img src={imageButton2} alt="Image" className="h-auto" />
-        </button>
-        <button 
-          onClick={rewriteText}
-          disabled={isRewriting}
-          className="flex flex-col items-center gap-2 disabled:opacity-50"
-        >
-          <img src={rewriteButton2} alt="Rewrite" className="h-auto" />
-        </button>
-        <button className="flex flex-col items-center gap-2">
-          <img src={shareButton2} alt="Share" className="h-auto" />
-        </button>
-      </div>
     </div>
   );
 };
