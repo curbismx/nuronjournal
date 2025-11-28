@@ -174,7 +174,7 @@ const Index = () => {
                       className="border-b border-[hsl(0,0%,85%)] last:border-b-0 cursor-pointer hover:bg-[hsl(0,0%,95%)] transition-colors"
                       onClick={() => navigate(`/note/${note.id}`)}
                     >
-                      <div className={index === 0 ? "px-8 pt-[12px] pb-2" : "px-8 pt-4 pb-6"}>
+                      <div className={index === 0 ? "px-8 pt-[12px] pb-2" : "px-8 py-6 -mt-2"}>
                         {/* Only show date for first note of each day */}
                         {index === 0 && (
                           <div className="flex items-start gap-4 mb-4">
