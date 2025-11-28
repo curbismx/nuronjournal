@@ -10,22 +10,26 @@ import sharedIcon from '@/assets/shared.png';
 import trashIcon from '@/assets/trash.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
+type ContentBlock = 
+  | { type: 'text'; id: string; content: string }
+  | { type: 'image'; id: string; url: string; width: number };
+
 const Note = () => {
   const navigate = useNavigate();
-  const [noteContent, setNoteContent] = useState('');
   const [noteTitle, setNoteTitle] = useState('Note Title');
   const [weather, setWeather] = useState<{ temp: number; WeatherIcon: React.ComponentType<any> } | null>(null);
   const [isRewriting, setIsRewriting] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [titleGenerated, setTitleGenerated] = useState(false);
-  const [images, setImages] = useState<Array<{id: string, url: string, width: number}>>([]);
+  const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([
+    { type: 'text', id: 'initial', content: '' }
+  ]);
   const [resizingId, setResizingId] = useState<string | null>(null);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const touchStartX = useRef<number>(0);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const textContentRef = useRef<HTMLTextAreaElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resizeStartX = useRef<number>(0);
@@ -52,7 +56,16 @@ const Note = () => {
     }
   };
 
+  // Get combined note content from all text blocks
+  const getNoteContent = () => {
+    return contentBlocks
+      .filter(b => b.type === 'text')
+      .map(b => (b as { type: 'text'; id: string; content: string }).content)
+      .join('\n\n');
+  };
+
   const rewriteText = async () => {
+    const noteContent = getNoteContent();
     if (!noteContent || noteContent.trim().length === 0) {
       return;
     }
@@ -66,7 +79,8 @@ const Note = () => {
       if (error) throw error;
 
       if (data.rewrittenText) {
-        setNoteContent(data.rewrittenText);
+        // Replace all text blocks with the rewritten content
+        setContentBlocks([{ type: 'text', id: Date.now().toString(), content: data.rewrittenText }]);
       }
     } catch (error) {
       console.error('Rewrite error:', error);
@@ -76,6 +90,7 @@ const Note = () => {
   };
 
   const shareNote = async () => {
+    const noteContent = getNoteContent();
     const shareData = {
       title: noteTitle,
       text: noteContent,
@@ -156,10 +171,11 @@ const Note = () => {
 
   // Auto-generate title when user has written enough (only once)
   useEffect(() => {
+    const noteContent = getNoteContent();
     if (noteContent.trim().split(/\s+/).length >= 10 && !titleGenerated) {
       generateTitle(noteContent);
     }
-  }, [noteContent, titleGenerated]);
+  }, [contentBlocks, titleGenerated]);
 
   // Click outside handler to close menu
   useEffect(() => {
@@ -209,9 +225,15 @@ const Note = () => {
     if (!file) return;
     
     const url = URL.createObjectURL(file);
-    const id = Date.now().toString();
+    const imageId = Date.now().toString();
+    const newTextId = (Date.now() + 1).toString();
     
-    setImages(prev => [...prev, { id, url, width: 100 }]);
+    setContentBlocks(prev => [
+      ...prev,
+      { type: 'image', id: imageId, url, width: 100 },
+      { type: 'text', id: newTextId, content: '' }
+    ]);
+    
     e.target.value = '';
   };
 
@@ -219,8 +241,8 @@ const Note = () => {
     e.preventDefault();
     setResizingId(id);
     resizeStartX.current = e.clientX;
-    const image = images.find(img => img.id === id);
-    resizeStartWidth.current = image?.width ?? 100;
+    const block = contentBlocks.find(b => b.type === 'image' && b.id === id) as { type: 'image'; id: string; url: string; width: number } | undefined;
+    resizeStartWidth.current = block?.width ?? 100;
     
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
@@ -234,8 +256,10 @@ const Note = () => {
     const deltaPercent = (deltaX / containerWidth) * 100;
     const newWidth = Math.min(100, Math.max(30, resizeStartWidth.current + deltaPercent));
     
-    setImages(prev => prev.map(img => 
-      img.id === resizingIdRef.current ? { ...img, width: newWidth } : img
+    setContentBlocks(prev => prev.map(block => 
+      block.type === 'image' && block.id === resizingIdRef.current 
+        ? { ...block, width: newWidth } 
+        : block
     ));
   };
 
@@ -250,8 +274,8 @@ const Note = () => {
     const touch = e.touches[0];
     setResizingId(id);
     resizeStartX.current = touch.clientX;
-    const image = images.find(img => img.id === id);
-    resizeStartWidth.current = image?.width ?? 100;
+    const block = contentBlocks.find(b => b.type === 'image' && b.id === id) as { type: 'image'; id: string; url: string; width: number } | undefined;
+    resizeStartWidth.current = block?.width ?? 100;
     
     document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('touchend', handleTouchEnd);
@@ -267,8 +291,10 @@ const Note = () => {
     const deltaPercent = (deltaX / containerWidth) * 100;
     const newWidth = Math.min(100, Math.max(30, resizeStartWidth.current + deltaPercent));
     
-    setImages(prev => prev.map(img => 
-      img.id === resizingIdRef.current ? { ...img, width: newWidth } : img
+    setContentBlocks(prev => prev.map(block => 
+      block.type === 'image' && block.id === resizingIdRef.current 
+        ? { ...block, width: newWidth } 
+        : block
     ));
   };
 
@@ -300,6 +326,7 @@ const Note = () => {
   };
 
   const handleViewerTouchEnd = (e: React.TouchEvent) => {
+    const images = contentBlocks.filter(b => b.type === 'image') as Array<{ type: 'image'; id: string; url: string; width: number }>;
     const touchEndX = e.changedTouches[0].clientX;
     const deltaX = touchEndX - touchStartX.current;
     const minSwipeDistance = 50;
@@ -316,9 +343,13 @@ const Note = () => {
   };
 
   // Calculate stats
+  const noteContent = getNoteContent();
   const wordCount = noteContent.trim() ? noteContent.trim().split(/\s+/).length : 0;
   const characterCount = noteContent.length;
   const paragraphCount = noteContent.trim() ? noteContent.split(/\n\n+/).filter(p => p.trim()).length : 0;
+  
+  // Get images for viewer
+  const images = contentBlocks.filter(b => b.type === 'image') as Array<{ type: 'image'; id: string; url: string; width: number }>;
 
   const today = new Date();
   const dayNumber = today.getDate();
@@ -397,68 +428,76 @@ const Note = () => {
           />
         </div>
 
-        {/* Body text */}
+        {/* Content blocks - text and images */}
         <div className="px-8 -mt-[10px]">
-          <textarea
-            ref={textContentRef}
-            value={noteContent}
-            onChange={(e) => {
-              setNoteContent(e.target.value);
-              e.target.style.height = 'auto';
-              e.target.style.height = e.target.scrollHeight + 'px';
-              
-              // Scroll cursor into view after a brief delay
-              setTimeout(() => {
-                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }, 50);
-            }}
-            onFocus={(e) => {
-              setTimeout(() => {
-                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }, 300);
-            }}
-            placeholder="Start writing..."
-            className="w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
-            style={{ minHeight: '100px' }}
-          />
-        </div>
-
-        {/* Images section - after textarea */}
-        {images.length > 0 && (
-          <div className="px-8 pb-4">
-            {images.map((image, index) => (
-              <div 
-                key={image.id} 
-                className="relative my-4 inline-block"
-                style={{ width: `${image.width}%` }}
-              >
-                <img 
-                  src={image.url} 
-                  alt=""
-                  className="rounded-[10px] w-full h-auto block"
-                  onClick={() => openImageViewer(index)}
+          {contentBlocks.map((block, index) => {
+            if (block.type === 'text') {
+              return (
+                <textarea
+                  key={block.id}
+                  value={block.content}
+                  onChange={(e) => {
+                    const newBlocks = [...contentBlocks];
+                    newBlocks[index] = { ...block, content: e.target.value };
+                    setContentBlocks(newBlocks);
+                    e.target.style.height = 'auto';
+                    e.target.style.height = Math.max(24, e.target.scrollHeight) + 'px';
+                  }}
+                  onFocus={(e) => {
+                    setTimeout(() => {
+                      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 300);
+                  }}
+                  placeholder={index === 0 ? "Start writing..." : ""}
+                  className="w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
+                  style={{ minHeight: '24px' }}
                 />
-                
-                {/* Resize handle - bottom right corner */}
-                <div
-                  className="absolute bottom-2 right-2 w-6 h-6 cursor-se-resize touch-none"
-                  onMouseDown={(e) => startResize(e, image.id)}
-                  onTouchStart={(e) => startResizeTouch(e, image.id)}
+              );
+            } else {
+              return (
+                <div 
+                  key={block.id} 
+                  className="relative my-4 inline-block"
+                  style={{ width: `${block.width}%` }}
                 >
-                  {/* Triangle shape */}
-                  <svg 
-                    viewBox="0 0 24 24" 
-                    className="w-full h-full text-white drop-shadow-md"
-                    fill="currentColor"
+                  <img 
+                    src={block.url} 
+                    alt=""
+                    className="rounded-[10px] w-full h-auto block cursor-pointer"
+                    onClick={() => {
+                      const imageIndex = contentBlocks
+                        .filter(b => b.type === 'image')
+                        .findIndex(b => b.id === block.id);
+                      openImageViewer(imageIndex);
+                    }}
+                  />
+                  
+                  {/* Resize handle */}
+                  <div
+                    className="absolute bottom-2 right-2 w-6 h-6 cursor-se-resize touch-none"
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                      startResize(e, block.id);
+                    }}
+                    onTouchStart={(e) => {
+                      e.stopPropagation();
+                      startResizeTouch(e, block.id);
+                    }}
                   >
-                    <path d="M22 22H6L22 6V22Z" fillOpacity="0.8"/>
-                    <path d="M22 22H6L22 6V22Z" stroke="rgba(0,0,0,0.2)" strokeWidth="1" fill="none"/>
-                  </svg>
+                    <svg 
+                      viewBox="0 0 24 24" 
+                      className="w-full h-full text-white drop-shadow-md"
+                      fill="currentColor"
+                    >
+                      <path d="M22 22H6L22 6V22Z" fillOpacity="0.8"/>
+                      <path d="M22 22H6L22 6V22Z" stroke="rgba(0,0,0,0.2)" strokeWidth="1" fill="none"/>
+                    </svg>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              );
+            }
+          })}
+        </div>
         
         {/* Spacer */}
         <div className="h-[40px] flex-shrink-0" />
