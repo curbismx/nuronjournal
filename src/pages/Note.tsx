@@ -174,7 +174,7 @@ const Note = () => {
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
             {monthYear}
           </h1>
-          <img src={threeDotsIcon} alt="Menu" className="w-[24px] h-[24px] absolute right-[30px] top-0" />
+          <img src={threeDotsIcon} alt="Menu" className="h-[24px] w-auto absolute right-[30px] top-0" />
         </div>
       </header>
 
