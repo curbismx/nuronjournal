@@ -1,12 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import settingsIcon from "@/assets/settings.png";
 import expandIcon from "@/assets/expand.png";
-import recordBig from "@/assets/recordbig-2.png";
 import plusBig from "@/assets/plusbig.png";
-import tapToRecord from "@/assets/01.png";
-import createFirst from "@/assets/02.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -35,28 +31,14 @@ const Index = () => {
 
       {/* Content Card */}
       <main className="flex-1 bg-journal-content rounded-t-[30px] -mt-0 flex flex-col items-center justify-center px-8">
-        <div className="flex flex-col items-center gap-12">
-          {/* Record Button */}
-          <div className="flex flex-col items-center">
-            <img src={tapToRecord} alt="Tap to record instruction" className="w-[280px] mb-4" />
-            <button 
-              onClick={() => navigate('/note?autostart=true')}
-              className="hover:scale-105 transition-transform"
-            >
-              <img src={recordBig} alt="Record" className="w-[200px] h-[200px]" />
-            </button>
-          </div>
-
-          {/* Plus Button */}
-          <div className="flex flex-col items-center">
-            <button 
-              onClick={() => navigate('/note')}
-              className="hover:scale-105 transition-transform"
-            >
-              <img src={plusBig} alt="Add Note" className="w-[60px] h-[60px]" />
-            </button>
-            <img src={createFirst} alt="Create note first instruction" className="w-[420px] mt-4" />
-          </div>
+        <div className="flex flex-col items-center gap-8">
+          <button 
+            onClick={() => navigate('/note')}
+            className="hover:scale-105 transition-transform flex flex-col items-center gap-4"
+          >
+            <img src={plusBig} alt="Create New Note" className="w-[80px] h-[80px]" />
+            <p className="text-[20px] font-outfit font-light text-[hsl(0,0%,40%)]">Create New Note</p>
+          </button>
         </div>
       </main>
     </div>
