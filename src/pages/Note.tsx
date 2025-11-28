@@ -444,28 +444,28 @@ const Note = () => {
           <div className="flex flex-col">
             <button 
               onClick={() => handleMenuAction('rewrite')} 
-              className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
             >
               <img src={starIcon} alt="" className="w-6 h-6" />
               <span className="text-gray-600 font-outfit">AI Rewrite</span>
             </button>
             <button 
               onClick={() => handleMenuAction('image')} 
-              className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
             >
               <img src={addImageIcon} alt="" className="w-6 h-6" />
               <span className="text-gray-600 font-outfit">Add Image</span>
             </button>
             <button 
               onClick={() => handleMenuAction('share')} 
-              className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
             >
               <img src={sharedIcon} alt="" className="w-6 h-6" />
               <span className="text-gray-600 font-outfit">Share Note</span>
             </button>
             <button 
               onClick={() => handleMenuAction('delete')} 
-              className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
             >
               <img src={trashIcon} alt="" className="w-6 h-6" />
               <span className="text-red-500 font-outfit">Delete Note</span>
@@ -477,15 +477,15 @@ const Note = () => {
           
           {/* Section 2 - Stats */}
           <div className="flex flex-col px-6 gap-2">
-            <div className="flex items-center gap-4 py-1">
+            <div className="flex items-center gap-2 py-1">
               <span className="font-outfit font-bold text-gray-400 w-12">{wordCount}</span>
               <span className="font-outfit text-gray-300">Words</span>
             </div>
-            <div className="flex items-center gap-4 py-1">
+            <div className="flex items-center gap-2 py-1">
               <span className="font-outfit font-bold text-gray-400 w-12">{characterCount}</span>
               <span className="font-outfit text-gray-300">Characters</span>
             </div>
-            <div className="flex items-center gap-4 py-1">
+            <div className="flex items-center gap-2 py-1">
               <span className="font-outfit font-bold text-gray-400 w-12">{paragraphCount}</span>
               <span className="font-outfit text-gray-300">Paragraphs</span>
             </div>
