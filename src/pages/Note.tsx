@@ -85,6 +85,7 @@ const Note = () => {
     if (navigator.share && navigator.canShare(shareData)) {
       try {
         await navigator.share(shareData);
+        console.log('Share completed via Web Share API');
       } catch (error) {
         // User cancelled or share failed - silently handle
         if ((error as Error).name !== 'AbortError') {
@@ -93,11 +94,13 @@ const Note = () => {
       }
     } else {
       // Fallback: Silently copy to clipboard
+      console.log('Web Share API not available, using clipboard fallback');
       try {
         const textToCopy = `${noteTitle}\n\n${noteContent}`;
         await navigator.clipboard.writeText(textToCopy);
+        console.log('Note copied to clipboard successfully');
       } catch (error) {
-        console.error('Copy failed:', error);
+        console.error('Copy to clipboard failed:', error);
       }
     }
   };
