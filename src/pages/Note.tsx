@@ -219,6 +219,16 @@ const Note = () => {
               setNoteContent(e.target.value);
               e.target.style.height = 'auto';
               e.target.style.height = e.target.scrollHeight + 'px';
+              
+              // Scroll cursor into view after a brief delay
+              setTimeout(() => {
+                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }, 50);
+            }}
+            onFocus={(e) => {
+              setTimeout(() => {
+                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }, 300);
             }}
             placeholder="Start writing..."
             className="w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
