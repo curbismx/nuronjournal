@@ -27,7 +27,7 @@ const Note = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const noteIdRef = useRef<string>(id || Date.now().toString());
-  const [noteTitle, setNoteTitle] = useState('Note Title');
+  const [noteTitle, setNoteTitle] = useState('');
   const [weather, setWeather] = useState<{ temp: number; weatherCode: number; WeatherIcon: React.ComponentType<any> } | null>(null);
   const [isRewriting, setIsRewriting] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -480,9 +480,9 @@ const Note = () => {
           <input
             type="text"
             value={noteTitle}
-            onChange={(e) => setNoteTitle(e.target.value || 'Note Title')}
-            className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] outline-none bg-transparent border-none w-full disabled:opacity-100 mb-4 focus:outline-none focus:ring-0 -mt-[10px]"
+            onChange={(e) => setNoteTitle(e.target.value)}
             placeholder="Note Title"
+            className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] outline-none bg-transparent border-none w-full mb-4 focus:outline-none focus:ring-0 -mt-[10px] placeholder:text-[hsl(60,1%,66%)]"
           />
         </div>
 
