@@ -213,6 +213,11 @@ const Note = () => {
     
     setImages(prev => [...prev, { id, url, width: 100 }]);
     e.target.value = '';
+    
+    // Refocus textarea after adding image
+    setTimeout(() => {
+      textContentRef.current?.focus();
+    }, 100);
   };
 
   const startResize = (e: React.MouseEvent, id: string) => {
@@ -362,8 +367,13 @@ const Note = () => {
           minHeight: 0
         }}
         onClick={(e) => {
+          const target = e.target as HTMLElement;
+          // Don't blur if tapping on textarea or input
+          if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') {
+            return;
+          }
           // If clicking directly on the scroll container (not on inputs), blur active element
-          if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === 'DIV') {
+          if (e.target === e.currentTarget || target.tagName === 'DIV') {
             setMenuOpen(false);
             if (document.activeElement instanceof HTMLElement) {
               document.activeElement.blur();
@@ -418,8 +428,8 @@ const Note = () => {
               }, 300);
             }}
             placeholder="Start writing..."
-            className="w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
-            style={{ minHeight: '100px' }}
+            className="w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden relative z-10"
+            style={{ minHeight: '150px' }}
           />
         </div>
 
@@ -435,20 +445,26 @@ const Note = () => {
                 <img 
                   src={image.url} 
                   alt=""
-                  className="rounded-[10px] w-full h-auto block"
+                  className="rounded-[10px] w-full h-auto block cursor-pointer"
                   onClick={() => openImageViewer(index)}
                 />
                 
                 {/* Resize handle - bottom right corner */}
                 <div
-                  className="absolute bottom-2 right-2 w-6 h-6 cursor-se-resize touch-none"
-                  onMouseDown={(e) => startResize(e, image.id)}
-                  onTouchStart={(e) => startResizeTouch(e, image.id)}
+                  className="absolute bottom-2 right-2 w-6 h-6 cursor-se-resize touch-none pointer-events-auto"
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    startResize(e, image.id);
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                    startResizeTouch(e, image.id);
+                  }}
                 >
                   {/* Triangle shape */}
                   <svg 
                     viewBox="0 0 24 24" 
-                    className="w-full h-full text-white drop-shadow-md"
+                    className="w-full h-full text-white drop-shadow-md pointer-events-none"
                     fill="currentColor"
                   >
                     <path d="M22 22H6L22 6V22Z" fillOpacity="0.8"/>
