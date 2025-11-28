@@ -118,5 +118,4 @@ All colors MUST be HSL.
 
 .ai-rewriting {
   animation: ai-glow 1.5s ease-in-out infinite;
-  border: 2px solid rgba(147, 112, 219, 0.4);
 }
