@@ -155,7 +155,7 @@ const Note = () => {
           <div className="flex items-start gap-4 mb-4">
             <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">{dayNumber}</div>
             <div className="flex flex-col">
-              <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">{dayName}</div>
+              <div className="text-[20px] font-outfit font-semibold tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">{dayName}</div>
               {weather && (
                 <div className="flex items-center gap-1.5 mt-1">
                   <weather.WeatherIcon size={20} className="text-[hsl(60,1%,66%)]" />
