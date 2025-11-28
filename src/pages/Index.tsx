@@ -18,20 +18,20 @@ const Index = () => {
       {/* Main Content - Centered */}
       <main className="flex-1 flex flex-col items-center justify-center px-8">
         {/* Text and Record Button Container */}
-        <div className="relative flex flex-col items-center">
+        <div className="relative">
           {/* Handwritten Text Image */}
           <img 
             src={textImage} 
             alt="Instructions" 
-            className="w-full max-w-[320px] mb-8"
+            className="w-full max-w-[320px]"
           />
           
-          {/* Red Record Button */}
+          {/* Red Record Button - Overlaid on text */}
           <button 
             onClick={() => navigate('/note')}
-            className="hover:scale-105 transition-transform"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hover:scale-105 transition-transform"
             style={{
-              filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3))'
+              filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
             }}
           >
             <img 
