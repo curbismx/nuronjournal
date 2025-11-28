@@ -194,7 +194,7 @@ const Index = () => {
 
       {/* Floating add button */}
       <img 
-        src={floatingAddButton} 
+        src={recordButton} 
         alt="Add Note"
         onClick={() => navigate('/note')}
         className="fixed bottom-[30px] right-[30px] z-50 cursor-pointer"
