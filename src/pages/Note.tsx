@@ -479,7 +479,7 @@ const Note = () => {
     <div className="fixed inset-0 flex flex-col bg-journal-header overflow-hidden">
       {/* Fixed dark header */}
       <header className="flex-shrink-0 bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] h-[150px] z-30">
-        <div className="flex items-center justify-between mb-auto">
+        <div className="flex items-center justify-between mb-auto -mt-[15px]">
           <Button
             variant="ghost"
             onClick={handleBack}
@@ -489,7 +489,7 @@ const Note = () => {
           </Button>
           <div className="flex-1" />
         </div>
-        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px] mt-[46px]">
+        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px] mt-[31px]">
           {monthYear}
         </h1>
       </header>
