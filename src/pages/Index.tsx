@@ -4,7 +4,7 @@ import settingsIcon from "@/assets/settings-2.png";
 import recordButton from "@/assets/rbigecordbutton.png";
 import textImage from "@/assets/text.png";
 import plusIcon from "@/assets/plusbig.png";
-import threeDotsIcon from "@/assets/3dots.png";
+import expandIcon from "@/assets/expand-2.png";
 import floatingAddButton from "@/assets/bigredbuttonnoshadow.png";
 import smallArrow from "@/assets/smallarrow.png";
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
@@ -142,7 +142,7 @@ const Index = () => {
             onClick={() => setMenuOpen(!menuOpen)}
             className="absolute right-[30px] top-0"
           >
-            <img src={threeDotsIcon} alt="Menu" className="h-[24px] w-auto" />
+            <img src={expandIcon} alt="Menu" className="h-[24px] w-auto" />
           </button>
         </div>
       </header>
