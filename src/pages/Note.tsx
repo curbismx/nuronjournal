@@ -75,6 +75,33 @@ const Note = () => {
     }
   };
 
+  const shareNote = async () => {
+    const shareData = {
+      title: noteTitle,
+      text: noteContent,
+    };
+
+    // Check if Web Share API is available
+    if (navigator.share && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        // User cancelled or share failed - silently handle
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Share failed:', error);
+        }
+      }
+    } else {
+      // Fallback: Silently copy to clipboard
+      try {
+        const textToCopy = `${noteTitle}\n\n${noteContent}`;
+        await navigator.clipboard.writeText(textToCopy);
+      } catch (error) {
+        console.error('Copy failed:', error);
+      }
+    }
+  };
+
   useEffect(() => {
     // Fetch weather data
     const fetchWeather = async () => {
@@ -254,6 +281,8 @@ const Note = () => {
       rewriteText();
     } else if (action === 'image') {
       fileInputRef.current?.click();
+    } else if (action === 'share') {
+      shareNote();
     }
     setMenuOpen(false);
   };
