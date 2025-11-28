@@ -6,6 +6,7 @@ import textImage from "@/assets/text.png";
 import plusIcon from "@/assets/plusbig.png";
 import threeDotsIcon from "@/assets/3dots.png";
 import floatingAddButton from "@/assets/bigredbuttonnoshadow.png";
+import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 interface SavedNote {
   id: string;
@@ -16,6 +17,7 @@ interface SavedNote {
   >;
   createdAt: string;
   updatedAt: string;
+  weather?: { temp: number; weatherCode: number };
 }
 
 interface GroupedNotes {
@@ -64,6 +66,18 @@ const Index = () => {
       .filter(b => b.type === 'text')
       .map(b => (b as { type: 'text'; id: string; content: string }).content)
       .join('\n\n');
+  };
+
+  // Map weather code to icon
+  const getWeatherIcon = (weatherCode: number) => {
+    if (weatherCode >= 61 && weatherCode <= 67) return CloudRain;
+    if (weatherCode >= 71 && weatherCode <= 77) return CloudSnow;
+    if (weatherCode >= 80 && weatherCode <= 82) return CloudRain;
+    if (weatherCode >= 51 && weatherCode <= 57) return CloudDrizzle;
+    if (weatherCode >= 2 && weatherCode <= 3) return Cloud;
+    if (weatherCode === 45 || weatherCode === 48) return CloudFog;
+    if (weatherCode >= 95) return CloudLightning;
+    return Sun;
   };
 
   // Show original start page if no notes
@@ -143,7 +157,7 @@ const Index = () => {
       >
         <div style={{ minHeight: 'calc(100% + 1px)' }}>
           {/* Notes list */}
-          <div className="pt-6">
+          <div className="pt-[12px]">
             {groupedNotes.map((group) => (
               <div key={group.date}>
                 {group.notes.map((note, index) => {
@@ -151,6 +165,7 @@ const Index = () => {
                   const dayNumber = noteDate.getDate();
                   const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
                   const preview = getNotePreview(note);
+                  const WeatherIcon = note.weather ? getWeatherIcon(note.weather.weatherCode) : null;
 
                   return (
                     <div 
@@ -158,28 +173,34 @@ const Index = () => {
                       className="border-b border-[hsl(0,0%,85%)] last:border-b-0 cursor-pointer hover:bg-[hsl(0,0%,95%)] transition-colors"
                       onClick={() => navigate(`/note/${note.id}`)}
                     >
-                      <div className="px-8 py-6">
+                      <div className={index === 0 ? "px-8 pt-[12px] pb-2" : "px-8 py-6"}>
                         {/* Only show date for first note of each day */}
                         {index === 0 && (
-                          <div className="flex items-start gap-4 mb-3">
-                            <div className="text-[48px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
+                          <div className="flex items-start gap-4 mb-4">
+                            <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
                               {dayNumber}
                             </div>
                             <div className="flex flex-col">
-                              <div className="text-[16px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
+                              <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
                                 {dayName}
                               </div>
+                              {WeatherIcon && note.weather && (
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  <WeatherIcon size={20} className="text-[hsl(60,1%,66%)]" />
+                                  <span className="text-[16px] font-outfit font-light text-[hsl(60,1%,66%)]">{note.weather.temp}°C</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
                         
                         {/* Title */}
-                        <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-1">
+                        <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 ${index === 0 ? '-mt-[10px]' : ''}`}>
                           {note.title || 'Untitled'}
                         </h3>
                         
                         {/* Body preview - 2 lines max */}
-                        <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2">
+                        <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px]">
                           {preview || 'No content'}
                         </p>
                       </div>

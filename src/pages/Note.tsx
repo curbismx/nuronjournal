@@ -28,7 +28,7 @@ const Note = () => {
   const { id } = useParams();
   const noteIdRef = useRef<string>(id || Date.now().toString());
   const [noteTitle, setNoteTitle] = useState('Note Title');
-  const [weather, setWeather] = useState<{ temp: number; WeatherIcon: React.ComponentType<any> } | null>(null);
+  const [weather, setWeather] = useState<{ temp: number; weatherCode: number; WeatherIcon: React.ComponentType<any> } | null>(null);
   const [isRewriting, setIsRewriting] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [titleGenerated, setTitleGenerated] = useState(false);
@@ -176,6 +176,7 @@ const Note = () => {
             
             setWeather({
               temp: Math.round(data.current.temperature_2m),
+              weatherCode,
               WeatherIcon
             });
           },
@@ -236,6 +237,7 @@ const Note = () => {
       contentBlocks,
       createdAt: id && notes.find(n => n.id === id)?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      weather: weather ? { temp: weather.temp, weatherCode: weather.weatherCode } : undefined,
     };
     
     const existingIndex = notes.findIndex(n => n.id === noteIdRef.current);
