@@ -497,7 +497,7 @@ const Note = () => {
       {/* Scrollable content area */}
       <div 
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto"
+        className="flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 -mt-[15px]"
         style={{ 
           WebkitOverflowScrolling: 'touch',
           overscrollBehaviorY: 'auto',
