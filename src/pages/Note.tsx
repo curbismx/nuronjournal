@@ -19,11 +19,15 @@ const Note = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [titleGenerated, setTitleGenerated] = useState(false);
   const [images, setImages] = useState<Array<{id: string, url: string, width: number}>>([]);
+  const [resizingId, setResizingId] = useState<string | null>(null);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const textContentRef = useRef<HTMLTextAreaElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const resizeStartX = useRef<number>(0);
+  const resizeStartWidth = useRef<number>(0);
+  const resizingIdRef = useRef<string | null>(null);
 
   const generateTitle = async (text: string) => {
     try {
@@ -112,6 +116,11 @@ const Note = () => {
     fetchWeather();
   }, []);
 
+  // Keep ref in sync
+  useEffect(() => {
+    resizingIdRef.current = resizingId;
+  }, [resizingId]);
+
   // Auto-generate title when user has written enough (only once)
   useEffect(() => {
     if (noteContent.trim().split(/\s+/).length >= 10 && !titleGenerated) {
@@ -136,6 +145,16 @@ const Note = () => {
     };
   }, [menuOpen]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
+
   const handleBack = () => {
     navigate('/');
   };
@@ -149,6 +168,69 @@ const Note = () => {
     
     setImages(prev => [...prev, { id, url, width: 100 }]);
     e.target.value = '';
+  };
+
+  const startResize = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    setResizingId(id);
+    resizeStartX.current = e.clientX;
+    const image = images.find(img => img.id === id);
+    resizeStartWidth.current = image?.width ?? 100;
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!resizingIdRef.current) return;
+    
+    const deltaX = e.clientX - resizeStartX.current;
+    const containerWidth = scrollContainerRef.current?.clientWidth ?? 300;
+    const deltaPercent = (deltaX / containerWidth) * 100;
+    const newWidth = Math.min(100, Math.max(30, resizeStartWidth.current + deltaPercent));
+    
+    setImages(prev => prev.map(img => 
+      img.id === resizingIdRef.current ? { ...img, width: newWidth } : img
+    ));
+  };
+
+  const handleMouseUp = () => {
+    setResizingId(null);
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  };
+
+  const startResizeTouch = (e: React.TouchEvent, id: string) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    setResizingId(id);
+    resizeStartX.current = touch.clientX;
+    const image = images.find(img => img.id === id);
+    resizeStartWidth.current = image?.width ?? 100;
+    
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (!resizingIdRef.current) return;
+    e.preventDefault();
+    
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - resizeStartX.current;
+    const containerWidth = scrollContainerRef.current?.clientWidth ?? 300;
+    const deltaPercent = (deltaX / containerWidth) * 100;
+    const newWidth = Math.min(100, Math.max(30, resizeStartWidth.current + deltaPercent));
+    
+    setImages(prev => prev.map(img => 
+      img.id === resizingIdRef.current ? { ...img, width: newWidth } : img
+    ));
+  };
+
+  const handleTouchEnd = () => {
+    setResizingId(null);
+    document.removeEventListener('touchmove', handleTouchMove);
+    document.removeEventListener('touchend', handleTouchEnd);
   };
 
   const handleMenuAction = (action: string) => {
@@ -273,13 +355,33 @@ const Note = () => {
         {images.length > 0 && (
           <div className="px-8 pb-4">
             {images.map((image, index) => (
-              <div key={image.id} className="relative my-4">
+              <div 
+                key={image.id} 
+                className="relative my-4 inline-block"
+                style={{ width: `${image.width}%` }}
+              >
                 <img 
                   src={image.url} 
                   alt=""
-                  className="rounded-[10px]"
-                  style={{ width: `${image.width}%` }}
+                  className="rounded-[10px] w-full h-auto block"
                 />
+                
+                {/* Resize handle - bottom right corner */}
+                <div
+                  className="absolute bottom-2 right-2 w-6 h-6 cursor-se-resize touch-none"
+                  onMouseDown={(e) => startResize(e, image.id)}
+                  onTouchStart={(e) => startResizeTouch(e, image.id)}
+                >
+                  {/* Triangle shape */}
+                  <svg 
+                    viewBox="0 0 24 24" 
+                    className="w-full h-full text-white drop-shadow-md"
+                    fill="currentColor"
+                  >
+                    <path d="M22 22H6L22 6V22Z" fillOpacity="0.8"/>
+                    <path d="M22 22H6L22 6V22Z" stroke="rgba(0,0,0,0.2)" strokeWidth="1" fill="none"/>
+                  </svg>
+                </div>
               </div>
             ))}
           </div>
