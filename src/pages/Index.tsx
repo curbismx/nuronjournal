@@ -174,10 +174,10 @@ const Index = () => {
                       className="border-b border-[hsl(0,0%,85%)] last:border-b-0 cursor-pointer hover:bg-[hsl(0,0%,95%)] transition-colors"
                       onClick={() => navigate(`/note/${note.id}`)}
                     >
-                      <div className={index === 0 ? "px-8 pt-[12px] pb-2 relative" : "px-8 py-6 relative"}>
+                      <div className={index === 0 ? "px-8 pt-[12px] pb-2" : "px-8 py-6"}>
                         {/* Only show date for first note of each day */}
                         {index === 0 && (
-                          <div className="flex items-start gap-4 mb-4 pr-[50px]">
+                          <div className="flex items-start gap-4 mb-4">
                             <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
                               {dayNumber}
                             </div>
@@ -196,7 +196,7 @@ const Index = () => {
                         )}
                         
                         {/* Title and Body Container with reduced width */}
-                        <div className="pr-[50px]">
+                        <div className="pr-[50px] relative">
                           {/* Title */}
                           <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 ${index === 0 ? '-mt-[10px]' : ''}`}>
                             {note.title || 'Untitled'}
@@ -206,14 +206,14 @@ const Index = () => {
                           <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px]">
                             {preview || 'No content'}
                           </p>
-                        </div>
 
-                        {/* Arrow icon - positioned on the right, centered vertically with title and body */}
-                        <img 
-                          src={smallArrow} 
-                          alt="" 
-                          className="absolute right-[30px] top-1/2 -translate-y-1/2 w-[20px] h-auto"
-                        />
+                          {/* Arrow icon - positioned on the right, centered vertically with title and body only */}
+                          <img 
+                            src={smallArrow} 
+                            alt="" 
+                            className="absolute right-[30px] top-1/2 -translate-y-1/2 w-[20px] h-auto"
+                          />
+                        </div>
                       </div>
                     </div>
                   );
