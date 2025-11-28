@@ -5,6 +5,7 @@ import recordButton from "@/assets/rbigecordbutton.png";
 import textImage from "@/assets/text.png";
 import plusIcon from "@/assets/plusbig.png";
 import threeDotsIcon from "@/assets/3dots.png";
+import floatingAddButton from "@/assets/floating-add-button.png";
 
 interface SavedNote {
   id: string;
@@ -190,6 +191,21 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* Floating add button */}
+      <button
+        onClick={() => navigate('/note')}
+        className="fixed bottom-[30px] right-[30px] z-50 hover:scale-105 transition-transform"
+        style={{
+          filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2))'
+        }}
+      >
+        <img 
+          src={floatingAddButton} 
+          alt="Add Note" 
+          className="w-[60px] h-[60px]"
+        />
+      </button>
     </div>
   );
 };
