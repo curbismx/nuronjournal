@@ -1,5 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+
+interface SavedNote {
+  id: string;
+  title: string;
+  contentBlocks: ContentBlock[];
+  createdAt: string;
+  updatedAt: string;
+  weather?: { temp: number; weatherCode: number };
+}
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import backIcon from '@/assets/back.png';
@@ -16,6 +25,8 @@ type ContentBlock =
 
 const Note = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const noteIdRef = useRef<string>(id || Date.now().toString());
   const [noteTitle, setNoteTitle] = useState('Note Title');
   const [weather, setWeather] = useState<{ temp: number; WeatherIcon: React.ComponentType<any> } | null>(null);
   const [isRewriting, setIsRewriting] = useState(false);
@@ -120,6 +131,22 @@ const Note = () => {
     }
   };
 
+  // Load existing note on mount
+  useEffect(() => {
+    if (id) {
+      const stored = localStorage.getItem('nuron-notes');
+      if (stored) {
+        const notes: SavedNote[] = JSON.parse(stored);
+        const existingNote = notes.find(n => n.id === id);
+        if (existingNote) {
+          setNoteTitle(existingNote.title);
+          setContentBlocks(existingNote.contentBlocks);
+          setTitleGenerated(true);
+        }
+      }
+    }
+  }, [id]);
+
   useEffect(() => {
     // Fetch weather data
     const fetchWeather = async () => {
@@ -194,15 +221,43 @@ const Note = () => {
     };
   }, [menuOpen]);
 
-  // Cleanup on unmount
+  // Save note function
+  const saveNote = () => {
+    const noteContent = getNoteContent();
+    // Only save if there's actual content
+    if (!noteContent.trim() && contentBlocks.filter(b => b.type === 'image').length === 0) {
+      return;
+    }
+
+    const notes: SavedNote[] = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
+    const noteData: SavedNote = {
+      id: noteIdRef.current,
+      title: noteTitle,
+      contentBlocks,
+      createdAt: id && notes.find(n => n.id === id)?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    const existingIndex = notes.findIndex(n => n.id === noteIdRef.current);
+    if (existingIndex >= 0) {
+      notes[existingIndex] = noteData;
+    } else {
+      notes.unshift(noteData);
+    }
+    
+    localStorage.setItem('nuron-notes', JSON.stringify(notes));
+  };
+
+  // Save on unmount
   useEffect(() => {
     return () => {
+      saveNote();
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, []);
+  }, [noteTitle, contentBlocks]);
 
   // Prevent body scroll when viewer is open
   useEffect(() => {
@@ -217,6 +272,7 @@ const Note = () => {
   }, [imageViewerOpen]);
 
   const handleBack = () => {
+    saveNote();
     navigate('/');
   };
 
