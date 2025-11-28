@@ -20,6 +20,9 @@ const Note = () => {
   const [titleGenerated, setTitleGenerated] = useState(false);
   const [images, setImages] = useState<Array<{id: string, url: string, width: number}>>([]);
   const [resizingId, setResizingId] = useState<string | null>(null);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const touchStartX = useRef<number>(0);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const textContentRef = useRef<HTMLTextAreaElement | null>(null);
@@ -155,6 +158,18 @@ const Note = () => {
     };
   }, []);
 
+  // Prevent body scroll when viewer is open
+  useEffect(() => {
+    if (imageViewerOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [imageViewerOpen]);
+
   const handleBack = () => {
     navigate('/');
   };
@@ -241,6 +256,31 @@ const Note = () => {
       fileInputRef.current?.click();
     }
     setMenuOpen(false);
+  };
+
+  const openImageViewer = (index: number) => {
+    setCurrentImageIndex(index);
+    setImageViewerOpen(true);
+  };
+
+  const handleViewerTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleViewerTouchEnd = (e: React.TouchEvent) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const deltaX = touchEndX - touchStartX.current;
+    const minSwipeDistance = 50;
+    
+    if (Math.abs(deltaX) > minSwipeDistance) {
+      if (deltaX > 0 && currentImageIndex > 0) {
+        // Swiped right - go to previous
+        setCurrentImageIndex(i => i - 1);
+      } else if (deltaX < 0 && currentImageIndex < images.length - 1) {
+        // Swiped left - go to next
+        setCurrentImageIndex(i => i + 1);
+      }
+    }
   };
 
   // Calculate stats
@@ -364,6 +404,7 @@ const Note = () => {
                   src={image.url} 
                   alt=""
                   className="rounded-[10px] w-full h-auto block"
+                  onClick={() => openImageViewer(index)}
                 />
                 
                 {/* Resize handle - bottom right corner */}
@@ -460,6 +501,84 @@ const Note = () => {
         className="hidden"
         onChange={handleImageSelect}
       />
+
+      {/* Fullscreen image viewer */}
+      {imageViewerOpen && (
+        <div 
+          className="fixed inset-0 z-50 bg-black animate-in fade-in duration-200"
+          style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+          onTouchStart={handleViewerTouchStart}
+          onTouchEnd={handleViewerTouchEnd}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setImageViewerOpen(false);
+            }
+          }}
+        >
+          {/* Header bar */}
+          <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-12 pb-4 z-10">
+            {/* Image counter */}
+            <div className="text-white/70 text-sm font-outfit">
+              {images.length > 1 ? `${currentImageIndex + 1} of ${images.length}` : ''}
+            </div>
+            
+            {/* Done button */}
+            <button 
+              className="text-white text-[17px] font-outfit font-medium"
+              onClick={() => setImageViewerOpen(false)}
+            >
+              Done
+            </button>
+          </div>
+          
+          {/* Main image */}
+          <div className="absolute inset-0 flex items-center justify-center p-4">
+            <img 
+              src={images[currentImageIndex]?.url} 
+              alt=""
+              className="max-w-full max-h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          
+          {/* Navigation arrows for desktop/fallback */}
+          {images.length > 1 && (
+            <>
+              {currentImageIndex > 0 && (
+                <button 
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-white/60 text-3xl"
+                  onClick={() => setCurrentImageIndex(i => i - 1)}
+                >
+                  ‹
+                </button>
+              )}
+              {currentImageIndex < images.length - 1 && (
+                <button 
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-white/60 text-3xl"
+                  onClick={() => setCurrentImageIndex(i => i + 1)}
+                >
+                  ›
+                </button>
+              )}
+            </>
+          )}
+          
+          {/* Dot indicators for multiple images */}
+          {images.length > 1 && (
+            <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-2">
+              {images.map((_, index) => (
+                <div 
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    index === currentImageIndex ? 'bg-white' : 'bg-white/40'
+                  }`}
+                  onClick={() => setCurrentImageIndex(index)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
     </div>
   );
