@@ -455,20 +455,33 @@ const Note = () => {
           </div>
         )}
 
-        {/* Tap area to continue writing below images */}
-        <div 
-          className="px-8 min-h-[200px] flex-1"
-          onClick={() => {
-            textContentRef.current?.focus();
-            // Move cursor to end of text
-            const len = noteContent.length;
-            textContentRef.current?.setSelectionRange(len, len);
-          }}
-        >
-          {noteContent.length === 0 && images.length > 0 && (
-            <p className="text-[hsl(0,0%,60%)] text-[16px] font-outfit">Tap to add text...</p>
-          )}
-        </div>
+        {/* Text area below images */}
+        {images.length > 0 && (
+          <div className="px-8 pb-4">
+            <textarea
+              value=""
+              onChange={(e) => {
+                // Append new text to main noteContent
+                setNoteContent(prev => prev + e.target.value);
+                // Clear this textarea
+                e.target.value = '';
+                // Focus main textarea at end
+                setTimeout(() => {
+                  if (textContentRef.current) {
+                    textContentRef.current.focus();
+                    const len = noteContent.length + e.target.value.length;
+                    textContentRef.current.setSelectionRange(len, len);
+                    textContentRef.current.style.height = 'auto';
+                    textContentRef.current.style.height = textContentRef.current.scrollHeight + 'px';
+                  }
+                }, 0);
+              }}
+              placeholder="Continue writing..."
+              className="w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0"
+              style={{ minHeight: '44px' }}
+            />
+          </div>
+        )}
         
         {/* Spacer */}
         <div className="h-[40px] flex-shrink-0" />
