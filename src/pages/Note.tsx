@@ -18,10 +18,15 @@ const Note = () => {
   const [isRewriting, setIsRewriting] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [titleGenerated, setTitleGenerated] = useState(false);
+  const [images, setImages] = useState<Array<{id: string, url: string, position: number, width: number}>>([]);
+  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const textContentRef = useRef<HTMLTextAreaElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const generateTitle = async (text: string) => {
     try {
@@ -134,6 +139,13 @@ const Note = () => {
     };
   }, [menuOpen]);
 
+  // Cleanup image URLs on unmount
+  useEffect(() => {
+    return () => {
+      images.forEach(img => URL.revokeObjectURL(img.url));
+    };
+  }, [images]);
+
   const handleBack = () => {
     navigate('/');
   };
@@ -142,8 +154,129 @@ const Note = () => {
     console.log(`Menu action: ${action}`);
     if (action === 'rewrite') {
       rewriteText();
+    } else if (action === 'image') {
+      fileInputRef.current?.click();
     }
     setMenuOpen(false);
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const url = URL.createObjectURL(file);
+    const id = Date.now().toString();
+    
+    // Get cursor position, or use end of text
+    const textarea = textContentRef.current;
+    const position = textarea?.selectionStart ?? noteContent.length;
+    
+    // Insert a placeholder marker in the text where image will appear
+    const before = noteContent.slice(0, position);
+    const after = noteContent.slice(position);
+    const imageMarker = `\n[IMAGE:${id}]\n`;
+    
+    setNoteContent(before + imageMarker + after);
+    setImages(prev => [...prev, { id, url, position, width: 100 }]); // width as percentage
+    
+    // Haptic feedback
+    if (navigator.vibrate) navigator.vibrate(10);
+    
+    // Reset input so same file can be selected again
+    e.target.value = '';
+  };
+
+  const resizeImage = (id: string, width: number) => {
+    setImages(prev => prev.map(img => img.id === id ? {...img, width} : img));
+  };
+
+  const openImageViewer = (index: number) => {
+    setCurrentImageIndex(index);
+    setImageViewerOpen(true);
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeImageViewer = () => {
+    setImageViewerOpen(false);
+    document.body.style.overflow = '';
+  };
+
+  const renderContentWithImages = () => {
+    const parts = noteContent.split(/(\[IMAGE:\d+\])/g);
+    const elements: JSX.Element[] = [];
+    let textBuffer = '';
+    
+    parts.forEach((part, index) => {
+      const imageMatch = part.match(/\[IMAGE:(\d+)\]/);
+      
+      if (imageMatch) {
+        // Render text before image
+        if (textBuffer) {
+          elements.push(
+            <div key={`text-${index}`} className="whitespace-pre-wrap">
+              {textBuffer}
+            </div>
+          );
+          textBuffer = '';
+        }
+        
+        // Render image
+        const imageId = imageMatch[1];
+        const image = images.find(img => img.id === imageId);
+        const imageIndex = images.findIndex(img => img.id === imageId);
+        
+        if (image) {
+          elements.push(
+            <div key={`image-${imageId}`} className="relative my-4 group">
+              <img 
+                src={image.url} 
+                alt=""
+                className="rounded-[5px] max-w-full cursor-pointer"
+                style={{ width: `${image.width}%` }}
+                onClick={() => openImageViewer(imageIndex)}
+              />
+              {/* Resize overlay - shows on tap/hover */}
+              <div className="absolute inset-0 bg-black/20 rounded-[5px] opacity-0 group-active:opacity-100 md:group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="flex gap-4">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); resizeImage(image.id, 50); }} 
+                    className="bg-white/90 rounded-full px-3 py-1 text-sm font-medium"
+                  >
+                    Small
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); resizeImage(image.id, 75); }} 
+                    className="bg-white/90 rounded-full px-3 py-1 text-sm font-medium"
+                  >
+                    Medium
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); resizeImage(image.id, 100); }} 
+                    className="bg-white/90 rounded-full px-3 py-1 text-sm font-medium"
+                  >
+                    Full
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        }
+      } else {
+        textBuffer += part;
+      }
+    });
+    
+    // Render remaining text
+    if (textBuffer) {
+      elements.push(
+        <div key="text-final" className="whitespace-pre-wrap">
+          {textBuffer}
+        </div>
+      );
+    }
+    
+    return elements;
   };
 
   // Calculate stats
@@ -230,6 +363,15 @@ const Note = () => {
 
         {/* Body text */}
         <div className="px-8 -mt-[10px]">
+          {/* Hidden file input */}
+          <input 
+            type="file" 
+            ref={fileInputRef}
+            accept="image/*"
+            className="hidden"
+            onChange={handleImageSelect}
+          />
+          
           <textarea
             ref={textContentRef}
             value={noteContent}
@@ -252,6 +394,13 @@ const Note = () => {
             className="w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
             style={{ minHeight: '100px' }}
           />
+          
+          {/* Render images inline */}
+          {images.length > 0 && (
+            <div className="mt-4">
+              {renderContentWithImages()}
+            </div>
+          )}
         </div>
         
         {/* Spacer */}
@@ -316,6 +465,63 @@ const Note = () => {
               <span className="font-outfit text-gray-300">Paragraphs</span>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Fullscreen Image Viewer */}
+      {imageViewerOpen && (
+        <div 
+          className="fixed inset-0 z-50 bg-black flex items-center justify-center pt-[env(safe-area-inset-top)] animate-in fade-in zoom-in-95 duration-200"
+          onClick={closeImageViewer}
+        >
+          {/* Close button */}
+          <button 
+            className="absolute top-12 right-4 text-white/80 text-lg font-light z-50"
+            onClick={closeImageViewer}
+          >
+            Done
+          </button>
+          
+          {/* Image counter */}
+          {images.length > 1 && (
+            <div className="absolute top-12 left-1/2 -translate-x-1/2 text-white/80 text-sm">
+              {currentImageIndex + 1} of {images.length}
+            </div>
+          )}
+          
+          {/* Main image */}
+          <img 
+            src={images[currentImageIndex]?.url} 
+            alt=""
+            className="max-w-full max-h-full object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+          
+          {/* Swipe navigation for multiple images */}
+          {images.length > 1 && (
+            <>
+              <button 
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-4xl"
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setCurrentImageIndex(i => Math.max(0, i - 1)); 
+                }}
+                style={{ visibility: currentImageIndex > 0 ? 'visible' : 'hidden' }}
+              >
+                ‹
+              </button>
+              <button 
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-4xl"
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setCurrentImageIndex(i => Math.min(images.length - 1, i + 1)); 
+                }}
+                style={{ visibility: currentImageIndex < images.length - 1 ? 'visible' : 'hidden' }}
+              >
+                ›
+              </button>
+            </>
+          )}
         </div>
       )}
 
