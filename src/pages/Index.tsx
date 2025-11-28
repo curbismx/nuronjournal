@@ -200,7 +200,9 @@ const Index = () => {
         className="fixed bottom-[30px] right-[30px] z-50 cursor-pointer"
         style={{
           width: '51px',
-          height: '51px'
+          height: '51px',
+          minWidth: '51px',
+          minHeight: '51px'
         }}
       />
     </div>
