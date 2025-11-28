@@ -183,6 +183,14 @@ const Note = () => {
           overscrollBehaviorY: 'auto',
           minHeight: 0
         }}
+        onClick={(e) => {
+          // If clicking directly on the scroll container (not on inputs), blur active element
+          if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === 'DIV') {
+            if (document.activeElement instanceof HTMLElement) {
+              document.activeElement.blur();
+            }
+          }
+        }}
       >
         <div style={{ minHeight: 'calc(100% + 1px)' }}>
           {/* Date and weather */}
