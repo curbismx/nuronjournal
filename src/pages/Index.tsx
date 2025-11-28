@@ -23,13 +23,13 @@ const Index = () => {
           <img 
             src={textImage} 
             alt="Instructions" 
-            className="w-full max-w-[320px]"
+            className="w-full max-w-[320px] mt-[15px]"
           />
           
           {/* Red Record Button - Overlaid on text */}
           <button 
             onClick={() => navigate('/note')}
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hover:scale-105 transition-transform"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -mt-[15px] hover:scale-105 transition-transform"
             style={{
               filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
             }}
