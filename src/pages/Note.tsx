@@ -405,27 +405,17 @@ const Note = () => {
             onChange={(e) => {
               setNoteContent(e.target.value);
               e.target.style.height = 'auto';
-              e.target.style.height = e.target.scrollHeight + 'px';
-              
-              // Scroll cursor into view after a brief delay
-              setTimeout(() => {
-                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }, 50);
-            }}
-            onFocus={(e) => {
-              setTimeout(() => {
-                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }, 300);
+              e.target.style.height = Math.max(24, e.target.scrollHeight) + 'px';
             }}
             placeholder="Start writing..."
             className="w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
-            style={{ minHeight: '100px' }}
+            style={{ minHeight: '24px' }}
           />
         </div>
 
-        {/* Images section - after textarea */}
+        {/* Images section */}
         {images.length > 0 && (
-          <div className="px-8 pb-4">
+          <div className="px-8">
             {images.map((image, index) => (
               <div 
                 key={image.id} 
@@ -435,17 +425,22 @@ const Note = () => {
                 <img 
                   src={image.url} 
                   alt=""
-                  className="rounded-[10px] w-full h-auto block"
+                  className="rounded-[10px] w-full h-auto block cursor-pointer"
                   onClick={() => openImageViewer(index)}
                 />
                 
-                {/* Resize handle - bottom right corner */}
+                {/* Resize handle */}
                 <div
                   className="absolute bottom-2 right-2 w-6 h-6 cursor-se-resize touch-none"
-                  onMouseDown={(e) => startResize(e, image.id)}
-                  onTouchStart={(e) => startResizeTouch(e, image.id)}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    startResize(e, image.id);
+                  }}
+                  onTouchStart={(e) => {
+                    e.stopPropagation();
+                    startResizeTouch(e, image.id);
+                  }}
                 >
-                  {/* Triangle shape */}
                   <svg 
                     viewBox="0 0 24 24" 
                     className="w-full h-full text-white drop-shadow-md"
@@ -459,6 +454,21 @@ const Note = () => {
             ))}
           </div>
         )}
+
+        {/* Tap area to continue writing below images */}
+        <div 
+          className="px-8 min-h-[200px] flex-1"
+          onClick={() => {
+            textContentRef.current?.focus();
+            // Move cursor to end of text
+            const len = noteContent.length;
+            textContentRef.current?.setSelectionRange(len, len);
+          }}
+        >
+          {noteContent.length === 0 && images.length > 0 && (
+            <p className="text-[hsl(0,0%,60%)] text-[16px] font-outfit">Tap to add text...</p>
+          )}
+        </div>
         
         {/* Spacer */}
         <div className="h-[40px] flex-shrink-0" />
