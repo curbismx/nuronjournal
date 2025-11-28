@@ -158,7 +158,7 @@ const Index = () => {
       >
         <div style={{ minHeight: 'calc(100% + 1px)' }}>
           {/* Notes list */}
-          <div className="pt-[12px]">
+          <div>
             {groupedNotes.map((group) => (
               <div key={group.date}>
                 {group.notes.map((note, index) => {
