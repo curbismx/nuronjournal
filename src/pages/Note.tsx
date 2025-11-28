@@ -277,7 +277,7 @@ const Note = () => {
                 <img 
                   src={image.url} 
                   alt=""
-                  className="rounded-[5px]"
+                  className="rounded-[10px]"
                   style={{ width: `${image.width}%` }}
                 />
               </div>
@@ -355,7 +355,6 @@ const Note = () => {
         type="file" 
         ref={fileInputRef}
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={handleImageSelect}
       />
