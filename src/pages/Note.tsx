@@ -134,7 +134,7 @@ const Note = () => {
           </Button>
           <div className="flex-1" />
         </div>
-        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px] mt-[31px]">
+        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px] mt-[41px]">
           {monthYear}
         </h1>
       </header>
