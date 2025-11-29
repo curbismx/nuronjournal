@@ -147,6 +147,20 @@ const Note = () => {
     }
   }, [id]);
 
+  // Auto-resize textareas when content is loaded
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const textareas = document.querySelectorAll('.note-textarea');
+      textareas.forEach((textarea) => {
+        const el = textarea as HTMLTextAreaElement;
+        el.style.height = 'auto';
+        el.style.height = Math.max(24, el.scrollHeight) + 'px';
+      });
+    }, 0);
+    
+    return () => clearTimeout(timer);
+  }, [contentBlocks]);
+
   useEffect(() => {
     // Fetch weather data
     const fetchWeather = async () => {
@@ -507,7 +521,7 @@ const Note = () => {
                     }, 300);
                   }}
                   placeholder={index === 0 ? "Start writing..." : ""}
-                  className="w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
+                  className="note-textarea w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
                   style={{ minHeight: '24px' }}
                 />
               );
