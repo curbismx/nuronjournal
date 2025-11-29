@@ -515,6 +515,36 @@ const Note = () => {
                     setContentBlocks(newBlocks);
                     e.target.style.height = 'auto';
                     e.target.style.height = Math.max(24, e.target.scrollHeight) + 'px';
+                    
+                    // Scroll to keep cursor visible when typing at bottom
+                    requestAnimationFrame(() => {
+                      const textarea = e.target;
+                      const scrollContainer = scrollContainerRef.current;
+                      if (!scrollContainer || !textarea) return;
+                      
+                      // Get cursor position by counting lines
+                      const textBeforeCursor = textarea.value.substring(0, textarea.selectionEnd);
+                      const lines = textBeforeCursor.split('\n');
+                      const lineHeight = 24; // Approximate line height
+                      const cursorY = lines.length * lineHeight;
+                      
+                      // Get textarea position relative to scroll container
+                      const textareaRect = textarea.getBoundingClientRect();
+                      const containerRect = scrollContainer.getBoundingClientRect();
+                      const textareaTop = textareaRect.top - containerRect.top + scrollContainer.scrollTop;
+                      
+                      // Calculate where cursor is in the scroll container
+                      const cursorPosition = textareaTop + cursorY;
+                      const visibleBottom = scrollContainer.scrollTop + scrollContainer.clientHeight - 150; // 150px buffer for keyboard
+                      
+                      // If cursor is below visible area, scroll to show it
+                      if (cursorPosition > visibleBottom) {
+                        scrollContainer.scrollTo({
+                          top: cursorPosition - scrollContainer.clientHeight + 200,
+                          behavior: 'smooth'
+                        });
+                      }
+                    });
                   }}
                   onFocus={(e) => {
                     setTimeout(() => {
