@@ -32,7 +32,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'openai/gpt-5-mini',
         max_tokens: 8000,
         temperature: 0.1,
         messages: [
@@ -42,7 +42,7 @@ serve(async (req) => {
           },
           {
             role: 'user',
-            content: `Here is the text to fix (${text.length} characters). Return ALL of it with corrections:\n\n${text}`
+            content: text
           }
         ],
       }),
