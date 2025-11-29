@@ -47,6 +47,7 @@ const Note = () => {
   const resizeStartX = useRef<number>(0);
   const resizeStartWidth = useRef<number>(0);
   const resizingIdRef = useRef<string | null>(null);
+  const activeTextBlockRef = useRef<{ id: string; cursorPosition: number } | null>(null);
 
   const generateTitle = async (text: string) => {
     try {
@@ -311,6 +312,36 @@ const Note = () => {
     const imageId = Date.now().toString();
     const newTextId = (Date.now() + 1).toString();
     
+    // Check if we have a cursor position
+    if (activeTextBlockRef.current) {
+      const { id: blockId, cursorPosition } = activeTextBlockRef.current;
+      const blockIndex = contentBlocks.findIndex(b => b.id === blockId);
+      
+      if (blockIndex !== -1) {
+        const block = contentBlocks[blockIndex];
+        if (block.type === 'text') {
+          // Split the text at cursor position
+          const textBefore = block.content.slice(0, cursorPosition);
+          const textAfter = block.content.slice(cursorPosition);
+          
+          // Create new blocks array with image inserted at cursor
+          const newBlocks = [
+            ...contentBlocks.slice(0, blockIndex),
+            { type: 'text' as const, id: block.id, content: textBefore },
+            { type: 'image' as const, id: imageId, url, width: 100 },
+            { type: 'text' as const, id: newTextId, content: textAfter },
+            ...contentBlocks.slice(blockIndex + 1)
+          ];
+          
+          setContentBlocks(newBlocks);
+          e.target.value = '';
+          activeTextBlockRef.current = null;
+          return;
+        }
+      }
+    }
+    
+    // Fallback: add to end if no cursor position
     setContentBlocks(prev => [
       ...prev,
       { type: 'image', id: imageId, url, width: 100 },
@@ -526,6 +557,15 @@ const Note = () => {
                     setContentBlocks(newBlocks);
                     e.target.style.height = 'auto';
                     e.target.style.height = Math.max(24, e.target.scrollHeight) + 'px';
+                  }}
+                  onFocus={(e) => {
+                    activeTextBlockRef.current = { id: block.id, cursorPosition: e.target.selectionStart };
+                  }}
+                  onSelect={(e) => {
+                    activeTextBlockRef.current = { id: block.id, cursorPosition: (e.target as HTMLTextAreaElement).selectionStart };
+                  }}
+                  onBlur={() => {
+                    // Keep the last position, don't clear it
                   }}
                   placeholder={index === 0 ? "Start writing..." : ""}
                   className="note-textarea w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
