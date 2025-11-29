@@ -119,31 +119,3 @@ All colors MUST be HSL.
 .ai-rewriting {
   animation: ai-glow 1.5s ease-in-out infinite;
 }
-
-/* Star icon magic animation */
-@keyframes star-magic {
-  0% {
-    transform: scale(1) rotate(0deg);
-    filter: brightness(1);
-  }
-  25% {
-    transform: scale(1.4) rotate(-10deg);
-    filter: brightness(1.5) sepia(1) saturate(3) hue-rotate(220deg);
-  }
-  50% {
-    transform: scale(1.3) rotate(10deg);
-    filter: brightness(1.8) sepia(1) saturate(3) hue-rotate(260deg);
-  }
-  75% {
-    transform: scale(1.4) rotate(-5deg);
-    filter: brightness(1.5) sepia(1) saturate(2) hue-rotate(240deg);
-  }
-  100% {
-    transform: scale(1) rotate(0deg);
-    filter: brightness(1);
-  }
-}
-
-.star-magic {
-  animation: star-magic 1.2s ease-in-out forwards;
-}
