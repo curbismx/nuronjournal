@@ -47,6 +47,7 @@ const Note = () => {
   const resizeStartX = useRef<number>(0);
   const resizeStartWidth = useRef<number>(0);
   const resizingIdRef = useRef<string | null>(null);
+  const hasLoadedRef = useRef(false);
 
   const generateTitle = async (text: string) => {
     try {
@@ -148,8 +149,11 @@ const Note = () => {
     }
   }, [id]);
 
-  // Auto-resize textareas when content is loaded
+  // Auto-resize textareas only on initial load
   useEffect(() => {
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
+    
     const timer = setTimeout(() => {
       const textareas = document.querySelectorAll('.note-textarea');
       textareas.forEach((textarea) => {
@@ -157,7 +161,7 @@ const Note = () => {
         el.style.height = 'auto';
         el.style.height = Math.max(24, el.scrollHeight) + 'px';
       });
-    }, 0);
+    }, 100);
     
     return () => clearTimeout(timer);
   }, [contentBlocks]);
