@@ -212,7 +212,7 @@ const Index = () => {
                               <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 ${index === 0 ? '-mt-[10px]' : ''}`}>
                                 {note.title || 'Untitled'}
                               </h3>
-                              <div className="-mt-[10px]">
+                              <div className="-mt-[10px]" style={{ maxHeight: '273px', overflow: 'hidden' }}>
                                 {firstImage && (
                                   <img 
                                     src={firstImage.url} 
@@ -221,7 +221,7 @@ const Index = () => {
                                     style={{ shapeOutside: 'margin-box' }}
                                   />
                                 )}
-                                <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)]" style={{ display: 'block', overflow: 'hidden', maxHeight: '273px' }}>
+                                <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)]" style={{ display: 'block' }}>
                                   {preview || 'No content'}
                                 </p>
                                 <div style={{ clear: 'both' }} />
