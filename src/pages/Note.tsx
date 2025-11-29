@@ -436,9 +436,14 @@ const Note = () => {
   };
 
   const deleteNote = () => {
-    // Remove note from localStorage
+    console.log('Deleting note with ID:', noteIdRef.current);
+    
     const notes: SavedNote[] = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
+    console.log('Current notes in localStorage:', notes.map(n => n.id));
+    
     const updatedNotes = notes.filter(n => n.id !== noteIdRef.current);
+    console.log('Notes after filter:', updatedNotes.map(n => n.id));
+    
     localStorage.setItem('nuron-notes', JSON.stringify(updatedNotes));
     
     // Navigate back to index
