@@ -208,21 +208,25 @@ const Index = () => {
 
                           {menuOpen ? (
                             /* EXPANDED VIEW - image floats, text wraps around and underneath */
-                            <>
-                              {firstImage && (
-                                <img 
-                                  src={firstImage.url} 
-                                  alt=""
-                                  className="float-right w-[70px] h-[70px] rounded-[10px] object-cover ml-[15px] mb-[10px]"
-                                />
-                              )}
+                            <div>
                               <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 ${index === 0 ? '-mt-[10px]' : ''}`}>
                                 {note.title || 'Untitled'}
                               </h3>
-                              <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-[13] -mt-[10px]">
-                                {preview || 'No content'}
-                              </p>
-                            </>
+                              <div className="-mt-[10px]">
+                                {firstImage && (
+                                  <img 
+                                    src={firstImage.url} 
+                                    alt=""
+                                    className="float-right w-[70px] h-[70px] rounded-[10px] object-cover ml-[15px] mb-[10px]"
+                                    style={{ shapeOutside: 'margin-box' }}
+                                  />
+                                )}
+                                <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)]" style={{ display: 'block', maxHeight: '300px', overflow: 'hidden' }}>
+                                  {preview || 'No content'}
+                                </p>
+                                <div style={{ clear: 'both' }} />
+                              </div>
+                            </div>
                           ) : (
                             /* COLLAPSED VIEW - image vertically centered with content */
                             <div className="flex items-center gap-[15px]">
