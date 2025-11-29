@@ -373,8 +373,6 @@ const Note = () => {
 
   const startResize = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
-    e.stopPropagation();
-    resizingIdRef.current = id;
     setResizingId(id);
     resizeStartX.current = e.clientX;
     const block = contentBlocks.find(b => b.type === 'image' && b.id === id) as { type: 'image'; id: string; url: string; width: number } | undefined;
@@ -400,7 +398,6 @@ const Note = () => {
   };
 
   const handleMouseUp = () => {
-    resizingIdRef.current = null;
     setResizingId(null);
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
@@ -408,8 +405,6 @@ const Note = () => {
 
   const startResizeTouch = (e: React.TouchEvent, id: string) => {
     e.preventDefault();
-    e.stopPropagation();
-    resizingIdRef.current = id;
     const touch = e.touches[0];
     setResizingId(id);
     resizeStartX.current = touch.clientX;
@@ -438,7 +433,6 @@ const Note = () => {
   };
 
   const handleTouchEnd = () => {
-    resizingIdRef.current = null;
     setResizingId(null);
     document.removeEventListener('touchmove', handleTouchMove);
     document.removeEventListener('touchend', handleTouchEnd);
@@ -618,18 +612,17 @@ const Note = () => {
                   />
                   
                   {/* Resize handle */}
-                <div
-                  className="absolute bottom-2 right-2 w-8 h-8 cursor-se-resize"
-                  style={{ touchAction: 'manipulation' }}
-                  onMouseDown={(e) => {
-                    e.stopPropagation();
-                    startResize(e, block.id);
-                  }}
-                  onTouchStart={(e) => {
-                    e.stopPropagation();
-                    startResizeTouch(e, block.id);
-                  }}
-                >
+                  <div
+                    className="absolute bottom-2 right-2 w-6 h-6 cursor-se-resize touch-none"
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                      startResize(e, block.id);
+                    }}
+                    onTouchStart={(e) => {
+                      e.stopPropagation();
+                      startResizeTouch(e, block.id);
+                    }}
+                  >
                     <svg 
                       viewBox="0 0 24 24" 
                       className="w-full h-full text-white drop-shadow-md"
