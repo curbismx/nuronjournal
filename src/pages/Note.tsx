@@ -321,27 +321,17 @@ const Note = () => {
         const block = contentBlocks[blockIndex];
         if (block.type === 'text') {
           // Split the text at cursor position
-          const textBefore = block.content.slice(0, cursorPosition).trimEnd();
-          const textAfter = block.content.slice(cursorPosition).trimStart();
+          const textBefore = block.content.slice(0, cursorPosition);
+          const textAfter = block.content.slice(cursorPosition);
           
-          // Build new blocks, avoiding empty text blocks
-          const newBlocks: ContentBlock[] = [
+          // Create new blocks array with image inserted at cursor
+          const newBlocks = [
             ...contentBlocks.slice(0, blockIndex),
+            { type: 'text' as const, id: block.id, content: textBefore },
+            { type: 'image' as const, id: imageId, url, width: 100 },
+            { type: 'text' as const, id: newTextId, content: textAfter },
+            ...contentBlocks.slice(blockIndex + 1)
           ];
-          
-          // Only add text before if it has content
-          if (textBefore) {
-            newBlocks.push({ type: 'text' as const, id: block.id, content: textBefore });
-          }
-          
-          // Add the image
-          newBlocks.push({ type: 'image' as const, id: imageId, url, width: 100 });
-          
-          // Always add text after block (for typing below image)
-          newBlocks.push({ type: 'text' as const, id: newTextId, content: textAfter });
-          
-          // Add remaining blocks
-          newBlocks.push(...contentBlocks.slice(blockIndex + 1));
           
           setContentBlocks(newBlocks);
           e.target.value = '';
@@ -363,9 +353,7 @@ const Note = () => {
 
   const startResize = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
-    e.stopPropagation();
     setResizingId(id);
-    resizingIdRef.current = id;  // Set ref immediately
     resizeStartX.current = e.clientX;
     const block = contentBlocks.find(b => b.type === 'image' && b.id === id) as { type: 'image'; id: string; url: string; width: number } | undefined;
     resizeStartWidth.current = block?.width ?? 100;
@@ -397,10 +385,8 @@ const Note = () => {
 
   const startResizeTouch = (e: React.TouchEvent, id: string) => {
     e.preventDefault();
-    e.stopPropagation();
     const touch = e.touches[0];
     setResizingId(id);
-    resizingIdRef.current = id;  // Set ref immediately
     resizeStartX.current = touch.clientX;
     const block = contentBlocks.find(b => b.type === 'image' && b.id === id) as { type: 'image'; id: string; url: string; width: number } | undefined;
     resizeStartWidth.current = block?.width ?? 100;
@@ -571,33 +557,6 @@ const Note = () => {
                     setContentBlocks(newBlocks);
                     e.target.style.height = 'auto';
                     e.target.style.height = Math.max(24, e.target.scrollHeight) + 'px';
-                  }}
-                  onKeyDown={(e) => {
-                    // Delete previous image if backspace at start of empty or beginning of text
-                    if (e.key === 'Backspace') {
-                      const textarea = e.target as HTMLTextAreaElement;
-                      if (textarea.selectionStart === 0 && textarea.selectionEnd === 0) {
-                        // Find the block before this one
-                        const currentIndex = contentBlocks.findIndex(b => b.id === block.id);
-                        if (currentIndex > 0) {
-                          const prevBlock = contentBlocks[currentIndex - 1];
-                          if (prevBlock.type === 'image') {
-                            e.preventDefault();
-                            // Remove the image and merge text blocks if needed
-                            const newBlocks = contentBlocks.filter(b => b.id !== prevBlock.id);
-                            setContentBlocks(newBlocks);
-                          } else if (prevBlock.type === 'text') {
-                            // Merge with previous text block
-                            e.preventDefault();
-                            const mergedContent = prevBlock.content + block.content;
-                            const newBlocks = contentBlocks
-                              .filter(b => b.id !== block.id)
-                              .map(b => b.id === prevBlock.id ? { ...b, content: mergedContent } : b);
-                            setContentBlocks(newBlocks);
-                          }
-                        }
-                      }
-                    }
                   }}
                   onFocus={(e) => {
                     activeTextBlockRef.current = { id: block.id, cursorPosition: e.target.selectionStart };
