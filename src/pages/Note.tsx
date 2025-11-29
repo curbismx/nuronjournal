@@ -459,7 +459,7 @@ const Note = () => {
       {/* Scrollable content area */}
       <div 
         ref={scrollContainerRef}
-        className={`flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 -mt-[25px] transition-shadow duration-300 ${isRewriting ? 'ai-rewriting' : ''}`}
+        className={`flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 -mt-[25px] transition-all duration-300 border-2 border-transparent ${isRewriting ? 'ai-rewriting' : ''}`}
         style={{ 
           WebkitOverflowScrolling: 'touch',
           overscrollBehaviorY: 'auto',

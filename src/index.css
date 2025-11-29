@@ -116,6 +116,16 @@ All colors MUST be HSL.
   }
 }
 
+@keyframes ai-border-pulse {
+  0%, 100% {
+    border-color: rgba(147, 112, 219, 0.4);
+  }
+  50% {
+    border-color: rgba(147, 112, 219, 0.9);
+  }
+}
+
 .ai-rewriting {
-  animation: ai-glow 1.5s ease-in-out infinite;
+  border: 2px solid rgba(147, 112, 219, 0.7);
+  animation: ai-glow 1.5s ease-in-out infinite, ai-border-pulse 1s ease-in-out infinite;
 }
