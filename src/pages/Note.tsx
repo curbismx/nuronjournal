@@ -866,7 +866,7 @@ const Note = () => {
             </button>
             
             <p className="text-[18px] font-outfit font-medium text-[hsl(0,0%,30%)] text-center mt-4 mb-8 leading-relaxed">
-              Are you sure you want to delete the current note?
+              Are you sure you want to<br />delete the current note?
             </p>
             
             <div className="flex gap-3">
