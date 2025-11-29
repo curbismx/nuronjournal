@@ -5,6 +5,7 @@ import recordButton from "@/assets/rbigecordbutton.png";
 import textImage from "@/assets/text.png";
 import plusIcon from "@/assets/plusbig.png";
 import expandIcon from "@/assets/expand-2.png";
+import condenseIcon from "@/assets/condense.png";
 import floatingAddButton from "@/assets/bigredbuttonnoshadow.png";
 import smallArrow from "@/assets/smallarrow.png";
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
@@ -142,7 +143,7 @@ const Index = () => {
             onClick={() => setMenuOpen(!menuOpen)}
             className="absolute right-[30px] top-0"
           >
-            <img src={expandIcon} alt="Menu" className="h-[24px] w-auto" />
+            <img src={menuOpen ? condenseIcon : expandIcon} alt="Menu" className="h-[24px] w-auto" />
           </button>
         </div>
       </header>
@@ -203,7 +204,7 @@ const Index = () => {
                           </h3>
                           
                           {/* Body preview - 2 lines max */}
-                          <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px]">
+                          <p className={`text-[14px] font-outfit text-[hsl(0,0%,50%)] ${menuOpen ? 'line-clamp-[13]' : 'line-clamp-2'} -mt-[10px]`}>
                             {preview || 'No content'}
                           </p>
 
