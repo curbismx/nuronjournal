@@ -32,6 +32,7 @@ const Note = () => {
   const [weather, setWeather] = useState<{ temp: number; weatherCode: number; WeatherIcon: React.ComponentType<any> } | null>(null);
   const [isRewriting, setIsRewriting] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [titleGenerated, setTitleGenerated] = useState(false);
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([
@@ -427,8 +428,20 @@ const Note = () => {
       fileInputRef.current?.click();
     } else if (action === 'share') {
       shareNote();
+    } else if (action === 'delete') {
+      setShowDeleteConfirm(true);
     }
     setMenuOpen(false);
+  };
+
+  const deleteNote = () => {
+    // Remove note from localStorage
+    const notes: SavedNote[] = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
+    const updatedNotes = notes.filter(n => n.id !== noteIdRef.current);
+    localStorage.setItem('nuron-notes', JSON.stringify(updatedNotes));
+    
+    // Navigate back to index
+    navigate('/');
   };
 
   const openImageViewer = (index: number) => {
@@ -839,6 +852,43 @@ const Note = () => {
           filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
         }}
       />
+
+      {/* Delete confirmation dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-[hsl(42,30%,94%)] rounded-2xl p-6 mx-6 max-w-[320px] w-full shadow-xl relative">
+            {/* X close button */}
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className="absolute top-4 right-4 text-[hsl(0,0%,60%)] text-xl font-light"
+            >
+              ×
+            </button>
+            
+            <p className="text-[18px] font-outfit font-medium text-[hsl(0,0%,30%)] text-center mt-4 mb-8 leading-relaxed">
+              Are you sure you want to delete the<br />current note?
+            </p>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-3 px-4 rounded-full bg-[hsl(0,0%,25%)] text-white font-outfit font-medium text-[15px]"
+              >
+                cancel
+              </button>
+              <button
+                onClick={() => {
+                  deleteNote();
+                  setShowDeleteConfirm(false);
+                }}
+                className="flex-1 py-3 px-4 rounded-full bg-[hsl(6,70%,65%)] text-white font-outfit font-medium text-[15px]"
+              >
+                delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
