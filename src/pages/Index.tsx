@@ -108,14 +108,14 @@ const Index = () => {
             <button 
               onClick={() => navigate('/note')}
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -mt-[15px] hover:scale-105 transition-transform"
-              style={{
-                filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
-              }}
             >
               <img 
                 src={newPlusIcon} 
                 alt="Record" 
-                className="w-[100px] h-[100px]"
+                className="w-[51px] h-[51px]"
+                style={{
+                  filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
+                }}
               />
             </button>
           </div>
