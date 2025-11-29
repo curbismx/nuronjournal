@@ -231,6 +231,9 @@ const Index = () => {
         alt="Add Note"
         onClick={() => navigate('/note')}
         className="fixed bottom-[30px] right-[30px] z-50 cursor-pointer w-[51px] h-[51px]"
+        style={{
+          filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
+        }}
       />
     </div>
   );
