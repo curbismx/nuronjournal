@@ -33,14 +33,16 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
+        max_tokens: 8000,
+        temperature: 0.1,
         messages: [
           {
             role: 'system',
-            content: 'You are a careful copy editor. Your ONLY job is to fix spelling, grammar, and punctuation errors in the text provided. DO NOT summarize, shorten, condense, or remove any content. DO NOT change the structure or rewrite sentences. Keep every single sentence and paragraph - just fix obvious errors. The output must be the same length as the input (or very close to it). If the text looks fine, return it unchanged. Return ONLY the corrected text with no explanations.'
+            content: 'Fix only spelling and punctuation errors in the following text. DO NOT shorten, summarize, or remove ANY sentences. Return the COMPLETE text with only minor corrections. The output MUST be approximately the same length as the input.'
           },
           {
             role: 'user',
-            content: text
+            content: `Here is the text to fix (${text.length} characters). Return ALL of it with corrections:\n\n${text}`
           }
         ],
       }),
