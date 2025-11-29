@@ -373,8 +373,6 @@ const Note = () => {
 
   const startResize = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
-    e.stopPropagation();
-    resizingIdRef.current = id;  // Set ref IMMEDIATELY
     setResizingId(id);
     resizeStartX.current = e.clientX;
     const block = contentBlocks.find(b => b.type === 'image' && b.id === id) as { type: 'image'; id: string; url: string; width: number } | undefined;
@@ -400,7 +398,6 @@ const Note = () => {
   };
 
   const handleMouseUp = () => {
-    resizingIdRef.current = null;  // Clear ref
     setResizingId(null);
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
@@ -408,8 +405,6 @@ const Note = () => {
 
   const startResizeTouch = (e: React.TouchEvent, id: string) => {
     e.preventDefault();
-    e.stopPropagation();
-    resizingIdRef.current = id;  // Set ref IMMEDIATELY
     const touch = e.touches[0];
     setResizingId(id);
     resizeStartX.current = touch.clientX;
@@ -438,7 +433,6 @@ const Note = () => {
   };
 
   const handleTouchEnd = () => {
-    resizingIdRef.current = null;  // Clear ref
     setResizingId(null);
     document.removeEventListener('touchmove', handleTouchMove);
     document.removeEventListener('touchend', handleTouchEnd);
