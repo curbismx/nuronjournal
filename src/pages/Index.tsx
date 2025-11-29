@@ -173,7 +173,7 @@ const Index = () => {
                   return (
                     <div 
                       key={note.id}
-                      className="border-b border-[hsl(0,0%,85%)] last:border-b-0 cursor-pointer hover:bg-[hsl(0,0%,95%)] transition-colors"
+                      className="border-b border-[hsl(0,0%,85%)] last:border-b-0 cursor-pointer"
                       onClick={() => navigate(`/note/${note.id}`)}
                     >
                       <div className={index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-6 pb-8"}>
