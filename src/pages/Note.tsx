@@ -728,9 +728,16 @@ const Note = () => {
       <img 
         src={newPlusIcon} 
         alt="Add Note"
-        onClick={() => {
-          saveNote();
-          window.location.href = '/note';
+        onClick={async () => {
+          await saveNote();
+          // Reset state for new note
+          noteIdRef.current = Date.now().toString();
+          setNoteTitle('');
+          setContentBlocks([{ type: 'text', id: 'initial', content: '' }]);
+          setTitleGenerated(false);
+          setMenuOpen(false);
+          // Navigate to new note route
+          navigate('/note', { state: { newNote: Date.now() } });
         }}
         className="fixed bottom-[30px] right-[30px] z-50 cursor-pointer w-[51px] h-[51px]"
         style={{
