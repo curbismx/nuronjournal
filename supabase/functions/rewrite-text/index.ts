@@ -32,12 +32,11 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'openai/gpt-5-mini',
-        max_completion_tokens: 8000,
+        model: 'google/gemini-2.5-flash',
         messages: [
           {
             role: 'system',
-            content: 'Fix only spelling and punctuation errors in the following text. DO NOT shorten, summarize, or remove ANY sentences. Return the COMPLETE text with only minor corrections. The output MUST be approximately the same length as the input.'
+            content: 'You are an expert editor. Your job is to take voice transcription text that may have errors, missing punctuation, or unclear phrasing, and rewrite it to be clear, grammatically correct, and well-structured. Preserve the original meaning and tone. Fix transcription errors, add proper punctuation, and improve clarity. Return ONLY the corrected text without any explanations or meta-commentary.'
           },
           {
             role: 'user',
