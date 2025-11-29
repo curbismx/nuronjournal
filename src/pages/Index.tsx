@@ -221,7 +221,7 @@ const Index = () => {
                                     style={{ shapeOutside: 'margin-box' }}
                                   />
                                 )}
-                                <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)]" style={{ display: 'block', overflow: 'visible' }}>
+                                <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)]" style={{ display: 'block', overflow: 'hidden', maxHeight: '273px' }}>
                                   {preview || 'No content'}
                                 </p>
                                 <div style={{ clear: 'both' }} />
