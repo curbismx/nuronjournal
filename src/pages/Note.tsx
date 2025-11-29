@@ -567,6 +567,23 @@ const Note = () => {
                   onBlur={() => {
                     // Keep the last position, don't clear it
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Backspace') {
+                      const textarea = e.target as HTMLTextAreaElement;
+                      // Check if cursor is at the very start with no selection
+                      if (textarea.selectionStart === 0 && textarea.selectionEnd === 0) {
+                        // Find the block before this one
+                        if (index > 0) {
+                          const prevBlock = contentBlocks[index - 1];
+                          if (prevBlock.type === 'image') {
+                            e.preventDefault();
+                            // Remove the image
+                            setContentBlocks(prev => prev.filter(b => b.id !== prevBlock.id));
+                          }
+                        }
+                      }
+                    }
+                  }}
                   placeholder={index === 0 ? "Start writing..." : ""}
                   className="note-textarea w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
                   style={{ minHeight: '24px' }}
