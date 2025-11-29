@@ -36,7 +36,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are an expert editor. Your job is to take voice transcription text that may have errors, missing punctuation, or unclear phrasing, and rewrite it to be clear, grammatically correct, and well-structured. Preserve the original meaning and tone. Fix transcription errors, add proper punctuation, and improve clarity. Return ONLY the corrected text without any explanations or meta-commentary.'
+            content: 'You are a careful copy editor. Your ONLY job is to fix spelling, grammar, and punctuation errors in the text provided. DO NOT summarize, shorten, condense, or remove any content. DO NOT change the structure or rewrite sentences. Keep every single sentence and paragraph - just fix obvious errors. The output must be the same length as the input (or very close to it). If the text looks fine, return it unchanged. Return ONLY the corrected text with no explanations.'
           },
           {
             role: 'user',
