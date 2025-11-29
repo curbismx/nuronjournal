@@ -583,6 +583,33 @@ const Note = () => {
                             e.preventDefault();
                             // Remove the image
                             setContentBlocks(prev => prev.filter(b => b.id !== prevBlock.id));
+                          } else if (prevBlock.type === 'text') {
+                            e.preventDefault();
+                            // Merge with previous text block
+                            const prevContent = prevBlock.content;
+                            const currentContent = block.content;
+                            const mergedContent = prevContent + currentContent;
+                            const cursorPosition = prevContent.length;
+                            
+                            // Remove current block and update previous block with merged content
+                            setContentBlocks(prev => prev
+                              .filter(b => b.id !== block.id)
+                              .map(b => b.id === prevBlock.id ? { ...b, content: mergedContent } : b)
+                            );
+                            
+                            // Focus the previous textarea and set cursor position after React updates
+                            setTimeout(() => {
+                              const textareas = document.querySelectorAll('.note-textarea');
+                              const prevTextarea = textareas[index - 1] as HTMLTextAreaElement;
+                              if (prevTextarea) {
+                                prevTextarea.focus();
+                                prevTextarea.selectionStart = cursorPosition;
+                                prevTextarea.selectionEnd = cursorPosition;
+                                // Resize the merged textarea
+                                prevTextarea.style.height = 'auto';
+                                prevTextarea.style.height = Math.max(24, prevTextarea.scrollHeight) + 'px';
+                              }
+                            }, 10);
                           }
                         }
                       }
