@@ -336,6 +336,16 @@ const Note = () => {
           setContentBlocks(newBlocks);
           e.target.value = '';
           activeTextBlockRef.current = null;
+          
+          // Resize all textareas after adding image
+          setTimeout(() => {
+            const textareas = document.querySelectorAll('.note-textarea');
+            textareas.forEach((textarea) => {
+              const el = textarea as HTMLTextAreaElement;
+              el.style.height = 'auto';
+              el.style.height = Math.max(24, el.scrollHeight) + 'px';
+            });
+          }, 50);
           return;
         }
       }
@@ -349,6 +359,16 @@ const Note = () => {
     ]);
     
     e.target.value = '';
+    
+    // Resize all textareas after adding image
+    setTimeout(() => {
+      const textareas = document.querySelectorAll('.note-textarea');
+      textareas.forEach((textarea) => {
+        const el = textarea as HTMLTextAreaElement;
+        el.style.height = 'auto';
+        el.style.height = Math.max(24, el.scrollHeight) + 'px';
+      });
+    }, 50);
   };
 
   const startResize = (e: React.MouseEvent, id: string) => {
