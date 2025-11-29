@@ -148,7 +148,7 @@ const Note = () => {
     }
   }, [id]);
 
-  // Auto-resize textareas when content is loaded
+  // Auto-resize textareas when a note is loaded (triggered by id change)
   useEffect(() => {
     const timer = setTimeout(() => {
       const textareas = document.querySelectorAll('.note-textarea');
@@ -157,10 +157,10 @@ const Note = () => {
         el.style.height = 'auto';
         el.style.height = Math.max(24, el.scrollHeight) + 'px';
       });
-    }, 0);
+    }, 50);
     
     return () => clearTimeout(timer);
-  }, [contentBlocks]);
+  }, [id]);
 
   useEffect(() => {
     // Fetch weather data
@@ -515,11 +515,6 @@ const Note = () => {
                     setContentBlocks(newBlocks);
                     e.target.style.height = 'auto';
                     e.target.style.height = Math.max(24, e.target.scrollHeight) + 'px';
-                  }}
-                  onFocus={(e) => {
-                    setTimeout(() => {
-                      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 300);
                   }}
                   placeholder={index === 0 ? "Start writing..." : ""}
                   className="note-textarea w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
