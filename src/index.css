@@ -123,10 +123,15 @@ All colors MUST be HSL.
 /* AI Rewrite shimmer text animation */
 @keyframes ai-shimmer {
   0% {
-    background-position: -200% center;
+    background-position: 200% center;
+    font-weight: 400;
+  }
+  30% {
+    font-weight: 600;
   }
   100% {
-    background-position: 200% center;
+    background-position: -200% center;
+    font-weight: 400;
   }
 }
 
@@ -134,14 +139,16 @@ All colors MUST be HSL.
   background: linear-gradient(
     90deg,
     hsl(0, 0%, 40%) 0%,
-    hsl(0, 0%, 40%) 40%,
-    hsl(260, 60%, 65%) 50%,
-    hsl(0, 0%, 40%) 60%,
+    hsl(0, 0%, 40%) 35%,
+    hsl(260, 70%, 60%) 45%,
+    hsl(220, 80%, 60%) 50%,
+    hsl(260, 70%, 60%) 55%,
+    hsl(0, 0%, 40%) 65%,
     hsl(0, 0%, 40%) 100%
   );
   background-size: 200% auto;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: ai-shimmer 1.5s ease-out forwards;
+  animation: ai-shimmer 1s ease-in-out forwards;
 }
