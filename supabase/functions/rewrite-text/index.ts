@@ -33,8 +33,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'openai/gpt-5-mini',
-        max_tokens: 8000,
-        temperature: 0.1,
+        max_completion_tokens: 8000,
         messages: [
           {
             role: 'system',
