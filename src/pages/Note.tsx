@@ -93,6 +93,16 @@ const Note = () => {
       if (data.rewrittenText) {
         // Replace all text blocks with the rewritten content
         setContentBlocks([{ type: 'text', id: Date.now().toString(), content: data.rewrittenText }]);
+        
+        // Resize textarea after content updates
+        setTimeout(() => {
+          const textareas = document.querySelectorAll('.note-textarea');
+          textareas.forEach((textarea) => {
+            const el = textarea as HTMLTextAreaElement;
+            el.style.height = 'auto';
+            el.style.height = Math.max(24, el.scrollHeight) + 'px';
+          });
+        }, 50);
       }
     } catch (error) {
       console.error('Rewrite error:', error);
