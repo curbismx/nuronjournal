@@ -176,7 +176,7 @@ const Index = () => {
                       className="border-b border-[hsl(0,0%,85%)] last:border-b-0 cursor-pointer"
                       onClick={() => navigate(`/note/${note.id}`)}
                     >
-                      <div className={index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-6 pb-8"}>
+                      <div className={index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-4 pb-4"}>
                         {/* Only show date for first note of each day */}
                         {index === 0 && (
                           <div className="flex items-start gap-4 mb-4">
