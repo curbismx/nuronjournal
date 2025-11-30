@@ -46,6 +46,7 @@ const Note = () => {
   const menuRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activeTextBlockRef = useRef<{ id: string; cursorPosition: number } | null>(null);
+  const isDeletedRef = useRef(false);
 
   const generateTitle = async (text: string) => {
     try {
@@ -245,6 +246,11 @@ const Note = () => {
 
   // Save note function
   const saveNote = () => {
+    // Don't save if note was deleted
+    if (isDeletedRef.current) {
+      return;
+    }
+    
     const noteContent = getNoteContent();
     // Only save if there's actual content
     if (!noteContent.trim() && contentBlocks.filter(b => b.type === 'image').length === 0) {
@@ -436,6 +442,8 @@ const Note = () => {
   };
 
   const deleteNote = () => {
+    isDeletedRef.current = true;  // Mark as deleted BEFORE removing from storage
+    
     console.log('Deleting note with ID:', noteIdRef.current);
     
     const notes: SavedNote[] = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
