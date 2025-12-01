@@ -1130,14 +1130,14 @@ const Index = () => {
         <div style={{ minHeight: 'calc(100% + 1px)' }}>
           {isSearching && (
             <div className="px-[30px] pt-[30px] pb-2">
-              <div className="flex items-center bg-[hsl(60,10%,88%)] rounded-full px-4 py-3 border border-[hsl(60,5%,80%)]">
+              <div className="flex items-center bg-[#F6F6F6] rounded-full px-4 py-3 border border-[hsl(60,5%,80%)]">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search here"
                   autoFocus
-                  className="flex-1 bg-transparent outline-none text-[16px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[hsl(0,0%,50%)]"
+                  className="flex-1 bg-transparent outline-none text-[16px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[hsl(0,0%,50%)] placeholder:tracking-wider"
                 />
                 <button 
                   onClick={() => {
