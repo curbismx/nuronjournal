@@ -1130,7 +1130,7 @@ const Index = () => {
         <div style={{ minHeight: 'calc(100% + 1px)' }}>
           {isSearching && (
             <div className="px-[30px] pt-[30px] pb-2">
-              <div className="flex items-center bg-[#F6F6F6] rounded-full px-4 py-3 border border-[hsl(60,5%,80%)]">
+               <div className="flex items-center bg-[#F6F6F6] rounded-full px-4 py-3 border border-[hsl(60,5%,80%)]">
                 <input
                   type="text"
                   value={searchQuery}
@@ -1139,16 +1139,6 @@ const Index = () => {
                   autoFocus
                   className="flex-1 bg-transparent outline-none text-[16px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[#A4A4A4] placeholder:tracking-wider focus:placeholder:opacity-0"
                 />
-                <button 
-                  onClick={() => {
-                    if (searchQuery.trim() === '') {
-                      setIsSearching(false);
-                    }
-                  }}
-                  className="flex items-center justify-center"
-                >
-                  <img src={searchArrow} alt="" className="w-[20px] h-auto" />
-                </button>
               </div>
             </div>
           )}
