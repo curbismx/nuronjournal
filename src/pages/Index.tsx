@@ -88,6 +88,8 @@ const Index = () => {
     const stored = localStorage.getItem('nuron-theme');
     return (stored as 'default' | 'green' | 'blue' | 'pink') || 'default';
   });
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const themeColors = {
     default: '#2E2E2E',
@@ -423,6 +425,29 @@ const Index = () => {
       });
     }
     
+    return groups;
+  }, []);
+
+  // Filter notes based on search
+  const filteredNotes = searchQuery.trim() === '' 
+    ? savedNotes 
+    : savedNotes.filter(note => {
+        const query = searchQuery.toLowerCase();
+        const titleMatch = note.title.toLowerCase().includes(query);
+        const contentMatch = note.contentBlocks
+          .filter(b => b.type === 'text')
+          .some(b => (b as { type: 'text'; id: string; content: string }).content.toLowerCase().includes(query));
+        return titleMatch || contentMatch;
+      });
+
+  const filteredGroupedNotes: GroupedNotes[] = filteredNotes.reduce((groups: GroupedNotes[], note) => {
+    const dateKey = new Date(note.createdAt).toLocaleDateString('en-US');
+    const existingGroup = groups.find(g => g.date === dateKey);
+    if (existingGroup) {
+      existingGroup.notes.push(note);
+    } else {
+      groups.push({ date: dateKey, notes: [note] });
+    }
     return groups;
   }, []);
 
@@ -812,7 +837,10 @@ const Index = () => {
           {!showSettings && !showAccountDetails && !showChangePassword && (
             <>
               <button 
-                onClick={() => {/* TODO: Add search functionality */}}
+                onClick={() => {
+                  setIsSearching(!isSearching);
+                  if (isSearching) setSearchQuery("");
+                }}
                 className="absolute right-[110px] top-0"
               >
                 <img src={searchIcon} alt="Search" className="h-[24px] w-auto" />
@@ -1099,9 +1127,38 @@ const Index = () => {
         }}
       >
         <div style={{ minHeight: 'calc(100% + 1px)' }}>
+          {isSearching && (
+            <div className="px-6 pt-4 pb-2">
+              <div className="flex items-center bg-[hsl(60,10%,88%)] rounded-full px-4 py-3 border border-[hsl(60,5%,80%)]">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search here"
+                  autoFocus
+                  className="flex-1 bg-transparent outline-none text-[16px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[hsl(0,0%,50%)]"
+                />
+                <button 
+                  onClick={() => {
+                    if (searchQuery.trim() === '') {
+                      setIsSearching(false);
+                    }
+                  }}
+                  className="w-[28px] h-[28px] rounded-full border border-[hsl(60,5%,70%)] flex items-center justify-center"
+                >
+                  <span className="text-[hsl(0,0%,50%)] text-[14px]">→</span>
+                </button>
+              </div>
+            </div>
+          )}
+          {isSearching && searchQuery.trim() !== '' && filteredGroupedNotes.length === 0 && (
+            <div className="px-8 py-12 text-center">
+              <p className="text-[16px] font-outfit text-[hsl(0,0%,50%)]">No notes found</p>
+            </div>
+          )}
           {/* Notes list */}
           <div>
-              {groupedNotes.map((group) => {
+              {(isSearching ? filteredGroupedNotes : groupedNotes).map((group) => {
                 const groupMonthYear = new Date(group.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
                 return (
                   <div 
