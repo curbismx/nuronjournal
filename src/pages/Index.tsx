@@ -37,6 +37,9 @@ interface GroupedNotes {
 const Index = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Prevent flash on initial render
+  const [isPageReady, setIsPageReady] = useState(false);
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const initialShowSettings = (location.state as any)?.showSettings || false;
@@ -67,6 +70,15 @@ const Index = () => {
         setIsReady(true);
       });
     });
+  }, []);
+
+  // Set page ready after initial render is complete
+  useEffect(() => {
+    // Small delay to ensure all state is settled
+    const timer = setTimeout(() => {
+      setIsPageReady(true);
+    }, 10);
+    return () => clearTimeout(timer);
   }, []);
 
   // Load notes based on auth status
@@ -275,6 +287,11 @@ const Index = () => {
       .map(b => (b as { type: 'text'; id: string; content: string }).content)
       .join('\n\n');
   };
+
+  // Show solid background until page is ready (prevents flash)
+  if (!isPageReady) {
+    return <div className="fixed inset-0 bg-journal-header" />;
+  }
 
   // Show original start page if no notes
   if (savedNotes.length === 0) {
