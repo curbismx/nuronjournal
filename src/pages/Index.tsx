@@ -39,9 +39,8 @@ const Index = () => {
   const location = useLocation();
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showSettings, setShowSettings] = useState(
-    (location.state as any)?.showSettings || false
-  );
+  const initialShowSettings = (location.state as any)?.showSettings || false;
+  const [showSettings, setShowSettings] = useState(initialShowSettings);
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; email: string } | null>(null);
   const [showSignUp, setShowSignUp] = useState(false);
@@ -51,10 +50,7 @@ const Index = () => {
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [skipInitialAnimation, setSkipInitialAnimation] = useState(
-    (location.state as any)?.showSettings || false
-  );
+  const [isReady, setIsReady] = useState(false);
 
   // Clear navigation state after reading
   useEffect(() => {
@@ -63,19 +59,13 @@ const Index = () => {
     }
   }, []);
 
-  // Set initialized after first render
+  // Use double requestAnimationFrame to ensure DOM has fully painted
   useEffect(() => {
-    setIsInitialized(true);
-  }, []);
-
-  // Re-enable animations after initial render
-  useEffect(() => {
-    if (skipInitialAnimation) {
-      const timer = setTimeout(() => {
-        setSkipInitialAnimation(false);
-      }, 50);
-      return () => clearTimeout(timer);
-    }
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setIsReady(true);
+      });
+    });
   }, []);
 
   // Load notes based on auth status
@@ -285,15 +275,10 @@ const Index = () => {
       .join('\n\n');
   };
 
-  // Show initialization background to prevent flash
-  if (!isInitialized) {
-    return <div className="fixed inset-0 bg-journal-header" />;
-  }
-
   // Show original start page if no notes
   if (savedNotes.length === 0) {
     return (
-      <div className="fixed inset-0 bg-journal-header flex flex-col overflow-hidden">
+      <div className={`fixed inset-0 bg-journal-header flex flex-col overflow-hidden ${isReady ? 'opacity-100' : 'opacity-0'}`} style={{ transition: 'none' }}>
         {/* Settings Button */}
         <div className="pl-[30px] pt-[30px] z-50">
           <button 
@@ -309,7 +294,7 @@ const Index = () => {
         </div>
 
         {/* Main Content - Centered */}
-        <main className={`flex-1 flex flex-col items-center justify-center px-8 ${skipInitialAnimation ? '' : 'transition-transform duration-300 ease-in-out'} ${showSettings ? 'translate-y-[100%]' : ''}`}>
+        <main className={`flex-1 flex flex-col items-center justify-center px-8 ${isReady ? 'transition-transform duration-300 ease-in-out' : ''} ${showSettings ? 'translate-y-[100%]' : ''}`}>
           {/* Text and Record Button Container */}
           <div className="relative">
             {/* Handwritten Text Image */}
@@ -478,7 +463,7 @@ const Index = () => {
 
   // Show timeline when notes exist
   return (
-    <div className="fixed inset-0 flex flex-col bg-journal-header overflow-hidden">
+    <div className={`fixed inset-0 flex flex-col bg-journal-header overflow-hidden ${isReady ? 'opacity-100' : 'opacity-0'}`} style={{ transition: 'none' }}>
       {/* Fixed dark header */}
       <header className="flex-shrink-0 bg-journal-header pl-[30px] pt-[30px] pb-[30px] h-[150px] z-30">
         <div className="flex items-center justify-between mb-auto -mt-[15px]">
@@ -653,7 +638,7 @@ const Index = () => {
 
       {/* Scrollable content area */}
       <div 
-        className={`flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 ${skipInitialAnimation ? '' : 'transition-transform duration-300 ease-in-out'} ${showSettings ? 'translate-y-[100%]' : '-mt-[25px]'}`}
+        className={`flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 ${isReady ? 'transition-transform duration-300 ease-in-out' : ''} ${showSettings ? 'translate-y-[100%]' : '-mt-[25px]'}`}
         style={{ 
           WebkitOverflowScrolling: 'touch',
           overscrollBehaviorY: 'auto',
