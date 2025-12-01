@@ -951,7 +951,8 @@ const Index = () => {
                     <button
                       key={t}
                       onClick={() => setTheme(t)}
-                      className="flex flex-col items-center gap-1"
+                      className="flex flex-col items-center relative"
+                      style={{ height: '54px' }}
                     >
                       <img 
                         src={themePlusIcons[t]} 
@@ -959,7 +960,10 @@ const Index = () => {
                         className="w-[40px] h-[40px]"
                       />
                       {theme === t && (
-                        <div className="w-[6px] h-[6px] bg-white rounded-full" />
+                        <div 
+                          className="w-[6px] h-[6px] bg-white rounded-full absolute"
+                          style={{ bottom: '0px' }}
+                        />
                       )}
                     </button>
                   ))}
