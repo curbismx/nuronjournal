@@ -10,6 +10,7 @@ import floatingAddButton from "@/assets/bigredbuttonnoshadow.png";
 import smallArrow from "@/assets/smallarrow.png";
 import backIcon from "@/assets/back.png";
 import accountArrow from "@/assets/account-arrow.png";
+import searchIcon from "@/assets/search.png";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
@@ -466,12 +467,20 @@ const Index = () => {
             {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : headerMonthYear}
           </h1>
           {!showSettings && !showAccountDetails && !showChangePassword && (
-            <button 
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="absolute right-[30px] top-0"
-            >
-              <img src={menuOpen ? condenseIcon : expandIcon} alt="Menu" className="h-[24px] w-auto" />
-            </button>
+            <>
+              <button 
+                onClick={() => {/* TODO: Add search functionality */}}
+                className="absolute right-[110px] top-0"
+              >
+                <img src={searchIcon} alt="Search" className="h-[24px] w-auto" />
+              </button>
+              <button 
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="absolute right-[30px] top-0"
+              >
+                <img src={menuOpen ? condenseIcon : expandIcon} alt="Menu" className="h-[24px] w-auto" />
+              </button>
+            </>
           )}
         </div>
       </header>
