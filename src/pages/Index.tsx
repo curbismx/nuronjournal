@@ -164,7 +164,7 @@ const Index = () => {
               <div key={group.date}>
                 {group.notes.map((note, index) => {
                   const noteDate = new Date(note.createdAt);
-                  const dayNumber = noteDate.getDate();
+                  const dayNumber = noteDate.getDate().toString().padStart(2, '0');
                   const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
                   const preview = getNotePreview(note);
                   const WeatherIcon = note.weather ? getWeatherIcon(note.weather.weatherCode) : null;
