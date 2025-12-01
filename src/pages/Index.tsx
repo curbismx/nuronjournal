@@ -400,12 +400,26 @@ const Index = () => {
                 Create an account to save your notes to the cloud<br />
                 and access them from any device.
               </p>
-              <button
-                onClick={() => setShowSignUp(true)}
-                className="px-6 py-3 bg-white text-journal-header font-medium rounded-md hover:bg-white/90 transition-colors text-[14px]"
-              >
-                Set Up Account
-              </button>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setShowSignUp(true);
+                    setIsSignInMode(true);
+                  }}
+                  className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    setShowSignUp(true);
+                    setIsSignInMode(false);
+                  }}
+                  className="flex-1 px-6 py-3 bg-white text-journal-header font-medium rounded-md hover:bg-white/90 transition-colors text-[14px]"
+                >
+                  Set Up Account
+                </button>
+              </div>
             </div>
           )}
         </div>
