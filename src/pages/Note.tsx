@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { User } from "@supabase/supabase-js";
+import { useToast } from "@/hooks/use-toast";
 
 interface SavedNote {
   id: string;
@@ -31,6 +32,7 @@ type ContentBlock =
 const Note = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { toast } = useToast();
   const noteIdRef = useRef<string>(id || crypto.randomUUID());
   const [user, setUser] = useState<User | null>(null);
   const [noteTitle, setNoteTitle] = useState('');
@@ -393,13 +395,61 @@ const Note = () => {
     navigate('/');
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    const url = URL.createObjectURL(file);
     const imageId = crypto.randomUUID();
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${imageId}.${fileExt}`;
     const newTextId = crypto.randomUUID();
+    
+    let url: string;
+    
+    // Check if user is logged in
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session?.user) {
+      // Upload to Supabase Storage
+      toast({
+        title: "Uploading image...",
+        description: "Please wait while we upload your image.",
+      });
+      
+      const { data, error } = await supabase.storage
+        .from('note-images')
+        .upload(`${session.user.id}/${fileName}`, file);
+      
+      if (error) {
+        console.error('Error uploading image:', error);
+        toast({
+          title: "Upload failed",
+          description: "Could not upload image. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('note-images')
+        .getPublicUrl(`${session.user.id}/${fileName}`);
+      
+      url = publicUrl;
+      
+      toast({
+        title: "Image uploaded",
+        description: "Your image will sync across devices.",
+      });
+    } else {
+      // Not logged in - use local blob URL (won't sync)
+      url = URL.createObjectURL(file);
+      toast({
+        title: "Image added locally",
+        description: "Sign in to sync images across devices.",
+        variant: "destructive",
+      });
+    }
     
     // Check if we have a cursor position
     if (activeTextBlockRef.current) {
@@ -539,6 +589,25 @@ const Note = () => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (session?.user) {
+      // Clean up images from storage
+      const imageBlocks = contentBlocks.filter(b => b.type === 'image') as Array<{ type: 'image'; id: string; url: string; width: number }>;
+      
+      for (const imageBlock of imageBlocks) {
+        // Check if URL is from Supabase Storage
+        if (imageBlock.url.includes('supabase.co/storage')) {
+          try {
+            // Extract file path from URL
+            const urlParts = imageBlock.url.split('/storage/v1/object/public/note-images/');
+            if (urlParts.length > 1) {
+              const filePath = urlParts[1];
+              await supabase.storage.from('note-images').remove([filePath]);
+            }
+          } catch (error) {
+            console.error('Error deleting image from storage:', error);
+          }
+        }
+      }
+      
       // LOGGED IN: Delete from Supabase
       await supabase.from('notes').delete().eq('id', noteIdRef.current);
       // Also update cache for instant UI update
