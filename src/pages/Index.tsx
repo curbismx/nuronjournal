@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import settingsIcon from "@/assets/settings-new.png";
 import newPlusIcon from "@/assets/plus-new.png";
 import textImage from "@/assets/text.png";
@@ -38,6 +40,12 @@ const Index = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; email: string } | null>(null);
+  const [showSignUp, setShowSignUp] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [repeatPassword, setRepeatPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Load notes on mount
   useEffect(() => {
@@ -83,6 +91,48 @@ const Index = () => {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setShowSettings(false);
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (password !== repeatPassword) {
+      alert("Passwords don't match!");
+      return;
+    }
+    
+    if (password.length < 6) {
+      alert("Password must be at least 6 characters");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name,
+          },
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) throw error;
+
+      alert("Account created successfully!");
+      setShowSignUp(false);
+      setName("");
+      setEmail("");
+      setPassword("");
+      setRepeatPassword("");
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Group notes by date
@@ -200,7 +250,7 @@ const Index = () => {
       </header>
 
       {/* Settings panel - sits behind the card */}
-      <div className={`absolute inset-x-0 top-[150px] bottom-0 bg-journal-header px-8 pt-8 transition-opacity duration-300 ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`absolute inset-x-0 top-[150px] bottom-0 bg-journal-header px-8 pt-8 transition-opacity duration-300 overflow-y-auto ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="text-white font-outfit space-y-6">
           {user && userProfile ? (
             <>
@@ -225,13 +275,88 @@ const Index = () => {
                 Sign Out
               </button>
             </>
+          ) : showSignUp ? (
+            <form onSubmit={handleSignUp} className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-white/80 text-[14px]">Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    placeholder="Your name"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-white/80 text-[14px]">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="you@example.com"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-white/80 text-[14px]">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                    minLength={6}
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="repeat-password" className="text-white/80 text-[14px]">Repeat Password</Label>
+                  <Input
+                    id="repeat-password"
+                    type="password"
+                    value={repeatPassword}
+                    onChange={(e) => setRepeatPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                    minLength={6}
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 px-6 py-3 bg-white text-journal-header font-medium rounded-md hover:bg-white/90 transition-colors text-[14px] disabled:opacity-50"
+                >
+                  {loading ? "Creating..." : "Create Account"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSignUp(false)}
+                  className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           ) : (
-            <div className="space-y-4">
-              <p className="text-white/80 text-[14px] mb-4">
+            <div className="space-y-6">
+              <p className="text-white/80 text-[16px] leading-relaxed">
                 Create an account to save your notes to the cloud and access them from any device.
               </p>
               <button
-                onClick={() => navigate('/auth')}
+                onClick={() => setShowSignUp(true)}
                 className="px-6 py-3 bg-white text-journal-header font-medium rounded-md hover:bg-white/90 transition-colors text-[14px]"
               >
                 Set Up Account
@@ -243,7 +368,7 @@ const Index = () => {
 
       {/* Scrollable content area */}
       <div 
-        className={`flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 transition-transform duration-300 ease-in-out ${showSettings ? 'translate-y-[70%]' : '-mt-[25px]'}`}
+        className={`flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 transition-transform duration-300 ease-in-out ${showSettings ? 'translate-y-[100%]' : '-mt-[25px]'}`}
         style={{ 
           WebkitOverflowScrolling: 'touch',
           overscrollBehaviorY: 'auto',
