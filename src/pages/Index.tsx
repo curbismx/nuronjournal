@@ -287,7 +287,7 @@ const Index = () => {
                     onChange={(e) => setName(e.target.value)}
                     required
                     placeholder="Your name"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                    className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
                   />
                 </div>
 
@@ -300,7 +300,7 @@ const Index = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="you@example.com"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                    className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
                   />
                 </div>
 
@@ -314,7 +314,7 @@ const Index = () => {
                     required
                     placeholder="••••••••"
                     minLength={6}
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                    className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
                   />
                 </div>
 
@@ -328,7 +328,7 @@ const Index = () => {
                     required
                     placeholder="••••••••"
                     minLength={6}
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                    className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
                   />
                 </div>
               </div>
@@ -353,7 +353,8 @@ const Index = () => {
           ) : (
             <div className="space-y-6">
               <p className="text-white/80 text-[16px] leading-relaxed">
-                Create an account to save your notes to the cloud and access them from any device.
+                Create an account to save your notes to the cloud<br />
+                and access them from any device.
               </p>
               <button
                 onClick={() => setShowSignUp(true)}
