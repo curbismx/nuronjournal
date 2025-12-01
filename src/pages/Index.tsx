@@ -36,7 +36,17 @@ interface GroupedNotes {
 
 const Index = () => {
   const navigate = useNavigate();
-  const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
+  const [savedNotes, setSavedNotes] = useState<SavedNote[]>(() => {
+    const stored = localStorage.getItem('nuron-notes');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
   const [menuOpen, setMenuOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAccountDetails, setShowAccountDetails] = useState(false);
