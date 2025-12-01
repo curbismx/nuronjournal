@@ -8,7 +8,7 @@ import expandIcon from "@/assets/expand-2.png";
 import condenseIcon from "@/assets/condense.png";
 import floatingAddButton from "@/assets/bigredbuttonnoshadow.png";
 import smallArrow from "@/assets/smallarrow.png";
-import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
+
 
 interface SavedNote {
   id: string;
@@ -70,17 +70,6 @@ const Index = () => {
       .join('\n\n');
   };
 
-  // Map weather code to icon
-  const getWeatherIcon = (weatherCode: number) => {
-    if (weatherCode >= 61 && weatherCode <= 67) return CloudRain;
-    if (weatherCode >= 71 && weatherCode <= 77) return CloudSnow;
-    if (weatherCode >= 80 && weatherCode <= 82) return CloudRain;
-    if (weatherCode >= 51 && weatherCode <= 57) return CloudDrizzle;
-    if (weatherCode >= 2 && weatherCode <= 3) return Cloud;
-    if (weatherCode === 45 || weatherCode === 48) return CloudFog;
-    if (weatherCode >= 95) return CloudLightning;
-    return Sun;
-  };
 
   // Show original start page if no notes
   if (savedNotes.length === 0) {
@@ -167,7 +156,6 @@ const Index = () => {
                   const dayNumber = noteDate.getDate().toString().padStart(2, '0');
                   const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
                   const preview = getNotePreview(note);
-                  const WeatherIcon = note.weather ? getWeatherIcon(note.weather.weatherCode) : null;
                   const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; id: string; url: string; width: number } | undefined;
 
                   return (
@@ -183,16 +171,8 @@ const Index = () => {
                             <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
                               {dayNumber}
                             </div>
-                            <div className="flex flex-col">
-                              <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
-                                {dayName}
-                              </div>
-                              {WeatherIcon && note.weather && (
-                                <div className="flex items-center gap-1.5 mt-1">
-                                  <WeatherIcon size={20} className="text-[hsl(60,1%,66%)]" />
-                                  <span className="text-[16px] font-outfit font-light text-[hsl(60,1%,66%)]">{note.weather.temp}°C</span>
-                                </div>
-                              )}
+                            <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
+                              {dayName}
                             </div>
                           </div>
                         )}
