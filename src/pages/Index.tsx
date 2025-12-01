@@ -84,19 +84,28 @@ const Index = () => {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // Only synchronous state updates here to prevent deadlock
       setUser(session?.user ?? null);
       
-      if (session?.user) {
-        // Defer Supabase calls to prevent deadlock
+      // Only reload notes on actual sign in/out events, not on initial load
+      if (event === 'SIGNED_IN') {
         setTimeout(() => {
-          loadUserProfile(session.user.id);
+          loadUserProfile(session!.user.id);
           
-          // Reload notes from Supabase
+          // Check for local notes to merge
+          const localNotes = localStorage.getItem('nuron-notes');
+          if (localNotes) {
+            const parsed = JSON.parse(localNotes);
+            if (parsed.length > 0) {
+              setLocalNotesToMerge(parsed);
+              setShowMergeDialog(true);
+            }
+          }
+          
+          // Reload notes from Supabase after sign in
           supabase
             .from('notes')
             .select('*')
-            .eq('user_id', session.user.id)
+            .eq('user_id', session!.user.id)
             .order('created_at', { ascending: false })
             .then(({ data }) => {
               if (data) {
@@ -110,20 +119,8 @@ const Index = () => {
                 })));
               }
             });
-          
-          // Check for merge ONLY on SIGNED_IN event
-          if (event === 'SIGNED_IN') {
-            const localNotes = localStorage.getItem('nuron-notes');
-            if (localNotes) {
-              const parsed = JSON.parse(localNotes);
-              if (parsed.length > 0) {
-                setLocalNotesToMerge(parsed);
-                setShowMergeDialog(true);
-              }
-            }
-          }
         }, 0);
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         setUserProfile(null);
         // Load from localStorage when logged out
         const stored = localStorage.getItem('nuron-notes');
