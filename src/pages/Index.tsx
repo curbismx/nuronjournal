@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import settingsIcon from "@/assets/00settings-4.png";
 import newPlusIcon from "@/assets/00plus-3.png";
 import textImage from "@/assets/text.png";
@@ -81,6 +81,11 @@ const Index = () => {
   const [localNotesToMerge, setLocalNotesToMerge] = useState<SavedNote[]>([]);
   const [authFormError, setAuthFormError] = useState("");
   const [passwordFormError, setPasswordFormError] = useState("");
+  const [visibleMonthYear, setVisibleMonthYear] = useState<string>(
+    new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase()
+  );
+  const dateGroupRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Save weather setting to localStorage
   useEffect(() => {
@@ -383,6 +388,34 @@ const Index = () => {
     
     return groups;
   }, []);
+
+  // Update visibleMonthYear when notes change
+  useEffect(() => {
+    if (savedNotes.length > 0) {
+      setVisibleMonthYear(new Date(savedNotes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase());
+    }
+  }, [savedNotes]);
+
+  // Intersection Observer for dynamic month/year header
+  useEffect(() => {
+    if (groupedNotes.length === 0) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries.filter(entry => entry.isIntersecting);
+        if (visibleEntries.length > 0) {
+          visibleEntries.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+          const topEntry = visibleEntries[0];
+          const monthYear = topEntry.target.getAttribute('data-month-year');
+          if (monthYear) setVisibleMonthYear(monthYear);
+        }
+      },
+      { root: scrollContainerRef.current, rootMargin: '-100px 0px -80% 0px', threshold: 0 }
+    );
+    const timer = setTimeout(() => {
+      dateGroupRefs.current.forEach((element) => observer.observe(element));
+    }, 100);
+    return () => { clearTimeout(timer); observer.disconnect(); };
+  }, [groupedNotes]);
 
   // Get month/year for header (most recent note or current month)
   const headerMonthYear = savedNotes.length > 0
@@ -992,8 +1025,9 @@ const Index = () => {
       </div>
 
       {/* Scrollable content area */}
-      <div 
-        className={`flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 transition-transform duration-300 ${showSettings ? 'translate-y-[100%]' : '-mt-[25px]'}`}
+            <div 
+              ref={scrollContainerRef}
+              className={`flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 transition-transform duration-300 ${showSettings ? 'translate-y-[100%]' : '-mt-[25px]'}`}
         style={{ 
           WebkitOverflowScrolling: 'touch',
           overscrollBehaviorY: 'auto',
@@ -1003,8 +1037,17 @@ const Index = () => {
         <div style={{ minHeight: 'calc(100% + 1px)' }}>
           {/* Notes list */}
           <div>
-            {groupedNotes.map((group) => (
-              <div key={group.date}>
+              {groupedNotes.map((group) => {
+                const groupMonthYear = new Date(group.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+                return (
+                  <div 
+                    key={group.date}
+                    data-month-year={groupMonthYear}
+                    ref={(el) => {
+                      if (el) dateGroupRefs.current.set(group.date, el);
+                      else dateGroupRefs.current.delete(group.date);
+                    }}
+                  >
                 {group.notes.map((note, index) => {
                   const noteDate = new Date(note.createdAt);
                   const dayNumber = noteDate.getDate().toString().padStart(2, '0');
@@ -1087,7 +1130,8 @@ const Index = () => {
                   );
                 })}
               </div>
-            ))}
+            );
+          })}
           </div>
         </div>
       </div>
