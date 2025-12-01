@@ -29,16 +29,19 @@ interface GroupedNotes {
 
 const Index = () => {
   const navigate = useNavigate();
-  const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  // Load notes on mount
-  useEffect(() => {
+  const [savedNotes, setSavedNotes] = useState<SavedNote[]>(() => {
     const stored = localStorage.getItem('nuron-notes');
     if (stored) {
-      setSavedNotes(JSON.parse(stored));
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return [];
+      }
     }
-  }, []);
+    return [];
+  });
+  const [menuOpen, setMenuOpen] = useState(false);
+
 
   // Group notes by date
   const groupedNotes: GroupedNotes[] = savedNotes.reduce((groups: GroupedNotes[], note) => {
