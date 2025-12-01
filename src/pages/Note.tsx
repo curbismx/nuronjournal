@@ -494,7 +494,7 @@ const Note = () => {
   const images = contentBlocks.filter(b => b.type === 'image') as Array<{ type: 'image'; id: string; url: string; width: number }>;
 
   const today = new Date();
-  const dayNumber = today.getDate();
+  const dayNumber = today.getDate().toString().padStart(2, '0');
   const dayName = today.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
   const monthYear = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
 
