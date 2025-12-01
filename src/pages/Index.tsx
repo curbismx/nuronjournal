@@ -121,6 +121,42 @@ const Index = () => {
     setShowSettings(false);
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    
+    const confirmed = window.confirm(
+      "Are you sure you want to delete your account? This will permanently delete all your notes and data. This action cannot be undone."
+    );
+    
+    if (!confirmed) return;
+
+    try {
+      // Delete all user's notes first
+      const { error: notesError } = await supabase
+        .from('notes')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (notesError) throw notesError;
+
+      // Delete user profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      // Sign out (Supabase will handle user deletion via cascade)
+      await supabase.auth.signOut();
+      
+      alert("Your account has been deleted successfully.");
+      setShowSettings(false);
+    } catch (error: any) {
+      alert("Error deleting account: " + error.message);
+    }
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -272,25 +308,39 @@ const Index = () => {
             {user && userProfile ? (
               <>
                 <div className="space-y-4">
-                  <div>
-                    <p className="text-white/60 text-[12px] uppercase tracking-wider mb-1">Name</p>
-                    <p className="text-white text-[16px]">{userProfile.name || 'Not set'}</p>
+                  <div className="space-y-2">
+                    <Label className="text-white/60 text-[12px] uppercase tracking-wider">Name</Label>
+                    <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                      {userProfile.name || 'Not set'}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-white/60 text-[12px] uppercase tracking-wider mb-1">Email</p>
-                    <p className="text-white text-[16px]">{userProfile.email}</p>
+                  <div className="space-y-2">
+                    <Label className="text-white/60 text-[12px] uppercase tracking-wider">Email</Label>
+                    <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                      {userProfile.email}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-white/60 text-[12px] uppercase tracking-wider mb-1">Password</p>
-                    <p className="text-white text-[16px]">••••••••</p>
+                  <div className="space-y-2">
+                    <Label className="text-white/60 text-[12px] uppercase tracking-wider">Password</Label>
+                    <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                      ••••••••
+                    </div>
                   </div>
                 </div>
-                <button
-                  onClick={handleSignOut}
-                  className="mt-8 px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
-                >
-                  Sign Out
-                </button>
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleSignOut}
+                    className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
+                  >
+                    Sign Out
+                  </button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white border border-red-500/40 rounded-md transition-colors text-[14px]"
+                  >
+                    Delete Account
+                  </button>
+                </div>
               </>
             ) : showSignUp ? (
               <form onSubmit={isSignInMode ? handleSignIn : handleSignUp} className="space-y-6">
@@ -465,25 +515,39 @@ const Index = () => {
           {user && userProfile ? (
             <>
               <div className="space-y-4">
-                <div>
-                  <p className="text-white/60 text-[12px] uppercase tracking-wider mb-1">Name</p>
-                  <p className="text-white text-[16px]">{userProfile.name || 'Not set'}</p>
+                <div className="space-y-2">
+                  <Label className="text-white/60 text-[12px] uppercase tracking-wider">Name</Label>
+                  <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                    {userProfile.name || 'Not set'}
+                  </div>
                 </div>
-                <div>
-                  <p className="text-white/60 text-[12px] uppercase tracking-wider mb-1">Email</p>
-                  <p className="text-white text-[16px]">{userProfile.email}</p>
+                <div className="space-y-2">
+                  <Label className="text-white/60 text-[12px] uppercase tracking-wider">Email</Label>
+                  <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                    {userProfile.email}
+                  </div>
                 </div>
-                <div>
-                  <p className="text-white/60 text-[12px] uppercase tracking-wider mb-1">Password</p>
-                  <p className="text-white text-[16px]">••••••••</p>
+                <div className="space-y-2">
+                  <Label className="text-white/60 text-[12px] uppercase tracking-wider">Password</Label>
+                  <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                    ••••••••
+                  </div>
                 </div>
               </div>
-              <button
-                onClick={handleSignOut}
-                className="mt-8 px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
-              >
-                Sign Out
-              </button>
+              <div className="flex gap-4">
+                <button
+                  onClick={handleSignOut}
+                  className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
+                >
+                  Sign Out
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white border border-red-500/40 rounded-md transition-colors text-[14px]"
+                >
+                  Delete Account
+                </button>
+              </div>
             </>
           ) : showSignUp ? (
             <form onSubmit={isSignInMode ? handleSignIn : handleSignUp} className="space-y-6">
