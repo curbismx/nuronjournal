@@ -18,7 +18,7 @@ import starIcon from '@/assets/star.png';
 import addImageIcon from '@/assets/addimage.png';
 import sharedIcon from '@/assets/shared.png';
 import trashIcon from '@/assets/trash.png';
-import newPlusIcon from '@/assets/new_plus.png';
+import newPlusIcon from '@/assets/00plus-3.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 type ContentBlock = 
