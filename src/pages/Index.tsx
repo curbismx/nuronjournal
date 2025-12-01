@@ -333,13 +333,13 @@ const Index = () => {
                 <div className="flex gap-4">
                   <button
                     onClick={handleSignOut}
-                    className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
+                    className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]"
                   >
                     Sign Out
                   </button>
                   <button
                     onClick={handleDeleteAccount}
-                    className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white border border-red-500/40 rounded-md transition-colors text-[14px]"
+                    className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white rounded-[10px] transition-colors text-[14px]"
                   >
                     Delete Account
                   </button>
@@ -540,13 +540,13 @@ const Index = () => {
               <div className="flex gap-4">
                 <button
                   onClick={handleSignOut}
-                  className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
+                  className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]"
                 >
                   Sign Out
                 </button>
                 <button
                   onClick={handleDeleteAccount}
-                  className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white border border-red-500/40 rounded-md transition-colors text-[14px]"
+                  className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white rounded-[10px] transition-colors text-[14px]"
                 >
                   Delete Account
                 </button>
