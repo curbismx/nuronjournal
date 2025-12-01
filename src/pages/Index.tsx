@@ -1137,7 +1137,7 @@ const Index = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search here"
                   autoFocus
-                  className="flex-1 bg-transparent outline-none text-[16px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[#A4A4A4] placeholder:tracking-wider"
+                  className="flex-1 bg-transparent outline-none text-[16px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[#A4A4A4] placeholder:tracking-wider focus:placeholder:opacity-0"
                 />
                 <button 
                   onClick={() => {
