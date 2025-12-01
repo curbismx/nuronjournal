@@ -61,19 +61,19 @@ const AccountDetails = () => {
 
   return (
     <div className="min-h-screen bg-journal-header">
-      <header className="sticky top-0 h-[80px] bg-journal-header border-b border-white/10 flex items-center px-8 z-10">
+      <header className="sticky top-0 h-[80px] bg-journal-header flex items-center px-8 z-10">
         <button
           onClick={() => navigate("/")}
-          className="absolute left-[30px]"
+          className="absolute left-[30px] top-0"
         >
           <img src={backIcon} alt="Back" className="h-[24px] w-auto" />
         </button>
-        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none ml-16">
-          ACCOUNT DETAILS
-        </h1>
       </header>
 
-      <div className="px-8 pt-8">
+      <div className="absolute inset-x-0 top-[80px] bottom-0 bg-journal-header px-8 pt-8 overflow-y-auto">
+        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none mb-8">
+          ACCOUNT DETAILS
+        </h1>
         <div className="text-white font-outfit space-y-6">
           {user && userProfile && (
             <>
