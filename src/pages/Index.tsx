@@ -51,6 +51,7 @@ const Index = () => {
   const [repeatPassword, setRepeatPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [showAccountDetails, setShowAccountDetails] = useState(false);
 
   // Clear navigation state after reading
   useEffect(() => {
@@ -282,12 +283,18 @@ const Index = () => {
         {/* Settings Button */}
         <div className="pl-[30px] pt-[30px] z-50">
           <button 
-            onClick={() => setShowSettings(!showSettings)}
+            onClick={() => {
+              if (showAccountDetails) {
+                setShowAccountDetails(false);
+              } else {
+                setShowSettings(!showSettings);
+              }
+            }}
             className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
           >
             <img 
-              src={showSettings ? backIcon : settingsIcon} 
-              alt={showSettings ? "Back" : "Settings"} 
+              src={showSettings || showAccountDetails ? backIcon : settingsIcon} 
+              alt={showSettings || showAccountDetails ? "Back" : "Settings"} 
               className="w-[30px] h-[30px]" 
             />
           </button>
@@ -324,136 +331,203 @@ const Index = () => {
         {/* Settings panel - same as in notes view */}
         <div className={`absolute inset-x-0 top-[80px] bottom-0 bg-journal-header px-8 pt-8 transition-opacity duration-300 overflow-y-auto ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none mb-8">
-            SETTINGS
+            {showAccountDetails ? 'ACCOUNT DETAILS' : 'SETTINGS'}
           </h1>
           <div className="text-white font-outfit space-y-6">
-            {user && userProfile ? (
-              <button
-                onClick={() => navigate("/account")}
-                className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
-              >
-                <span>Account Details</span>
-                <img src={settingsArrow} alt="" className="w-[20px] h-auto" />
-              </button>
-            ) : showSignUp ? (
-              <form onSubmit={isSignInMode ? handleSignIn : handleSignUp} className="space-y-6">
-                <div className="space-y-4">
-                  {!isSignInMode && (
-                    <div className="space-y-2">
-                      <Label htmlFor="name" className="text-white/80 text-[14px]">Name</Label>
-                      <Input
-                        id="name"
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                        placeholder="Your name"
-                        className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
-                      />
+            {showAccountDetails ? (
+              /* Account Details View */
+              <>
+                {user && userProfile && (
+                  <>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-white/60 text-[12px] uppercase tracking-wider">Name</Label>
+                        <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                          {userProfile.name || 'Not set'}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-white/60 text-[12px] uppercase tracking-wider">Email</Label>
+                        <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                          {userProfile.email}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-white/60 text-[12px] uppercase tracking-wider">Password</Label>
+                        <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                          ••••••••
+                        </div>
+                      </div>
                     </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-white/80 text-[14px]">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      placeholder="you@example.com"
-                      className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="text-white/80 text-[14px]">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      placeholder="••••••••"
-                      minLength={6}
-                      className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
-                    />
-                  </div>
-
-                  {!isSignInMode && (
-                    <div className="space-y-2">
-                      <Label htmlFor="repeat-password" className="text-white/80 text-[14px]">Repeat Password</Label>
-                      <Input
-                        id="repeat-password"
-                        type="password"
-                        value={repeatPassword}
-                        onChange={(e) => setRepeatPassword(e.target.value)}
-                        required
-                        placeholder="••••••••"
-                        minLength={6}
-                        className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
-                      />
+                    <div className="flex gap-4">
+                      <button
+                        onClick={async () => {
+                          await supabase.auth.signOut();
+                          setUser(null);
+                          setUserProfile(null);
+                          setShowAccountDetails(false);
+                          setShowSettings(false);
+                        }}
+                        className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]"
+                      >
+                        Sign Out
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (!user) return;
+                          const confirmed = window.confirm(
+                            "Are you sure you want to delete your account? This action cannot be undone."
+                          );
+                          if (confirmed) {
+                            await supabase.from("notes").delete().eq("user_id", user.id);
+                            await supabase.from("profiles").delete().eq("id", user.id);
+                            await supabase.auth.signOut();
+                            setUser(null);
+                            setUserProfile(null);
+                            setShowAccountDetails(false);
+                            setShowSettings(false);
+                          }
+                        }}
+                        className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white rounded-[10px] transition-colors text-[14px]"
+                      >
+                        Delete Account
+                      </button>
                     </div>
-                  )}
-                </div>
-
-                <div className="flex gap-4">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex-1 px-6 py-3 bg-white text-journal-header font-medium rounded-md hover:bg-white/90 transition-colors text-[14px] disabled:opacity-50"
-                  >
-                    {loading ? (isSignInMode ? "Signing in..." : "Creating...") : (isSignInMode ? "Sign In" : "Create Account")}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowSignUp(false);
-                      setIsSignInMode(false);
-                    }}
-                    className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
-                  >
-                    Cancel
-                  </button>
-                </div>
-
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => setIsSignInMode(!isSignInMode)}
-                    className="text-white/60 hover:text-white/80 text-[14px] transition-colors"
-                  >
-                    {isSignInMode ? "Don't have an account? Create one here" : "Already have an account? Sign in here"}
-                  </button>
-                </div>
-              </form>
+                  </>
+                )}
+              </>
             ) : (
-              <div className="space-y-6">
-                <p className="text-white/80 text-[16px] leading-relaxed">
-                  Create an account to save your notes to the cloud<br />
-                  and access them from any device.
-                </p>
-                <div className="flex gap-4">
+              /* Settings View */
+              <>
+                {user && userProfile ? (
                   <button
-                    onClick={() => {
-                      setShowSignUp(true);
-                      setIsSignInMode(true);
-                    }}
-                    className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
+                    onClick={() => setShowAccountDetails(true)}
+                    className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
                   >
-                    Sign In
+                    <span>Account Details</span>
+                    <img src={settingsArrow} alt="" className="w-[20px] h-auto" />
                   </button>
-                  <button
-                    onClick={() => {
-                      setShowSignUp(true);
-                      setIsSignInMode(false);
-                    }}
-                    className="flex-1 px-6 py-3 bg-white text-journal-header font-medium rounded-md hover:bg-white/90 transition-colors text-[14px]"
-                  >
-                    Set Up Account
-                  </button>
-                </div>
-              </div>
+                ) : showSignUp ? (
+                  <form onSubmit={isSignInMode ? handleSignIn : handleSignUp} className="space-y-6">
+                    <div className="space-y-4">
+                      {!isSignInMode && (
+                        <div className="space-y-2">
+                          <Label htmlFor="name" className="text-white/80 text-[14px]">Name</Label>
+                          <Input
+                            id="name"
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                            placeholder="Your name"
+                            className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                          />
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="text-white/80 text-[14px]">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                          placeholder="you@example.com"
+                          className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="password" className="text-white/80 text-[14px]">Password</Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                          placeholder="••••••••"
+                          minLength={6}
+                          className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                        />
+                      </div>
+
+                      {!isSignInMode && (
+                        <div className="space-y-2">
+                          <Label htmlFor="repeat-password" className="text-white/80 text-[14px]">Repeat Password</Label>
+                          <Input
+                            id="repeat-password"
+                            type="password"
+                            value={repeatPassword}
+                            onChange={(e) => setRepeatPassword(e.target.value)}
+                            required
+                            placeholder="••••••••"
+                            minLength={6}
+                            className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex gap-4">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex-1 px-6 py-3 bg-white text-journal-header font-medium rounded-md hover:bg-white/90 transition-colors text-[14px] disabled:opacity-50"
+                      >
+                        {loading ? (isSignInMode ? "Signing in..." : "Creating...") : (isSignInMode ? "Sign In" : "Create Account")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowSignUp(false);
+                          setIsSignInMode(false);
+                        }}
+                        className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => setIsSignInMode(!isSignInMode)}
+                        className="text-white/60 hover:text-white/80 text-[14px] transition-colors"
+                      >
+                        {isSignInMode ? "Don't have an account? Create one here" : "Already have an account? Sign in here"}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="space-y-6">
+                    <p className="text-white/80 text-[16px] leading-relaxed">
+                      Create an account to save your notes to the cloud<br />
+                      and access them from any device.
+                    </p>
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => {
+                          setShowSignUp(true);
+                          setIsSignInMode(true);
+                        }}
+                        className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
+                      >
+                        Sign In
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowSignUp(true);
+                          setIsSignInMode(false);
+                        }}
+                        className="flex-1 px-6 py-3 bg-white text-journal-header font-medium rounded-md hover:bg-white/90 transition-colors text-[14px]"
+                      >
+                        Set Up Account
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -468,12 +542,18 @@ const Index = () => {
       <header className="flex-shrink-0 bg-journal-header pl-[30px] pt-[30px] pb-[30px] h-[150px] z-30">
         <div className="flex items-center justify-between mb-auto -mt-[15px]">
           <button 
-            onClick={() => setShowSettings(!showSettings)}
+            onClick={() => {
+              if (showAccountDetails) {
+                setShowAccountDetails(false);
+              } else {
+                setShowSettings(!showSettings);
+              }
+            }}
             className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
           >
             <img 
-              src={showSettings ? backIcon : settingsIcon} 
-              alt={showSettings ? "Back" : "Settings"} 
+              src={showSettings || showAccountDetails ? backIcon : settingsIcon} 
+              alt={showSettings || showAccountDetails ? "Back" : "Settings"} 
               className="w-[30px] h-[30px]" 
             />
           </button>
@@ -481,9 +561,9 @@ const Index = () => {
         </div>
         <div className="relative mt-[41px]">
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
-            {showSettings ? 'SETTINGS' : headerMonthYear}
+            {showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : headerMonthYear}
           </h1>
-          {!showSettings && (
+          {!showSettings && !showAccountDetails && (
             <>
               <button 
                 onClick={() => {/* TODO: Add search functionality */}}
@@ -505,133 +585,200 @@ const Index = () => {
       {/* Settings panel - sits behind the card */}
       <div className={`absolute inset-x-0 top-[150px] bottom-0 bg-journal-header px-8 pt-8 transition-opacity duration-300 overflow-y-auto ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="text-white font-outfit space-y-6">
-          {user && userProfile ? (
-            <button
-              onClick={() => navigate("/account")}
-              className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
-            >
-              <span>Account Details</span>
-              <img src={settingsArrow} alt="" className="w-[20px] h-auto" />
-            </button>
-          ) : showSignUp ? (
-            <form onSubmit={isSignInMode ? handleSignIn : handleSignUp} className="space-y-6">
-              <div className="space-y-4">
-                {!isSignInMode && (
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-white/80 text-[14px]">Name</Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                      placeholder="Your name"
-                      className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
-                    />
+          {showAccountDetails ? (
+            /* Account Details View */
+            <>
+              {user && userProfile && (
+                <>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-white/60 text-[12px] uppercase tracking-wider">Name</Label>
+                      <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                        {userProfile.name || 'Not set'}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white/60 text-[12px] uppercase tracking-wider">Email</Label>
+                      <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                        {userProfile.email}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white/60 text-[12px] uppercase tracking-wider">Password</Label>
+                      <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                        ••••••••
+                      </div>
+                    </div>
                   </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-white/80 text-[14px]">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    placeholder="you@example.com"
-                    className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-white/80 text-[14px]">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    placeholder="••••••••"
-                    minLength={6}
-                    className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
-                  />
-                </div>
-
-                {!isSignInMode && (
-                  <div className="space-y-2">
-                    <Label htmlFor="repeat-password" className="text-white/80 text-[14px]">Repeat Password</Label>
-                    <Input
-                      id="repeat-password"
-                      type="password"
-                      value={repeatPassword}
-                      onChange={(e) => setRepeatPassword(e.target.value)}
-                      required
-                      placeholder="••••••••"
-                      minLength={6}
-                      className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
-                    />
+                  <div className="flex gap-4">
+                    <button
+                      onClick={async () => {
+                        await supabase.auth.signOut();
+                        setUser(null);
+                        setUserProfile(null);
+                        setShowAccountDetails(false);
+                        setShowSettings(false);
+                      }}
+                      className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]"
+                    >
+                      Sign Out
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!user) return;
+                        const confirmed = window.confirm(
+                          "Are you sure you want to delete your account? This action cannot be undone."
+                        );
+                        if (confirmed) {
+                          await supabase.from("notes").delete().eq("user_id", user.id);
+                          await supabase.from("profiles").delete().eq("id", user.id);
+                          await supabase.auth.signOut();
+                          setUser(null);
+                          setUserProfile(null);
+                          setShowAccountDetails(false);
+                          setShowSettings(false);
+                        }
+                      }}
+                      className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white rounded-[10px] transition-colors text-[14px]"
+                    >
+                      Delete Account
+                    </button>
                   </div>
-                )}
-              </div>
-
-              <div className="flex gap-4">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 px-6 py-3 bg-white text-journal-header font-medium rounded-md hover:bg-white/90 transition-colors text-[14px] disabled:opacity-50"
-                >
-                  {loading ? (isSignInMode ? "Signing in..." : "Creating...") : (isSignInMode ? "Sign In" : "Create Account")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowSignUp(false);
-                    setIsSignInMode(false);
-                  }}
-                  className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
-                >
-                  Cancel
-                </button>
-              </div>
-
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => setIsSignInMode(!isSignInMode)}
-                  className="text-white/60 hover:text-white/80 text-[14px] transition-colors"
-                >
-                  {isSignInMode ? "Don't have an account? Create one here" : "Already have an account? Sign in here"}
-                </button>
-              </div>
-            </form>
+                </>
+              )}
+            </>
           ) : (
-            <div className="space-y-6">
-              <p className="text-white/80 text-[16px] leading-relaxed">
-                Create an account to save your notes to the cloud<br />
-                and access them from any device.
-              </p>
-              <div className="flex gap-4">
+            /* Settings View */
+            <>
+              {user && userProfile ? (
                 <button
-                  onClick={() => {
-                    setShowSignUp(true);
-                    setIsSignInMode(true);
-                  }}
-                  className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
+                  onClick={() => setShowAccountDetails(true)}
+                  className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
                 >
-                  Sign In
+                  <span>Account Details</span>
+                  <img src={settingsArrow} alt="" className="w-[20px] h-auto" />
                 </button>
-                <button
-                  onClick={() => {
-                    setShowSignUp(true);
-                    setIsSignInMode(false);
-                  }}
-                  className="flex-1 px-6 py-3 bg-white text-journal-header font-medium rounded-md hover:bg-white/90 transition-colors text-[14px]"
-                >
-                  Set Up Account
-                </button>
-              </div>
-            </div>
+              ) : showSignUp ? (
+                <form onSubmit={isSignInMode ? handleSignIn : handleSignUp} className="space-y-6">
+                  <div className="space-y-4">
+                    {!isSignInMode && (
+                      <div className="space-y-2">
+                        <Label htmlFor="name" className="text-white/80 text-[14px]">Name</Label>
+                        <Input
+                          id="name"
+                          type="text"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          required
+                          placeholder="Your name"
+                          className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                        />
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-white/80 text-[14px]">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        placeholder="you@example.com"
+                        className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-white/80 text-[14px]">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        placeholder="••••••••"
+                        minLength={6}
+                        className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                      />
+                    </div>
+
+                    {!isSignInMode && (
+                      <div className="space-y-2">
+                        <Label htmlFor="repeat-password" className="text-white/80 text-[14px]">Repeat Password</Label>
+                        <Input
+                          id="repeat-password"
+                          type="password"
+                          value={repeatPassword}
+                          onChange={(e) => setRepeatPassword(e.target.value)}
+                          required
+                          placeholder="••••••••"
+                          minLength={6}
+                          className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 px-6 py-3 bg-white text-journal-header font-medium rounded-md hover:bg-white/90 transition-colors text-[14px] disabled:opacity-50"
+                    >
+                      {loading ? (isSignInMode ? "Signing in..." : "Creating...") : (isSignInMode ? "Sign In" : "Create Account")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSignUp(false);
+                        setIsSignInMode(false);
+                      }}
+                      className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => setIsSignInMode(!isSignInMode)}
+                      className="text-white/60 hover:text-white/80 text-[14px] transition-colors"
+                    >
+                      {isSignInMode ? "Don't have an account? Create one here" : "Already have an account? Sign in here"}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-6">
+                  <p className="text-white/80 text-[16px] leading-relaxed">
+                    Create an account to save your notes to the cloud<br />
+                    and access them from any device.
+                  </p>
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => {
+                        setShowSignUp(true);
+                        setIsSignInMode(true);
+                      }}
+                      className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
+                    >
+                      Sign In
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowSignUp(true);
+                        setIsSignInMode(false);
+                      }}
+                      className="flex-1 px-6 py-3 bg-white text-journal-header font-medium rounded-md hover:bg-white/90 transition-colors text-[14px]"
+                    >
+                      Set Up Account
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
