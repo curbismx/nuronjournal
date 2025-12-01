@@ -17,7 +17,7 @@ import starIcon from '@/assets/star.png';
 import addImageIcon from '@/assets/addimage.png';
 import sharedIcon from '@/assets/shared.png';
 import trashIcon from '@/assets/trash.png';
-import newPlusIcon from '@/assets/new_plus.png';
+import newPlusIcon from '@/assets/plus-new.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 type ContentBlock = 
@@ -878,7 +878,7 @@ const Note = () => {
           // Navigate to new note route
           navigate('/note', { state: { newNote: Date.now() } });
         }}
-        className="fixed bottom-[30px] right-[30px] z-50 cursor-pointer w-[51px] h-[51px]"
+        className="fixed bottom-[30px] right-[30px] z-50 cursor-pointer w-[70px] h-[70px]"
         style={{
           filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
         }}

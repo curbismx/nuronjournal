@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import settingsIcon from "@/assets/settings-new.png";
-import newPlusIcon from "@/assets/new_plus.png";
+import newPlusIcon from "@/assets/plus-new.png";
 import textImage from "@/assets/text.png";
 import plusIcon from "@/assets/plusbig.png";
 import expandIcon from "@/assets/expand-new.png";
@@ -104,7 +104,7 @@ const Index = () => {
               <img 
                 src={newPlusIcon} 
                 alt="Record" 
-                className="w-[51px] h-[51px]"
+                className="w-[70px] h-[70px]"
                 style={{
                   filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
                 }}
@@ -271,7 +271,7 @@ const Index = () => {
           src={newPlusIcon} 
           alt="Add Note"
           onClick={() => navigate('/note')}
-          className="fixed bottom-[30px] right-[30px] z-50 cursor-pointer w-[51px] h-[51px]"
+          className="fixed bottom-[30px] right-[30px] z-50 cursor-pointer w-[70px] h-[70px]"
           style={{
             filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
           }}
