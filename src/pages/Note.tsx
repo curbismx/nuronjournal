@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { User } from "@supabase/supabase-js";
 
 interface SavedNote {
   id: string;
@@ -28,6 +29,7 @@ const Note = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const noteIdRef = useRef<string>(id || Date.now().toString());
+  const [user, setUser] = useState<User | null>(null);
   const [noteTitle, setNoteTitle] = useState('');
   const [noteDate, setNoteDate] = useState<Date>(new Date());
   const [weather, setWeather] = useState<{ temp: number; weatherCode: number; WeatherIcon: React.ComponentType<any> } | null>(null);
@@ -52,6 +54,13 @@ const Note = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activeTextBlockRef = useRef<{ id: string; cursorPosition: number } | null>(null);
   const isDeletedRef = useRef(false);
+  const existingCreatedAt = useRef<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+  }, []);
 
   const generateTitle = async (text: string) => {
     try {
@@ -151,19 +160,40 @@ const Note = () => {
   useEffect(() => {
     if (id) {
       noteIdRef.current = id;  // Ensure ref matches the loaded note ID
-      const stored = localStorage.getItem('nuron-notes');
-      if (stored) {
-        const notes: SavedNote[] = JSON.parse(stored);
-        const existingNote = notes.find(n => n.id === id);
-        if (existingNote) {
-          setNoteTitle(existingNote.title);
-          setContentBlocks(existingNote.contentBlocks);
-          setTitleGenerated(true);
-          setNoteDate(new Date(existingNote.createdAt));
+      
+      // Try loading from Supabase first if logged in
+      if (user) {
+        supabase
+          .from('notes')
+          .select('*')
+          .eq('id', id)
+          .single()
+          .then(({ data, error }) => {
+            if (data && !error) {
+              setNoteTitle(data.title || '');
+              setContentBlocks(data.content_blocks as ContentBlock[]);
+              setTitleGenerated(true);
+              setNoteDate(new Date(data.created_at));
+              existingCreatedAt.current = data.created_at;
+            }
+          });
+      } else {
+        // Fall back to localStorage
+        const stored = localStorage.getItem('nuron-notes');
+        if (stored) {
+          const notes: SavedNote[] = JSON.parse(stored);
+          const existingNote = notes.find(n => n.id === id);
+          if (existingNote) {
+            setNoteTitle(existingNote.title);
+            setContentBlocks(existingNote.contentBlocks);
+            setTitleGenerated(true);
+            setNoteDate(new Date(existingNote.createdAt));
+            existingCreatedAt.current = existingNote.createdAt;
+          }
         }
       }
     }
-  }, [id]);
+  }, [id, user]);
 
   // Auto-resize textareas when a note is loaded (triggered by id change)
   useEffect(() => {
@@ -267,7 +297,7 @@ const Note = () => {
   }, [menuOpen]);
 
   // Save note function
-  const saveNote = () => {
+  const saveNote = async () => {
     // Don't save if note was deleted
     if (isDeletedRef.current) {
       return;
@@ -279,24 +309,41 @@ const Note = () => {
       return;
     }
 
-    const notes: SavedNote[] = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
-    const noteData: SavedNote = {
+    const noteData = {
       id: noteIdRef.current,
       title: noteTitle,
       contentBlocks,
-      createdAt: id && notes.find(n => n.id === id)?.createdAt || new Date().toISOString(),
+      createdAt: existingCreatedAt.current || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       weather: weather ? { temp: weather.temp, weatherCode: weather.weatherCode } : undefined,
     };
-    
-    const existingIndex = notes.findIndex(n => n.id === noteIdRef.current);
-    if (existingIndex >= 0) {
-      notes[existingIndex] = noteData;
+
+    if (user) {
+      // Save to Supabase
+      const { error } = await supabase.from('notes').upsert({
+        id: noteData.id,
+        user_id: user.id,
+        title: noteData.title,
+        content_blocks: noteData.contentBlocks,
+        created_at: noteData.createdAt,
+        updated_at: noteData.updatedAt,
+        weather: noteData.weather
+      });
+      
+      if (error) {
+        console.error('Error saving to Supabase:', error);
+      }
     } else {
-      notes.unshift(noteData);
+      // Save to localStorage
+      const notes: SavedNote[] = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
+      const existingIndex = notes.findIndex(n => n.id === noteIdRef.current);
+      if (existingIndex >= 0) {
+        notes[existingIndex] = noteData;
+      } else {
+        notes.unshift(noteData);
+      }
+      localStorage.setItem('nuron-notes', JSON.stringify(notes));
     }
-    
-    localStorage.setItem('nuron-notes', JSON.stringify(notes));
   };
 
   // Save on unmount
@@ -463,18 +510,31 @@ const Note = () => {
     setMenuOpen(false);
   };
 
-  const deleteNote = () => {
+  const deleteNote = async () => {
     isDeletedRef.current = true;  // Mark as deleted BEFORE removing from storage
     
     console.log('Deleting note with ID:', noteIdRef.current);
     
-    const notes: SavedNote[] = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
-    console.log('Current notes in localStorage:', notes.map(n => n.id));
-    
-    const updatedNotes = notes.filter(n => n.id !== noteIdRef.current);
-    console.log('Notes after filter:', updatedNotes.map(n => n.id));
-    
-    localStorage.setItem('nuron-notes', JSON.stringify(updatedNotes));
+    if (user) {
+      // Delete from Supabase
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', noteIdRef.current);
+      
+      if (error) {
+        console.error('Error deleting from Supabase:', error);
+      }
+    } else {
+      // Delete from localStorage
+      const notes: SavedNote[] = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
+      console.log('Current notes in localStorage:', notes.map(n => n.id));
+      
+      const updatedNotes = notes.filter(n => n.id !== noteIdRef.current);
+      console.log('Notes after filter:', updatedNotes.map(n => n.id));
+      
+      localStorage.setItem('nuron-notes', JSON.stringify(updatedNotes));
+    }
     
     // Navigate back to index
     navigate('/');

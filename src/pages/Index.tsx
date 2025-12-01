@@ -36,17 +36,7 @@ interface GroupedNotes {
 
 const Index = () => {
   const navigate = useNavigate();
-  const [savedNotes, setSavedNotes] = useState<SavedNote[]>(() => {
-    const stored = localStorage.getItem('nuron-notes');
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return [];
-      }
-    }
-    return [];
-  });
+  const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAccountDetails, setShowAccountDetails] = useState(false);
@@ -66,6 +56,8 @@ const Index = () => {
     const stored = localStorage.getItem('nuron-show-weather');
     return stored !== null ? JSON.parse(stored) : true; // Default to ON
   });
+  const [showMergeDialog, setShowMergeDialog] = useState(false);
+  const [localNotesToMerge, setLocalNotesToMerge] = useState<SavedNote[]>([]);
 
   // Save weather setting to localStorage
   useEffect(() => {
@@ -85,6 +77,18 @@ const Index = () => {
       setUser(session?.user ?? null);
       if (session?.user) {
         loadUserProfile(session.user.id);
+        
+        // Check if there are local notes to merge
+        setTimeout(() => {
+          const localNotes = localStorage.getItem('nuron-notes');
+          if (localNotes) {
+            const parsedNotes = JSON.parse(localNotes);
+            if (parsedNotes.length > 0) {
+              setLocalNotesToMerge(parsedNotes);
+              setShowMergeDialog(true);
+            }
+          }
+        }, 0);
       } else {
         setUserProfile(null);
       }
@@ -92,6 +96,44 @@ const Index = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Load notes from Supabase or localStorage based on auth status
+  useEffect(() => {
+    const loadNotes = async () => {
+      if (user) {
+        // Load from Supabase when logged in
+        const { data } = await supabase
+          .from('notes')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (data) {
+          setSavedNotes(data.map(note => ({
+            id: note.id,
+            title: note.title || 'Untitled',
+            contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
+            createdAt: note.created_at,
+            updatedAt: note.updated_at,
+            weather: note.weather as SavedNote['weather']
+          })));
+        }
+      } else {
+        // Load from localStorage when not logged in
+        const stored = localStorage.getItem('nuron-notes');
+        if (stored) {
+          try {
+            setSavedNotes(JSON.parse(stored));
+          } catch {
+            setSavedNotes([]);
+          }
+        } else {
+          setSavedNotes([]);
+        }
+      }
+    };
+
+    loadNotes();
+  }, [user]);
 
   const loadUserProfile = async (userId: string) => {
     const { data } = await supabase
@@ -200,6 +242,53 @@ const Index = () => {
       alert(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const uploadLocalNotesToSupabase = async (notes: SavedNote[]) => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      for (const note of notes) {
+        await supabase.from('notes').insert({
+          id: note.id,
+          user_id: user.id,
+          title: note.title,
+          content_blocks: note.contentBlocks,
+          created_at: note.createdAt,
+          updated_at: note.updatedAt,
+          weather: note.weather
+        });
+      }
+      
+      // Clear localStorage after successful upload
+      localStorage.removeItem('nuron-notes');
+      
+      // Reload notes from Supabase
+      const { data } = await supabase
+        .from('notes')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (data) {
+        setSavedNotes(data.map(note => ({
+          id: note.id,
+          title: note.title || 'Untitled',
+          contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
+          createdAt: note.created_at,
+          updatedAt: note.updated_at,
+          weather: note.weather as SavedNote['weather']
+        })));
+      }
+      
+      alert('Notes uploaded successfully!');
+    } catch (error: any) {
+      alert('Error uploading notes: ' + error.message);
+    } finally {
+      setLoading(false);
+      setShowMergeDialog(false);
+      setLocalNotesToMerge([]);
     }
   };
 
@@ -477,6 +566,60 @@ const Index = () => {
             </button>
           </div>
         </main>
+
+        {/* Merge notes dialog */}
+        {showMergeDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-2xl p-6 mx-8 max-w-sm w-full shadow-xl">
+              <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] text-center mb-2">
+                Sync Notes
+              </h3>
+              <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] text-center mb-6">
+                You have {localNotesToMerge.length} note{localNotesToMerge.length !== 1 ? 's' : ''} on this device. Would you like to upload them to your account so they sync across all your devices?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('nuron-notes');
+                    setShowMergeDialog(false);
+                    setLocalNotesToMerge([]);
+                    // Reload from Supabase
+                    if (user) {
+                      supabase
+                        .from('notes')
+                        .select('*')
+                        .order('created_at', { ascending: false })
+                        .then(({ data }) => {
+                          if (data) {
+                            setSavedNotes(data.map(note => ({
+                              id: note.id,
+                              title: note.title || 'Untitled',
+                              contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
+                              createdAt: note.created_at,
+                              updatedAt: note.updated_at,
+                              weather: note.weather as SavedNote['weather']
+                            })));
+                          } else {
+                            setSavedNotes([]);
+                          }
+                        });
+                    }
+                  }}
+                  className="flex-1 py-3 px-4 rounded-xl bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium"
+                >
+                  Discard
+                </button>
+                <button
+                  onClick={() => uploadLocalNotesToSupabase(localNotesToMerge)}
+                  disabled={loading}
+                  className="flex-1 py-3 px-4 rounded-xl bg-journal-header text-white font-outfit font-medium disabled:opacity-50"
+                >
+                  {loading ? 'Uploading...' : 'Upload'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -837,6 +980,60 @@ const Index = () => {
             filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
           }}
         />
+      )}
+
+      {/* Merge notes dialog */}
+      {showMergeDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl p-6 mx-8 max-w-sm w-full shadow-xl">
+            <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] text-center mb-2">
+              Sync Notes
+            </h3>
+            <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] text-center mb-6">
+              You have {localNotesToMerge.length} note{localNotesToMerge.length !== 1 ? 's' : ''} on this device. Would you like to upload them to your account so they sync across all your devices?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  localStorage.removeItem('nuron-notes');
+                  setShowMergeDialog(false);
+                  setLocalNotesToMerge([]);
+                  // Reload from Supabase
+                  if (user) {
+                    supabase
+                      .from('notes')
+                      .select('*')
+                      .order('created_at', { ascending: false })
+                      .then(({ data }) => {
+                        if (data) {
+                          setSavedNotes(data.map(note => ({
+                            id: note.id,
+                            title: note.title || 'Untitled',
+                            contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
+                            createdAt: note.created_at,
+                            updatedAt: note.updated_at,
+                            weather: note.weather as SavedNote['weather']
+                          })));
+                        } else {
+                          setSavedNotes([]);
+                        }
+                      });
+                  }
+                }}
+                className="flex-1 py-3 px-4 rounded-xl bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium"
+              >
+                Discard
+              </button>
+              <button
+                onClick={() => uploadLocalNotesToSupabase(localNotesToMerge)}
+                disabled={loading}
+                className="flex-1 py-3 px-4 rounded-xl bg-journal-header text-white font-outfit font-medium disabled:opacity-50"
+              >
+                {loading ? 'Uploading...' : 'Upload'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
