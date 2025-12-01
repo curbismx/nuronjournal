@@ -38,6 +38,16 @@ interface GroupedNotes {
 const Index = () => {
   const navigate = useNavigate();
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>(() => {
+    // Try cache first (for logged-in users)
+    const cached = localStorage.getItem('nuron-notes-cache');
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // Fall through
+      }
+    }
+    // Then try local notes (for non-logged-in users)
     const stored = localStorage.getItem('nuron-notes');
     if (stored) {
       try {
@@ -122,12 +132,13 @@ const Index = () => {
                 }));
                 setSavedNotes(notes);
                 // CACHE TO LOCALSTORAGE
-                localStorage.setItem('nuron-notes', JSON.stringify(notes));
+                localStorage.setItem('nuron-notes-cache', JSON.stringify(notes));
               }
             });
         }, 0);
       } else if (event === 'SIGNED_OUT') {
         setUserProfile(null);
+        localStorage.removeItem('nuron-notes-cache');  // Clear cache on sign out
         // Load from localStorage when logged out
         const stored = localStorage.getItem('nuron-notes');
         setSavedNotes(stored ? JSON.parse(stored) : []);
@@ -162,7 +173,7 @@ const Index = () => {
           }));
           setSavedNotes(notes);
           // CACHE TO LOCALSTORAGE for instant load next time
-          localStorage.setItem('nuron-notes', JSON.stringify(notes));
+          localStorage.setItem('nuron-notes-cache', JSON.stringify(notes));
         }
       } else {
         // Not logged in - load from localStorage

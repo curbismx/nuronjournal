@@ -331,14 +331,14 @@ const Note = () => {
       
       if (!error) {
         // UPDATE LOCAL CACHE so Index loads instantly
-        const cached = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
+        const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
         const existingIndex = cached.findIndex((n: any) => n.id === noteData.id);
         if (existingIndex >= 0) {
           cached[existingIndex] = noteData;
         } else {
           cached.unshift(noteData);
         }
-        localStorage.setItem('nuron-notes', JSON.stringify(cached));
+        localStorage.setItem('nuron-notes-cache', JSON.stringify(cached));
       }
       
       if (error) console.error('Error saving to Supabase:', error);
@@ -518,8 +518,12 @@ const Note = () => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (session?.user) {
-      // LOGGED IN: Delete from Supabase only
+      // LOGGED IN: Delete from Supabase
       await supabase.from('notes').delete().eq('id', noteIdRef.current);
+      // Also update cache for instant UI update
+      const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
+      const filtered = cached.filter((n: any) => n.id !== noteIdRef.current);
+      localStorage.setItem('nuron-notes-cache', JSON.stringify(filtered));
     } else {
       // NOT LOGGED IN: Delete from localStorage only
       const notes = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
