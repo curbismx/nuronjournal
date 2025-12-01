@@ -64,7 +64,7 @@ const AccountDetails = () => {
       <header className="flex-shrink-0 bg-journal-header pl-[30px] pt-[30px] pb-[30px] h-[150px] z-30">
         <div className="flex items-center justify-between mb-auto -mt-[15px]">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/", { state: { showSettings: true } })}
             className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
           >
             <img src={backIcon} alt="Back" className="w-[30px] h-[30px]" />

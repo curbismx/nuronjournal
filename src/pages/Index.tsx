@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -36,9 +36,12 @@ interface GroupedNotes {
 
 const Index = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  const [showSettings, setShowSettings] = useState(
+    (location.state as any)?.showSettings || false
+  );
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; email: string } | null>(null);
   const [showSignUp, setShowSignUp] = useState(false);
@@ -48,6 +51,13 @@ const Index = () => {
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Clear navigation state after reading
+  useEffect(() => {
+    if ((location.state as any)?.showSettings) {
+      window.history.replaceState({}, document.title);
+    }
+  }, []);
 
   // Load notes based on auth status
   useEffect(() => {
