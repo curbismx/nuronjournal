@@ -11,7 +11,7 @@ import plusIcon from "@/assets/plusbig.png";
 import expandIcon from "@/assets/expand-new.png";
 import condenseIcon from "@/assets/condense-new.png";
 import floatingAddButton from "@/assets/bigredbuttonnoshadow.png";
-import smallArrow from "@/assets/smallarrow.png";
+import noteArrow from "@/assets/note-arrow.png";
 import backIcon from "@/assets/back-new.png";
 import searchIcon from "@/assets/search.png";
 
@@ -719,7 +719,7 @@ const Index = () => {
                         <div className="pr-[50px] relative">
                           {/* Arrow icon - always in same position */}
                           <img 
-                            src={smallArrow} 
+                            src={noteArrow} 
                             alt="" 
                             className="absolute right-[-2px] top-1/2 -translate-y-1/2 w-[20px] h-auto"
                           />
