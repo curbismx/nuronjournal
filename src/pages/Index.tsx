@@ -171,11 +171,11 @@ const Index = () => {
                   const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; id: string; url: string; width: number } | undefined;
 
                   return (
-                    <div 
-                      key={note.id}
-                      className="border-b border-[hsl(0,0%,85%)] last:border-b-0 cursor-pointer"
-                      onClick={() => navigate(`/note/${note.id}`)}
-                    >
+              <div 
+                key={note.id}
+                className="border-b border-[hsl(0,0%,85%)] cursor-pointer"
+                onClick={() => navigate(`/note/${note.id}`)}
+              >
                       <div className={index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-4 pb-4"}>
                         {/* Only show date for first note of each day */}
                         {index === 0 && (
