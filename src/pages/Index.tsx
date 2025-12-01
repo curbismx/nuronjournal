@@ -39,6 +39,7 @@ const Index = () => {
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showAccountDetails, setShowAccountDetails] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; email: string } | null>(null);
   const [showSignUp, setShowSignUp] = useState(false);
@@ -119,6 +120,7 @@ const Index = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    setShowAccountDetails(false);
     setShowSettings(false);
   };
 
@@ -152,6 +154,7 @@ const Index = () => {
       await supabase.auth.signOut();
       
       alert("Your account has been deleted successfully.");
+      setShowAccountDetails(false);
       setShowSettings(false);
     } catch (error: any) {
       alert("Error deleting account: " + error.message);
@@ -264,12 +267,18 @@ const Index = () => {
         {/* Settings Button */}
         <div className="pl-[30px] pt-[30px] z-50">
           <button 
-            onClick={() => setShowSettings(!showSettings)}
+            onClick={() => {
+              if (showAccountDetails) {
+                setShowAccountDetails(false);
+              } else {
+                setShowSettings(!showSettings);
+              }
+            }}
             className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
           >
             <img 
-              src={showSettings ? backIcon : settingsIcon} 
-              alt={showSettings ? "Back" : "Settings"} 
+              src={showSettings || showAccountDetails ? backIcon : settingsIcon} 
+              alt={showSettings || showAccountDetails ? "Back" : "Settings"} 
               className="w-[30px] h-[30px]" 
             />
           </button>
@@ -306,12 +315,51 @@ const Index = () => {
         {/* Settings panel - same as in notes view */}
         <div className={`absolute inset-x-0 top-[80px] bottom-0 bg-journal-header px-8 pt-8 transition-opacity duration-300 overflow-y-auto ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none mb-8">
-            SETTINGS
+            {showAccountDetails ? 'ACCOUNT DETAILS' : 'SETTINGS'}
           </h1>
           <div className="text-white font-outfit space-y-6">
-            {user && userProfile ? (
+            {showAccountDetails ? (
+              user && userProfile && (
+                <>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-white/60 text-[12px] uppercase tracking-wider">Name</Label>
+                      <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                        {userProfile.name || 'Not set'}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white/60 text-[12px] uppercase tracking-wider">Email</Label>
+                      <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                        {userProfile.email}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white/60 text-[12px] uppercase tracking-wider">Password</Label>
+                      <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                        ••••••••
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <button
+                      onClick={handleSignOut}
+                      className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]"
+                    >
+                      Sign Out
+                    </button>
+                    <button
+                      onClick={handleDeleteAccount}
+                      className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white rounded-[10px] transition-colors text-[14px]"
+                    >
+                      Delete Account
+                    </button>
+                  </div>
+                </>
+              )
+            ) : user && userProfile ? (
               <button
-                onClick={() => navigate("/account")}
+                onClick={() => setShowAccountDetails(true)}
                 className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
               >
                 <span>Account Details</span>
@@ -450,12 +498,18 @@ const Index = () => {
       <header className="flex-shrink-0 bg-journal-header pl-[30px] pt-[30px] pb-[30px] h-[150px] z-30">
         <div className="flex items-center justify-between mb-auto -mt-[15px]">
           <button 
-            onClick={() => setShowSettings(!showSettings)}
+            onClick={() => {
+              if (showAccountDetails) {
+                setShowAccountDetails(false);
+              } else {
+                setShowSettings(!showSettings);
+              }
+            }}
             className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
           >
             <img 
-              src={showSettings ? backIcon : settingsIcon} 
-              alt={showSettings ? "Back" : "Settings"} 
+              src={showSettings || showAccountDetails ? backIcon : settingsIcon} 
+              alt={showSettings || showAccountDetails ? "Back" : "Settings"} 
               className="w-[30px] h-[30px]" 
             />
           </button>
@@ -463,7 +517,7 @@ const Index = () => {
         </div>
         <div className="relative mt-[41px]">
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
-            {showSettings ? 'SETTINGS' : headerMonthYear}
+            {showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : headerMonthYear}
           </h1>
           {!showSettings && (
             <>
@@ -487,9 +541,48 @@ const Index = () => {
       {/* Settings panel - sits behind the card */}
       <div className={`absolute inset-x-0 top-[150px] bottom-0 bg-journal-header px-8 pt-8 transition-opacity duration-300 overflow-y-auto ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="text-white font-outfit space-y-6">
-          {user && userProfile ? (
+          {showAccountDetails ? (
+            user && userProfile && (
+              <>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-white/60 text-[12px] uppercase tracking-wider">Name</Label>
+                    <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                      {userProfile.name || 'Not set'}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-white/60 text-[12px] uppercase tracking-wider">Email</Label>
+                    <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                      {userProfile.email}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-white/60 text-[12px] uppercase tracking-wider">Password</Label>
+                    <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                      ••••••••
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleSignOut}
+                    className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]"
+                  >
+                    Sign Out
+                  </button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white rounded-[10px] transition-colors text-[14px]"
+                  >
+                    Delete Account
+                  </button>
+                </div>
+              </>
+            )
+          ) : user && userProfile ? (
             <button
-              onClick={() => navigate("/account")}
+              onClick={() => setShowAccountDetails(true)}
               className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
             >
               <span>Account Details</span>
