@@ -19,6 +19,9 @@ import addImageIcon from '@/assets/addimage.png';
 import sharedIcon from '@/assets/shared.png';
 import trashIcon from '@/assets/trash.png';
 import newPlusIcon from '@/assets/00plus-3.png';
+import plusIconGreen from "@/assets/00plus_green.png";
+import plusIconBlue from "@/assets/00plus_blue.png";
+import plusIconPink from "@/assets/00plus_pink.png";
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 type ContentBlock = 
@@ -48,6 +51,24 @@ const Note = () => {
     const stored = localStorage.getItem('nuron-show-weather');
     return stored !== null ? JSON.parse(stored) : true;
   });
+  const [theme] = useState<'default' | 'green' | 'blue' | 'pink'>(() => {
+    const stored = localStorage.getItem('nuron-theme');
+    return (stored as 'default' | 'green' | 'blue' | 'pink') || 'default';
+  });
+
+  const themeColors = {
+    default: '#2E2E2E',
+    green: '#A8D86B',
+    blue: '#6BA8D8',
+    pink: '#E88BAD'
+  };
+
+  const themePlusIcons = {
+    default: newPlusIcon,
+    green: plusIconGreen,
+    blue: plusIconBlue,
+    pink: plusIconPink
+  };
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -574,9 +595,9 @@ const Note = () => {
   const monthYear = noteDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-journal-header overflow-hidden">
+    <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: themeColors[theme] }}>
       {/* Fixed dark header */}
-      <header className="flex-shrink-0 bg-journal-header pl-[30px] pt-[30px] pr-4 pb-[30px] h-[150px] z-30">
+      <header className="flex-shrink-0 pl-[30px] pt-[30px] pr-4 pb-[30px] h-[150px] z-30" style={{ backgroundColor: themeColors[theme] }}>
         <div className="flex items-center justify-between mb-auto -mt-[15px]">
           <Button
             variant="ghost"
@@ -924,7 +945,7 @@ const Note = () => {
 
       {/* Floating add button */}
       <img 
-        src={newPlusIcon} 
+        src={themePlusIcons[theme]} 
         alt="Add Note"
         onClick={async () => {
           await saveNote();

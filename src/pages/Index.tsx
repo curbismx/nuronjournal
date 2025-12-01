@@ -2,6 +2,9 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import settingsIcon from "@/assets/00settings-4.png";
 import newPlusIcon from "@/assets/00plus-3.png";
+import plusIconGreen from "@/assets/00plus_green.png";
+import plusIconBlue from "@/assets/00plus_blue.png";
+import plusIconPink from "@/assets/00plus_pink.png";
 import textImage from "@/assets/text.png";
 import plusIcon from "@/assets/plusbig.png";
 import expandIcon from "@/assets/00expand-3.png";
@@ -77,6 +80,24 @@ const Index = () => {
     const stored = localStorage.getItem('nuron-show-weather');
     return stored !== null ? JSON.parse(stored) : true; // Default to ON
   });
+  const [theme, setTheme] = useState<'default' | 'green' | 'blue' | 'pink'>(() => {
+    const stored = localStorage.getItem('nuron-theme');
+    return (stored as 'default' | 'green' | 'blue' | 'pink') || 'default';
+  });
+
+  const themeColors = {
+    default: '#2E2E2E',
+    green: '#A8D86B',
+    blue: '#6BA8D8',
+    pink: '#E88BAD'
+  };
+
+  const themePlusIcons = {
+    default: newPlusIcon,
+    green: plusIconGreen,
+    blue: plusIconBlue,
+    pink: plusIconPink
+  };
   const [showMergeDialog, setShowMergeDialog] = useState(false);
   const [localNotesToMerge, setLocalNotesToMerge] = useState<SavedNote[]>([]);
   const [authFormError, setAuthFormError] = useState("");
@@ -91,6 +112,10 @@ const Index = () => {
   useEffect(() => {
     localStorage.setItem('nuron-show-weather', JSON.stringify(showWeatherOnNotes));
   }, [showWeatherOnNotes]);
+
+  useEffect(() => {
+    localStorage.setItem('nuron-theme', theme);
+  }, [theme]);
 
   // Check authentication status and set up auth listener
   useEffect(() => {
@@ -434,7 +459,7 @@ const Index = () => {
   // Show original start page if no notes
   if (savedNotes.length === 0) {
     return (
-      <div className="fixed inset-0 bg-journal-header flex flex-col overflow-hidden">
+      <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: themeColors[theme] }}>
         {/* Header with settings button */}
         <div className="pl-[30px] pt-[30px] z-50">
         <button 
@@ -467,7 +492,7 @@ const Index = () => {
       )}
 
         {/* Settings panel */}
-      <div className={`absolute inset-x-0 top-[120px] bottom-0 bg-journal-header px-8 pt-[80px] overflow-y-auto transition-opacity duration-200 ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`absolute inset-x-0 top-[120px] bottom-0 px-8 pt-[80px] overflow-y-auto transition-opacity duration-200 ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} style={{ backgroundColor: themeColors[theme] }}>
         <div className="text-white font-outfit space-y-6">
           {showChangePassword ? (
             /* Change Password Form */
@@ -729,7 +754,8 @@ const Index = () => {
                 <button
                   onClick={() => mergeAndSyncNotes()}
                   disabled={loading}
-                  className="flex-1 py-3 px-4 rounded-xl bg-journal-header text-white font-outfit font-medium disabled:opacity-50"
+                  className="flex-1 py-3 px-4 rounded-xl text-white font-outfit font-medium disabled:opacity-50"
+                  style={{ backgroundColor: themeColors[theme] }}
                 >
                   {loading ? 'Syncing...' : 'Sync'}
                 </button>
@@ -743,9 +769,9 @@ const Index = () => {
 
   // Show timeline when notes exist
   return (
-    <div className="fixed inset-0 flex flex-col bg-journal-header overflow-hidden">
+    <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: themeColors[theme] }}>
       {/* Fixed dark header */}
-      <header className="flex-shrink-0 bg-journal-header pl-[30px] pt-[30px] pb-[30px] h-[150px] z-30">
+      <header className="flex-shrink-0 pl-[30px] pt-[30px] pb-[30px] h-[150px] z-30" style={{ backgroundColor: themeColors[theme] }}>
         <div className="flex items-center justify-between mb-auto -mt-[15px]">
           <button 
             onClick={() => {
@@ -791,7 +817,7 @@ const Index = () => {
       </header>
 
       {/* Settings panel - sits behind the card */}
-      <div className={`absolute inset-x-0 top-[150px] bottom-0 bg-journal-header px-8 pt-[80px] transition-opacity duration-200 overflow-y-auto ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`absolute inset-x-0 top-[150px] bottom-0 px-8 pt-[80px] transition-opacity duration-200 overflow-y-auto ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} style={{ backgroundColor: themeColors[theme] }}>
         <div className="text-white font-outfit space-y-6">
           {showChangePassword ? (
             /* Change Password Form */
@@ -916,6 +942,28 @@ const Index = () => {
                     className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`}
                   />
                 </button>
+              </div>
+
+              <div className="bg-white/5 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
+                <span className="text-[20px]">Theme colour</span>
+                <div className="flex items-center gap-3">
+                  {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setTheme(t)}
+                      className="flex flex-col items-center gap-1"
+                    >
+                      <img 
+                        src={themePlusIcons[t]} 
+                        alt={t} 
+                        className="w-[40px] h-[40px]"
+                      />
+                      {theme === t && (
+                        <div className="w-[6px] h-[6px] bg-white rounded-full" />
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           ) : showSignUp ? (
@@ -1139,7 +1187,7 @@ const Index = () => {
       {/* Floating add button */}
       {!showSettings && (
         <img 
-          src={newPlusIcon} 
+          src={themePlusIcons[theme]} 
           alt="Add Note"
           onClick={() => navigate('/note')}
           className="fixed bottom-[30px] right-[30px] z-50 cursor-pointer w-[70px] h-[70px]"
@@ -1191,7 +1239,8 @@ const Index = () => {
               <button
                 onClick={() => mergeAndSyncNotes()}
                 disabled={loading}
-                className="flex-1 py-3 px-4 rounded-xl bg-journal-header text-white font-outfit font-medium disabled:opacity-50"
+                className="flex-1 py-3 px-4 rounded-xl text-white font-outfit font-medium disabled:opacity-50"
+                style={{ backgroundColor: themeColors[theme] }}
               >
                 {loading ? 'Syncing...' : 'Sync'}
               </button>
