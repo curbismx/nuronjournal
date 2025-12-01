@@ -376,7 +376,7 @@ const Index = () => {
                   className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
                 >
                   <span 
-                    className={`absolute top-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-[2px]'}`}
+                    className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`}
                   />
                 </button>
               </div>
@@ -615,7 +615,7 @@ const Index = () => {
                   className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
                 >
                   <span 
-                    className={`absolute top-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-[2px]'}`}
+                    className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`}
                   />
                 </button>
               </div>
@@ -680,7 +680,7 @@ const Index = () => {
                   className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
                 >
                   <span 
-                    className={`absolute top-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-[2px]'}`}
+                    className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`}
                   />
                 </button>
               </div>
