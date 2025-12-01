@@ -379,7 +379,12 @@ const Index = () => {
 
   // Show loading screen while checking for notes
   if (isLoading) {
-    return <div className="fixed inset-0 bg-journal-content" />;
+    return (
+      <div className="fixed inset-0 flex flex-col bg-journal-header overflow-hidden">
+        <div className="flex-shrink-0 bg-journal-header h-[150px]" />
+        <div className="flex-1 bg-journal-content rounded-t-[30px] -mt-[25px]" />
+      </div>
+    );
   }
 
   // Show original start page if no notes
