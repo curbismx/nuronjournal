@@ -1129,7 +1129,7 @@ const Index = () => {
       >
         <div style={{ minHeight: 'calc(100% + 1px)' }}>
           {isSearching && (
-            <div className="px-6 pt-4 pb-2">
+            <div className="px-[30px] pt-[30px] pb-2">
               <div className="flex items-center bg-[hsl(60,10%,88%)] rounded-full px-4 py-3 border border-[hsl(60,5%,80%)]">
                 <input
                   type="text"
