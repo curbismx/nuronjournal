@@ -87,7 +87,7 @@ const Index = () => {
 
   const themeColors = {
     default: '#2E2E2E',
-    green: '#A8D86B',
+    green: '#8DBA55',
     blue: '#6BA8D8',
     pink: '#E88BAD'
   };
