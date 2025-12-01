@@ -57,6 +57,10 @@ const Index = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   // Check authentication status
   useEffect(() => {
@@ -156,6 +160,39 @@ const Index = () => {
     }
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (newPassword !== confirmNewPassword) {
+      alert("New passwords don't match");
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      alert("Password must be at least 6 characters");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (error) throw error;
+      
+      alert("Password updated successfully!");
+      setShowChangePassword(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmNewPassword("");
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   // Group notes by date
   const groupedNotes: GroupedNotes[] = savedNotes.reduce((groups: GroupedNotes[], note) => {
@@ -194,37 +231,85 @@ const Index = () => {
       <div className="fixed inset-0 bg-journal-header flex flex-col overflow-hidden">
         {/* Header with settings button */}
         <div className="pl-[30px] pt-[30px] z-50">
-          <button 
-            onClick={() => {
-              if (showAccountDetails) {
-                setShowAccountDetails(false);
-              } else {
-                setShowSettings(!showSettings);
-              }
-            }}
-            className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
-          >
-            <img 
-              src={showSettings || showAccountDetails ? backIcon : settingsIcon} 
-              alt={showSettings || showAccountDetails ? "Back" : "Settings"} 
-              className="w-[30px] h-[30px]" 
-            />
-          </button>
+        <button 
+          onClick={() => {
+            if (showChangePassword) {
+              setShowChangePassword(false);
+            } else if (showAccountDetails) {
+              setShowAccountDetails(false);
+            } else {
+              setShowSettings(!showSettings);
+            }
+          }}
+          className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
+        >
+          <img 
+            src={showSettings || showAccountDetails || showChangePassword ? backIcon : settingsIcon} 
+            alt={showSettings || showAccountDetails || showChangePassword ? "Back" : "Settings"} 
+            className="w-[30px] h-[30px]" 
+          />
+        </button>
         </div>
 
         {/* Title for settings/account */}
-        {(showSettings || showAccountDetails) && (
-          <div className="px-[30px] mt-[20px]">
-            <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider">
-              {showAccountDetails ? 'ACCOUNT DETAILS' : 'SETTINGS'}
-            </h1>
-          </div>
-        )}
+      {(showSettings || showAccountDetails || showChangePassword) && (
+        <div className="px-[30px] mt-[20px]">
+          <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider">
+            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : 'SETTINGS'}
+          </h1>
+        </div>
+      )}
 
         {/* Settings panel */}
-        <div className={`absolute inset-x-0 top-[120px] bottom-0 bg-journal-header px-8 pt-4 overflow-y-auto transition-opacity duration-200 ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-          <div className="text-white font-outfit space-y-6">
-            {showAccountDetails ? (
+      <div className={`absolute inset-x-0 top-[120px] bottom-0 bg-journal-header px-8 pt-4 overflow-y-auto transition-opacity duration-200 ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="text-white font-outfit space-y-6">
+          {showChangePassword ? (
+            /* Change Password Form */
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-white/80 text-[14px]">New Password</Label>
+                <Input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  placeholder="Enter new password"
+                  minLength={6}
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-white/80 text-[14px]">Confirm New Password</Label>
+                <Input
+                  type="password"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  required
+                  placeholder="Confirm new password"
+                  minLength={6}
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors disabled:opacity-50"
+              >
+                {loading ? "Updating..." : "Update Password"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowChangePassword(false);
+                  setNewPassword("");
+                  setConfirmNewPassword("");
+                }}
+                className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors"
+              >
+                Cancel
+              </button>
+            </form>
+          ) : showAccountDetails ? (
               /* Account Details View */
               user && userProfile && (
                 <>
@@ -241,12 +326,16 @@ const Index = () => {
                         {userProfile.email}
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-white/60 text-[12px] uppercase tracking-wider">Password</Label>
-                      <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
-                        ••••••••
-                      </div>
-                    </div>
+                  <div className="space-y-2">
+                    <Label className="text-white/60 text-[12px] uppercase tracking-wider">Password</Label>
+                    <button
+                      onClick={() => setShowChangePassword(true)}
+                      className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px] text-left flex items-center justify-between hover:bg-white/10 transition-colors"
+                    >
+                      <span>••••••••</span>
+                      <span className="text-white/40">→</span>
+                    </button>
+                  </div>
                   </div>
                   <div className="flex gap-4">
                     <button onClick={handleSignOut} className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]">
@@ -354,7 +443,9 @@ const Index = () => {
         <div className="flex items-center justify-between mb-auto -mt-[15px]">
           <button 
             onClick={() => {
-              if (showAccountDetails) {
+              if (showChangePassword) {
+                setShowChangePassword(false);
+              } else if (showAccountDetails) {
                 setShowAccountDetails(false);
               } else {
                 setShowSettings(!showSettings);
@@ -363,8 +454,8 @@ const Index = () => {
             className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
           >
             <img 
-              src={showSettings || showAccountDetails ? backIcon : settingsIcon} 
-              alt={showSettings || showAccountDetails ? "Back" : "Settings"} 
+              src={showSettings || showAccountDetails || showChangePassword ? backIcon : settingsIcon} 
+              alt={showSettings || showAccountDetails || showChangePassword ? "Back" : "Settings"} 
               className="w-[30px] h-[30px]" 
             />
           </button>
@@ -372,9 +463,9 @@ const Index = () => {
         </div>
         <div className="relative mt-[41px]">
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
-            {showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : headerMonthYear}
+            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : headerMonthYear}
           </h1>
-          {!showSettings && !showAccountDetails && (
+          {!showSettings && !showAccountDetails && !showChangePassword && (
             <button 
               onClick={() => setMenuOpen(!menuOpen)}
               className="absolute right-[30px] top-0"
@@ -388,7 +479,53 @@ const Index = () => {
       {/* Settings panel - sits behind the card */}
       <div className={`absolute inset-x-0 top-[150px] bottom-0 bg-journal-header px-8 pt-8 transition-opacity duration-200 overflow-y-auto ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="text-white font-outfit space-y-6">
-          {showAccountDetails ? (
+          {showChangePassword ? (
+            /* Change Password Form */
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-white/80 text-[14px]">New Password</Label>
+                <Input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  placeholder="Enter new password"
+                  minLength={6}
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-white/80 text-[14px]">Confirm New Password</Label>
+                <Input
+                  type="password"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  required
+                  placeholder="Confirm new password"
+                  minLength={6}
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors disabled:opacity-50"
+              >
+                {loading ? "Updating..." : "Update Password"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowChangePassword(false);
+                  setNewPassword("");
+                  setConfirmNewPassword("");
+                }}
+                className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors"
+              >
+                Cancel
+              </button>
+            </form>
+          ) : showAccountDetails ? (
             /* Account Details View */
             user && userProfile && (
               <>
@@ -407,9 +544,13 @@ const Index = () => {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-white/60 text-[12px] uppercase tracking-wider">Password</Label>
-                    <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
-                      ••••••••
-                    </div>
+                    <button
+                      onClick={() => setShowChangePassword(true)}
+                      className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px] text-left flex items-center justify-between hover:bg-white/10 transition-colors"
+                    >
+                      <span>••••••••</span>
+                      <span className="text-white/40">→</span>
+                    </button>
                   </div>
                 </div>
                 <div className="flex gap-4">
