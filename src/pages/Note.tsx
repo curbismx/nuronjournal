@@ -28,7 +28,7 @@ type ContentBlock =
 const Note = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const noteIdRef = useRef<string>(id || Date.now().toString());
+  const noteIdRef = useRef<string>(id || crypto.randomUUID());
   const [user, setUser] = useState<User | null>(null);
   const [noteTitle, setNoteTitle] = useState('');
   const [noteDate, setNoteDate] = useState<Date>(new Date());
@@ -106,7 +106,7 @@ const Note = () => {
 
       if (data.rewrittenText) {
         // Replace all text blocks with the rewritten content
-        setContentBlocks([{ type: 'text', id: Date.now().toString(), content: data.rewrittenText }]);
+        setContentBlocks([{ type: 'text', id: crypto.randomUUID(), content: data.rewrittenText }]);
         
         // Resize textarea after content updates
         setTimeout(() => {
@@ -364,8 +364,8 @@ const Note = () => {
     if (!file) return;
     
     const url = URL.createObjectURL(file);
-    const imageId = Date.now().toString();
-    const newTextId = (Date.now() + 1).toString();
+    const imageId = crypto.randomUUID();
+    const newTextId = crypto.randomUUID();
     
     // Check if we have a cursor position
     if (activeTextBlockRef.current) {
@@ -911,7 +911,7 @@ const Note = () => {
         onClick={async () => {
           await saveNote();
           // Reset state for new note
-          noteIdRef.current = Date.now().toString();
+          noteIdRef.current = crypto.randomUUID();
           setNoteTitle('');
           setContentBlocks([{ type: 'text', id: 'initial', content: '' }]);
           setTitleGenerated(false);
