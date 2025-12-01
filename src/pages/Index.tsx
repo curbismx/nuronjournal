@@ -48,13 +48,40 @@ const Index = () => {
   const [repeatPassword, setRepeatPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Load notes on mount
+  // Load notes based on auth status
   useEffect(() => {
-    const stored = localStorage.getItem('nuron-notes');
-    if (stored) {
-      setSavedNotes(JSON.parse(stored));
-    }
-  }, []);
+    const loadNotes = async () => {
+      if (user) {
+        // Load from Supabase for authenticated users
+        const { data, error } = await supabase
+          .from('notes')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (data && !error) {
+          setSavedNotes(data.map(note => ({
+            id: note.id,
+            title: note.title || 'Untitled',
+            contentBlocks: note.content_blocks as Array<
+              | { type: 'text'; id: string; content: string }
+              | { type: 'image'; id: string; url: string; width: number }
+            >,
+            createdAt: note.created_at,
+            updatedAt: note.updated_at,
+            weather: note.weather as { temp: number; weatherCode: number } | undefined
+          })));
+        }
+      } else {
+        // Load from localStorage for non-authenticated users
+        const stored = localStorage.getItem('nuron-notes');
+        if (stored) {
+          setSavedNotes(JSON.parse(stored));
+        }
+      }
+    };
+
+    loadNotes();
+  }, [user]);
 
   // Check authentication status
   useEffect(() => {
