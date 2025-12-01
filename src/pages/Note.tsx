@@ -296,27 +296,11 @@ const Note = () => {
     };
   }, [menuOpen]);
 
-  // Helper function to save to localStorage
-  const saveToLocalStorage = (noteData: any) => {
-    const notes = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
-    const existingIndex = notes.findIndex((n: any) => n.id === noteData.id);
-    if (existingIndex >= 0) {
-      notes[existingIndex] = noteData;
-    } else {
-      notes.unshift(noteData);
-    }
-    localStorage.setItem('nuron-notes', JSON.stringify(notes));
-  };
-
   // Save note function
   const saveNote = async () => {
-    // Don't save if note was deleted
-    if (isDeletedRef.current) {
-      return;
-    }
+    if (isDeletedRef.current) return;
     
     const noteContent = getNoteContent();
-    // Only save if there's actual content
     if (!noteContent.trim() && contentBlocks.filter(b => b.type === 'image').length === 0) {
       return;
     }
@@ -330,12 +314,12 @@ const Note = () => {
       weather: weather ? { temp: weather.temp, weatherCode: weather.weatherCode } : undefined,
     };
 
-    // Check auth status directly - don't rely on React state
+    // Check auth directly every time
     const { data: { session } } = await supabase.auth.getSession();
     
     if (session?.user) {
-      // Save to Supabase
-      const { error } = await supabase.from('notes').upsert({
+      // LOGGED IN: Save to Supabase only
+      await supabase.from('notes').upsert({
         id: noteData.id,
         user_id: session.user.id,
         title: noteData.title,
@@ -344,15 +328,16 @@ const Note = () => {
         updated_at: noteData.updatedAt,
         weather: noteData.weather
       });
-      
-      if (error) {
-        console.error('Error saving to Supabase:', error);
-        // If Supabase fails, save to localStorage as backup
-        saveToLocalStorage(noteData);
-      }
     } else {
-      // Save to localStorage
-      saveToLocalStorage(noteData);
+      // NOT LOGGED IN: Save to localStorage only
+      const notes = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
+      const existingIndex = notes.findIndex((n: any) => n.id === noteData.id);
+      if (existingIndex >= 0) {
+        notes[existingIndex] = noteData;
+      } else {
+        notes.unshift(noteData);
+      }
+      localStorage.setItem('nuron-notes', JSON.stringify(notes));
     }
   };
 
@@ -521,35 +506,20 @@ const Note = () => {
   };
 
   const deleteNote = async () => {
-    isDeletedRef.current = true;  // Mark as deleted BEFORE removing from storage
+    isDeletedRef.current = true;
     
-    console.log('Deleting note with ID:', noteIdRef.current);
-    
-    // Check auth status directly - don't rely on React state
     const { data: { session } } = await supabase.auth.getSession();
     
     if (session?.user) {
-      // Delete from Supabase
-      const { error } = await supabase
-        .from('notes')
-        .delete()
-        .eq('id', noteIdRef.current);
-      
-      if (error) {
-        console.error('Error deleting from Supabase:', error);
-      }
+      // LOGGED IN: Delete from Supabase only
+      await supabase.from('notes').delete().eq('id', noteIdRef.current);
     } else {
-      // Delete from localStorage
-      const notes: SavedNote[] = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
-      console.log('Current notes in localStorage:', notes.map(n => n.id));
-      
-      const updatedNotes = notes.filter(n => n.id !== noteIdRef.current);
-      console.log('Notes after filter:', updatedNotes.map(n => n.id));
-      
-      localStorage.setItem('nuron-notes', JSON.stringify(updatedNotes));
+      // NOT LOGGED IN: Delete from localStorage only
+      const notes = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
+      const filtered = notes.filter((n: any) => n.id !== noteIdRef.current);
+      localStorage.setItem('nuron-notes', JSON.stringify(filtered));
     }
     
-    // Navigate back to index
     navigate('/');
   };
 

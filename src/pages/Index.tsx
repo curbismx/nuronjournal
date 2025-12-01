@@ -70,41 +70,28 @@ const Index = () => {
       setUser(session?.user ?? null);
       if (session?.user) {
         loadUserProfile(session.user.id);
-        
-        // Check if there are local notes that need syncing
-        const localNotes = localStorage.getItem('nuron-notes');
-        if (localNotes) {
-          const parsedNotes = JSON.parse(localNotes);
-          if (parsedNotes.length > 0) {
-            setLocalNotesToMerge(parsedNotes);
-            setShowMergeDialog(true);
-          } else {
-            // No local notes, just load from Supabase
-            loadNotesFromSupabase(session.user.id);
-          }
-        } else {
-          // No local notes, just load from Supabase
-          loadNotesFromSupabase(session.user.id);
-        }
+        // DON'T check for merge here - that's only on SIGNED_IN event
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      const wasLoggedOut = !user;
       setUser(session?.user ?? null);
+      
       if (session?.user) {
         loadUserProfile(session.user.id);
         
-        // Check if there are local notes to merge
-        setTimeout(() => {
+        // ONLY check for merge on actual LOGIN (not page refresh)
+        if (event === 'SIGNED_IN' && wasLoggedOut) {
           const localNotes = localStorage.getItem('nuron-notes');
           if (localNotes) {
-            const parsedNotes = JSON.parse(localNotes);
-            if (parsedNotes.length > 0) {
-              setLocalNotesToMerge(parsedNotes);
+            const parsed = JSON.parse(localNotes);
+            if (parsed.length > 0) {
+              setLocalNotesToMerge(parsed);
               setShowMergeDialog(true);
             }
           }
-        }, 0);
+        }
       } else {
         setUserProfile(null);
       }
@@ -116,12 +103,14 @@ const Index = () => {
   // Load notes from Supabase or localStorage based on auth status
   useEffect(() => {
     const loadNotes = async () => {
-      if (user) {
-        // Load from Supabase when logged in - MUST filter by user_id
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        // LOGGED IN: Load from Supabase only
         const { data } = await supabase
           .from('notes')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', session.user.id)
           .order('created_at', { ascending: false });
         
         if (data) {
@@ -135,20 +124,12 @@ const Index = () => {
           })));
         }
       } else {
-        // Load from localStorage when not logged in
+        // NOT LOGGED IN: Load from localStorage only
         const stored = localStorage.getItem('nuron-notes');
-        if (stored) {
-          try {
-            setSavedNotes(JSON.parse(stored));
-          } catch {
-            setSavedNotes([]);
-          }
-        } else {
-          setSavedNotes([]);
-        }
+        setSavedNotes(stored ? JSON.parse(stored) : []);
       }
     };
-
+    
     loadNotes();
   }, [user]);
 
@@ -285,65 +266,44 @@ const Index = () => {
     if (!user) return;
     
     setLoading(true);
-    try {
-      // Get local notes
-      const localNotesJson = localStorage.getItem('nuron-notes');
-      const localNotes: SavedNote[] = localNotesJson ? JSON.parse(localNotesJson) : [];
-      
-      // Get Supabase notes
-      const { data: supabaseData } = await supabase
-        .from('notes')
-        .select('*')
-        .eq('user_id', user.id);
-      
-      const supabaseNotes: SavedNote[] = (supabaseData || []).map(note => ({
+    
+    // Upload all local notes to Supabase
+    for (const note of localNotesToMerge) {
+      await supabase.from('notes').upsert({
+        id: note.id,
+        user_id: user.id,
+        title: note.title,
+        content_blocks: note.contentBlocks,
+        created_at: note.createdAt,
+        updated_at: note.updatedAt,
+        weather: note.weather
+      });
+    }
+    
+    // Clear localStorage - we're now fully on Supabase
+    localStorage.removeItem('nuron-notes');
+    
+    // Reload notes from Supabase
+    const { data } = await supabase
+      .from('notes')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    
+    if (data) {
+      setSavedNotes(data.map(note => ({
         id: note.id,
         title: note.title || 'Untitled',
         contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
         createdAt: note.created_at,
         updatedAt: note.updated_at,
         weather: note.weather as SavedNote['weather']
-      }));
-      
-      // Find local notes that don't exist in Supabase (by ID)
-      const supabaseIds = new Set(supabaseNotes.map(n => n.id));
-      const notesToUpload = localNotes.filter(n => !supabaseIds.has(n.id));
-      
-      // Upload missing notes to Supabase
-      for (const note of notesToUpload) {
-        await supabase.from('notes').insert({
-          id: note.id,
-          user_id: user.id,
-          title: note.title,
-          content_blocks: note.contentBlocks,
-          created_at: note.createdAt,
-          updated_at: note.updatedAt,
-          weather: note.weather
-        });
-      }
-      
-      // Merge all notes (Supabase + newly uploaded local)
-      const allNotes = [...supabaseNotes, ...notesToUpload];
-      
-      // Sort by created date descending
-      allNotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      
-      // Update state
-      setSavedNotes(allNotes);
-      
-      // Clear localStorage since everything is now in Supabase
-      localStorage.removeItem('nuron-notes');
-      
-      if (notesToUpload.length > 0) {
-        alert(`${notesToUpload.length} note${notesToUpload.length !== 1 ? 's' : ''} synced to your account!`);
-      }
-    } catch (error: any) {
-      console.error('Error syncing notes:', error);
-      alert('Error syncing notes: ' + error.message);
-    } finally {
-      setLoading(false);
-      setShowMergeDialog(false);
+      })));
     }
+    
+    setLoading(false);
+    setShowMergeDialog(false);
+    setLocalNotesToMerge([]);
   };
 
 
