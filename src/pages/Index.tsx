@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
 import settingsIcon from "@/assets/settings-new.png";
 import newPlusIcon from "@/assets/plus-new.png";
 import textImage from "@/assets/text.png";
@@ -34,6 +36,8 @@ const Index = () => {
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<{ name: string; email: string } | null>(null);
 
   // Load notes on mount
   useEffect(() => {
@@ -42,6 +46,44 @@ const Index = () => {
       setSavedNotes(JSON.parse(stored));
     }
   }, []);
+
+  // Check authentication status
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        loadUserProfile(session.user.id);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        loadUserProfile(session.user.id);
+      } else {
+        setUserProfile(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loadUserProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('name, email')
+      .eq('id', userId)
+      .single();
+    
+    if (data) {
+      setUserProfile(data);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setShowSettings(false);
+  };
 
   // Group notes by date
   const groupedNotes: GroupedNotes[] = savedNotes.reduce((groups: GroupedNotes[], note) => {
@@ -159,8 +201,43 @@ const Index = () => {
 
       {/* Settings panel - sits behind the card */}
       <div className={`absolute inset-x-0 top-[150px] bottom-0 bg-journal-header px-8 pt-8 transition-opacity duration-300 ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className="text-white font-outfit">
-          <p className="text-white/60 text-[14px]">Settings options coming soon...</p>
+        <div className="text-white font-outfit space-y-6">
+          {user && userProfile ? (
+            <>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-white/60 text-[12px] uppercase tracking-wider mb-1">Name</p>
+                  <p className="text-white text-[16px]">{userProfile.name || 'Not set'}</p>
+                </div>
+                <div>
+                  <p className="text-white/60 text-[12px] uppercase tracking-wider mb-1">Email</p>
+                  <p className="text-white text-[16px]">{userProfile.email}</p>
+                </div>
+                <div>
+                  <p className="text-white/60 text-[12px] uppercase tracking-wider mb-1">Password</p>
+                  <p className="text-white text-[16px]">••••••••</p>
+                </div>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="mt-8 px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-md transition-colors text-[14px]"
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-white/80 text-[14px] mb-4">
+                Create an account to save your notes to the cloud and access them from any device.
+              </p>
+              <button
+                onClick={() => navigate('/auth')}
+                className="px-6 py-3 bg-white text-journal-header font-medium rounded-md hover:bg-white/90 transition-colors text-[14px]"
+              >
+                Set Up Account
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
