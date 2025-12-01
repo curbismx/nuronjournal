@@ -176,34 +176,50 @@ const Note = () => {
   }, [id]);
 
   useEffect(() => {
-    // Fetch weather data
     const fetchWeather = async () => {
       try {
-        // Get user's location
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             const { latitude, longitude } = position.coords;
             
-            // Fetch weather from Open-Meteo (free, no API key)
-            const response = await fetch(
-              `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&temperature_unit=celsius`
-            );
-            const data = await response.json();
+            const today = new Date();
+            const isToday = noteDate.getDate() === today.getDate() &&
+                           noteDate.getMonth() === today.getMonth() &&
+                           noteDate.getFullYear() === today.getFullYear();
             
-            // Map weather codes to Lucide icons
-            const weatherCode = data.current.weather_code;
-            let WeatherIcon = Sun; // default sunny
+            let temp: number;
+            let weatherCode: number;
             
-            if (weatherCode >= 61 && weatherCode <= 67) WeatherIcon = CloudRain; // rain
-            else if (weatherCode >= 71 && weatherCode <= 77) WeatherIcon = CloudSnow; // snow
-            else if (weatherCode >= 80 && weatherCode <= 82) WeatherIcon = CloudRain; // showers
-            else if (weatherCode >= 51 && weatherCode <= 57) WeatherIcon = CloudDrizzle; // drizzle
-            else if (weatherCode >= 2 && weatherCode <= 3) WeatherIcon = Cloud; // partly cloudy
-            else if (weatherCode === 45 || weatherCode === 48) WeatherIcon = CloudFog; // fog
-            else if (weatherCode >= 95) WeatherIcon = CloudLightning; // thunderstorm
+            if (isToday) {
+              // Today: fetch current weather
+              const response = await fetch(
+                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&temperature_unit=celsius`
+              );
+              const data = await response.json();
+              temp = Math.round(data.current.temperature_2m);
+              weatherCode = data.current.weather_code;
+            } else {
+              // Past day: fetch daily high and dominant weather for that date
+              const dateStr = noteDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+              const response = await fetch(
+                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,weather_code&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`
+              );
+              const data = await response.json();
+              temp = Math.round(data.daily.temperature_2m_max[0]);
+              weatherCode = data.daily.weather_code[0];
+            }
+            
+            let WeatherIcon = Sun;
+            if (weatherCode >= 61 && weatherCode <= 67) WeatherIcon = CloudRain;
+            else if (weatherCode >= 71 && weatherCode <= 77) WeatherIcon = CloudSnow;
+            else if (weatherCode >= 80 && weatherCode <= 82) WeatherIcon = CloudRain;
+            else if (weatherCode >= 51 && weatherCode <= 57) WeatherIcon = CloudDrizzle;
+            else if (weatherCode >= 2 && weatherCode <= 3) WeatherIcon = Cloud;
+            else if (weatherCode === 45 || weatherCode === 48) WeatherIcon = CloudFog;
+            else if (weatherCode >= 95) WeatherIcon = CloudLightning;
             
             setWeather({
-              temp: Math.round(data.current.temperature_2m),
+              temp,
               weatherCode,
               WeatherIcon
             });
@@ -218,7 +234,7 @@ const Note = () => {
     };
     
     fetchWeather();
-  }, []);
+  }, [noteDate]);
 
 
   // Auto-generate title when user has written enough (only once)
