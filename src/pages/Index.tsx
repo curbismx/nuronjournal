@@ -1145,9 +1145,9 @@ const Index = () => {
                       setIsSearching(false);
                     }
                   }}
-                  className="w-[28px] h-[28px] rounded-full border border-[hsl(60,5%,70%)] flex items-center justify-center"
+                  className="flex items-center justify-center"
                 >
-                  <img src={searchArrow} alt="" className="w-[14px] h-[14px]" />
+                  <img src={searchArrow} alt="" className="w-[20px] h-auto" />
                 </button>
               </div>
             </div>
