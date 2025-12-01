@@ -142,7 +142,7 @@ const Index = () => {
             <>
               <button 
                 onClick={() => {/* TODO: Add search functionality */}}
-                className="absolute right-[80px] top-0"
+                className="absolute right-[110px] top-0"
               >
                 <img src={searchIcon} alt="Search" className="h-[24px] w-auto" />
               </button>
