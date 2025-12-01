@@ -76,7 +76,7 @@ const Index = () => {
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [skipInitialAnimation]);
+  }, []);
 
   // Load notes based on auth status
   useEffect(() => {
