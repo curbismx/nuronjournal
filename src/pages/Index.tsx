@@ -8,6 +8,11 @@ import expandIcon from "@/assets/expand-2.png";
 import condenseIcon from "@/assets/condense.png";
 import floatingAddButton from "@/assets/bigredbuttonnoshadow.png";
 import smallArrow from "@/assets/smallarrow.png";
+import backIcon from "@/assets/back.png";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 
 interface SavedNote {
@@ -41,6 +46,114 @@ const Index = () => {
     return [];
   });
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showAccountDetails, setShowAccountDetails] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<{ name: string; email: string } | null>(null);
+  const [showSignUp, setShowSignUp] = useState(false);
+  const [isSignInMode, setIsSignInMode] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Check authentication status
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        loadUserProfile(session.user.id);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        loadUserProfile(session.user.id);
+      } else {
+        setUserProfile(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loadUserProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('name, email')
+      .eq('id', userId)
+      .single();
+    
+    if (data) {
+      setUserProfile(data);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { name },
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+      if (error) throw error;
+      alert("Account created successfully!");
+      setShowSignUp(false);
+      setName("");
+      setEmail("");
+      setPassword("");
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      alert("Signed in successfully!");
+      setShowSignUp(false);
+      setIsSignInMode(false);
+      setEmail("");
+      setPassword("");
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setUserProfile(null);
+    setShowAccountDetails(false);
+    setShowSettings(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    const confirmed = window.confirm("Are you sure you want to delete your account? This action cannot be undone.");
+    if (confirmed) {
+      await supabase.from("notes").delete().eq("user_id", user.id);
+      await supabase.from("profiles").delete().eq("id", user.id);
+      await supabase.auth.signOut();
+      setUser(null);
+      setUserProfile(null);
+      setShowAccountDetails(false);
+      setShowSettings(false);
+    }
+  };
 
 
   // Group notes by date
@@ -77,38 +190,154 @@ const Index = () => {
   // Show original start page if no notes
   if (savedNotes.length === 0) {
     return (
-      <div className="fixed inset-0 bg-journal-header flex flex-col">
-        {/* Settings Button */}
-        <div className="pl-[30px] pt-[30px]">
-          <button className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity">
-            <img src={settingsIcon} alt="Settings" className="w-[30px] h-[30px]" />
+      <div className="fixed inset-0 bg-journal-header flex flex-col overflow-hidden">
+        {/* Header with settings button */}
+        <div className="pl-[30px] pt-[30px] z-50">
+          <button 
+            onClick={() => {
+              if (showAccountDetails) {
+                setShowAccountDetails(false);
+              } else {
+                setShowSettings(!showSettings);
+              }
+            }}
+            className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
+          >
+            <img 
+              src={showSettings || showAccountDetails ? backIcon : settingsIcon} 
+              alt={showSettings || showAccountDetails ? "Back" : "Settings"} 
+              className="w-[30px] h-[30px]" 
+            />
           </button>
         </div>
 
-        {/* Main Content - Centered */}
-        <main className="flex-1 flex flex-col items-center justify-center px-8">
-          {/* Text and Record Button Container */}
+        {/* Title for settings/account */}
+        {(showSettings || showAccountDetails) && (
+          <div className="px-[30px] mt-[20px]">
+            <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider">
+              {showAccountDetails ? 'ACCOUNT DETAILS' : 'SETTINGS'}
+            </h1>
+          </div>
+        )}
+
+        {/* Settings panel */}
+        <div className={`absolute inset-x-0 top-[120px] bottom-0 bg-journal-header px-8 pt-4 overflow-y-auto transition-opacity duration-200 ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          <div className="text-white font-outfit space-y-6">
+            {showAccountDetails ? (
+              /* Account Details View */
+              user && userProfile && (
+                <>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-white/60 text-[12px] uppercase tracking-wider">Name</Label>
+                      <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                        {userProfile.name || 'Not set'}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white/60 text-[12px] uppercase tracking-wider">Email</Label>
+                      <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                        {userProfile.email}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white/60 text-[12px] uppercase tracking-wider">Password</Label>
+                      <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                        ••••••••
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <button onClick={handleSignOut} className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]">
+                      Sign Out
+                    </button>
+                    <button onClick={handleDeleteAccount} className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white rounded-[10px] transition-colors text-[14px]">
+                      Delete Account
+                    </button>
+                  </div>
+                </>
+              )
+            ) : user && userProfile ? (
+              /* Settings View - logged in */
+              <button
+                onClick={() => setShowAccountDetails(true)}
+                className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
+              >
+                <span>Account Details</span>
+                <span className="text-white/40">→</span>
+              </button>
+            ) : showSignUp ? (
+              /* Sign Up / Sign In Form */
+              <form onSubmit={isSignInMode ? handleSignIn : handleSignUp} className="space-y-4">
+                {!isSignInMode && (
+                  <div className="space-y-2">
+                    <Label className="text-white/80 text-[14px]">Name</Label>
+                    <Input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      placeholder="Your name"
+                      className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                    />
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-[14px]">Email</Label>
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="you@example.com"
+                    className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-[14px]">Password</Label>
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                    minLength={6}
+                    className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                  />
+                </div>
+                <button type="submit" disabled={loading} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors">
+                  {loading ? "Loading..." : isSignInMode ? "Sign In" : "Create Account"}
+                </button>
+                <button type="button" onClick={() => setIsSignInMode(!isSignInMode)} className="w-full text-white/60 hover:text-white/80 text-[14px] transition-colors">
+                  {isSignInMode ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+                </button>
+                <button type="button" onClick={() => setShowSignUp(false)} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
+                  Cancel
+                </button>
+              </form>
+            ) : (
+              /* Initial buttons - not logged in */
+              <div className="space-y-4">
+                <button onClick={() => { setShowSignUp(true); setIsSignInMode(false); }} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors">
+                  Create Account
+                </button>
+                <button onClick={() => { setShowSignUp(true); setIsSignInMode(true); }} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
+                  Sign In
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Main Content - slides down when settings open */}
+        <main className={`flex-1 flex flex-col items-center justify-center px-8 transition-transform duration-300 ${showSettings ? 'translate-y-[100%]' : ''}`}>
           <div className="relative">
-            {/* Handwritten Text Image */}
-            <img 
-              src={textImage} 
-              alt="Instructions" 
-              className="w-full max-w-[320px] mt-[60px]"
-            />
-            
-            {/* Red Record Button - Overlaid on text */}
+            <img src={textImage} alt="Instructions" className="w-full max-w-[320px] mt-[60px]" />
             <button 
               onClick={() => navigate('/note')}
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -mt-[15px] hover:scale-105 transition-transform"
             >
-              <img 
-                src={newPlusIcon} 
-                alt="Record" 
-                className="w-[51px] h-[51px]"
-                style={{
-                  filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
-                }}
-              />
+              <img src={newPlusIcon} alt="Record" className="w-[51px] h-[51px]" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))' }} />
             </button>
           </div>
         </main>
@@ -122,27 +351,151 @@ const Index = () => {
       {/* Fixed dark header */}
       <header className="flex-shrink-0 bg-journal-header pl-[30px] pt-[30px] pb-[30px] h-[150px] z-30">
         <div className="flex items-center justify-between mb-auto -mt-[15px]">
-          <button className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity">
-            <img src={settingsIcon} alt="Settings" className="w-[30px] h-[30px]" />
+          <button 
+            onClick={() => {
+              if (showAccountDetails) {
+                setShowAccountDetails(false);
+              } else {
+                setShowSettings(!showSettings);
+              }
+            }}
+            className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
+          >
+            <img 
+              src={showSettings || showAccountDetails ? backIcon : settingsIcon} 
+              alt={showSettings || showAccountDetails ? "Back" : "Settings"} 
+              className="w-[30px] h-[30px]" 
+            />
           </button>
           <div className="flex-1" />
         </div>
         <div className="relative mt-[41px]">
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
-            {headerMonthYear}
+            {showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : headerMonthYear}
           </h1>
-          <button 
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="absolute right-[30px] top-0"
-          >
-            <img src={menuOpen ? condenseIcon : expandIcon} alt="Menu" className="h-[24px] w-auto" />
-          </button>
+          {!showSettings && !showAccountDetails && (
+            <button 
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="absolute right-[30px] top-0"
+            >
+              <img src={menuOpen ? condenseIcon : expandIcon} alt="Menu" className="h-[24px] w-auto" />
+            </button>
+          )}
         </div>
       </header>
 
+      {/* Settings panel - sits behind the card */}
+      <div className={`absolute inset-x-0 top-[150px] bottom-0 bg-journal-header px-8 pt-8 transition-opacity duration-200 overflow-y-auto ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className="text-white font-outfit space-y-6">
+          {showAccountDetails ? (
+            /* Account Details View */
+            user && userProfile && (
+              <>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-white/60 text-[12px] uppercase tracking-wider">Name</Label>
+                    <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                      {userProfile.name || 'Not set'}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-white/60 text-[12px] uppercase tracking-wider">Email</Label>
+                    <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                      {userProfile.email}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-white/60 text-[12px] uppercase tracking-wider">Password</Label>
+                    <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                      ••••••••
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <button onClick={handleSignOut} className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]">
+                    Sign Out
+                  </button>
+                  <button onClick={handleDeleteAccount} className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white rounded-[10px] transition-colors text-[14px]">
+                    Delete Account
+                  </button>
+                </div>
+              </>
+            )
+          ) : user && userProfile ? (
+            /* Settings View - logged in */
+            <button
+              onClick={() => setShowAccountDetails(true)}
+              className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
+            >
+              <span>Account Details</span>
+              <span className="text-white/40">→</span>
+            </button>
+          ) : showSignUp ? (
+            /* Sign Up / Sign In Form */
+            <form onSubmit={isSignInMode ? handleSignIn : handleSignUp} className="space-y-4">
+              {!isSignInMode && (
+                <div className="space-y-2">
+                  <Label className="text-white/80 text-[14px]">Name</Label>
+                  <Input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    placeholder="Your name"
+                    className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label className="text-white/80 text-[14px]">Email</Label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="you@example.com"
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-white/80 text-[14px]">Password</Label>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••••"
+                  minLength={6}
+                  className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                />
+              </div>
+              <button type="submit" disabled={loading} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors">
+                {loading ? "Loading..." : isSignInMode ? "Sign In" : "Create Account"}
+              </button>
+              <button type="button" onClick={() => setIsSignInMode(!isSignInMode)} className="w-full text-white/60 hover:text-white/80 text-[14px] transition-colors">
+                {isSignInMode ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+              </button>
+              <button type="button" onClick={() => setShowSignUp(false)} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
+                Cancel
+              </button>
+            </form>
+          ) : (
+            /* Initial buttons - not logged in */
+            <div className="space-y-4">
+              <button onClick={() => { setShowSignUp(true); setIsSignInMode(false); }} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors">
+                Create Account
+              </button>
+              <button onClick={() => { setShowSignUp(true); setIsSignInMode(true); }} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
+                Sign In
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Scrollable content area */}
       <div 
-        className="flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 -mt-[25px]"
+        className={`flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 transition-transform duration-300 ${showSettings ? 'translate-y-[100%]' : '-mt-[25px]'}`}
         style={{ 
           WebkitOverflowScrolling: 'touch',
           overscrollBehaviorY: 'auto',
@@ -242,15 +595,17 @@ const Index = () => {
       </div>
 
       {/* Floating add button */}
-      <img 
-        src={newPlusIcon} 
-        alt="Add Note"
-        onClick={() => navigate('/note')}
-        className="fixed bottom-[30px] right-[30px] z-50 cursor-pointer w-[51px] h-[51px]"
-        style={{
-          filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
-        }}
-      />
+      {!showSettings && (
+        <img 
+          src={newPlusIcon} 
+          alt="Add Note"
+          onClick={() => navigate('/note')}
+          className="fixed bottom-[30px] right-[30px] z-50 cursor-pointer w-[51px] h-[51px]"
+          style={{
+            filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
+          }}
+        />
+      )}
     </div>
   );
 };
