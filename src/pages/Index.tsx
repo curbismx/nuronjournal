@@ -514,9 +514,6 @@ const Index = () => {
 
       {/* Settings panel - sits behind the card */}
       <div className={`absolute inset-x-0 top-[150px] bottom-0 bg-journal-header px-8 pt-8 transition-opacity duration-300 overflow-y-auto ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none mb-8">
-          SETTINGS
-        </h1>
         <div className="text-white font-outfit space-y-6">
           {user && userProfile ? (
             <>
