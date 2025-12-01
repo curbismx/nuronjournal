@@ -41,6 +41,7 @@ const Index = () => {
   // Prevent flash on initial render
   const [isPageReady, setIsPageReady] = useState(false);
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
+  const [notesLoaded, setNotesLoaded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const initialShowSettings = (location.state as any)?.showSettings || false;
   const [showSettings, setShowSettings] = useState(initialShowSettings);
@@ -104,12 +105,14 @@ const Index = () => {
             weather: note.weather as { temp: number; weatherCode: number } | undefined
           })));
         }
+        setNotesLoaded(true);
       } else {
         // Load from localStorage for non-authenticated users
         const stored = localStorage.getItem('nuron-notes');
         if (stored) {
           setSavedNotes(JSON.parse(stored));
         }
+        setNotesLoaded(true);
       }
     };
 
@@ -291,6 +294,11 @@ const Index = () => {
   // Show solid background until page is ready (prevents flash)
   if (!isPageReady) {
     return <div className="fixed inset-0 bg-journal-header" />;
+  }
+
+  // Show blank screen while notes are loading (prevents flash)
+  if (!notesLoaded) {
+    return <div className="fixed inset-0 bg-journal-content" />;
   }
 
   // Show original start page if no notes
