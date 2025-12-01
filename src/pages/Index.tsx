@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 
 interface SavedNote {
@@ -68,6 +69,8 @@ const Index = () => {
   });
   const [showMergeDialog, setShowMergeDialog] = useState(false);
   const [localNotesToMerge, setLocalNotesToMerge] = useState<SavedNote[]>([]);
+  const [authFormError, setAuthFormError] = useState("");
+  const [passwordFormError, setPasswordFormError] = useState("");
 
   // Save weather setting to localStorage
   useEffect(() => {
@@ -186,6 +189,7 @@ const Index = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setAuthFormError("");
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -196,13 +200,13 @@ const Index = () => {
         },
       });
       if (error) throw error;
-      alert("Account created successfully!");
+      // SUCCESS: Just proceed - the auth state change will handle navigation
       setShowSignUp(false);
       setName("");
       setEmail("");
       setPassword("");
     } catch (error: any) {
-      alert(error.message);
+      setAuthFormError(error.message);
     } finally {
       setLoading(false);
     }
@@ -211,16 +215,17 @@ const Index = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setAuthFormError("");
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      alert("Signed in successfully!");
+      // SUCCESS: Just proceed - no alert needed
       setShowSignUp(false);
       setIsSignInMode(false);
       setEmail("");
       setPassword("");
     } catch (error: any) {
-      alert(error.message);
+      setAuthFormError(error.message);
     } finally {
       setLoading(false);
     }
@@ -250,14 +255,15 @@ const Index = () => {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPasswordFormError("");
     
     if (newPassword !== confirmNewPassword) {
-      alert("New passwords don't match");
+      setPasswordFormError("Passwords don't match");
       return;
     }
     
     if (newPassword.length < 6) {
-      alert("Password must be at least 6 characters");
+      setPasswordFormError("Password must be at least 6 characters");
       return;
     }
     
@@ -269,13 +275,13 @@ const Index = () => {
       
       if (error) throw error;
       
-      alert("Password updated successfully!");
+      // SUCCESS: Just close the form - that's the feedback
       setShowChangePassword(false);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmNewPassword("");
     } catch (error: any) {
-      alert(error.message);
+      setPasswordFormError(error.message);
     } finally {
       setLoading(false);
     }
@@ -342,7 +348,7 @@ const Index = () => {
       setLocalNotesToMerge([]);
     } catch (error: any) {
       console.error('Error syncing notes:', error);
-      alert('Error syncing: ' + error.message);
+      toast.error('Could not sync notes. Please try again.');
     } finally {
       setLoading(false);
       setShowMergeDialog(false);
@@ -427,7 +433,10 @@ const Index = () => {
                 <Input
                   type="password"
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    setPasswordFormError("");
+                  }}
                   required
                   placeholder="Enter new password"
                   minLength={6}
@@ -439,13 +448,19 @@ const Index = () => {
                 <Input
                   type="password"
                   value={confirmNewPassword}
-                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmNewPassword(e.target.value);
+                    setPasswordFormError("");
+                  }}
                   required
                   placeholder="Confirm new password"
                   minLength={6}
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
                 />
               </div>
+              {passwordFormError && (
+                <p className="text-red-400 text-[14px]">{passwordFormError}</p>
+              )}
               <button
                 type="submit"
                 disabled={loading}
@@ -459,6 +474,7 @@ const Index = () => {
                   setShowChangePassword(false);
                   setNewPassword("");
                   setConfirmNewPassword("");
+                  setPasswordFormError("");
                 }}
                 className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors"
               >
@@ -485,7 +501,10 @@ const Index = () => {
                   <div className="space-y-2">
                     <Label className="text-white/60 text-[12px] uppercase tracking-wider">Password</Label>
                     <button
-                      onClick={() => setShowChangePassword(true)}
+                      onClick={() => {
+                        setShowChangePassword(true);
+                        setPasswordFormError("");
+                      }}
                       className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px] text-left flex items-center justify-between hover:bg-white/10 transition-colors"
                     >
                       <span>••••••••</span>
@@ -738,7 +757,10 @@ const Index = () => {
                 <Input
                   type="password"
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    setPasswordFormError("");
+                  }}
                   required
                   placeholder="Enter new password"
                   minLength={6}
@@ -750,13 +772,19 @@ const Index = () => {
                 <Input
                   type="password"
                   value={confirmNewPassword}
-                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmNewPassword(e.target.value);
+                    setPasswordFormError("");
+                  }}
                   required
                   placeholder="Confirm new password"
                   minLength={6}
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
                 />
               </div>
+              {passwordFormError && (
+                <p className="text-red-400 text-[14px]">{passwordFormError}</p>
+              )}
               <button
                 type="submit"
                 disabled={loading}
@@ -770,6 +798,7 @@ const Index = () => {
                   setShowChangePassword(false);
                   setNewPassword("");
                   setConfirmNewPassword("");
+                  setPasswordFormError("");
                 }}
                 className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors"
               >
@@ -796,7 +825,10 @@ const Index = () => {
                   <div className="space-y-2">
                     <Label className="text-white/60 text-[12px] uppercase tracking-wider">Password</Label>
                     <button
-                      onClick={() => setShowChangePassword(true)}
+                      onClick={() => {
+                        setShowChangePassword(true);
+                        setPasswordFormError("");
+                      }}
                       className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px] text-left flex items-center justify-between hover:bg-white/10 transition-colors"
                     >
                       <span>••••••••</span>
@@ -851,7 +883,10 @@ const Index = () => {
                   <Input
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      setAuthFormError("");
+                    }}
                     required
                     placeholder="Your name"
                     className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
@@ -863,7 +898,10 @@ const Index = () => {
                 <Input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setAuthFormError("");
+                  }}
                   required
                   placeholder="you@example.com"
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
@@ -874,20 +912,32 @@ const Index = () => {
                 <Input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setAuthFormError("");
+                  }}
                   required
                   placeholder="••••••••"
                   minLength={6}
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
                 />
               </div>
+              {authFormError && (
+                <p className="text-red-400 text-[14px]">{authFormError}</p>
+              )}
               <button type="submit" disabled={loading} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors">
                 {loading ? "Loading..." : isSignInMode ? "Sign In" : "Create Account"}
               </button>
-              <button type="button" onClick={() => setIsSignInMode(!isSignInMode)} className="w-full text-white/60 hover:text-white/80 text-[14px] transition-colors">
+              <button type="button" onClick={() => {
+                setIsSignInMode(!isSignInMode);
+                setAuthFormError("");
+              }} className="w-full text-white/60 hover:text-white/80 text-[14px] transition-colors">
                 {isSignInMode ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
               </button>
-              <button type="button" onClick={() => setShowSignUp(false)} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
+              <button type="button" onClick={() => {
+                setShowSignUp(false);
+                setAuthFormError("");
+              }} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
                 Cancel
               </button>
             </form>
@@ -895,10 +945,18 @@ const Index = () => {
             /* Initial buttons - not logged in */
             <div className="space-y-4">
               {/* Account section */}
-              <button onClick={() => { setShowSignUp(true); setIsSignInMode(false); }} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors">
+              <button onClick={() => { 
+                setShowSignUp(true); 
+                setIsSignInMode(false);
+                setAuthFormError("");
+              }} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors">
                 Create Account
               </button>
-              <button onClick={() => { setShowSignUp(true); setIsSignInMode(true); }} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
+              <button onClick={() => { 
+                setShowSignUp(true); 
+                setIsSignInMode(true);
+                setAuthFormError("");
+              }} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
                 Sign In
               </button>
               
