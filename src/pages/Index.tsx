@@ -359,28 +359,32 @@ const Index = () => {
               )
             ) : user && userProfile ? (
               /* Settings View - logged in */
-            <div className="space-y-4">
-              <button
-                onClick={() => setShowAccountDetails(true)}
-                className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
-              >
-                <span>Account Details</span>
-                <img src={accountArrow} alt="" className="w-[20px] h-[20px] opacity-60" />
-              </button>
-              
-              {/* Weather toggle */}
-              <div className="bg-white/5 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
-                <span className="text-[20px]">Show weather on notes</span>
+              <div className="space-y-4">
+                {/* Account section */}
                 <button
-                  onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
-                  className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
+                  onClick={() => setShowAccountDetails(true)}
+                  className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[20px]"
                 >
-                  <span 
-                    className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`}
-                  />
+                  <span>Account Details</span>
+                  <img src={accountArrow} alt="" className="w-[20px] h-[20px] opacity-60" />
                 </button>
+                
+                {/* Separator line */}
+                <div className="border-t border-white/20 my-[50px]"></div>
+                
+                {/* Other settings */}
+                <div className="bg-white/5 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
+                  <span className="text-[20px]">Show weather on notes</span>
+                  <button
+                    onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
+                    className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
+                  >
+                    <span 
+                      className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`}
+                    />
+                  </button>
+                </div>
               </div>
-            </div>
             ) : showSignUp ? (
               /* Sign Up / Sign In Form */
               <form onSubmit={isSignInMode ? handleSignIn : handleSignUp} className="space-y-4">
@@ -433,12 +437,29 @@ const Index = () => {
             ) : (
               /* Initial buttons - not logged in */
               <div className="space-y-4">
+                {/* Account section */}
                 <button onClick={() => { setShowSignUp(true); setIsSignInMode(false); }} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors">
                   Create Account
                 </button>
                 <button onClick={() => { setShowSignUp(true); setIsSignInMode(true); }} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
                   Sign In
                 </button>
+                
+                {/* Separator line */}
+                <div className="border-t border-white/20 my-[50px]"></div>
+                
+                {/* Other settings */}
+                <div className="bg-white/5 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
+                  <span className="text-[20px]">Show weather on notes</span>
+                  <button
+                    onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
+                    className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
+                  >
+                    <span 
+                      className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`}
+                    />
+                  </button>
+                </div>
               </div>
             )}
           </div>
