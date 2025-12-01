@@ -68,7 +68,6 @@ const Index = () => {
   });
   const [showMergeDialog, setShowMergeDialog] = useState(false);
   const [localNotesToMerge, setLocalNotesToMerge] = useState<SavedNote[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Save weather setting to localStorage
   useEffect(() => {
@@ -110,14 +109,17 @@ const Index = () => {
             .order('created_at', { ascending: false })
             .then(({ data }) => {
               if (data) {
-                setSavedNotes(data.map(note => ({
+                const notes = data.map(note => ({
                   id: note.id,
                   title: note.title || 'Untitled',
                   contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
                   createdAt: note.created_at,
                   updatedAt: note.updated_at,
                   weather: note.weather as SavedNote['weather']
-                })));
+                }));
+                setSavedNotes(notes);
+                // CACHE TO LOCALSTORAGE
+                localStorage.setItem('nuron-notes', JSON.stringify(notes));
               }
             });
         }, 0);
@@ -147,21 +149,23 @@ const Index = () => {
           .order('created_at', { ascending: false });
         
         if (data) {
-          setSavedNotes(data.map(note => ({
+          const notes = data.map(note => ({
             id: note.id,
             title: note.title || 'Untitled',
             contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
             createdAt: note.created_at,
             updatedAt: note.updated_at,
             weather: note.weather as SavedNote['weather']
-          })));
+          }));
+          setSavedNotes(notes);
+          // CACHE TO LOCALSTORAGE for instant load next time
+          localStorage.setItem('nuron-notes', JSON.stringify(notes));
         }
       } else {
         // Not logged in - load from localStorage
         const stored = localStorage.getItem('nuron-notes');
         setSavedNotes(stored ? JSON.parse(stored) : []);
       }
-      setIsLoading(false);
     };
 
     loadNotes();
@@ -376,16 +380,6 @@ const Index = () => {
       .join('\n\n');
   };
 
-
-  // Show loading screen while checking for notes
-  if (isLoading) {
-    return (
-      <div className="fixed inset-0 flex flex-col bg-journal-header overflow-hidden">
-        <div className="flex-shrink-0 bg-journal-header h-[150px]" />
-        <div className="flex-1 bg-journal-content rounded-t-[30px] -mt-[25px]" />
-      </div>
-    );
-  }
 
   // Show original start page if no notes
   if (savedNotes.length === 0) {
