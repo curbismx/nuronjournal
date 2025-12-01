@@ -29,6 +29,7 @@ const Note = () => {
   const { id } = useParams();
   const noteIdRef = useRef<string>(id || Date.now().toString());
   const [noteTitle, setNoteTitle] = useState('');
+  const [noteDate, setNoteDate] = useState<Date>(new Date());
   const [weather, setWeather] = useState<{ temp: number; weatherCode: number; WeatherIcon: React.ComponentType<any> } | null>(null);
   const [isRewriting, setIsRewriting] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -154,6 +155,7 @@ const Note = () => {
           setNoteTitle(existingNote.title);
           setContentBlocks(existingNote.contentBlocks);
           setTitleGenerated(true);
+          setNoteDate(new Date(existingNote.createdAt));
         }
       }
     }
@@ -493,10 +495,9 @@ const Note = () => {
   // Get images for viewer
   const images = contentBlocks.filter(b => b.type === 'image') as Array<{ type: 'image'; id: string; url: string; width: number }>;
 
-  const today = new Date();
-  const dayNumber = today.getDate().toString().padStart(2, '0');
-  const dayName = today.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
-  const monthYear = today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+  const dayNumber = noteDate.getDate().toString().padStart(2, '0');
+  const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+  const monthYear = noteDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
 
   return (
     <div className="fixed inset-0 flex flex-col bg-journal-header overflow-hidden">
