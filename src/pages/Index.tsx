@@ -9,6 +9,7 @@ import condenseIcon from "@/assets/condense.png";
 import floatingAddButton from "@/assets/bigredbuttonnoshadow.png";
 import smallArrow from "@/assets/smallarrow.png";
 import backIcon from "@/assets/back.png";
+import accountArrow from "@/assets/account-arrow.png";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
@@ -259,13 +260,13 @@ const Index = () => {
               )
             ) : user && userProfile ? (
               /* Settings View - logged in */
-              <button
-                onClick={() => setShowAccountDetails(true)}
-                className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
-              >
-                <span>Account Details</span>
-                <span className="text-white/40">→</span>
-              </button>
+            <button
+              onClick={() => setShowAccountDetails(true)}
+              className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
+            >
+              <span>Account Details</span>
+              <img src={accountArrow} alt="" className="w-[20px] h-[20px] opacity-60" />
+            </button>
             ) : showSignUp ? (
               /* Sign Up / Sign In Form */
               <form onSubmit={isSignInMode ? handleSignIn : handleSignUp} className="space-y-4">
@@ -428,7 +429,7 @@ const Index = () => {
               className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
             >
               <span>Account Details</span>
-              <span className="text-white/40">→</span>
+              <img src={accountArrow} alt="" className="w-[20px] h-[20px] opacity-60" />
             </button>
           ) : showSignUp ? (
             /* Sign Up / Sign In Form */
