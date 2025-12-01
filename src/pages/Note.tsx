@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { User } from "@supabase/supabase-js";
-import { useToast } from "@/hooks/use-toast";
 
 interface SavedNote {
   id: string;
@@ -32,7 +31,6 @@ type ContentBlock =
 const Note = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { toast } = useToast();
   const noteIdRef = useRef<string>(id || crypto.randomUUID());
   const [user, setUser] = useState<User | null>(null);
   const [noteTitle, setNoteTitle] = useState('');
@@ -411,22 +409,12 @@ const Note = () => {
     
     if (session?.user) {
       // Upload to Supabase Storage
-      toast({
-        title: "Uploading image...",
-        description: "Please wait while we upload your image.",
-      });
-      
       const { data, error } = await supabase.storage
         .from('note-images')
         .upload(`${session.user.id}/${fileName}`, file);
       
       if (error) {
         console.error('Error uploading image:', error);
-        toast({
-          title: "Upload failed",
-          description: "Could not upload image. Please try again.",
-          variant: "destructive",
-        });
         return;
       }
       
@@ -436,19 +424,9 @@ const Note = () => {
         .getPublicUrl(`${session.user.id}/${fileName}`);
       
       url = publicUrl;
-      
-      toast({
-        title: "Image uploaded",
-        description: "Your image will sync across devices.",
-      });
     } else {
       // Not logged in - use local blob URL (won't sync)
       url = URL.createObjectURL(file);
-      toast({
-        title: "Image added locally",
-        description: "Sign in to sync images across devices.",
-        variant: "destructive",
-      });
     }
     
     // Check if we have a cursor position
