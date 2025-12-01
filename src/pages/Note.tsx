@@ -42,6 +42,10 @@ const Note = () => {
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const touchStartX = useRef<number>(0);
+  const [showWeatherSetting, setShowWeatherSetting] = useState(() => {
+    const stored = localStorage.getItem('nuron-show-weather');
+    return stored !== null ? JSON.parse(stored) : true;
+  });
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -569,7 +573,7 @@ const Note = () => {
             <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">{dayNumber}</div>
             <div className="flex flex-col">
               <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">{dayName}</div>
-              {weather && (
+              {weather && showWeatherSetting && (
                 <div className="flex items-center gap-1.5 mt-1">
                   <weather.WeatherIcon size={20} className="text-[hsl(60,1%,66%)]" />
                   <span className="text-[16px] font-outfit font-light text-[hsl(60,1%,66%)]">{weather.temp}°C</span>

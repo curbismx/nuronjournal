@@ -62,6 +62,15 @@ const Index = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showWeatherOnNotes, setShowWeatherOnNotes] = useState(() => {
+    const stored = localStorage.getItem('nuron-show-weather');
+    return stored !== null ? JSON.parse(stored) : true; // Default to ON
+  });
+
+  // Save weather setting to localStorage
+  useEffect(() => {
+    localStorage.setItem('nuron-show-weather', JSON.stringify(showWeatherOnNotes));
+  }, [showWeatherOnNotes]);
 
   // Check authentication status
   useEffect(() => {
@@ -350,13 +359,28 @@ const Index = () => {
               )
             ) : user && userProfile ? (
               /* Settings View - logged in */
-            <button
-              onClick={() => setShowAccountDetails(true)}
-              className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
-            >
-              <span>Account Details</span>
-              <img src={accountArrow} alt="" className="w-[20px] h-[20px] opacity-60" />
-            </button>
+            <div className="space-y-4">
+              <button
+                onClick={() => setShowAccountDetails(true)}
+                className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
+              >
+                <span>Account Details</span>
+                <img src={accountArrow} alt="" className="w-[20px] h-[20px] opacity-60" />
+              </button>
+              
+              {/* Weather toggle */}
+              <div className="bg-white/5 text-white rounded-[10px] px-4 py-3 flex items-center justify-between">
+                <span className="text-[16px]">Show weather on notes</span>
+                <button
+                  onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
+                  className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
+                >
+                  <span 
+                    className={`absolute top-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[22px]' : 'translate-x-[2px]'}`}
+                  />
+                </button>
+              </div>
+            </div>
             ) : showSignUp ? (
               /* Sign Up / Sign In Form */
               <form onSubmit={isSignInMode ? handleSignIn : handleSignUp} className="space-y-4">
@@ -574,13 +598,28 @@ const Index = () => {
             )
           ) : user && userProfile ? (
             /* Settings View - logged in */
-            <button
-              onClick={() => setShowAccountDetails(true)}
-              className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
-            >
-              <span>Account Details</span>
-              <img src={accountArrow} alt="" className="w-[20px] h-[20px] opacity-60" />
-            </button>
+            <div className="space-y-4">
+              <button
+                onClick={() => setShowAccountDetails(true)}
+                className="w-full bg-white/5 hover:bg-white/10 text-white rounded-[10px] px-4 py-3 flex items-center justify-between transition-colors text-[16px]"
+              >
+                <span>Account Details</span>
+                <img src={accountArrow} alt="" className="w-[20px] h-[20px] opacity-60" />
+              </button>
+              
+              {/* Weather toggle */}
+              <div className="bg-white/5 text-white rounded-[10px] px-4 py-3 flex items-center justify-between">
+                <span className="text-[16px]">Show weather on notes</span>
+                <button
+                  onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
+                  className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
+                >
+                  <span 
+                    className={`absolute top-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[22px]' : 'translate-x-[2px]'}`}
+                  />
+                </button>
+              </div>
+            </div>
           ) : showSignUp ? (
             /* Sign Up / Sign In Form */
             <form onSubmit={isSignInMode ? handleSignIn : handleSignUp} className="space-y-4">
@@ -633,6 +672,19 @@ const Index = () => {
           ) : (
             /* Initial buttons - not logged in */
             <div className="space-y-4">
+              {/* Weather toggle - available for all users */}
+              <div className="bg-white/5 text-white rounded-[10px] px-4 py-3 flex items-center justify-between">
+                <span className="text-[16px]">Show weather on notes</span>
+                <button
+                  onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
+                  className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
+                >
+                  <span 
+                    className={`absolute top-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[22px]' : 'translate-x-[2px]'}`}
+                  />
+                </button>
+              </div>
+              
               <button onClick={() => { setShowSignUp(true); setIsSignInMode(false); }} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors">
                 Create Account
               </button>
