@@ -52,6 +52,9 @@ const Index = () => {
   const [repeatPassword, setRepeatPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [skipInitialAnimation, setSkipInitialAnimation] = useState(
+    (location.state as any)?.showSettings || false
+  );
 
   // Clear navigation state after reading
   useEffect(() => {
@@ -64,6 +67,16 @@ const Index = () => {
   useEffect(() => {
     setIsInitialized(true);
   }, []);
+
+  // Re-enable animations after initial render
+  useEffect(() => {
+    if (skipInitialAnimation) {
+      const timer = setTimeout(() => {
+        setSkipInitialAnimation(false);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [skipInitialAnimation]);
 
   // Load notes based on auth status
   useEffect(() => {
@@ -296,7 +309,7 @@ const Index = () => {
         </div>
 
         {/* Main Content - Centered */}
-        <main className={`flex-1 flex flex-col items-center justify-center px-8 transition-transform duration-300 ease-in-out ${showSettings ? 'translate-y-[100%]' : ''}`}>
+        <main className={`flex-1 flex flex-col items-center justify-center px-8 ${skipInitialAnimation ? '' : 'transition-transform duration-300 ease-in-out'} ${showSettings ? 'translate-y-[100%]' : ''}`}>
           {/* Text and Record Button Container */}
           <div className="relative">
             {/* Handwritten Text Image */}
@@ -640,7 +653,7 @@ const Index = () => {
 
       {/* Scrollable content area */}
       <div 
-        className={`flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 transition-transform duration-300 ease-in-out ${showSettings ? 'translate-y-[100%]' : '-mt-[25px]'}`}
+        className={`flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 ${skipInitialAnimation ? '' : 'transition-transform duration-300 ease-in-out'} ${showSettings ? 'translate-y-[100%]' : '-mt-[25px]'}`}
         style={{ 
           WebkitOverflowScrolling: 'touch',
           overscrollBehaviorY: 'auto',
