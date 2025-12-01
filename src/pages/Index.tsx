@@ -8,7 +8,7 @@ import expandIcon from "@/assets/expand-2.png";
 import condenseIcon from "@/assets/condense.png";
 import floatingAddButton from "@/assets/bigredbuttonnoshadow.png";
 import smallArrow from "@/assets/smallarrow.png";
-import backIcon from "@/assets/back.png";
+import backIcon from "@/assets/back-new.png";
 
 
 interface SavedNote {
