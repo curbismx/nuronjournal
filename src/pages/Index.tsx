@@ -5,6 +5,10 @@ import newPlusIcon from "@/assets/00plus-3.png";
 import plusIconGreen from "@/assets/00plus_green.png";
 import plusIconBlue from "@/assets/00plus_blue.png";
 import plusIconPink from "@/assets/00plus_pink.png";
+import themeIconRed from "@/assets/00red.png";
+import themeIconGreen from "@/assets/00green.png";
+import themeIconBlue from "@/assets/00blue.png";
+import themeIconPink from "@/assets/00pink.png";
 import textImage from "@/assets/text.png";
 import plusIcon from "@/assets/plusbig.png";
 import expandIcon from "@/assets/00expand-3.png";
@@ -98,6 +102,14 @@ const Index = () => {
     blue: plusIconBlue,
     pink: plusIconPink
   };
+
+  const themeSettingsIcons = {
+    default: themeIconRed,
+    green: themeIconGreen,
+    blue: themeIconBlue,
+    pink: themeIconPink
+  };
+
   const [showMergeDialog, setShowMergeDialog] = useState(false);
   const [localNotesToMerge, setLocalNotesToMerge] = useState<SavedNote[]>([]);
   const [authFormError, setAuthFormError] = useState("");
@@ -955,7 +967,7 @@ const Index = () => {
                       style={{ height: '54px' }}
                     >
                       <img 
-                        src={themePlusIcons[t]} 
+                        src={themeSettingsIcons[t]} 
                         alt={t} 
                         className="w-[40px] h-[40px]"
                       />
