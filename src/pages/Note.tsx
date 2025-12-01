@@ -12,7 +12,7 @@ interface SavedNote {
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import backIcon from '@/assets/back-new.png';
-import threeDotsIcon from '@/assets/3dots.png';
+import threeDotsIcon from '@/assets/3dots-new.png';
 import starIcon from '@/assets/star.png';
 import addImageIcon from '@/assets/addimage.png';
 import sharedIcon from '@/assets/shared.png';
