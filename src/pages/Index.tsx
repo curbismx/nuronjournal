@@ -64,49 +64,26 @@ const Index = () => {
     localStorage.setItem('nuron-show-weather', JSON.stringify(showWeatherOnNotes));
   }, [showWeatherOnNotes]);
 
-  // Check authentication status
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadUserProfile(session.user.id);
-        // DON'T check for merge here - that's only on SIGNED_IN event
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      const wasLoggedOut = !user;
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        loadUserProfile(session.user.id);
-        
-        // ONLY check for merge on actual LOGIN (not page refresh)
-        if (event === 'SIGNED_IN' && wasLoggedOut) {
-          const localNotes = localStorage.getItem('nuron-notes');
-          if (localNotes) {
-            const parsed = JSON.parse(localNotes);
-            if (parsed.length > 0) {
-              setLocalNotesToMerge(parsed);
-              setShowMergeDialog(true);
-            }
-          }
-        }
-      } else {
-        setUserProfile(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Load notes from Supabase or localStorage based on auth status
+  // Load notes - check auth directly each time
   useEffect(() => {
     const loadNotes = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
-        // LOGGED IN: Load from Supabase only
+        setUser(session.user);
+        loadUserProfile(session.user.id);
+        
+        // Check for local notes to merge (one-time on login)
+        const localNotes = localStorage.getItem('nuron-notes');
+        if (localNotes) {
+          const parsed = JSON.parse(localNotes);
+          if (parsed.length > 0) {
+            setLocalNotesToMerge(parsed);
+            setShowMergeDialog(true);
+          }
+        }
+        
+        // Load from Supabase
         const { data } = await supabase
           .from('notes')
           .select('*')
@@ -124,14 +101,22 @@ const Index = () => {
           })));
         }
       } else {
-        // NOT LOGGED IN: Load from localStorage only
+        setUser(null);
+        // Load from localStorage
         const stored = localStorage.getItem('nuron-notes');
         setSavedNotes(stored ? JSON.parse(stored) : []);
       }
     };
     
     loadNotes();
-  }, [user]);
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      loadNotes(); // Just reload everything when auth changes
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
 
   const loadUserProfile = async (userId: string) => {
     const { data } = await supabase
