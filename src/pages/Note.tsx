@@ -45,6 +45,8 @@ const Note = () => {
   const [isRewriting, setIsRewriting] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showAudioDeleteConfirm, setShowAudioDeleteConfirm] = useState(false);
+  const [audioToDelete, setAudioToDelete] = useState<number | null>(null);
   const [titleGenerated, setTitleGenerated] = useState(false);
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([
@@ -1229,7 +1231,8 @@ const Note = () => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      deleteAudio(index);
+                      setAudioToDelete(index);
+                      setShowAudioDeleteConfirm(true);
                     }}
                     style={{
                       width: '18px',
@@ -1521,6 +1524,43 @@ const Note = () => {
                 onClick={() => {
                   deleteNote();
                   setShowDeleteConfirm(false);
+                }}
+                className="flex-1 py-3 px-4 rounded-full bg-[hsl(6,70%,65%)] text-white font-outfit font-medium text-[15px]"
+              >
+                delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Audio Delete Confirmation */}
+      {showAudioDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl p-6 mx-8 max-w-sm w-full shadow-xl">
+            <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] text-center mb-2">
+              Delete Recording?
+            </h3>
+            <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] text-center mb-6">
+              Are you sure you want to delete this sound file? This cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowAudioDeleteConfirm(false);
+                  setAudioToDelete(null);
+                }}
+                className="flex-1 py-3 px-4 rounded-full bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium text-[15px]"
+              >
+                cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (audioToDelete !== null) {
+                    deleteAudio(audioToDelete);
+                  }
+                  setShowAudioDeleteConfirm(false);
+                  setAudioToDelete(null);
                 }}
                 className="flex-1 py-3 px-4 rounded-full bg-[hsl(6,70%,65%)] text-white font-outfit font-medium text-[15px]"
               >
