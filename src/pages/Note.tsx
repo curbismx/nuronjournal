@@ -1124,7 +1124,7 @@ const Note = () => {
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(3, min-content)', 
-              gap: '30px'
+              gap: '8px'
             }}>
               {audioUrls.map((url, index) => (
                 <div
