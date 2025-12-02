@@ -1123,9 +1123,8 @@ const Note = () => {
           <div className="px-8 mt-6" style={{ minHeight: '31px' }}>
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(3, 1fr)', 
-              gap: '8px',
-              maxWidth: '100%'
+              gridTemplateColumns: 'repeat(3, min-content)', 
+              gap: '8px'
             }}>
               {audioUrls.map((url, index) => (
                 <div
@@ -1138,6 +1137,7 @@ const Note = () => {
                     borderRadius: '50px',
                     padding: '0 16px 0 6px',
                     height: '31px',
+                    minWidth: '90px',
                     cursor: 'pointer'
                   }}
                   onClick={() => {
