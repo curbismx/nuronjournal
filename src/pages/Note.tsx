@@ -93,11 +93,11 @@ const Note = () => {
   const recognitionRef = useRef<any>(null);
   const isRecordingRef = useRef(false);
   
-  // Audio recording state
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [audioDuration, setAudioDuration] = useState<string>('00:00');
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  // Audio recording state - supports multiple recordings
+  const [audioUrls, setAudioUrls] = useState<string[]>([]);
+  const [audioDurations, setAudioDurations] = useState<string[]>([]);
+  const [playingAudioIndex, setPlayingAudioIndex] = useState<number | null>(null);
+  const audioPlayerRefs = useRef<(HTMLAudioElement | null)[]>([]);
   
   const [isUploading, setIsUploading] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -373,7 +373,8 @@ const Note = () => {
         console.log('Created blob with type:', blob.type, 'size:', blob.size);
         const url = await uploadAudioToSupabase(blob);
         if (url) {
-          setAudioUrl(url);
+          setAudioUrls(prev => [...prev, url]);
+          setAudioDurations(prev => [...prev, '00:00']); // Will be set when audio loads
         }
         setIsUploading(false);
       };
@@ -418,7 +419,18 @@ const Note = () => {
               setNoteDate(new Date(data.created_at));
               existingCreatedAt.current = data.created_at;
               if (data.audio_data) {
-                setAudioUrl(data.audio_data);
+                // Support both old single URL format and new JSON array format
+                try {
+                  const parsed = JSON.parse(data.audio_data);
+                  if (Array.isArray(parsed)) {
+                    setAudioUrls(parsed);
+                    setAudioDurations(parsed.map(() => '00:00'));
+                  }
+                } catch {
+                  // Old format: single URL string
+                  setAudioUrls([data.audio_data]);
+                  setAudioDurations(['00:00']);
+                }
               }
             }
           });
@@ -572,7 +584,7 @@ const Note = () => {
         created_at: noteData.createdAt,
         updated_at: noteData.updatedAt,
         weather: noteData.weather,
-        audio_data: audioUrl
+        audio_data: audioUrls.length > 0 ? JSON.stringify(audioUrls) : null
       });
       
       if (!error) {
@@ -1071,82 +1083,97 @@ const Note = () => {
           })}
         </div>
         
-        {/* Audio Recording Player */}
-        {audioUrl && (
+        {/* Audio Recording Players */}
+        {audioUrls.length > 0 && (
           <div className="px-8 mt-6">
-            <div 
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                backgroundColor: '#E07B6B',
-                borderRadius: '50px',
-                padding: '0 16px 0 6px',
-                height: '31px',
-                cursor: 'pointer'
-              }}
-              onClick={() => {
-                if (audioPlayerRef.current) {
-                  if (isPlayingAudio) {
-                    audioPlayerRef.current.pause();
-                    setIsPlayingAudio(false);
-                  } else {
-                    audioPlayerRef.current.play();
-                    setIsPlayingAudio(true);
-                  }
-                }
-              }}
-            >
-              {/* Play/Pause button icon */}
-              <div style={{
-                width: '21px',
-                height: '21px',
-                borderRadius: '50%',
-                border: '1.5px solid white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                {isPlayingAudio ? (
-                  <div style={{ display: 'flex', gap: '2px' }}>
-                    <div style={{ width: '3px', height: '9px', backgroundColor: 'white', borderRadius: '1px' }} />
-                    <div style={{ width: '3px', height: '9px', backgroundColor: 'white', borderRadius: '1px' }} />
-                  </div>
-                ) : (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {audioUrls.map((url, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    backgroundColor: '#E07B6B',
+                    borderRadius: '50px',
+                    padding: '0 16px 0 6px',
+                    height: '31px',
+                    cursor: 'pointer',
+                    marginBottom: index >= 3 ? '0' : undefined
+                  }}
+                  onClick={() => {
+                    const audioEl = audioPlayerRefs.current[index];
+                    if (audioEl) {
+                      if (playingAudioIndex === index) {
+                        audioEl.pause();
+                        setPlayingAudioIndex(null);
+                      } else {
+                        // Pause any currently playing audio
+                        if (playingAudioIndex !== null && audioPlayerRefs.current[playingAudioIndex]) {
+                          audioPlayerRefs.current[playingAudioIndex]?.pause();
+                        }
+                        audioEl.play();
+                        setPlayingAudioIndex(index);
+                      }
+                    }
+                  }}
+                >
+                  {/* Play/Pause button icon */}
                   <div style={{
-                    width: 0,
-                    height: 0,
-                    borderLeft: '7px solid white',
-                    borderTop: '4px solid transparent',
-                    borderBottom: '4px solid transparent',
-                    marginLeft: '2px'
-                  }} />
-                )}
-              </div>
-              
-              {/* Duration timestamp */}
-              <span style={{
-                color: 'white',
-                fontSize: '14px',
-                fontFamily: 'Outfit',
-                fontWeight: '400'
-              }}>
-                {audioDuration}
-              </span>
+                    width: '21px',
+                    height: '21px',
+                    borderRadius: '50%',
+                    border: '1.5px solid white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {playingAudioIndex === index ? (
+                      <div style={{ display: 'flex', gap: '2px' }}>
+                        <div style={{ width: '3px', height: '9px', backgroundColor: 'white', borderRadius: '1px' }} />
+                        <div style={{ width: '3px', height: '9px', backgroundColor: 'white', borderRadius: '1px' }} />
+                      </div>
+                    ) : (
+                      <div style={{
+                        width: 0,
+                        height: 0,
+                        borderLeft: '7px solid white',
+                        borderTop: '4px solid transparent',
+                        borderBottom: '4px solid transparent',
+                        marginLeft: '2px'
+                      }} />
+                    )}
+                  </div>
+                  
+                  {/* Duration timestamp */}
+                  <span style={{
+                    color: 'white',
+                    fontSize: '14px',
+                    fontFamily: 'Outfit',
+                    fontWeight: '400'
+                  }}>
+                    {audioDurations[index] || '00:00'}
+                  </span>
+                  
+                  {/* Hidden audio element */}
+                  <audio 
+                    ref={el => { audioPlayerRefs.current[index] = el; }}
+                    src={url}
+                    onLoadedMetadata={(e) => {
+                      const duration = e.currentTarget.duration;
+                      const mins = Math.floor(duration / 60);
+                      const secs = Math.floor(duration % 60);
+                      setAudioDurations(prev => {
+                        const updated = [...prev];
+                        updated[index] = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                        return updated;
+                      });
+                    }}
+                    onEnded={() => setPlayingAudioIndex(null)}
+                  />
+                </div>
+              ))}
             </div>
-            
-            {/* Hidden audio element */}
-            <audio 
-              ref={audioPlayerRef}
-              src={audioUrl}
-              onLoadedMetadata={(e) => {
-                const duration = e.currentTarget.duration;
-                const mins = Math.floor(duration / 60);
-                const secs = Math.floor(duration % 60);
-                setAudioDuration(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
-              }}
-              onEnded={() => setIsPlayingAudio(false)}
-            />
           </div>
         )}
         
