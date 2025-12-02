@@ -300,7 +300,16 @@ const Note = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
-      const mediaRecorder = new MediaRecorder(stream);
+      let mimeType = '';
+      if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        mimeType = 'audio/mp4';
+      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+        mimeType = 'audio/webm';
+      }
+      
+      const mediaRecorder = mimeType 
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
       
@@ -410,7 +419,8 @@ const Note = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       await new Promise<void>((resolve) => {
         mediaRecorderRef.current!.onstop = () => {
-          const blob = new Blob(audioChunksRef.current, { type: 'audio/mp4' });
+          const mimeType = mediaRecorderRef.current?.mimeType || 'audio/mp4';
+          const blob = new Blob(audioChunksRef.current, { type: mimeType });
           const url = URL.createObjectURL(blob);
           console.log('Audio blob created:', blob.size, 'bytes');
           console.log('Audio URL:', url);
