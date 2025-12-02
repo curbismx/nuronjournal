@@ -100,9 +100,8 @@ const Note = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const mimeTypeRef = useRef<string>('');
+  const [audioDataUrl, setAudioDataUrl] = useState<string | null>(null);
+  const audioElementRef = useRef<HTMLAudioElement | null>(null);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -239,6 +238,14 @@ const Note = () => {
     return new Blob([uInt8Array], { type: contentType });
   };
 
+  const blobToDataUrl = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
 
   const startRecording = async () => {
     // Start speech recognition
@@ -296,50 +303,22 @@ const Note = () => {
       recognition.start();
     }
     
-    // Start audio recording
+    // Audio recording - simplified, no MIME type detection needed for data URLs
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
-      // Detect supported mime type - iPhone Safari prefers audio/webm;codecs=opus
-      let selectedMimeType = '';
-      const supportedTypes = [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/mp4',
-        'audio/mpeg',
-        'audio/wav'
-      ];
-      
-      for (const type of supportedTypes) {
-        if (MediaRecorder.isTypeSupported(type)) {
-          selectedMimeType = type;
-          break;
-        }
-      }
-      
-      console.log('Using mime type:', selectedMimeType);
-      
-      const mediaRecorder = selectedMimeType 
-        ? new MediaRecorder(stream, { mimeType: selectedMimeType })
-        : new MediaRecorder(stream);
-      
-      // Store the actual mime type being used
-      mimeTypeRef.current = mediaRecorder.mimeType || selectedMimeType || 'audio/webm';
-      console.log('Actual mime type:', mimeTypeRef.current);
-      
+      const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
       
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
       };
       
-      mediaRecorder.start(1000); // Collect data every second
+      mediaRecorder.start(1000);
     } catch (error) {
-      console.error('Error starting audio recording:', error);
+      console.error('Recording error:', error);
     }
     
     setIsRecording(true);
@@ -433,27 +412,18 @@ const Note = () => {
       return prev;
     });
     
-    // Stop audio recording and create blob with correct mime type
+    // Create audio data URL (works on iOS Safari)
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      await new Promise<void>((resolve) => {
-        mediaRecorderRef.current!.onstop = () => {
-          console.log('Recording stopped, chunks:', audioChunksRef.current.length);
-          console.log('Using mime type for blob:', mimeTypeRef.current);
-          
-          const blob = new Blob(audioChunksRef.current, { type: mimeTypeRef.current });
-          console.log('Blob created, size:', blob.size, 'type:', blob.type);
-          
-          const url = URL.createObjectURL(blob);
-          console.log('URL created:', url);
-          
-          setAudioUrl(url);
-          resolve();
-        };
-        mediaRecorderRef.current!.stop();
-      });
+      mediaRecorderRef.current.onstop = async () => {
+        if (audioChunksRef.current.length > 0) {
+          const blob = new Blob(audioChunksRef.current);
+          const dataUrl = await blobToDataUrl(blob);
+          setAudioDataUrl(dataUrl);
+        }
+      };
+      mediaRecorderRef.current.stop();
     }
     
-    // Stop microphone
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
     }
@@ -461,31 +431,31 @@ const Note = () => {
     setIsRecording(false);
     setIsPaused(false);
     setRecordingTime(0);
-    // Don't close module yet so user can play back
   };
 
   const playRecording = () => {
-    console.log('Play clicked, audioUrl:', audioUrl);
-    if (!audioUrl) return;
+    if (!audioDataUrl) return;
     
-    const audio = new Audio();
-    audio.src = audioUrl;
+    if (audioElementRef.current) {
+      audioElementRef.current.pause();
+      audioElementRef.current = null;
+    }
     
-    audio.onplay = () => setIsPlaying(true);
+    const audio = new Audio(audioDataUrl);
+    audioElementRef.current = audio;
+    
     audio.onended = () => setIsPlaying(false);
-    audio.onerror = (e) => {
-      console.error('Audio error:', e);
-      setIsPlaying(false);
-    };
+    audio.onerror = () => setIsPlaying(false);
     
-    audio.play().catch(err => console.error('Play failed:', err));
+    setIsPlaying(true);
+    audio.play().catch(() => setIsPlaying(false));
   };
 
   const pausePlayback = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      setIsPlaying(false);
+    if (audioElementRef.current) {
+      audioElementRef.current.pause();
     }
+    setIsPlaying(false);
   };
 
   const openRecordingModule = () => {
@@ -514,10 +484,9 @@ const Note = () => {
               setNoteDate(new Date(data.created_at));
               existingCreatedAt.current = data.created_at;
               
-              // Load saved audio
+              // Load saved audio - use data URL directly
               if (data.audio_data) {
-                const blob = base64ToBlob(data.audio_data);
-                setAudioUrl(URL.createObjectURL(blob));
+                setAudioDataUrl(data.audio_data);
               }
             }
           });
@@ -534,10 +503,9 @@ const Note = () => {
             setNoteDate(new Date(existingNote.createdAt));
             existingCreatedAt.current = existingNote.createdAt;
             
-            // Load saved audio
+            // Load saved audio - use data URL directly
             if (existingNote.audioData) {
-              const blob = base64ToBlob(existingNote.audioData);
-              setAudioUrl(URL.createObjectURL(blob));
+              setAudioDataUrl(existingNote.audioData);
             }
           }
         }
@@ -655,18 +623,8 @@ const Note = () => {
       return;
     }
 
-    // Convert audio blob to base64 for storage
-    // Convert audio URL back to blob for storage
-    let audioBase64: string | null = null;
-    if (audioUrl) {
-      try {
-        const response = await fetch(audioUrl);
-        const blob = await response.blob();
-        audioBase64 = await blobToBase64(blob);
-      } catch (e) {
-        console.error('Failed to convert audio for storage:', e);
-      }
-    }
+    // Audio is already a data URL, use it directly
+    const audioBase64 = audioDataUrl;
 
     const noteData = {
       id: noteIdRef.current,
@@ -1428,8 +1386,8 @@ const Note = () => {
                   gap: '4px', 
                   background: 'none', 
                   border: 'none', 
-                  cursor: audioUrl ? 'pointer' : 'default',
-                  opacity: audioUrl ? 1 : 0.4
+                  cursor: audioDataUrl ? 'pointer' : 'default',
+                  opacity: audioDataUrl ? 1 : 0.4
                 }}
               >
                 <img 
