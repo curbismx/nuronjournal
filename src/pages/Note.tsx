@@ -95,6 +95,7 @@ const Note = () => {
   const [recordingTime, setRecordingTime] = useState(0);
   const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recognitionRef = useRef<any>(null);
+  const isRecordingRef = useRef(false);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -255,26 +256,42 @@ const Note = () => {
     
     recognition.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error);
+      if (event.error === 'no-speech' && isRecordingRef.current) {
+        recognition.stop();
+        setTimeout(() => {
+          if (isRecordingRef.current) {
+            recognition.start();
+          }
+        }, 100);
+      }
     };
     
     recognition.onend = () => {
-      // Restart if still recording (handles auto-stop)
-      if (isRecording && !isPaused) {
-        recognition.start();
+      if (isRecordingRef.current) {
+        setTimeout(() => {
+          if (isRecordingRef.current && recognitionRef.current) {
+            try {
+              recognitionRef.current.start();
+            } catch (e) {
+              console.log('Recognition restart failed:', e);
+            }
+          }
+        }, 100);
       }
     };
     
     recognition.start();
     setIsRecording(true);
+    isRecordingRef.current = true;
     setIsPaused(false);
     
-    // Start timer
     recordingIntervalRef.current = setInterval(() => {
       setRecordingTime(prev => prev + 1);
     }, 1000);
   };
 
   const pauseRecording = () => {
+    isRecordingRef.current = false;
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
@@ -286,8 +303,13 @@ const Note = () => {
   };
 
   const resumeRecording = () => {
+    isRecordingRef.current = true;
     if (recognitionRef.current) {
-      recognitionRef.current.start();
+      try {
+        recognitionRef.current.start();
+      } catch (e) {
+        console.log('Resume failed:', e);
+      }
     }
     setIsPaused(false);
     setIsRecording(true);
@@ -297,6 +319,7 @@ const Note = () => {
   };
 
   const stopRecording = () => {
+    isRecordingRef.current = false;
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
@@ -308,7 +331,6 @@ const Note = () => {
     
     setIsRecording(false);
     setIsPaused(false);
-    setIsPlaying(false);
     setRecordingTime(0);
     setIsRecordingModuleOpen(false);
   };
@@ -1223,11 +1245,14 @@ const Note = () => {
             </div>
             
             {/* Visual Feedback */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', height: '40px' }}>
               {isRecording ? (
                 <>
-                  <div style={{ width: '8px', height: '8px', backgroundColor: 'white', borderRadius: '50%', animation: 'pulse 1s infinite' }} />
-                  <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', fontFamily: 'Outfit' }}>Recording...</span>
+                  <div style={{ width: '4px', height: '20px', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: '2px', animation: 'soundBar1 0.5s ease-in-out infinite' }} />
+                  <div style={{ width: '4px', height: '30px', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: '2px', animation: 'soundBar2 0.5s ease-in-out infinite' }} />
+                  <div style={{ width: '4px', height: '15px', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: '2px', animation: 'soundBar3 0.5s ease-in-out infinite' }} />
+                  <div style={{ width: '4px', height: '25px', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: '2px', animation: 'soundBar4 0.5s ease-in-out infinite' }} />
+                  <div style={{ width: '4px', height: '18px', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: '2px', animation: 'soundBar5 0.5s ease-in-out infinite' }} />
                 </>
               ) : isPaused ? (
                 <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', fontFamily: 'Outfit' }}>PAUSED</span>
