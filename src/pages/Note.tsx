@@ -1265,7 +1265,7 @@ const Note = () => {
       {/* Recording Module */}
       {isRecordingModuleOpen && (
         <div 
-          className="fixed bottom-[30px] left-[30px] right-[30px] z-50 rounded-[20px] px-6 pr-8 py-5 flex items-center justify-between relative"
+          className="fixed bottom-[30px] left-[30px] right-[30px] z-50 rounded-[20px] p-5 flex items-center justify-between relative overflow-hidden"
           style={{ 
             backgroundColor: '#E57373',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
@@ -1341,7 +1341,7 @@ const Note = () => {
           </div>
           
           {/* Visual Feedback - Audio Waveform Bars */}
-          <div className="flex items-center gap-[3px] h-[40px]">
+          <div className="flex items-center gap-[3px] h-[40px] flex-1 justify-center min-w-0">
             {isRecording ? (
               audioLevels.map((level, i) => (
                 <div
@@ -1365,7 +1365,7 @@ const Note = () => {
           </div>
           
           {/* Timer */}
-          <div className="text-white text-[20px] font-outfit font-light tracking-wide">
+          <div className="text-white text-[20px] font-outfit font-light tracking-wide flex-shrink-0">
             {formatTime(recordingTime)}
           </div>
         </div>
