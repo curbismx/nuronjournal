@@ -1121,7 +1121,12 @@ const Note = () => {
         {/* Audio Recording Players */}
         {audioUrls.length > 0 && (
           <div className="px-8 mt-6" style={{ minHeight: '31px' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(3, 1fr)', 
+              gap: '8px',
+              maxWidth: '100%'
+            }}>
               {audioUrls.map((url, index) => (
                 <div
                   key={index}
@@ -1133,9 +1138,7 @@ const Note = () => {
                     borderRadius: '50px',
                     padding: '0 16px 0 6px',
                     height: '31px',
-                    minWidth: '90px',
-                    cursor: 'pointer',
-                    marginBottom: index >= 3 ? '0' : undefined
+                    cursor: 'pointer'
                   }}
                   onClick={() => {
                     const audioEl = audioPlayerRefs.current[index];
