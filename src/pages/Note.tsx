@@ -698,10 +698,15 @@ const Note = () => {
         <div style={{ minHeight: 'calc(100% + 1px)' }}>
           {/* Date and weather */}
           <div className="px-8 pt-[12px] pb-2">
-          <div 
-            className="flex items-start gap-4 mb-4 cursor-pointer"
-            onClick={() => dateInputRef.current?.showPicker()}
-          >
+          <div className="relative flex items-start gap-4 mb-4">
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={noteDate.toISOString().split('T')[0]}
+              onChange={handleDateChange}
+              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+              style={{ fontSize: '16px' }}
+            />
             <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">{dayNumber}</div>
             <div className="flex flex-col">
               <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">{dayName}</div>
@@ -713,14 +718,6 @@ const Note = () => {
               )}
             </div>
           </div>
-
-          <input
-            ref={dateInputRef}
-            type="date"
-            value={noteDate.toISOString().split('T')[0]}
-            onChange={handleDateChange}
-            className="sr-only"
-          />
 
           {/* Title */}
           <input
