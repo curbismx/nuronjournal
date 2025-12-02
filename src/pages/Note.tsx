@@ -23,12 +23,6 @@ import newPlusIcon from '@/assets/00plus-3.png';
 import plusIconGreen from "@/assets/00plus_green.png";
 import plusIconBlue from "@/assets/00plus_blue.png";
 import plusIconPink from "@/assets/00plus_pink.png";
-import recordIcon from '@/assets/01record.png';
-import stopIcon from '@/assets/01stop.png';
-import noteRecordRed from '@/assets/01noterecord_red.png';
-import noteRecordGreen from '@/assets/01noterecord_green.png';
-import noteRecordBlue from '@/assets/01noterecord_blue.png';
-import noteRecordPink from '@/assets/01noterecord_pink.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 type ContentBlock = 
@@ -78,18 +72,10 @@ const Note = () => {
     pink: plusIconPink
   };
 
-  const themeRecordIcons = {
-    default: noteRecordRed,
-    green: noteRecordGreen,
-    blue: noteRecordBlue,
-    pink: noteRecordPink
-  };
-
   // Recording state (speech-to-text + audio recording)
-  const [isRecordingModuleOpen, setIsRecordingModuleOpen] = useState(false);
+  const [isRecordingOpen, setIsRecordingOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
   const recognitionRef = useRef<any>(null);
   const isRecordingRef = useRef(false);
   
@@ -99,7 +85,7 @@ const Note = () => {
   const [playingAudioIndex, setPlayingAudioIndex] = useState<number | null>(null);
   const audioPlayerRefs = useRef<(HTMLAudioElement | null)[]>([]);
   
-  const [isUploading, setIsUploading] = useState(false);
+  
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
@@ -212,12 +198,6 @@ const Note = () => {
     }
   };
 
-  // Recording helper functions
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
 
   const uploadAudioToSupabase = async (blob: Blob): Promise<string | null> => {
     try {
@@ -334,10 +314,29 @@ const Note = () => {
     
     setIsRecording(true);
     isRecordingRef.current = true;
-    
-    recordingIntervalRef.current = setInterval(() => {
-      setRecordingTime(prev => prev + 1);
-    }, 1000);
+    setIsPaused(false);
+  };
+
+  const pauseRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.pause();
+    }
+    setIsPaused(true);
+    isRecordingRef.current = false;
+  };
+
+  const resumeRecording = () => {
+    if (recognitionRef.current) {
+      try { recognitionRef.current.start(); } catch (e) {}
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
+      mediaRecorderRef.current.resume();
+    }
+    setIsPaused(false);
+    isRecordingRef.current = true;
   };
 
   const stopRecording = async () => {
@@ -346,10 +345,6 @@ const Note = () => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
-    }
-    
-    if (recordingIntervalRef.current) {
-      clearInterval(recordingIntervalRef.current);
     }
     
     // Clean interim markers
@@ -365,8 +360,6 @@ const Note = () => {
     
     // Upload audio to Supabase
     if (mediaRecorderRef.current && audioChunksRef.current.length > 0) {
-      setIsUploading(true);
-      
       mediaRecorderRef.current.onstop = async () => {
         const mimeType = mediaRecorderRef.current?.mimeType || 'audio/mp4';
         const blob = new Blob(audioChunksRef.current, { type: mimeType });
@@ -374,9 +367,8 @@ const Note = () => {
         const url = await uploadAudioToSupabase(blob);
         if (url) {
           setAudioUrls(prev => [...prev, url]);
-          setAudioDurations(prev => [...prev, '00:00']); // Will be set when audio loads
+          setAudioDurations(prev => [...prev, '00:00']);
         }
-        setIsUploading(false);
       };
       
       if (mediaRecorderRef.current.state !== 'inactive') {
@@ -389,14 +381,22 @@ const Note = () => {
     }
     
     setIsRecording(false);
-    setRecordingTime(0);
+    setIsPaused(false);
+    setIsRecordingOpen(false);
   };
 
-
-  const openRecordingModule = () => {
-    setIsRecordingModuleOpen(true);
-    setRecordingTime(0);
+  const openRecorder = () => {
+    setIsRecordingOpen(true);
     audioChunksRef.current = [];
+    startRecording();
+  };
+
+  const handleRecorderTap = () => {
+    if (isPaused) {
+      resumeRecording();
+    } else {
+      pauseRecording();
+    }
   };
 
   // Load existing note on mount
@@ -1332,104 +1332,70 @@ const Note = () => {
         </div>
       )}
 
-      {/* Floating record button */}
-      {!isRecordingModuleOpen && (
-        <img 
-          src={themeRecordIcons[theme]} 
-          alt="Record"
-          onClick={openRecordingModule}
-          className="fixed bottom-[30px] right-[30px] z-50 cursor-pointer w-[51px] h-[51px]"
-          style={{
-            filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
-          }}
-        />
-      )}
-
-      {/* Recording Module */}
-      {isRecordingModuleOpen && (
-        <div 
-          className="fixed z-50 rounded-[20px]"
+      {/* Recording Button */}
+      {!isRecordingOpen ? (
+        <button
+          onClick={openRecorder}
+          className="fixed bottom-[30px] right-[30px] z-50 w-[70px] h-[70px] rounded-full flex items-center justify-center"
           style={{ 
-            bottom: '30px',
-            left: '30px',
-            right: '30px',
-            padding: '16px 20px',
             backgroundColor: '#E57373',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
           }}
         >
-          {/* Close X button */}
+          <svg width="30" height="30" viewBox="0 0 100 100">
+            <path
+              d="M 20,50 Q 35,30 50,50 T 80,50"
+              stroke="white"
+              strokeWidth="6"
+              strokeLinecap="round"
+              fill="none"
+            />
+          </svg>
+        </button>
+      ) : (
+        <>
+          {/* Backdrop to detect tap outside */}
+          <div 
+            className="fixed inset-0 z-40"
+            onClick={stopRecording}
+          />
+          
+          {/* Expanded Recording Circle */}
           <button
-            onClick={() => setIsRecordingModuleOpen(false)}
-            style={{
-              position: 'absolute',
-              top: '8px',
-              right: '12px',
-              color: 'rgba(255,255,255,0.5)',
-              fontSize: '18px',
-              fontWeight: '300',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer'
+            onClick={handleRecorderTap}
+            className="fixed bottom-[20px] right-[20px] z-50 w-[90px] h-[90px] rounded-full flex items-center justify-center transition-all duration-300"
+            style={{ 
+              backgroundColor: '#E57373',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
+              animation: isPaused ? 'none' : 'pulse 1.5s ease-in-out infinite'
             }}
           >
-            ×
+            <svg width="50" height="50" viewBox="0 0 100 100">
+              {isPaused ? (
+                /* Paused - show static wave */
+                <path
+                  d="M 15,50 Q 30,50 40,50 T 85,50"
+                  stroke="white"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  fill="none"
+                />
+              ) : (
+                /* Recording - animated wave */
+                <path
+                  d="M 10,50 Q 20,25 30,50 T 50,50 T 70,50 T 90,50"
+                  stroke="white"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  fill="none"
+                  style={{
+                    animation: 'waveform 0.8s ease-in-out infinite'
+                  }}
+                />
+              )}
+            </svg>
           </button>
-          
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            {/* Buttons */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-              {/* REC Button */}
-              <button
-                onClick={isRecording ? stopRecording : startRecording}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'none', border: 'none', cursor: 'pointer' }}
-              >
-                <img 
-                  src={recordIcon} 
-                  alt="Record" 
-                  style={{ width: '44px', height: '44px' }}
-                />
-                <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', fontFamily: 'Outfit', letterSpacing: '0.5px' }}>
-                  {isRecording ? 'STOP' : 'REC'}
-                </span>
-              </button>
-              
-              
-              {/* CLOSE Button */}
-              <button
-                onClick={() => setIsRecordingModuleOpen(false)}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'none', border: 'none', cursor: 'pointer' }}
-              >
-                <img 
-                  src={stopIcon} 
-                  alt="Close" 
-                  style={{ width: '44px', height: '44px' }}
-                />
-                <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', fontFamily: 'Outfit', letterSpacing: '0.5px' }}>CLOSE</span>
-              </button>
-            </div>
-            
-            {/* Visual Feedback */}
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {isUploading ? (
-                <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', fontFamily: 'Outfit' }}>Saving...</span>
-              ) : isRecording ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <div style={{ width: '6px', height: '20px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar1 0.4s ease-in-out infinite' }} />
-                  <div style={{ width: '6px', height: '30px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar2 0.4s ease-in-out infinite' }} />
-                  <div style={{ width: '6px', height: '15px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar3 0.4s ease-in-out infinite' }} />
-                  <div style={{ width: '6px', height: '25px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar4 0.4s ease-in-out infinite' }} />
-                  <div style={{ width: '6px', height: '18px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar5 0.4s ease-in-out infinite' }} />
-                </div>
-              ) : null}
-            </div>
-            
-            {/* Timer */}
-            <div style={{ color: 'white', fontSize: '20px', fontFamily: 'Outfit', fontWeight: '300' }}>
-              {formatTime(recordingTime)}
-            </div>
-          </div>
-        </div>
+        </>
       )}
 
 
