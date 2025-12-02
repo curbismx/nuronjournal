@@ -115,6 +115,7 @@ const Index = () => {
 
   const [showMergeDialog, setShowMergeDialog] = useState(false);
   const [localNotesToMerge, setLocalNotesToMerge] = useState<SavedNote[]>([]);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const [authFormError, setAuthFormError] = useState("");
   const [passwordFormError, setPasswordFormError] = useState("");
   const [visibleMonthYear, setVisibleMonthYear] = useState<string>(
@@ -297,16 +298,14 @@ const Index = () => {
 
   const handleDeleteAccount = async () => {
     if (!user) return;
-    const confirmed = window.confirm("Are you sure you want to delete your account? This action cannot be undone.");
-    if (confirmed) {
-      await supabase.from("notes").delete().eq("user_id", user.id);
-      await supabase.from("profiles").delete().eq("id", user.id);
-      await supabase.auth.signOut();
-      setUser(null);
-      setUserProfile(null);
-      setShowAccountDetails(false);
-      setShowSettings(false);
-    }
+    setShowDeleteConfirmDialog(false);
+    await supabase.from("notes").delete().eq("user_id", user.id);
+    await supabase.from("profiles").delete().eq("id", user.id);
+    await supabase.auth.signOut();
+    setUser(null);
+    setUserProfile(null);
+    setShowAccountDetails(false);
+    setShowSettings(false);
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -1013,7 +1012,7 @@ const Index = () => {
                   <button onClick={handleSignOut} className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]">
                     Sign Out
                   </button>
-                  <button onClick={handleDeleteAccount} className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white rounded-[10px] transition-colors text-[14px]">
+                  <button onClick={() => setShowDeleteConfirmDialog(true)} className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white rounded-[10px] transition-colors text-[14px]">
                     Delete Account
                   </button>
                 </div>
@@ -1348,6 +1347,34 @@ const Index = () => {
             filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
           }}
         />
+      )}
+
+      {/* Delete account confirmation dialog */}
+      {showDeleteConfirmDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl p-6 mx-8 max-w-sm w-full shadow-xl">
+            <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] text-center mb-2">
+              Delete Account
+            </h3>
+            <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] text-center mb-6">
+              Deleting the account cannot be undone. Are you sure you want to delete your account?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirmDialog(false)}
+                className="flex-1 py-3 px-4 rounded-xl bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                className="flex-1 py-3 px-4 rounded-xl bg-red-500 text-white font-outfit font-medium"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Merge notes dialog */}
