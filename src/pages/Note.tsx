@@ -228,30 +228,41 @@ const Note = () => {
     recognition.lang = 'en-GB';
     
     recognition.onresult = (event: any) => {
+      let interimTranscript = '';
       let finalTranscript = '';
       
       for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript + ' ';
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript;
         }
       }
       
-      if (finalTranscript) {
-        setContentBlocks(prev => {
-          const lastBlock = prev[prev.length - 1];
-          if (lastBlock && lastBlock.type === 'text') {
-            const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
-            const newContent = currentContent 
-              ? currentContent + finalTranscript
-              : finalTranscript;
-            return [
-              ...prev.slice(0, -1),
-              { ...lastBlock, content: newContent }
-            ];
+      setContentBlocks(prev => {
+        const lastBlock = prev[prev.length - 1];
+        if (lastBlock && lastBlock.type === 'text') {
+          const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
+          
+          // Remove any previous interim text (marked with ||)
+          const baseContent = currentContent.replace(/\|\|.*$/, '').trimEnd();
+          
+          let newContent = baseContent;
+          if (finalTranscript) {
+            newContent = baseContent ? baseContent + ' ' + finalTranscript : finalTranscript;
           }
-          return prev;
-        });
-      }
+          if (interimTranscript) {
+            newContent = newContent + '||' + interimTranscript;
+          }
+          
+          return [
+            ...prev.slice(0, -1),
+            { ...lastBlock, content: newContent }
+          ];
+        }
+        return prev;
+      });
     };
     
     recognition.onerror = (event: any) => {
@@ -295,6 +306,19 @@ const Note = () => {
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
+    // Clean up any remaining interim markers
+    setContentBlocks(prev => {
+      const lastBlock = prev[prev.length - 1];
+      if (lastBlock && lastBlock.type === 'text') {
+        const content = (lastBlock as { type: 'text'; id: string; content: string }).content;
+        const cleanContent = content.replace(/\|\|.*$/, '').trimEnd();
+        return [
+          ...prev.slice(0, -1),
+          { ...lastBlock, content: cleanContent }
+        ];
+      }
+      return prev;
+    });
     setIsPaused(true);
     setIsRecording(false);
     if (recordingIntervalRef.current) {
@@ -328,6 +352,20 @@ const Note = () => {
     if (recordingIntervalRef.current) {
       clearInterval(recordingIntervalRef.current);
     }
+    
+    // Clean up any remaining interim markers
+    setContentBlocks(prev => {
+      const lastBlock = prev[prev.length - 1];
+      if (lastBlock && lastBlock.type === 'text') {
+        const content = (lastBlock as { type: 'text'; id: string; content: string }).content;
+        const cleanContent = content.replace(/\|\|.*$/, '').trimEnd();
+        return [
+          ...prev.slice(0, -1),
+          { ...lastBlock, content: cleanContent }
+        ];
+      }
+      return prev;
+    });
     
     setIsRecording(false);
     setIsPaused(false);
@@ -1245,14 +1283,17 @@ const Note = () => {
             </div>
             
             {/* Visual Feedback */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', height: '40px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '50px', flex: 1 }}>
               {isRecording ? (
                 <>
-                  <div style={{ width: '4px', height: '20px', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: '2px', animation: 'soundBar1 0.5s ease-in-out infinite' }} />
-                  <div style={{ width: '4px', height: '30px', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: '2px', animation: 'soundBar2 0.5s ease-in-out infinite' }} />
-                  <div style={{ width: '4px', height: '15px', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: '2px', animation: 'soundBar3 0.5s ease-in-out infinite' }} />
-                  <div style={{ width: '4px', height: '25px', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: '2px', animation: 'soundBar4 0.5s ease-in-out infinite' }} />
-                  <div style={{ width: '4px', height: '18px', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: '2px', animation: 'soundBar5 0.5s ease-in-out infinite' }} />
+                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar1 0.4s ease-in-out infinite' }} />
+                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar2 0.4s ease-in-out infinite' }} />
+                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar3 0.4s ease-in-out infinite' }} />
+                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar4 0.4s ease-in-out infinite' }} />
+                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar5 0.4s ease-in-out infinite' }} />
+                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar1 0.4s ease-in-out infinite', animationDelay: '0.1s' }} />
+                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar2 0.4s ease-in-out infinite', animationDelay: '0.1s' }} />
+                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar3 0.4s ease-in-out infinite', animationDelay: '0.1s' }} />
                 </>
               ) : isPaused ? (
                 <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', fontFamily: 'Outfit' }}>PAUSED</span>
