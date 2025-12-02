@@ -1265,8 +1265,12 @@ const Note = () => {
       {/* Recording Module */}
       {isRecordingModuleOpen && (
         <div 
-          className="fixed bottom-[30px] left-[30px] right-[30px] z-50 rounded-[20px] p-5 flex items-center justify-between relative overflow-hidden"
+          className="fixed z-50 rounded-[20px]"
           style={{ 
+            bottom: '30px',
+            left: '30px',
+            right: '30px',
+            padding: '16px 20px',
             backgroundColor: '#E57373',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
           }}
@@ -1274,99 +1278,112 @@ const Note = () => {
           {/* Close X button */}
           <button
             onClick={stopRecording}
-            className="absolute top-2 right-3 text-white/50 hover:text-white/80 text-[18px] font-light"
+            style={{
+              position: 'absolute',
+              top: '8px',
+              right: '12px',
+              color: 'rgba(255,255,255,0.5)',
+              fontSize: '18px',
+              fontWeight: '300',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer'
+            }}
           >
             ×
           </button>
-          {/* Buttons */}
-          <div className="flex items-center gap-6">
-            {/* REC/PAUSE Button */}
-            <button
-              onClick={() => {
-                if (isRecording) {
-                  pauseRecording();
-                } else if (isPaused) {
-                  resumeRecording();
-                } else {
-                  startRecording();
-                }
-              }}
-              className="flex flex-col items-center gap-1"
-            >
-              <img 
-                src={isRecording ? pauseIcon : recordIcon} 
-                alt={isRecording ? "Pause" : "Record"} 
-                className="w-[44px] h-[44px]"
-              />
-              <span className="text-white/80 text-[11px] font-outfit tracking-wide">
-                {isRecording ? 'PAUSE' : 'REC'}
-              </span>
-            </button>
-            
-            {/* PLAY/PAUSE Button */}
-            <button
-              onClick={() => {
-                if (isPlaying) {
-                  pausePlayback();
-                } else {
-                  playRecording();
-                }
-              }}
-              className="flex flex-col items-center gap-1"
-              disabled={fullAudioChunksRef.current.length === 0 && !isPlaying}
-              style={{ opacity: fullAudioChunksRef.current.length === 0 && !isPlaying ? 0.5 : 1 }}
-            >
-              <img 
-                src={isPlaying ? pauseIcon : playIcon} 
-                alt={isPlaying ? "Pause" : "Play"} 
-                className="w-[44px] h-[44px]"
-              />
-              <span className="text-white/80 text-[11px] font-outfit tracking-wide">
-                {isPlaying ? 'PAUSE' : 'PLAY'}
-              </span>
-            </button>
-            
-            {/* STOP Button */}
-            <button
-              onClick={stopRecording}
-              className="flex flex-col items-center gap-1"
-            >
-              <img 
-                src={stopIcon} 
-                alt="Stop" 
-                className="w-[44px] h-[44px]"
-              />
-              <span className="text-white/80 text-[11px] font-outfit tracking-wide">STOP</span>
-            </button>
-          </div>
           
-          {/* Visual Feedback - Audio Waveform Bars */}
-          <div className="flex items-center gap-[3px] h-[40px] flex-1 justify-center min-w-0">
-            {isRecording ? (
-              audioLevels.map((level, i) => (
-                <div
-                  key={i}
-                  className="w-[4px] bg-white/70 rounded-full transition-all duration-75"
-                  style={{ 
-                    height: `${Math.max(4, level * 36)}px`,
-                  }}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            {/* Buttons */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+              {/* REC/PAUSE Button */}
+              <button
+                onClick={() => {
+                  if (isRecording) {
+                    pauseRecording();
+                  } else if (isPaused) {
+                    resumeRecording();
+                  } else {
+                    startRecording();
+                  }
+                }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                <img 
+                  src={isRecording ? pauseIcon : recordIcon} 
+                  alt={isRecording ? "Pause" : "Record"} 
+                  style={{ width: '44px', height: '44px' }}
                 />
-              ))
-            ) : isPaused ? (
-              <span className="text-white/60 text-[14px] font-outfit">PAUSED</span>
-            ) : (
-              audioLevels.map((_, i) => (
-                <div
-                  key={i}
-                  className="w-[4px] h-[4px] bg-white/30 rounded-full"
+                <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', fontFamily: 'Outfit', letterSpacing: '0.5px' }}>
+                  {isRecording ? 'PAUSE' : 'REC'}
+                </span>
+              </button>
+              
+              {/* PLAY Button */}
+              <button
+                onClick={() => {
+                  if (isPlaying) {
+                    pausePlayback();
+                  } else {
+                    playRecording();
+                  }
+                }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'none', border: 'none', cursor: 'pointer', opacity: fullAudioChunksRef.current.length === 0 && !isPlaying ? 0.5 : 1 }}
+              >
+                <img 
+                  src={isPlaying ? pauseIcon : playIcon} 
+                  alt={isPlaying ? "Pause" : "Play"} 
+                  style={{ width: '44px', height: '44px' }}
                 />
-              ))
-            )}
-          </div>
-          
-          {/* Timer */}
-          <div className="text-white text-[20px] font-outfit font-light tracking-wide flex-shrink-0">
-            {formatTime(recordingTime)}
+                <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', fontFamily: 'Outfit', letterSpacing: '0.5px' }}>
+                  {isPlaying ? 'PAUSE' : 'PLAY'}
+                </span>
+              </button>
+              
+              {/* STOP Button */}
+              <button
+                onClick={stopRecording}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                <img 
+                  src={stopIcon} 
+                  alt="Stop" 
+                  style={{ width: '44px', height: '44px' }}
+                />
+                <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', fontFamily: 'Outfit', letterSpacing: '0.5px' }}>STOP</span>
+              </button>
+            </div>
+            
+            {/* Visual Feedback - Audio Waveform Bars */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', height: '40px' }}>
+              {isRecording ? (
+                audioLevels.map((level, i) => (
+                  <div
+                    key={i}
+                    style={{ 
+                      width: '4px', 
+                      backgroundColor: 'rgba(255,255,255,0.7)', 
+                      borderRadius: '2px',
+                      height: `${Math.max(4, level * 36)}px`
+                    }}
+                  />
+                ))
+              ) : isPaused ? (
+                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', fontFamily: 'Outfit' }}>PAUSED</span>
+              ) : (
+                audioLevels.map((_, i) => (
+                  <div
+                    key={i}
+                    style={{ width: '4px', height: '4px', backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: '2px' }}
+                  />
+                ))
+              )}
+            </div>
+            
+            {/* Timer */}
+            <div style={{ color: 'white', fontSize: '20px', fontFamily: 'Outfit', fontWeight: '300' }}>
+              {formatTime(recordingTime)}
+            </div>
           </div>
         </div>
       )}
