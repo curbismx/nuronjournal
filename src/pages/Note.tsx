@@ -101,6 +101,7 @@ const Note = () => {
   const chunkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioPlaybackRef = useRef<HTMLAudioElement | null>(null);
+  const mimeTypeRef = useRef<string>('audio/webm');
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -276,7 +277,8 @@ const Note = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      const mediaRecorder = new MediaRecorder(stream);
+      mimeTypeRef.current = mediaRecorder.mimeType;
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
       
@@ -289,7 +291,7 @@ const Note = () => {
       
       mediaRecorder.onstop = async () => {
         if (audioChunksRef.current.length > 0) {
-          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          const audioBlob = new Blob(audioChunksRef.current, { type: mimeTypeRef.current });
           await transcribeAudio(audioBlob);
           audioChunksRef.current = [];
         }
@@ -368,7 +370,7 @@ const Note = () => {
 
   const playRecording = () => {
     if (fullAudioChunksRef.current.length > 0) {
-      const audioBlob = new Blob(fullAudioChunksRef.current, { type: 'audio/webm' });
+      const audioBlob = new Blob(fullAudioChunksRef.current, { type: mimeTypeRef.current });
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
       audioPlaybackRef.current = audio;
@@ -508,7 +510,6 @@ const Note = () => {
     
     fetchWeather();
   }, [noteDate]);
-
 
   // Auto-generate title when user has written enough (only once)
   useEffect(() => {
