@@ -23,6 +23,14 @@ import newPlusIcon from '@/assets/00plus-3.png';
 import plusIconGreen from "@/assets/00plus_green.png";
 import plusIconBlue from "@/assets/00plus_blue.png";
 import plusIconPink from "@/assets/00plus_pink.png";
+import recordIcon from '@/assets/01record.png';
+import pauseIcon from '@/assets/01pause.png';
+import playIcon from '@/assets/01play.png';
+import stopIcon from '@/assets/01stop.png';
+import noteRecordRed from '@/assets/01noterecord_red.png';
+import noteRecordGreen from '@/assets/01noterecord_green.png';
+import noteRecordBlue from '@/assets/01noterecord_blue.png';
+import noteRecordPink from '@/assets/01noterecord_pink.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 type ContentBlock = 
@@ -71,6 +79,28 @@ const Note = () => {
     blue: plusIconBlue,
     pink: plusIconPink
   };
+
+  const themeRecordIcons = {
+    default: noteRecordRed,
+    green: noteRecordGreen,
+    blue: noteRecordBlue,
+    pink: noteRecordPink
+  };
+
+  // Recording state
+  const [isRecordingModuleOpen, setIsRecordingModuleOpen] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const fullAudioChunksRef = useRef<Blob[]>([]);
+  const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const chunkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const audioPlaybackRef = useRef<HTMLAudioElement | null>(null);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -177,6 +207,192 @@ const Note = () => {
         console.error('Copy to clipboard failed:', error);
       }
     }
+  };
+
+  // Recording helper functions
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const transcribeAudio = async (audioBlob: Blob) => {
+    setIsTranscribing(true);
+    try {
+      // Convert blob to base64
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      let binary = '';
+      for (let i = 0; i < uint8Array.length; i++) {
+        binary += String.fromCharCode(uint8Array[i]);
+      }
+      const base64Audio = btoa(binary);
+
+      const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+        body: { audio: base64Audio }
+      });
+
+      if (error) {
+        console.error('Transcription error:', error);
+        return;
+      }
+
+      if (data?.text && data.text.trim()) {
+        // Add transcribed text to note
+        setContentBlocks(prev => {
+          const lastBlock = prev[prev.length - 1];
+          if (lastBlock && lastBlock.type === 'text') {
+            const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
+            const newContent = currentContent 
+              ? currentContent + ' ' + data.text.trim()
+              : data.text.trim();
+            return [
+              ...prev.slice(0, -1),
+              { ...lastBlock, content: newContent }
+            ];
+          }
+          return prev;
+        });
+        
+        // Resize textarea after content updates
+        setTimeout(() => {
+          const textareas = document.querySelectorAll('.note-textarea');
+          textareas.forEach((textarea) => {
+            const el = textarea as HTMLTextAreaElement;
+            el.style.height = 'auto';
+            el.style.height = Math.max(24, el.scrollHeight) + 'px';
+          });
+        }, 50);
+      }
+    } catch (error) {
+      console.error('Transcription error:', error);
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+          fullAudioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = async () => {
+        if (audioChunksRef.current.length > 0) {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          await transcribeAudio(audioBlob);
+          audioChunksRef.current = [];
+        }
+      };
+      
+      mediaRecorder.start();
+      setIsRecording(true);
+      setIsPaused(false);
+      
+      // Start timer
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      
+      // Send chunks every 3 seconds for transcription
+      chunkIntervalRef.current = setInterval(() => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          mediaRecorderRef.current.stop();
+          mediaRecorderRef.current.start();
+        }
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error starting recording:', error);
+    }
+  };
+
+  const pauseRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.pause();
+      setIsPaused(true);
+      setIsRecording(false);
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+    }
+  };
+
+  const resumeRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
+      mediaRecorderRef.current.resume();
+      setIsPaused(false);
+      setIsRecording(true);
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    }
+  };
+
+  const stopRecording = () => {
+    if (chunkIntervalRef.current) {
+      clearInterval(chunkIntervalRef.current);
+    }
+    
+    if (mediaRecorderRef.current) {
+      if (mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+    }
+    
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+    
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current);
+    }
+    
+    setIsRecording(false);
+    setIsPaused(false);
+    setIsPlaying(false);
+    setRecordingTime(0);
+    setIsRecordingModuleOpen(false);
+    fullAudioChunksRef.current = [];
+  };
+
+  const playRecording = () => {
+    if (fullAudioChunksRef.current.length > 0) {
+      const audioBlob = new Blob(fullAudioChunksRef.current, { type: 'audio/webm' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audioPlaybackRef.current = audio;
+      
+      audio.onended = () => {
+        setIsPlaying(false);
+      };
+      
+      audio.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const pausePlayback = () => {
+    if (audioPlaybackRef.current) {
+      audioPlaybackRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const openRecordingModule = () => {
+    setIsRecordingModuleOpen(true);
+    setRecordingTime(0);
+    fullAudioChunksRef.current = [];
   };
 
   // Load existing note on mount
@@ -1000,26 +1216,124 @@ const Note = () => {
         </div>
       )}
 
-      {/* Floating add button */}
-      <img 
-        src={themePlusIcons[theme]} 
-        alt="Add Note"
-        onClick={async () => {
-          await saveNote();
-          // Reset state for new note
-          noteIdRef.current = crypto.randomUUID();
-          setNoteTitle('');
-          setContentBlocks([{ type: 'text', id: 'initial', content: '' }]);
-          setTitleGenerated(false);
-          setMenuOpen(false);
-          // Navigate to new note route
-          navigate('/note', { state: { newNote: Date.now() } });
-        }}
-        className="fixed bottom-[30px] right-[30px] z-50 cursor-pointer w-[51px] h-[51px]"
-        style={{
-          filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
-        }}
-      />
+      {/* Floating record button */}
+      {!isRecordingModuleOpen && (
+        <img 
+          src={themeRecordIcons[theme]} 
+          alt="Record"
+          onClick={openRecordingModule}
+          className="fixed bottom-[30px] right-[30px] z-50 cursor-pointer w-[51px] h-[51px]"
+          style={{
+            filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
+          }}
+        />
+      )}
+
+      {/* Recording Module */}
+      {isRecordingModuleOpen && (
+        <div 
+          className="fixed bottom-[30px] left-[30px] right-[30px] z-50 rounded-[20px] px-6 py-5 flex items-center justify-between"
+          style={{ 
+            backgroundColor: '#E57373',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
+          }}
+        >
+          {/* Buttons */}
+          <div className="flex items-center gap-6">
+            {/* REC/PAUSE Button */}
+            <button
+              onClick={() => {
+                if (isRecording) {
+                  pauseRecording();
+                } else if (isPaused) {
+                  resumeRecording();
+                } else {
+                  startRecording();
+                }
+              }}
+              className="flex flex-col items-center gap-1"
+            >
+              <img 
+                src={isRecording ? pauseIcon : recordIcon} 
+                alt={isRecording ? "Pause" : "Record"} 
+                className="w-[44px] h-[44px]"
+              />
+              <span className="text-white/80 text-[11px] font-outfit tracking-wide">
+                {isRecording ? 'PAUSE' : 'REC'}
+              </span>
+            </button>
+            
+            {/* PLAY/PAUSE Button */}
+            <button
+              onClick={() => {
+                if (isPlaying) {
+                  pausePlayback();
+                } else {
+                  playRecording();
+                }
+              }}
+              className="flex flex-col items-center gap-1"
+              disabled={fullAudioChunksRef.current.length === 0 && !isPlaying}
+              style={{ opacity: fullAudioChunksRef.current.length === 0 && !isPlaying ? 0.5 : 1 }}
+            >
+              <img 
+                src={isPlaying ? pauseIcon : playIcon} 
+                alt={isPlaying ? "Pause" : "Play"} 
+                className="w-[44px] h-[44px]"
+              />
+              <span className="text-white/80 text-[11px] font-outfit tracking-wide">
+                {isPlaying ? 'PAUSE' : 'PLAY'}
+              </span>
+            </button>
+            
+            {/* STOP Button */}
+            <button
+              onClick={stopRecording}
+              className="flex flex-col items-center gap-1"
+            >
+              <img 
+                src={stopIcon} 
+                alt="Stop" 
+                className="w-[44px] h-[44px]"
+              />
+              <span className="text-white/80 text-[11px] font-outfit tracking-wide">STOP</span>
+            </button>
+          </div>
+          
+          {/* Visual Feedback - Pulsing Dots */}
+          <div className="flex items-center gap-2">
+            {isRecording && (
+              <>
+                <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
+                <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{ animationDelay: '450ms' }} />
+                <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{ animationDelay: '600ms' }} />
+              </>
+            )}
+            {isPaused && !isRecording && (
+              <span className="text-white/60 text-[14px] font-outfit">PAUSED</span>
+            )}
+          </div>
+          
+          {/* Timer */}
+          <div className="text-white text-[28px] font-outfit font-light tracking-wide">
+            {formatTime(recordingTime)}
+          </div>
+        </div>
+      )}
+
+      {/* Transcribing indicator */}
+      {isTranscribing && (
+        <div className="fixed bottom-[120px] left-1/2 -translate-x-1/2 z-50 bg-black/70 text-white px-4 py-2 rounded-full flex items-center gap-2">
+          <div className="flex gap-1">
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
+          <span className="text-[14px] font-outfit">Transcribing...</span>
+        </div>
+      )}
 
       {/* Delete confirmation dialog */}
       {showDeleteConfirm && (
