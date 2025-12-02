@@ -25,8 +25,6 @@ import plusIconBlue from "@/assets/00plus_blue.png";
 import plusIconPink from "@/assets/00plus_pink.png";
 import recordIcon from '@/assets/01record.png';
 import stopIcon from '@/assets/01stop.png';
-import playIcon from '@/assets/01play.png';
-import pauseIcon from '@/assets/01pause.png';
 import noteRecordRed from '@/assets/01noterecord_red.png';
 import noteRecordGreen from '@/assets/01noterecord_green.png';
 import noteRecordBlue from '@/assets/01noterecord_blue.png';
@@ -97,13 +95,11 @@ const Note = () => {
   
   // Audio recording state
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  
   const [isUploading, setIsUploading] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const preloadedAudioRef = useRef<HTMLAudioElement | null>(null);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -118,15 +114,6 @@ const Note = () => {
     });
   }, []);
 
-  // Preload audio for iOS Safari compatibility
-  useEffect(() => {
-    if (audioUrl) {
-      const audio = new Audio();
-      audio.src = audioUrl;
-      audio.load();
-      preloadedAudioRef.current = audio;
-    }
-  }, [audioUrl]);
 
   const generateTitle = async (text: string) => {
     try {
@@ -401,25 +388,6 @@ const Note = () => {
     setRecordingTime(0);
   };
 
-  const playRecording = () => {
-    if (!preloadedAudioRef.current) return;
-    
-    preloadedAudioRef.current.onended = () => setIsPlaying(false);
-    preloadedAudioRef.current.onerror = () => setIsPlaying(false);
-    
-    setIsPlaying(true);
-    preloadedAudioRef.current.play().catch((err) => {
-      console.error('Play error:', err);
-      setIsPlaying(false);
-    });
-  };
-
-  const pausePlayback = () => {
-    if (preloadedAudioRef.current) {
-      preloadedAudioRef.current.pause();
-    }
-    setIsPlaying(false);
-  };
 
   const openRecordingModule = () => {
     setIsRecordingModuleOpen(true);
@@ -1314,35 +1282,6 @@ const Note = () => {
                 </span>
               </button>
               
-              {/* PLAY Button */}
-              <button
-                onClick={() => {
-                  if (isPlaying) {
-                    pausePlayback();
-                  } else {
-                    playRecording();
-                  }
-                }}
-                style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  alignItems: 'center', 
-                  gap: '4px', 
-                  background: 'none', 
-                  border: 'none', 
-                  cursor: audioUrl ? 'pointer' : 'default',
-                  opacity: audioUrl ? 1 : 0.4
-                }}
-              >
-                <img 
-                  src={isPlaying ? pauseIcon : playIcon} 
-                  alt={isPlaying ? "Pause" : "Play"} 
-                  style={{ width: '44px', height: '44px' }}
-                />
-                <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', fontFamily: 'Outfit', letterSpacing: '0.5px' }}>
-                  {isPlaying ? 'PAUSE' : 'PLAY'}
-                </span>
-              </button>
               
               {/* CLOSE Button */}
               <button
@@ -1358,23 +1297,25 @@ const Note = () => {
               </button>
             </div>
             
-            {/* Visual Feedback */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '50px', flex: 1 }}>
+            {/* Audio Player */}
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {isUploading ? (
                 <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', fontFamily: 'Outfit' }}>Saving...</span>
               ) : isRecording ? (
-                <>
-                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar1 0.4s ease-in-out infinite' }} />
-                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar2 0.4s ease-in-out infinite' }} />
-                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar3 0.4s ease-in-out infinite' }} />
-                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar4 0.4s ease-in-out infinite' }} />
-                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar5 0.4s ease-in-out infinite' }} />
-                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar1 0.4s ease-in-out infinite', animationDelay: '0.1s' }} />
-                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar2 0.4s ease-in-out infinite', animationDelay: '0.1s' }} />
-                  <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar3 0.4s ease-in-out infinite', animationDelay: '0.1s' }} />
-                </>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '6px', height: '20px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar1 0.4s ease-in-out infinite' }} />
+                  <div style={{ width: '6px', height: '30px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar2 0.4s ease-in-out infinite' }} />
+                  <div style={{ width: '6px', height: '15px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar3 0.4s ease-in-out infinite' }} />
+                  <div style={{ width: '6px', height: '25px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar4 0.4s ease-in-out infinite' }} />
+                  <div style={{ width: '6px', height: '18px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar5 0.4s ease-in-out infinite' }} />
+                </div>
               ) : audioUrl ? (
-                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', fontFamily: 'Outfit' }}>Ready to play</span>
+                <audio 
+                  src={audioUrl} 
+                  controls 
+                  playsInline
+                  style={{ height: '40px', maxWidth: '200px' }}
+                />
               ) : null}
             </div>
             
