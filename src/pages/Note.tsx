@@ -1371,7 +1371,7 @@ const Note = () => {
       {!isRecordingOpen ? (
         <button
           onClick={openRecorder}
-          className="fixed bottom-[30px] right-[30px] z-50"
+          className="fixed bottom-[30px] left-[30px] z-50"
         >
           <img src={themeRecordIcons[theme]} alt="Record" className="w-[51px] h-[51px]" />
         </button>
@@ -1387,8 +1387,8 @@ const Note = () => {
           <div
             className="fixed z-50"
             style={{
-              bottom: '20px',
-              right: '20px',
+              bottom: '30px',
+              left: '30px',
               width: '80px',
               height: '80px',
               animation: 'growIn 0.3s ease-out'
