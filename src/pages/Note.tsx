@@ -1403,10 +1403,9 @@ const Note = () => {
               }}
             />
             
-            {/* White center circle with timer */}
-            <button
-              onClick={handleRecorderTap}
-              className="absolute rounded-full flex items-center justify-center"
+            {/* White center circle - pulsates */}
+            <div
+              className="absolute rounded-full"
               style={{
                 width: '52px',
                 height: '52px',
@@ -1416,6 +1415,12 @@ const Note = () => {
                 transform: 'translate(-50%, -50%)',
                 animation: isPaused ? 'none' : 'centerPulse 1.2s ease-in-out infinite'
               }}
+            />
+            
+            {/* Timer text - static, on top */}
+            <button
+              onClick={handleRecorderTap}
+              className="absolute inset-0 flex items-center justify-center"
             >
               <span 
                 style={{ 
