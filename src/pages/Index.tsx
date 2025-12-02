@@ -1235,103 +1235,110 @@ const Index = () => {
               <p className="text-[16px] font-outfit text-[hsl(0,0%,50%)]">No notes found</p>
             </div>
           )}
-          {/* Notes list */}
-          <div>
-              {(isSearching ? filteredGroupedNotes : groupedNotes).map((group) => {
-                const groupMonthYear = new Date(group.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
-                return (
+          {/* Notes list with sticky headers */}
+          <div className="relative">
+            {(isSearching ? filteredGroupedNotes : groupedNotes).map((group) => {
+              const groupMonthYear = new Date(group.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+              const noteDate = new Date(group.notes[0].createdAt);
+              const dayNumber = noteDate.getDate().toString().padStart(2, '0');
+              const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+              
+              return (
+                <div 
+                  key={group.date}
+                  data-month-year={groupMonthYear}
+                  ref={(el) => {
+                    if (el) dateGroupRefs.current.set(group.date, el);
+                    else dateGroupRefs.current.delete(group.date);
+                  }}
+                >
+                  {/* Sticky Date Header */}
                   <div 
-                    key={group.date}
-                    data-month-year={groupMonthYear}
-                    ref={(el) => {
-                      if (el) dateGroupRefs.current.set(group.date, el);
-                      else dateGroupRefs.current.delete(group.date);
+                    className="sticky top-0 z-10 px-8 pt-[12px] pb-4 bg-journal-content"
+                    style={{ 
+                      boxShadow: '0 4px 8px -4px rgba(0,0,0,0.05)'
                     }}
                   >
-                {group.notes.map((note, index) => {
-                  const noteDate = new Date(note.createdAt);
-                  const dayNumber = noteDate.getDate().toString().padStart(2, '0');
-                  const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
-                  const preview = getNotePreview(note);
-                  const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; id: string; url: string; width: number } | undefined;
+                    <div className="flex items-start gap-4">
+                      <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
+                        {dayNumber}
+                      </div>
+                      <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
+                        {dayName}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Notes for this day */}
+                  {group.notes.map((note) => {
+                    const preview = getNotePreview(note);
+                    const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; id: string; url: string; width: number } | undefined;
 
-                  return (
-              <div 
-                key={note.id}
-                className="border-b border-[hsl(0,0%,85%)] cursor-pointer"
-                onClick={() => navigate(`/note/${note.id}`)}
-              >
-                      <div className={index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-4 pb-4"}>
-                        {/* Only show date for first note of each day */}
-                        {index === 0 && (
-                          <div className="flex items-start gap-4 mb-4">
-                            <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
-                              {dayNumber}
-                            </div>
-                            <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
-                              {dayName}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* Title and Body Container */}
-                        <div className="pr-[50px] relative">
-                          {/* Arrow icon - always in same position */}
-                          <img 
-                            src={smallArrow} 
-                            alt="" 
-                            className="absolute right-[-2px] top-1/2 -translate-y-1/2 w-[20px] h-auto"
-                          />
+                    return (
+                      <div 
+                        key={note.id}
+                        className="border-b border-[hsl(0,0%,85%)] cursor-pointer"
+                        onClick={() => navigate(`/note/${note.id}`)}
+                      >
+                        <div className="px-8 pt-4 pb-4">
+                          {/* Title and Body Container */}
+                          <div className="pr-[50px] relative">
+                            {/* Arrow icon */}
+                            <img 
+                              src={smallArrow} 
+                              alt="" 
+                              className="absolute right-[-2px] top-1/2 -translate-y-1/2 w-[20px] h-auto"
+                            />
 
-                          {menuOpen ? (
-                            /* EXPANDED VIEW - image floats, text wraps around and underneath */
-                            <div>
-                              <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 ${index === 0 ? '-mt-[10px]' : ''}`}>
-                                {note.title || 'Untitled'}
-                              </h3>
-                              <div className="-mt-[10px]" style={{ maxHeight: '273px', overflow: 'hidden' }}>
+                            {menuOpen ? (
+                              /* EXPANDED VIEW */
+                              <div>
+                                <h3 className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4">
+                                  {note.title || 'Untitled'}
+                                </h3>
+                                <div className="-mt-[10px]" style={{ maxHeight: '273px', overflow: 'hidden' }}>
+                                  {firstImage && (
+                                    <img 
+                                      src={firstImage.url} 
+                                      alt=""
+                                      className="float-right w-[70px] h-[70px] rounded-[10px] object-cover ml-[15px] mb-[10px]"
+                                      style={{ shapeOutside: 'margin-box' }}
+                                    />
+                                  )}
+                                  <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)]" style={{ display: 'block' }}>
+                                    {preview || 'No content'}
+                                  </p>
+                                  <div style={{ clear: 'both' }} />
+                                </div>
+                              </div>
+                            ) : (
+                              /* COLLAPSED VIEW */
+                              <div className="flex items-center gap-[15px]">
+                                <div className="flex-1">
+                                  <h3 className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4">
+                                    {note.title || 'Untitled'}
+                                  </h3>
+                                  <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px]">
+                                    {preview || 'No content'}
+                                  </p>
+                                </div>
                                 {firstImage && (
                                   <img 
                                     src={firstImage.url} 
                                     alt=""
-                                    className="float-right w-[70px] h-[70px] rounded-[10px] object-cover ml-[15px] mb-[10px]"
-                                    style={{ shapeOutside: 'margin-box' }}
+                                    className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0"
                                   />
                                 )}
-                                <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)]" style={{ display: 'block' }}>
-                                  {preview || 'No content'}
-                                </p>
-                                <div style={{ clear: 'both' }} />
                               </div>
-                            </div>
-                          ) : (
-                            /* COLLAPSED VIEW - image vertically centered with content */
-                            <div className="flex items-center gap-[15px]">
-                              <div className="flex-1">
-                                <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 ${index === 0 ? '-mt-[10px]' : ''}`}>
-                                  {note.title || 'Untitled'}
-                                </h3>
-                                <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px]">
-                                  {preview || 'No content'}
-                                </p>
-                              </div>
-                              {firstImage && (
-                                <img 
-                                  src={firstImage.url} 
-                                  alt=""
-                                  className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0"
-                                />
-                              )}
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })}
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
