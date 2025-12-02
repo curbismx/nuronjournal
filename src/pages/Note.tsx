@@ -1085,7 +1085,7 @@ const Note = () => {
         
         {/* Audio Recording Players */}
         {audioUrls.length > 0 && (
-          <div className="px-8 mt-6">
+          <div className="px-8 mt-6" style={{ minHeight: '31px' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {audioUrls.map((url, index) => (
                 <div
@@ -1098,6 +1098,7 @@ const Note = () => {
                     borderRadius: '50px',
                     padding: '0 16px 0 6px',
                     height: '31px',
+                    minWidth: '90px',
                     cursor: 'pointer',
                     marginBottom: index >= 3 ? '0' : undefined
                   }}
@@ -1126,7 +1127,8 @@ const Note = () => {
                     border: '1.5px solid white',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    flexShrink: 0
                   }}>
                     {playingAudioIndex === index ? (
                       <div style={{ display: 'flex', gap: '2px' }}>
@@ -1150,7 +1152,8 @@ const Note = () => {
                     color: 'white',
                     fontSize: '14px',
                     fontFamily: 'Outfit',
-                    fontWeight: '400'
+                    fontWeight: '400',
+                    minWidth: '38px'
                   }}>
                     {audioDurations[index] || '00:00'}
                   </span>
