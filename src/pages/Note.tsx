@@ -102,6 +102,7 @@ const Note = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const audioBlobRef = useRef<Blob | null>(null);
   const audioPlaybackRef = useRef<HTMLAudioElement | null>(null);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -267,16 +268,17 @@ const Note = () => {
         const newBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType });
         
         // If there's existing audio, combine them
-        setAudioBlob(prevBlob => {
-          if (prevBlob) {
-            const combinedBlob = new Blob([prevBlob, newBlob], { type: newBlob.type });
-            setAudioUrl(URL.createObjectURL(combinedBlob));
-            return combinedBlob;
-          } else {
-            setAudioUrl(URL.createObjectURL(newBlob));
-            return newBlob;
-          }
-        });
+        if (audioBlobRef.current) {
+          const combinedChunks = [audioBlobRef.current, newBlob];
+          const combinedBlob = new Blob(combinedChunks, { type: newBlob.type });
+          setAudioBlob(combinedBlob);
+          audioBlobRef.current = combinedBlob;
+          setAudioUrl(URL.createObjectURL(combinedBlob));
+        } else {
+          setAudioBlob(newBlob);
+          audioBlobRef.current = newBlob;
+          setAudioUrl(URL.createObjectURL(newBlob));
+        }
       };
       
       mediaRecorder.start();
@@ -510,6 +512,7 @@ const Note = () => {
               if (data.audio_data) {
                 const blob = base64ToBlob(data.audio_data);
                 setAudioBlob(blob);
+                audioBlobRef.current = blob;
                 setAudioUrl(URL.createObjectURL(blob));
               }
             }
@@ -531,6 +534,7 @@ const Note = () => {
             if (existingNote.audioData) {
               const blob = base64ToBlob(existingNote.audioData);
               setAudioBlob(blob);
+              audioBlobRef.current = blob;
               setAudioUrl(URL.createObjectURL(blob));
             }
           }
@@ -621,6 +625,11 @@ const Note = () => {
       generateTitle(noteContent);
     }
   }, [contentBlocks, titleGenerated, titleManuallyEdited]);
+
+  // Keep audioBlobRef in sync with audioBlob state
+  useEffect(() => {
+    audioBlobRef.current = audioBlob;
+  }, [audioBlob]);
 
   // Click outside handler to close menu
   useEffect(() => {
