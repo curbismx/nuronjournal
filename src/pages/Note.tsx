@@ -101,9 +101,7 @@ const Note = () => {
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
-  const audioBlobRef = useRef<Blob | null>(null);
-  const audioPlaybackRef = useRef<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -242,11 +240,59 @@ const Note = () => {
 
 
   const startRecording = async () => {
+    // Start speech recognition
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
-    if (!SpeechRecognition) {
-      console.error('Speech recognition not supported');
-      return;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognitionRef.current = recognition;
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-GB';
+      
+      recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+        
+        setContentBlocks(prev => {
+          const lastBlock = prev[prev.length - 1];
+          if (lastBlock && lastBlock.type === 'text') {
+            const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
+            const baseContent = currentContent.replace(/\|\|.*$/, '').trimEnd();
+            
+            let newContent = baseContent;
+            if (finalTranscript) {
+              newContent = baseContent ? baseContent + ' ' + finalTranscript : finalTranscript;
+            }
+            if (interimTranscript) {
+              newContent = newContent + '||' + interimTranscript;
+            }
+            
+            return [
+              ...prev.slice(0, -1),
+              { ...lastBlock, content: newContent }
+            ];
+          }
+          return prev;
+        });
+      };
+      
+      recognition.onend = () => {
+        if (isRecordingRef.current) {
+          try { recognition.start(); } catch (e) {}
+        }
+      };
+      
+      recognition.start();
     }
     
     // Start audio recording
@@ -264,103 +310,14 @@ const Note = () => {
         }
       };
       
-      mediaRecorder.onstop = () => {
-        const newBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType });
-        
-        // If there's existing audio, combine them
-        if (audioBlobRef.current) {
-          const combinedChunks = [audioBlobRef.current, newBlob];
-          const combinedBlob = new Blob(combinedChunks, { type: newBlob.type });
-          setAudioBlob(combinedBlob);
-          audioBlobRef.current = combinedBlob;
-          setAudioUrl(URL.createObjectURL(combinedBlob));
-        } else {
-          setAudioBlob(newBlob);
-          audioBlobRef.current = newBlob;
-          setAudioUrl(URL.createObjectURL(newBlob));
-        }
-      };
-      
       mediaRecorder.start();
     } catch (error) {
       console.error('Error starting audio recording:', error);
     }
     
-    // Start speech recognition
-    const recognition = new SpeechRecognition();
-    recognitionRef.current = recognition;
-    
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-GB';
-    
-    recognition.onresult = (event: any) => {
-      let interimTranscript = '';
-      let finalTranscript = '';
-      
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript + ' ';
-        } else {
-          interimTranscript += transcript;
-        }
-      }
-      
-      setContentBlocks(prev => {
-        const lastBlock = prev[prev.length - 1];
-        if (lastBlock && lastBlock.type === 'text') {
-          const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
-          const baseContent = currentContent.replace(/\|\|.*$/, '').trimEnd();
-          
-          let newContent = baseContent;
-          if (finalTranscript) {
-            newContent = baseContent ? baseContent + ' ' + finalTranscript : finalTranscript;
-          }
-          if (interimTranscript) {
-            newContent = newContent + '||' + interimTranscript;
-          }
-          
-          return [
-            ...prev.slice(0, -1),
-            { ...lastBlock, content: newContent }
-          ];
-        }
-        return prev;
-      });
-    };
-    
-    recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
-      if (event.error === 'no-speech' && isRecordingRef.current) {
-        recognition.stop();
-        setTimeout(() => {
-          if (isRecordingRef.current) {
-            recognition.start();
-          }
-        }, 100);
-      }
-    };
-    
-    recognition.onend = () => {
-      if (isRecordingRef.current) {
-        setTimeout(() => {
-          if (isRecordingRef.current && recognitionRef.current) {
-            try {
-              recognitionRef.current.start();
-            } catch (e) {
-              console.log('Recognition restart failed:', e);
-            }
-          }
-        }, 100);
-      }
-    };
-    
-    recognition.start();
     setIsRecording(true);
     isRecordingRef.current = true;
     setIsPaused(false);
-    setAudioUrl(null);
     
     recordingIntervalRef.current = setInterval(() => {
       setRecordingTime(prev => prev + 1);
@@ -421,14 +378,16 @@ const Note = () => {
     }, 1000);
   };
 
-  const stopRecording = () => {
+  const stopRecording = async () => {
     isRecordingRef.current = false;
     
+    // Stop speech recognition
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
     }
     
+    // Stop timer
     if (recordingIntervalRef.current) {
       clearInterval(recordingIntervalRef.current);
     }
@@ -447,80 +406,66 @@ const Note = () => {
       return prev;
     });
     
-    // Stop media recorder and wait for it to finish before closing stream
+    // Stop audio recording and create URL
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.onstop = () => {
-        const newBlob = new Blob(audioChunksRef.current, { type: mediaRecorderRef.current?.mimeType || 'audio/webm' });
-        
-        if (audioBlobRef.current) {
-          const combinedBlob = new Blob([audioBlobRef.current, newBlob], { type: newBlob.type });
-          setAudioBlob(combinedBlob);
-          audioBlobRef.current = combinedBlob;
-          setAudioUrl(URL.createObjectURL(combinedBlob));
-        } else {
-          setAudioBlob(newBlob);
-          audioBlobRef.current = newBlob;
-          setAudioUrl(URL.createObjectURL(newBlob));
-        }
-        
-        // Stop stream tracks AFTER saving audio
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach(track => track.stop());
-        }
-      };
-      
-      mediaRecorderRef.current.stop();
-    } else {
-      // No active recording, just stop stream
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
+      await new Promise<void>((resolve) => {
+        mediaRecorderRef.current!.onstop = () => {
+          const blob = new Blob(audioChunksRef.current, { type: 'audio/mp4' });
+          const url = URL.createObjectURL(blob);
+          console.log('Audio blob created:', blob.size, 'bytes');
+          console.log('Audio URL:', url);
+          setAudioUrl(url);
+          resolve();
+        };
+        mediaRecorderRef.current!.stop();
+      });
+    }
+    
+    // Stop microphone
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
     }
     
     setIsRecording(false);
     setIsPaused(false);
     setRecordingTime(0);
-    setIsRecordingModuleOpen(false);
+    // Don't close module yet so user can play back
   };
 
   const playRecording = () => {
-    if (audioUrl) {
-      // Stop any existing playback
-      if (audioPlaybackRef.current) {
-        audioPlaybackRef.current.pause();
-        audioPlaybackRef.current = null;
-      }
-      
-      const audio = new Audio(audioUrl);
-      audioPlaybackRef.current = audio;
-      
-      audio.onended = () => {
-        setIsPlaying(false);
-      };
-      
-      audio.onerror = (e) => {
-        console.error('Audio playback error:', e);
-        setIsPlaying(false);
-      };
-      
-      // Handle iOS audio promise
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setIsPlaying(true);
-          })
-          .catch((error) => {
-            console.error('Playback failed:', error);
-            setIsPlaying(false);
-          });
-      }
+    console.log('Play clicked, audioUrl:', audioUrl);
+    
+    if (!audioUrl) {
+      console.log('No audio URL');
+      return;
     }
+    
+    const audio = new Audio(audioUrl);
+    audioRef.current = audio;
+    
+    audio.onplay = () => {
+      console.log('Audio started playing');
+      setIsPlaying(true);
+    };
+    
+    audio.onended = () => {
+      console.log('Audio ended');
+      setIsPlaying(false);
+    };
+    
+    audio.onerror = (e) => {
+      console.error('Audio error:', e);
+      setIsPlaying(false);
+    };
+    
+    audio.play().catch(err => {
+      console.error('Play failed:', err);
+    });
   };
 
   const pausePlayback = () => {
-    if (audioPlaybackRef.current) {
-      audioPlaybackRef.current.pause();
+    if (audioRef.current) {
+      audioRef.current.pause();
       setIsPlaying(false);
     }
   };
@@ -554,8 +499,6 @@ const Note = () => {
               // Load saved audio
               if (data.audio_data) {
                 const blob = base64ToBlob(data.audio_data);
-                setAudioBlob(blob);
-                audioBlobRef.current = blob;
                 setAudioUrl(URL.createObjectURL(blob));
               }
             }
@@ -576,8 +519,6 @@ const Note = () => {
             // Load saved audio
             if (existingNote.audioData) {
               const blob = base64ToBlob(existingNote.audioData);
-              setAudioBlob(blob);
-              audioBlobRef.current = blob;
               setAudioUrl(URL.createObjectURL(blob));
             }
           }
@@ -669,10 +610,6 @@ const Note = () => {
     }
   }, [contentBlocks, titleGenerated, titleManuallyEdited]);
 
-  // Keep audioBlobRef in sync with audioBlob state
-  useEffect(() => {
-    audioBlobRef.current = audioBlob;
-  }, [audioBlob]);
 
   // Click outside handler to close menu
   useEffect(() => {
@@ -701,7 +638,17 @@ const Note = () => {
     }
 
     // Convert audio blob to base64 for storage
-    const audioBase64 = audioBlob ? await blobToBase64(audioBlob) : null;
+    // Convert audio URL back to blob for storage
+    let audioBase64: string | null = null;
+    if (audioUrl) {
+      try {
+        const response = await fetch(audioUrl);
+        const blob = await response.blob();
+        audioBase64 = await blobToBase64(blob);
+      } catch (e) {
+        console.error('Failed to convert audio for storage:', e);
+      }
+    }
 
     const noteData = {
       id: noteIdRef.current,
@@ -1405,7 +1352,7 @@ const Note = () => {
         >
           {/* Close X button */}
           <button
-            onClick={stopRecording}
+            onClick={() => setIsRecordingModuleOpen(false)}
             style={{
               position: 'absolute',
               top: '8px',
@@ -1463,10 +1410,9 @@ const Note = () => {
                   gap: '4px', 
                   background: 'none', 
                   border: 'none', 
-                  cursor: 'pointer',
-                  opacity: (audioUrl || audioBlobRef.current) ? 1 : 0.4
+                  cursor: audioUrl ? 'pointer' : 'default',
+                  opacity: audioUrl ? 1 : 0.4
                 }}
-                disabled={!audioUrl && !audioBlobRef.current}
               >
                 <img 
                   src={isPlaying ? pauseIcon : playIcon} 
