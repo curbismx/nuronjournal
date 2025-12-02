@@ -226,12 +226,14 @@ const Note = () => {
         return null;
       }
       
-      const fileName = `${session.user.id}/${noteIdRef.current}-${Date.now()}.webm`;
+      const contentType = blob.type || 'audio/mp4';
+      const extension = contentType.includes('mp4') ? 'mp4' : 'webm';
+      const fileNameWithExt = `${session.user.id}/${noteIdRef.current}-${Date.now()}.${extension}`;
       
       const { error } = await supabase.storage
         .from('audio-recordings')
-        .upload(fileName, blob, {
-          contentType: 'audio/webm',
+        .upload(fileNameWithExt, blob, {
+          contentType: contentType,
           upsert: true
         });
       
@@ -242,7 +244,7 @@ const Note = () => {
       
       const { data: { publicUrl } } = supabase.storage
         .from('audio-recordings')
-        .getPublicUrl(fileName);
+        .getPublicUrl(fileNameWithExt);
       
       return publicUrl;
     } catch (error) {
@@ -306,7 +308,15 @@ const Note = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
-      const mediaRecorder = new MediaRecorder(stream);
+      let options: MediaRecorderOptions = {};
+      if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        options = { mimeType: 'audio/mp4' };
+      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+        options = { mimeType: 'audio/webm' };
+      }
+      
+      const mediaRecorder = new MediaRecorder(stream, options);
+      console.log('Recording with mimeType:', mediaRecorder.mimeType);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
       
@@ -357,7 +367,9 @@ const Note = () => {
       setIsUploading(true);
       
       mediaRecorderRef.current.onstop = async () => {
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const mimeType = mediaRecorderRef.current?.mimeType || 'audio/mp4';
+        const blob = new Blob(audioChunksRef.current, { type: mimeType });
+        console.log('Created blob with type:', blob.type, 'size:', blob.size);
         const url = await uploadAudioToSupabase(blob);
         if (url) {
           setAudioUrl(url);
@@ -379,6 +391,7 @@ const Note = () => {
   };
 
   const playRecording = () => {
+    console.log('Playing audio from:', audioUrl);
     if (!audioUrl) return;
     
     const audio = new Audio(audioUrl);
