@@ -1265,7 +1265,7 @@ const Note = () => {
       {/* Recording Module */}
       {isRecordingModuleOpen && (
         <div 
-          className="fixed bottom-[30px] left-[30px] right-[30px] z-50 rounded-[20px] px-6 py-5 flex items-center justify-between relative"
+          className="fixed bottom-[30px] left-[30px] right-[30px] z-50 rounded-[20px] px-6 pr-8 py-5 flex items-center justify-between relative"
           style={{ 
             backgroundColor: '#E57373',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
