@@ -973,8 +973,8 @@ const Index = () => {
           ) : showAccountDetails ? (
             /* Account Details View */
             user && userProfile && (
-              <div className="-mt-[80px]">
-                <div className="space-y-4">
+              <>
+                <div className="space-y-4 -mt-[80px]">
                   <div className="space-y-2">
                     <Label className="text-white/60 text-[12px] uppercase tracking-wider">Name</Label>
                     <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
@@ -1009,7 +1009,7 @@ const Index = () => {
                     Delete Account
                   </button>
                 </div>
-              </div>
+              </>
             )
           ) : user && userProfile ? (
             /* Settings View - logged in */
