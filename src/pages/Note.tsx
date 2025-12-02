@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { User } from "@supabase/supabase-js";
+import DatePicker from '@/components/DatePicker';
 
 interface SavedNote {
   id: string;
@@ -47,6 +48,7 @@ const Note = () => {
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const touchStartX = useRef<number>(0);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [showWeatherSetting, setShowWeatherSetting] = useState(() => {
     const stored = localStorage.getItem('nuron-show-weather');
     return stored !== null ? JSON.parse(stored) : true;
@@ -76,7 +78,6 @@ const Note = () => {
   const activeTextBlockRef = useRef<{ id: string; cursorPosition: number } | null>(null);
   const isDeletedRef = useRef(false);
   const existingCreatedAt = useRef<string | null>(null);
-  const dateInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -394,8 +395,7 @@ const Note = () => {
     navigate('/');
   };
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = new Date(e.target.value + 'T12:00:00');
+  const handleDateSelect = (newDate: Date) => {
     setNoteDate(newDate);
     existingCreatedAt.current = newDate.toISOString();
   };
@@ -698,15 +698,10 @@ const Note = () => {
         <div style={{ minHeight: 'calc(100% + 1px)' }}>
           {/* Date and weather */}
           <div className="px-8 pt-[12px] pb-2">
-          <div className="relative flex items-start gap-4 mb-4">
-            <input
-              ref={dateInputRef}
-              type="date"
-              value={noteDate.toISOString().split('T')[0]}
-              onChange={handleDateChange}
-              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-              style={{ fontSize: '16px' }}
-            />
+          <div 
+            className="flex items-start gap-4 mb-4 cursor-pointer"
+            onClick={() => setDatePickerOpen(true)}
+          >
             <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">{dayNumber}</div>
             <div className="flex flex-col">
               <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">{dayName}</div>
@@ -1062,6 +1057,13 @@ const Note = () => {
           </div>
         </div>
       )}
+
+      <DatePicker
+        value={noteDate}
+        onChange={handleDateSelect}
+        isOpen={datePickerOpen}
+        onClose={() => setDatePickerOpen(false)}
+      />
 
     </div>
   );
