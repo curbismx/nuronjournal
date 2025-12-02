@@ -10,7 +10,6 @@ interface SavedNote {
   createdAt: string;
   updatedAt: string;
   weather?: { temp: number; weatherCode: number };
-  audioData?: string | null;
 }
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,8 +24,6 @@ import plusIconGreen from "@/assets/00plus_green.png";
 import plusIconBlue from "@/assets/00plus_blue.png";
 import plusIconPink from "@/assets/00plus_pink.png";
 import recordIcon from '@/assets/01record.png';
-import pauseIcon from '@/assets/01pause.png';
-import playIcon from '@/assets/01play.png';
 import stopIcon from '@/assets/01stop.png';
 import noteRecordRed from '@/assets/01noterecord_red.png';
 import noteRecordGreen from '@/assets/01noterecord_green.png';
@@ -88,20 +85,13 @@ const Note = () => {
     pink: noteRecordPink
   };
 
-  // Recording state
+  // Recording state (speech-to-text only)
   const [isRecordingModuleOpen, setIsRecordingModuleOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recognitionRef = useRef<any>(null);
   const isRecordingRef = useRef(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const streamRef = useRef<MediaStream | null>(null);
-  const [audioDataUrl, setAudioDataUrl] = useState<string | null>(null);
-  const audioElementRef = useRef<HTMLAudioElement | null>(null);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -217,251 +207,98 @@ const Note = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const blobToBase64 = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
 
-  const base64ToBlob = (base64: string): Blob => {
-    const parts = base64.split(';base64,');
-    const contentType = parts[0].split(':')[1];
-    const raw = window.atob(parts[1]);
-    const rawLength = raw.length;
-    const uInt8Array = new Uint8Array(rawLength);
-    for (let i = 0; i < rawLength; ++i) {
-      uInt8Array[i] = raw.charCodeAt(i);
-    }
-    return new Blob([uInt8Array], { type: contentType });
-  };
-
-  const blobToDataUrl = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
-  const startRecording = async () => {
-    // Start speech recognition
+  const startRecording = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognitionRef.current = recognition;
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'en-GB';
-      
-      recognition.onresult = (event: any) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
-        
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-          } else {
-            interimTranscript += transcript;
-          }
-        }
-        
-        setContentBlocks(prev => {
-          const lastBlock = prev[prev.length - 1];
-          if (lastBlock && lastBlock.type === 'text') {
-            const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
-            const baseContent = currentContent.replace(/\|\|.*$/, '').trimEnd();
-            
-            let newContent = baseContent;
-            if (finalTranscript) {
-              newContent = baseContent ? baseContent + ' ' + finalTranscript : finalTranscript;
-            }
-            if (interimTranscript) {
-              newContent = newContent + '||' + interimTranscript;
-            }
-            
-            return [
-              ...prev.slice(0, -1),
-              { ...lastBlock, content: newContent }
-            ];
-          }
-          return prev;
-        });
-      };
-      
-      recognition.onend = () => {
-        if (isRecordingRef.current) {
-          try { recognition.start(); } catch (e) {}
-        }
-      };
-      
-      recognition.start();
+    if (!SpeechRecognition) {
+      console.error('Speech recognition not supported');
+      return;
     }
     
-    // Audio recording - simplified, no MIME type detection needed for data URLs
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-      
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) audioChunksRef.current.push(e.data);
-      };
-      
-      mediaRecorder.start(1000);
-    } catch (error) {
-      console.error('Recording error:', error);
-    }
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-GB';
     
+    recognition.onresult = (event: any) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+      
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+      
+      setContentBlocks(prev => {
+        const lastBlock = prev[prev.length - 1];
+        if (lastBlock && lastBlock.type === 'text') {
+          const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
+          const baseContent = currentContent.replace(/\|\|.*$/, '').trimEnd();
+          let newContent = baseContent;
+          if (finalTranscript) {
+            newContent = baseContent ? baseContent + ' ' + finalTranscript : finalTranscript;
+          }
+          if (interimTranscript) {
+            newContent = newContent + '||' + interimTranscript;
+          }
+          return [...prev.slice(0, -1), { ...lastBlock, content: newContent }];
+        }
+        return prev;
+      });
+    };
+    
+    recognition.onend = () => {
+      if (isRecordingRef.current) {
+        try { recognition.start(); } catch (e) {}
+      }
+    };
+    
+    recognition.start();
     setIsRecording(true);
     isRecordingRef.current = true;
-    setIsPaused(false);
     
     recordingIntervalRef.current = setInterval(() => {
       setRecordingTime(prev => prev + 1);
     }, 1000);
   };
 
-  const pauseRecording = () => {
+  const stopRecording = () => {
     isRecordingRef.current = false;
     
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
-    
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.pause();
-    }
-    
-    // Clean up interim markers
-    setContentBlocks(prev => {
-      const lastBlock = prev[prev.length - 1];
-      if (lastBlock && lastBlock.type === 'text') {
-        const content = (lastBlock as { type: 'text'; id: string; content: string }).content;
-        const cleanContent = content.replace(/\|\|.*$/, '').trimEnd();
-        return [
-          ...prev.slice(0, -1),
-          { ...lastBlock, content: cleanContent }
-        ];
-      }
-      return prev;
-    });
-    
-    setIsPaused(true);
-    setIsRecording(false);
-    if (recordingIntervalRef.current) {
-      clearInterval(recordingIntervalRef.current);
-    }
-  };
-
-  const resumeRecording = () => {
-    isRecordingRef.current = true;
-    
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.start();
-      } catch (e) {
-        console.log('Resume recognition failed:', e);
-      }
-    }
-    
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
-      mediaRecorderRef.current.resume();
-    }
-    
-    setIsPaused(false);
-    setIsRecording(true);
-    recordingIntervalRef.current = setInterval(() => {
-      setRecordingTime(prev => prev + 1);
-    }, 1000);
-  };
-
-  const stopRecording = async () => {
-    isRecordingRef.current = false;
-    
-    // Stop speech recognition
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
     }
     
-    // Stop timer
     if (recordingIntervalRef.current) {
       clearInterval(recordingIntervalRef.current);
     }
     
-    // Clean up interim markers
+    // Clean interim markers
     setContentBlocks(prev => {
       const lastBlock = prev[prev.length - 1];
       if (lastBlock && lastBlock.type === 'text') {
         const content = (lastBlock as { type: 'text'; id: string; content: string }).content;
         const cleanContent = content.replace(/\|\|.*$/, '').trimEnd();
-        return [
-          ...prev.slice(0, -1),
-          { ...lastBlock, content: cleanContent }
-        ];
+        return [...prev.slice(0, -1), { ...lastBlock, content: cleanContent }];
       }
       return prev;
     });
     
-    // Create audio data URL (works on iOS Safari)
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.onstop = async () => {
-        if (audioChunksRef.current.length > 0) {
-          const blob = new Blob(audioChunksRef.current);
-          const dataUrl = await blobToDataUrl(blob);
-          setAudioDataUrl(dataUrl);
-        }
-      };
-      mediaRecorderRef.current.stop();
-    }
-    
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-    }
-    
     setIsRecording(false);
-    setIsPaused(false);
     setRecordingTime(0);
-  };
-
-  const playRecording = () => {
-    if (!audioDataUrl) return;
-    
-    if (audioElementRef.current) {
-      audioElementRef.current.pause();
-      audioElementRef.current = null;
-    }
-    
-    const audio = new Audio(audioDataUrl);
-    audioElementRef.current = audio;
-    
-    audio.onended = () => setIsPlaying(false);
-    audio.onerror = () => setIsPlaying(false);
-    
-    setIsPlaying(true);
-    audio.play().catch(() => setIsPlaying(false));
-  };
-
-  const pausePlayback = () => {
-    if (audioElementRef.current) {
-      audioElementRef.current.pause();
-    }
-    setIsPlaying(false);
+    setIsRecordingModuleOpen(false);
   };
 
   const openRecordingModule = () => {
     setIsRecordingModuleOpen(true);
     setRecordingTime(0);
-    audioChunksRef.current = [];
   };
 
   // Load existing note on mount
@@ -483,11 +320,6 @@ const Note = () => {
               setTitleGenerated(true);
               setNoteDate(new Date(data.created_at));
               existingCreatedAt.current = data.created_at;
-              
-              // Load saved audio - use data URL directly
-              if (data.audio_data) {
-                setAudioDataUrl(data.audio_data);
-              }
             }
           });
       } else {
@@ -502,11 +334,6 @@ const Note = () => {
             setTitleGenerated(true);
             setNoteDate(new Date(existingNote.createdAt));
             existingCreatedAt.current = existingNote.createdAt;
-            
-            // Load saved audio - use data URL directly
-            if (existingNote.audioData) {
-              setAudioDataUrl(existingNote.audioData);
-            }
           }
         }
       }
@@ -623,9 +450,6 @@ const Note = () => {
       return;
     }
 
-    // Audio is already a data URL, use it directly
-    const audioBase64 = audioDataUrl;
-
     const noteData = {
       id: noteIdRef.current,
       title: noteTitle,
@@ -633,7 +457,6 @@ const Note = () => {
       createdAt: existingCreatedAt.current || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       weather: weather ? { temp: weather.temp, weatherCode: weather.weatherCode } : undefined,
-      audioData: audioBase64,
     };
 
     // ALWAYS check auth directly - don't use React state
@@ -648,8 +471,7 @@ const Note = () => {
         content_blocks: noteData.contentBlocks,
         created_at: noteData.createdAt,
         updated_at: noteData.updatedAt,
-        weather: noteData.weather,
-        audio_data: noteData.audioData
+        weather: noteData.weather
       });
       
       if (!error) {
@@ -1346,57 +1168,19 @@ const Note = () => {
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             {/* Buttons */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-              {/* REC/PAUSE Button */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+              {/* REC Button */}
               <button
-                onClick={() => {
-                  if (isRecording) {
-                    pauseRecording();
-                  } else if (isPaused) {
-                    resumeRecording();
-                  } else {
-                    startRecording();
-                  }
-                }}
+                onClick={isRecording ? stopRecording : startRecording}
                 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'none', border: 'none', cursor: 'pointer' }}
               >
                 <img 
-                  src={isRecording ? pauseIcon : recordIcon} 
-                  alt={isRecording ? "Pause" : "Record"} 
+                  src={recordIcon} 
+                  alt="Record" 
                   style={{ width: '44px', height: '44px' }}
                 />
                 <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', fontFamily: 'Outfit', letterSpacing: '0.5px' }}>
-                  {isRecording ? 'PAUSE' : 'REC'}
-                </span>
-              </button>
-              
-              {/* PLAY/PAUSE Button */}
-              <button
-                onClick={() => {
-                  if (isPlaying) {
-                    pausePlayback();
-                  } else {
-                    playRecording();
-                  }
-                }}
-                style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  alignItems: 'center', 
-                  gap: '4px', 
-                  background: 'none', 
-                  border: 'none', 
-                  cursor: audioDataUrl ? 'pointer' : 'default',
-                  opacity: audioDataUrl ? 1 : 0.4
-                }}
-              >
-                <img 
-                  src={isPlaying ? pauseIcon : playIcon} 
-                  alt={isPlaying ? "Pause" : "Play"} 
-                  style={{ width: '44px', height: '44px' }}
-                />
-                <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', fontFamily: 'Outfit', letterSpacing: '0.5px' }}>
-                  {isPlaying ? 'PAUSE' : 'PLAY'}
+                  {isRecording ? 'RECORDING' : 'REC'}
                 </span>
               </button>
               
@@ -1416,7 +1200,7 @@ const Note = () => {
             
             {/* Visual Feedback */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '50px', flex: 1 }}>
-              {isRecording ? (
+              {isRecording && (
                 <>
                   <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar1 0.4s ease-in-out infinite' }} />
                   <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar2 0.4s ease-in-out infinite' }} />
@@ -1427,9 +1211,7 @@ const Note = () => {
                   <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar2 0.4s ease-in-out infinite', animationDelay: '0.1s' }} />
                   <div style={{ width: '6px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar3 0.4s ease-in-out infinite', animationDelay: '0.1s' }} />
                 </>
-              ) : isPaused ? (
-                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', fontFamily: 'Outfit' }}>PAUSED</span>
-              ) : null}
+              )}
             </div>
             
             {/* Timer */}
