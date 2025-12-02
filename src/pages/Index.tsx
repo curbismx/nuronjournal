@@ -989,15 +989,17 @@ const Index = () => {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-white/60 text-[12px] uppercase tracking-wider">Password</Label>
+                    <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
+                      ••••••••
+                    </div>
                     <button
                       onClick={() => {
                         setShowChangePassword(true);
                         setPasswordFormError("");
                       }}
-                      className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px] text-left flex items-center justify-between hover:bg-white/10 transition-colors"
+                      className="text-red-500 hover:text-red-400 text-[14px] transition-colors text-left"
                     >
-                      <span>••••••••</span>
-                      <span className="text-white/40">→</span>
+                      Change Password
                     </button>
                   </div>
                 </div>
