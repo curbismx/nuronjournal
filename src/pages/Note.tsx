@@ -95,6 +95,9 @@ const Note = () => {
   
   // Audio recording state
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioDuration, setAudioDuration] = useState<string>('00:00');
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   
   const [isUploading, setIsUploading] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -1068,6 +1071,84 @@ const Note = () => {
           })}
         </div>
         
+        {/* Audio Recording Player */}
+        {audioUrl && (
+          <div className="px-8 pb-4">
+            <div 
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '12px',
+                backgroundColor: '#E07B6B',
+                borderRadius: '50px',
+                padding: '12px 24px 12px 16px',
+                cursor: 'pointer'
+              }}
+              onClick={() => {
+                if (audioPlayerRef.current) {
+                  if (isPlayingAudio) {
+                    audioPlayerRef.current.pause();
+                    setIsPlayingAudio(false);
+                  } else {
+                    audioPlayerRef.current.play();
+                    setIsPlayingAudio(true);
+                  }
+                }
+              }}
+            >
+              {/* Play/Pause button icon */}
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                border: '2px solid white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                {isPlayingAudio ? (
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <div style={{ width: '4px', height: '14px', backgroundColor: 'white', borderRadius: '1px' }} />
+                    <div style={{ width: '4px', height: '14px', backgroundColor: 'white', borderRadius: '1px' }} />
+                  </div>
+                ) : (
+                  <div style={{
+                    width: 0,
+                    height: 0,
+                    borderLeft: '12px solid white',
+                    borderTop: '7px solid transparent',
+                    borderBottom: '7px solid transparent',
+                    marginLeft: '3px'
+                  }} />
+                )}
+              </div>
+              
+              {/* Duration timestamp */}
+              <span style={{
+                color: 'white',
+                fontSize: '24px',
+                fontFamily: 'Outfit',
+                fontWeight: '400'
+              }}>
+                {audioDuration}
+              </span>
+            </div>
+            
+            {/* Hidden audio element */}
+            <audio 
+              ref={audioPlayerRef}
+              src={audioUrl}
+              onLoadedMetadata={(e) => {
+                const duration = e.currentTarget.duration;
+                const mins = Math.floor(duration / 60);
+                const secs = Math.floor(duration % 60);
+                setAudioDuration(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+              }}
+              onEnded={() => setIsPlayingAudio(false)}
+            />
+          </div>
+        )}
+        
         {/* Spacer */}
         <div className="h-[40px] flex-shrink-0" />
         <div className="h-[1px]" />
@@ -1297,7 +1378,7 @@ const Note = () => {
               </button>
             </div>
             
-            {/* Audio Player */}
+            {/* Visual Feedback */}
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {isUploading ? (
                 <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', fontFamily: 'Outfit' }}>Saving...</span>
@@ -1309,13 +1390,6 @@ const Note = () => {
                   <div style={{ width: '6px', height: '25px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar4 0.4s ease-in-out infinite' }} />
                   <div style={{ width: '6px', height: '18px', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: '3px', animation: 'soundBar5 0.4s ease-in-out infinite' }} />
                 </div>
-              ) : audioUrl ? (
-                <audio 
-                  src={audioUrl} 
-                  controls 
-                  playsInline
-                  style={{ height: '40px', maxWidth: '200px' }}
-                />
               ) : null}
             </div>
             
