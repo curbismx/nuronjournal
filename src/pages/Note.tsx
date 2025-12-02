@@ -1218,8 +1218,8 @@ const Note = () => {
           </div>
         )}
         
-        {/* Spacer */}
-        <div className="h-[40px] flex-shrink-0" />
+        {/* Spacer - enough space to scroll past floating button */}
+        <div className="h-[150px] flex-shrink-0" />
         <div className="h-[1px]" />
         </div>
       </div>
