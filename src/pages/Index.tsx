@@ -456,7 +456,7 @@ const Index = () => {
     if (savedNotes.length > 0) {
       setVisibleMonthYear(new Date(savedNotes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase());
     }
-  }, [savedNotes]);
+  }, [savedNotes, menuOpen]);
 
   // Intersection Observer for dynamic month/year header
   useEffect(() => {
