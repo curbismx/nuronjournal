@@ -103,6 +103,7 @@ const Note = () => {
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const preloadedAudioRef = useRef<HTMLAudioElement | null>(null);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -116,6 +117,16 @@ const Note = () => {
       setUser(session?.user ?? null);
     });
   }, []);
+
+  // Preload audio for iOS Safari compatibility
+  useEffect(() => {
+    if (audioUrl) {
+      const audio = new Audio();
+      audio.src = audioUrl;
+      audio.load();
+      preloadedAudioRef.current = audio;
+    }
+  }, [audioUrl]);
 
   const generateTitle = async (text: string) => {
     try {
@@ -391,22 +402,21 @@ const Note = () => {
   };
 
   const playRecording = () => {
-    console.log('Playing audio from:', audioUrl);
-    if (!audioUrl) return;
+    if (!preloadedAudioRef.current) return;
     
-    const audio = new Audio(audioUrl);
-    audioRef.current = audio;
-    
-    audio.onended = () => setIsPlaying(false);
-    audio.onerror = () => setIsPlaying(false);
+    preloadedAudioRef.current.onended = () => setIsPlaying(false);
+    preloadedAudioRef.current.onerror = () => setIsPlaying(false);
     
     setIsPlaying(true);
-    audio.play().catch(() => setIsPlaying(false));
+    preloadedAudioRef.current.play().catch((err) => {
+      console.error('Play error:', err);
+      setIsPlaying(false);
+    });
   };
 
   const pausePlayback = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
+    if (preloadedAudioRef.current) {
+      preloadedAudioRef.current.pause();
     }
     setIsPlaying(false);
   };
