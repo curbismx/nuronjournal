@@ -102,6 +102,7 @@ const Note = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const mimeTypeRef = useRef<string>('');
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -300,16 +301,33 @@ const Note = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
-      let mimeType = '';
-      if (MediaRecorder.isTypeSupported('audio/mp4')) {
-        mimeType = 'audio/mp4';
-      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
-        mimeType = 'audio/webm';
+      // Detect supported mime type - iPhone Safari prefers audio/webm;codecs=opus
+      let selectedMimeType = '';
+      const supportedTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/mpeg',
+        'audio/wav'
+      ];
+      
+      for (const type of supportedTypes) {
+        if (MediaRecorder.isTypeSupported(type)) {
+          selectedMimeType = type;
+          break;
+        }
       }
       
-      const mediaRecorder = mimeType 
-        ? new MediaRecorder(stream, { mimeType })
+      console.log('Using mime type:', selectedMimeType);
+      
+      const mediaRecorder = selectedMimeType 
+        ? new MediaRecorder(stream, { mimeType: selectedMimeType })
         : new MediaRecorder(stream);
+      
+      // Store the actual mime type being used
+      mimeTypeRef.current = mediaRecorder.mimeType || selectedMimeType || 'audio/webm';
+      console.log('Actual mime type:', mimeTypeRef.current);
+      
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
       
@@ -319,7 +337,7 @@ const Note = () => {
         }
       };
       
-      mediaRecorder.start();
+      mediaRecorder.start(1000); // Collect data every second
     } catch (error) {
       console.error('Error starting audio recording:', error);
     }
@@ -415,15 +433,19 @@ const Note = () => {
       return prev;
     });
     
-    // Stop audio recording and create URL
+    // Stop audio recording and create blob with correct mime type
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       await new Promise<void>((resolve) => {
         mediaRecorderRef.current!.onstop = () => {
-          const mimeType = mediaRecorderRef.current?.mimeType || 'audio/mp4';
-          const blob = new Blob(audioChunksRef.current, { type: mimeType });
+          console.log('Recording stopped, chunks:', audioChunksRef.current.length);
+          console.log('Using mime type for blob:', mimeTypeRef.current);
+          
+          const blob = new Blob(audioChunksRef.current, { type: mimeTypeRef.current });
+          console.log('Blob created, size:', blob.size, 'type:', blob.type);
+          
           const url = URL.createObjectURL(blob);
-          console.log('Audio blob created:', blob.size, 'bytes');
-          console.log('Audio URL:', url);
+          console.log('URL created:', url);
+          
           setAudioUrl(url);
           resolve();
         };
@@ -444,33 +466,19 @@ const Note = () => {
 
   const playRecording = () => {
     console.log('Play clicked, audioUrl:', audioUrl);
+    if (!audioUrl) return;
     
-    if (!audioUrl) {
-      console.log('No audio URL');
-      return;
-    }
+    const audio = new Audio();
+    audio.src = audioUrl;
     
-    const audio = new Audio(audioUrl);
-    audioRef.current = audio;
-    
-    audio.onplay = () => {
-      console.log('Audio started playing');
-      setIsPlaying(true);
-    };
-    
-    audio.onended = () => {
-      console.log('Audio ended');
-      setIsPlaying(false);
-    };
-    
+    audio.onplay = () => setIsPlaying(true);
+    audio.onended = () => setIsPlaying(false);
     audio.onerror = (e) => {
       console.error('Audio error:', e);
       setIsPlaying(false);
     };
     
-    audio.play().catch(err => {
-      console.error('Play failed:', err);
-    });
+    audio.play().catch(err => console.error('Play failed:', err));
   };
 
   const pausePlayback = () => {
