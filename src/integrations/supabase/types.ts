@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       notes: {
         Row: {
+          audio_data: string | null
           content_blocks: Json
           created_at: string
           id: string
@@ -25,6 +26,7 @@ export type Database = {
           weather: Json | null
         }
         Insert: {
+          audio_data?: string | null
           content_blocks?: Json
           created_at?: string
           id?: string
@@ -34,6 +36,7 @@ export type Database = {
           weather?: Json | null
         }
         Update: {
+          audio_data?: string | null
           content_blocks?: Json
           created_at?: string
           id?: string
