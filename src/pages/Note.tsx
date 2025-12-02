@@ -75,6 +75,8 @@ const Note = () => {
   // Recording state (speech-to-text + audio recording)
   const [isRecordingOpen, setIsRecordingOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const recognitionRef = useRef<any>(null);
   const isRecordingRef = useRef(false);
@@ -315,6 +317,11 @@ const Note = () => {
     setIsRecording(true);
     isRecordingRef.current = true;
     setIsPaused(false);
+    
+    // Start timer
+    recordingIntervalRef.current = setInterval(() => {
+      setRecordingTime(prev => prev + 1);
+    }, 1000);
   };
 
   const pauseRecording = () => {
@@ -323,6 +330,9 @@ const Note = () => {
     }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.pause();
+    }
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current);
     }
     setIsPaused(true);
     isRecordingRef.current = false;
@@ -335,6 +345,9 @@ const Note = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
       mediaRecorderRef.current.resume();
     }
+    recordingIntervalRef.current = setInterval(() => {
+      setRecordingTime(prev => prev + 1);
+    }, 1000);
     setIsPaused(false);
     isRecordingRef.current = true;
   };
@@ -380,9 +393,19 @@ const Note = () => {
       streamRef.current.getTracks().forEach(track => track.stop());
     }
     
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current);
+    }
+    setRecordingTime(0);
     setIsRecording(false);
     setIsPaused(false);
     setIsRecordingOpen(false);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const openRecorder = () => {
@@ -1336,17 +1359,18 @@ const Note = () => {
       {!isRecordingOpen ? (
         <button
           onClick={openRecorder}
-          className="fixed bottom-[30px] right-[30px] z-50 w-[70px] h-[70px] rounded-full flex items-center justify-center"
+          className="fixed bottom-[30px] right-[30px] z-50 w-[51px] h-[51px] rounded-[12px] flex items-center justify-center"
           style={{ 
             backgroundColor: '#E57373',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
           }}
         >
-          <svg width="30" height="30" viewBox="0 0 100 100">
+          {/* Small waveform icon */}
+          <svg width="24" height="24" viewBox="0 0 100 100">
             <path
               d="M 20,50 Q 35,30 50,50 T 80,50"
               stroke="white"
-              strokeWidth="6"
+              strokeWidth="8"
               strokeLinecap="round"
               fill="none"
             />
@@ -1360,41 +1384,64 @@ const Note = () => {
             onClick={stopRecording}
           />
           
-          {/* Expanded Recording Circle */}
-          <button
-            onClick={handleRecorderTap}
-            className="fixed bottom-[20px] right-[20px] z-50 w-[90px] h-[90px] rounded-full flex items-center justify-center transition-all duration-300"
-            style={{ 
-              backgroundColor: '#E57373',
-              boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
-              animation: isPaused ? 'none' : 'pulse 1.5s ease-in-out infinite'
+          {/* Teardrop Recording Button */}
+          <div
+            className="fixed z-50"
+            style={{
+              bottom: '20px',
+              right: '20px',
+              width: '80px',
+              height: '95px',
+              animation: 'growIn 0.3s ease-out'
             }}
           >
-            <svg width="50" height="50" viewBox="0 0 100 100">
-              {isPaused ? (
-                /* Paused - show static wave */
-                <path
-                  d="M 15,50 Q 30,50 40,50 T 85,50"
-                  stroke="white"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  fill="none"
-                />
-              ) : (
-                /* Recording - animated wave */
-                <path
-                  d="M 10,50 Q 20,25 30,50 T 50,50 T 70,50 T 90,50"
-                  stroke="white"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  fill="none"
-                  style={{
-                    animation: 'waveform 0.8s ease-in-out infinite'
-                  }}
-                />
-              )}
+            {/* Teardrop SVG shape */}
+            <svg 
+              width="80" 
+              height="95" 
+              viewBox="0 0 80 95"
+              style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))' }}
+            >
+              <path
+                d="M 40,95 
+                   C 18,95 0,77 0,55 
+                   L 0,40 
+                   C 0,18 18,0 40,0 
+                   C 62,0 80,18 80,40 
+                   L 80,55 
+                   C 80,77 62,95 40,95 Z"
+                fill="#E57373"
+              />
             </svg>
-          </button>
+            
+            {/* White center circle */}
+            <button
+              onClick={handleRecorderTap}
+              className="absolute rounded-full flex items-center justify-center"
+              style={{
+                width: '52px',
+                height: '52px',
+                backgroundColor: '#FAF9F6',
+                top: '50%',
+                left: '50%',
+                marginTop: '-8px',
+                animation: isPaused ? 'none' : 'centerPulse 1.2s ease-in-out infinite',
+                transform: 'translate(-50%, -50%)'
+              }}
+            >
+              {/* Timer */}
+              <span 
+                style={{ 
+                  color: '#E57373', 
+                  fontSize: '16px', 
+                  fontFamily: 'Outfit',
+                  fontWeight: '500'
+                }}
+              >
+                {formatTime(recordingTime)}
+              </span>
+            </button>
+          </div>
         </>
       )}
 
