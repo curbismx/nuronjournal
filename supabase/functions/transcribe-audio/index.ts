@@ -36,6 +36,50 @@ function processBase64Chunks(base64String: string, chunkSize = 32768): Uint8Arra
   return result;
 }
 
+async function transcribeWithRetry(formData: FormData, apiKey: string, maxRetries = 3): Promise<Response> {
+  let lastError: string = '';
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: formData,
+    });
+
+    if (response.ok) {
+      return response;
+    }
+
+    const errorText = await response.text();
+    console.error(`OpenAI API error (attempt ${attempt + 1}):`, response.status, errorText);
+
+    // Check if it's a rate limit error
+    if (response.status === 429) {
+      // Parse retry-after or use exponential backoff
+      const retryAfter = response.headers.get('retry-after');
+      const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : Math.min(1000 * Math.pow(2, attempt + 1), 30000);
+      console.log(`Rate limited. Waiting ${waitTime}ms before retry...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+      lastError = errorText;
+      continue;
+    }
+
+    // For non-rate-limit errors, don't retry
+    return new Response(
+      JSON.stringify({ error: `OpenAI API error: ${errorText}` }),
+      { status: response.status, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // All retries exhausted
+  return new Response(
+    JSON.stringify({ error: `Rate limit exceeded after ${maxRetries} retries. Please wait a moment and try again.` }),
+    { status: 429, headers: { 'Content-Type': 'application/json' } }
+  );
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -76,22 +120,16 @@ serve(async (req) => {
 
     console.log('Sending to OpenAI Whisper API...');
 
-    // Send to OpenAI
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-      },
-      body: formData,
-    });
+    // Send to OpenAI with retry logic
+    const response = await transcribeWithRetry(formData, openAIApiKey);
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
-      return new Response(
-        JSON.stringify({ error: `OpenAI API error: ${errorText}` }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      // Response already formatted by transcribeWithRetry
+      const errorBody = await response.text();
+      return new Response(errorBody, { 
+        status: response.status, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      });
     }
 
     const result = await response.json();
