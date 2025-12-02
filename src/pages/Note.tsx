@@ -76,6 +76,7 @@ const Note = () => {
   const activeTextBlockRef = useRef<{ id: string; cursorPosition: number } | null>(null);
   const isDeletedRef = useRef(false);
   const existingCreatedAt = useRef<string | null>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -393,6 +394,12 @@ const Note = () => {
     navigate('/');
   };
 
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = new Date(e.target.value + 'T12:00:00');
+    setNoteDate(newDate);
+    existingCreatedAt.current = newDate.toISOString();
+  };
+
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -691,7 +698,10 @@ const Note = () => {
         <div style={{ minHeight: 'calc(100% + 1px)' }}>
           {/* Date and weather */}
           <div className="px-8 pt-[12px] pb-2">
-          <div className="flex items-start gap-4 mb-4">
+          <div 
+            className="flex items-start gap-4 mb-4 cursor-pointer"
+            onClick={() => dateInputRef.current?.showPicker()}
+          >
             <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">{dayNumber}</div>
             <div className="flex flex-col">
               <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">{dayName}</div>
@@ -703,6 +713,14 @@ const Note = () => {
               )}
             </div>
           </div>
+
+          <input
+            ref={dateInputRef}
+            type="date"
+            value={noteDate.toISOString().split('T')[0]}
+            onChange={handleDateChange}
+            className="sr-only"
+          />
 
           {/* Title */}
           <input
