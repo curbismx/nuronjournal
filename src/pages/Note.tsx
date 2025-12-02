@@ -306,13 +306,13 @@ const Note = () => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
       
-      // Send chunks every 3 seconds for transcription
+      // Send chunks every 25 seconds for transcription (OpenAI rate limit: 3 requests/min)
       chunkIntervalRef.current = setInterval(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
           mediaRecorderRef.current.stop();
           mediaRecorderRef.current.start();
         }
-      }, 3000);
+      }, 25000);
       
     } catch (error) {
       console.error('Error starting recording:', error);
