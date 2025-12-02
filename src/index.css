@@ -119,3 +119,28 @@ All colors MUST be HSL.
 .ai-rewriting {
   animation: ai-glow 1.5s ease-in-out infinite;
 }
+
+@keyframes soundBar1 {
+  0%, 100% { height: 8px; }
+  50% { height: 24px; }
+}
+
+@keyframes soundBar2 {
+  0%, 100% { height: 24px; }
+  50% { height: 12px; }
+}
+
+@keyframes soundBar3 {
+  0%, 100% { height: 16px; }
+  50% { height: 32px; }
+}
+
+@keyframes soundBar4 {
+  0%, 100% { height: 20px; }
+  50% { height: 8px; }
+}
+
+@keyframes soundBar5 {
+  0%, 100% { height: 12px; }
+  50% { height: 28px; }
+}
