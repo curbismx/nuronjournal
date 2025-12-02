@@ -1137,8 +1137,10 @@ const Note = () => {
                       className="w-full h-full text-white drop-shadow-md"
                       fill="currentColor"
                     >
-                      <path d="M22 22H6L22 6V22Z" fillOpacity="0.8"/>
-                      <path d="M22 22H6L22 6V22Z" stroke="rgba(0,0,0,0.2)" strokeWidth="1" fill="none"/>
+                      <path 
+                        d="M20 6 L22 6 L22 8 L22 20 C22 21.1 21.1 22 20 22 L8 22 C6.9 22 6.5 20.5 7.5 19.5 L19.5 7.5 C20.5 6.5 20 6 20 6 Z" 
+                        fillOpacity="0.8"
+                      />
                     </svg>
                   </div>
                 </div>
