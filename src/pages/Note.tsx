@@ -102,6 +102,9 @@ const Note = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const audioPlaybackRef = useRef<HTMLAudioElement | null>(null);
   const mimeTypeRef = useRef<string>('audio/webm');
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const [audioLevels, setAudioLevels] = useState<number[]>([0, 0, 0, 0, 0, 0, 0, 0]);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -276,6 +279,29 @@ const Note = () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
+
+      // Set up audio analyser for visualizer
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
+      const analyser = audioContext.createAnalyser();
+      analyserRef.current = analyser;
+      analyser.fftSize = 32;
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+
+      // Start visualizer update loop
+      const updateLevels = () => {
+        if (analyserRef.current) {
+          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+          analyserRef.current.getByteFrequencyData(dataArray);
+          const levels = Array.from(dataArray.slice(0, 8)).map(v => v / 255);
+          setAudioLevels(levels);
+        }
+        if (streamRef.current && streamRef.current.active) {
+          requestAnimationFrame(updateLevels);
+        }
+      };
+      updateLevels();
       
       const mediaRecorder = new MediaRecorder(stream);
       mimeTypeRef.current = mediaRecorder.mimeType;
@@ -355,6 +381,12 @@ const Note = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
     }
+
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    setAudioLevels([0, 0, 0, 0, 0, 0, 0, 0]);
     
     if (recordingIntervalRef.current) {
       clearInterval(recordingIntervalRef.current);
@@ -1233,12 +1265,19 @@ const Note = () => {
       {/* Recording Module */}
       {isRecordingModuleOpen && (
         <div 
-          className="fixed bottom-[30px] left-[30px] right-[30px] z-50 rounded-[20px] px-6 py-5 flex items-center justify-between"
+          className="fixed bottom-[30px] left-[30px] right-[30px] z-50 rounded-[20px] px-6 py-5 flex items-center justify-between relative"
           style={{ 
             backgroundColor: '#E57373',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
           }}
         >
+          {/* Close X button */}
+          <button
+            onClick={stopRecording}
+            className="absolute top-2 right-3 text-white/50 hover:text-white/80 text-[18px] font-light"
+          >
+            ×
+          </button>
           {/* Buttons */}
           <div className="flex items-center gap-6">
             {/* REC/PAUSE Button */}
@@ -1301,40 +1340,37 @@ const Note = () => {
             </button>
           </div>
           
-          {/* Visual Feedback - Pulsing Dots */}
-          <div className="flex items-center gap-2">
-            {isRecording && (
-              <>
-                <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
-                <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{ animationDelay: '450ms' }} />
-                <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse" style={{ animationDelay: '600ms' }} />
-              </>
-            )}
-            {isPaused && !isRecording && (
+          {/* Visual Feedback - Audio Waveform Bars */}
+          <div className="flex items-center gap-[3px] h-[40px]">
+            {isRecording ? (
+              audioLevels.map((level, i) => (
+                <div
+                  key={i}
+                  className="w-[4px] bg-white/70 rounded-full transition-all duration-75"
+                  style={{ 
+                    height: `${Math.max(4, level * 36)}px`,
+                  }}
+                />
+              ))
+            ) : isPaused ? (
               <span className="text-white/60 text-[14px] font-outfit">PAUSED</span>
+            ) : (
+              audioLevels.map((_, i) => (
+                <div
+                  key={i}
+                  className="w-[4px] h-[4px] bg-white/30 rounded-full"
+                />
+              ))
             )}
           </div>
           
           {/* Timer */}
-          <div className="text-white text-[28px] font-outfit font-light tracking-wide">
+          <div className="text-white text-[20px] font-outfit font-light tracking-wide">
             {formatTime(recordingTime)}
           </div>
         </div>
       )}
 
-      {/* Transcribing indicator */}
-      {isTranscribing && (
-        <div className="fixed bottom-[120px] left-1/2 -translate-x-1/2 z-50 bg-black/70 text-white px-4 py-2 rounded-full flex items-center gap-2">
-          <div className="flex gap-1">
-            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-          </div>
-          <span className="text-[14px] font-outfit">Transcribing...</span>
-        </div>
-      )}
 
       {/* Delete confirmation dialog */}
       {showDeleteConfirm && (
