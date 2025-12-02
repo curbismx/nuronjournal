@@ -1373,7 +1373,7 @@ const Note = () => {
           onClick={openRecorder}
           className="fixed bottom-[30px] right-[30px] z-50"
         >
-          <img src={recorderTeardrop} alt="Record" className="w-[51px] h-[51px]" />
+          <img src={themeRecordIcons[theme]} alt="Record" className="w-[51px] h-[51px]" />
         </button>
       ) : (
         <>
@@ -1390,45 +1390,25 @@ const Note = () => {
               bottom: '20px',
               right: '20px',
               width: '80px',
-              height: '95px',
+              height: '80px',
               animation: 'growIn 0.3s ease-out'
             }}
           >
-            {/* Teardrop SVG shape */}
-            <svg 
-              width="80" 
-              height="95" 
-              viewBox="0 0 80 95"
-              style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))' }}
-            >
-              <path
-                d="M 40,95 
-                   C 18,95 0,77 0,55 
-                   L 0,40 
-                   C 0,18 18,0 40,0 
-                   C 62,0 80,18 80,40 
-                   L 80,55 
-                   C 80,77 62,95 40,95 Z"
-                fill="#E57373"
-              />
-            </svg>
+            <img 
+              src={recorderTeardrop} 
+              alt="Recording" 
+              className="w-[80px] h-[80px]"
+              style={{ 
+                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))',
+                animation: isPaused ? 'none' : 'pulse 1.5s ease-in-out infinite'
+              }}
+            />
             
-            {/* White center circle */}
+            {/* Timer overlay */}
             <button
               onClick={handleRecorderTap}
-              className="absolute rounded-full flex items-center justify-center"
-              style={{
-                width: '52px',
-                height: '52px',
-                backgroundColor: '#FAF9F6',
-                top: '50%',
-                left: '50%',
-                marginTop: '-8px',
-                animation: isPaused ? 'none' : 'centerPulse 1.2s ease-in-out infinite',
-                transform: 'translate(-50%, -50%)'
-              }}
+              className="absolute inset-0 flex items-center justify-center"
             >
-              {/* Timer */}
               <span 
                 style={{ 
                   color: '#E57373', 
