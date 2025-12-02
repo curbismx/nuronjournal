@@ -997,7 +997,7 @@ const Index = () => {
                         setShowChangePassword(true);
                         setPasswordFormError("");
                       }}
-                      className="text-red-500 hover:text-red-400 text-[14px] transition-colors text-left"
+                      className="text-red-500 hover:text-red-400 text-[14px] transition-colors text-left mt-[8px]"
                     >
                       Change Password
                     </button>
