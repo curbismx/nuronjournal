@@ -27,6 +27,7 @@ import recordIconRed from "@/assets/01noterecord_red.png";
 import recordIconGreen from "@/assets/01noterecord_green.png";
 import recordIconBlue from "@/assets/01noterecord_blue.png";
 import recordIconPink from "@/assets/01noterecord_pink.png";
+import recorderTeardrop from "@/assets/recorder-teardrop.png";
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 type ContentBlock = 
@@ -1371,11 +1372,8 @@ const Note = () => {
         <button
           onClick={openRecorder}
           className="fixed bottom-[30px] right-[30px] z-50"
-          style={{ 
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-          }}
         >
-          <img src={themeRecordIcons[theme]} alt="Record" className="w-[51px] h-[51px]" />
+          <img src={recorderTeardrop} alt="Record" className="w-[51px] h-[51px]" />
         </button>
       ) : (
         <>
