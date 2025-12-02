@@ -23,6 +23,7 @@ import newPlusIcon from '@/assets/00plus-3.png';
 import plusIconGreen from "@/assets/00plus_green.png";
 import plusIconBlue from "@/assets/00plus_blue.png";
 import plusIconPink from "@/assets/00plus_pink.png";
+import recordIcon from "@/assets/01noterecord_red-2.png";
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 type ContentBlock = 
@@ -1359,22 +1360,12 @@ const Note = () => {
       {!isRecordingOpen ? (
         <button
           onClick={openRecorder}
-          className="fixed bottom-[30px] right-[30px] z-50 w-[51px] h-[51px] rounded-[12px] flex items-center justify-center"
+          className="fixed bottom-[30px] right-[30px] z-50"
           style={{ 
-            backgroundColor: '#E57373',
             boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
           }}
         >
-          {/* Small waveform icon */}
-          <svg width="24" height="24" viewBox="0 0 100 100">
-            <path
-              d="M 20,50 Q 35,30 50,50 T 80,50"
-              stroke="white"
-              strokeWidth="8"
-              strokeLinecap="round"
-              fill="none"
-            />
-          </svg>
+          <img src={recordIcon} alt="Record" className="w-[51px] h-[51px]" />
         </button>
       ) : (
         <>
