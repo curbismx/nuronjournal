@@ -10,6 +10,7 @@ interface SavedNote {
   createdAt: string;
   updatedAt: string;
   weather?: { temp: number; weatherCode: number };
+  audioData?: string | null;
 }
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -100,6 +101,7 @@ const Note = () => {
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const audioPlaybackRef = useRef<HTMLAudioElement | null>(null);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -216,6 +218,27 @@ const Note = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const base64ToBlob = (base64: string): Blob => {
+    const parts = base64.split(';base64,');
+    const contentType = parts[0].split(':')[1];
+    const raw = window.atob(parts[1]);
+    const rawLength = raw.length;
+    const uInt8Array = new Uint8Array(rawLength);
+    for (let i = 0; i < rawLength; ++i) {
+      uInt8Array[i] = raw.charCodeAt(i);
+    }
+    return new Blob([uInt8Array], { type: contentType });
+  };
+
 
   const startRecording = async () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -241,9 +264,19 @@ const Note = () => {
       };
       
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType });
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
+        const newBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType });
+        
+        // If there's existing audio, combine them
+        setAudioBlob(prevBlob => {
+          if (prevBlob) {
+            const combinedBlob = new Blob([prevBlob, newBlob], { type: newBlob.type });
+            setAudioUrl(URL.createObjectURL(combinedBlob));
+            return combinedBlob;
+          } else {
+            setAudioUrl(URL.createObjectURL(newBlob));
+            return newBlob;
+          }
+        });
       };
       
       mediaRecorder.start();
@@ -450,6 +483,7 @@ const Note = () => {
   const openRecordingModule = () => {
     setIsRecordingModuleOpen(true);
     setRecordingTime(0);
+    audioChunksRef.current = [];
   };
 
   // Load existing note on mount
@@ -471,6 +505,13 @@ const Note = () => {
               setTitleGenerated(true);
               setNoteDate(new Date(data.created_at));
               existingCreatedAt.current = data.created_at;
+              
+              // Load saved audio
+              if (data.audio_data) {
+                const blob = base64ToBlob(data.audio_data);
+                setAudioBlob(blob);
+                setAudioUrl(URL.createObjectURL(blob));
+              }
             }
           });
       } else {
@@ -485,6 +526,13 @@ const Note = () => {
             setTitleGenerated(true);
             setNoteDate(new Date(existingNote.createdAt));
             existingCreatedAt.current = existingNote.createdAt;
+            
+            // Load saved audio
+            if (existingNote.audioData) {
+              const blob = base64ToBlob(existingNote.audioData);
+              setAudioBlob(blob);
+              setAudioUrl(URL.createObjectURL(blob));
+            }
           }
         }
       }
@@ -600,6 +648,9 @@ const Note = () => {
       return;
     }
 
+    // Convert audio blob to base64 for storage
+    const audioBase64 = audioBlob ? await blobToBase64(audioBlob) : null;
+
     const noteData = {
       id: noteIdRef.current,
       title: noteTitle,
@@ -607,6 +658,7 @@ const Note = () => {
       createdAt: existingCreatedAt.current || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       weather: weather ? { temp: weather.temp, weatherCode: weather.weatherCode } : undefined,
+      audioData: audioBase64,
     };
 
     // ALWAYS check auth directly - don't use React state
@@ -621,7 +673,8 @@ const Note = () => {
         content_blocks: noteData.contentBlocks,
         created_at: noteData.createdAt,
         updated_at: noteData.updatedAt,
-        weather: noteData.weather
+        weather: noteData.weather,
+        audio_data: noteData.audioData
       });
       
       if (!error) {
