@@ -1073,15 +1073,16 @@ const Note = () => {
         
         {/* Audio Recording Player */}
         {audioUrl && (
-          <div className="px-8 pb-4">
+          <div className="px-8 mt-6">
             <div 
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '12px',
+                gap: '8px',
                 backgroundColor: '#E07B6B',
                 borderRadius: '50px',
-                padding: '12px 24px 12px 16px',
+                padding: '0 16px 0 4px',
+                height: '21px',
                 cursor: 'pointer'
               }}
               onClick={() => {
@@ -1098,27 +1099,27 @@ const Note = () => {
             >
               {/* Play/Pause button icon */}
               <div style={{
-                width: '36px',
-                height: '36px',
+                width: '15px',
+                height: '15px',
                 borderRadius: '50%',
-                border: '2px solid white',
+                border: '1.5px solid white',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
                 {isPlayingAudio ? (
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    <div style={{ width: '4px', height: '14px', backgroundColor: 'white', borderRadius: '1px' }} />
-                    <div style={{ width: '4px', height: '14px', backgroundColor: 'white', borderRadius: '1px' }} />
+                  <div style={{ display: 'flex', gap: '2px' }}>
+                    <div style={{ width: '2px', height: '6px', backgroundColor: 'white', borderRadius: '1px' }} />
+                    <div style={{ width: '2px', height: '6px', backgroundColor: 'white', borderRadius: '1px' }} />
                   </div>
                 ) : (
                   <div style={{
                     width: 0,
                     height: 0,
-                    borderLeft: '12px solid white',
-                    borderTop: '7px solid transparent',
-                    borderBottom: '7px solid transparent',
-                    marginLeft: '3px'
+                    borderLeft: '5px solid white',
+                    borderTop: '3px solid transparent',
+                    borderBottom: '3px solid transparent',
+                    marginLeft: '1px'
                   }} />
                 )}
               </div>
@@ -1126,7 +1127,7 @@ const Note = () => {
               {/* Duration timestamp */}
               <span style={{
                 color: 'white',
-                fontSize: '24px',
+                fontSize: '12px',
                 fontFamily: 'Outfit',
                 fontWeight: '400'
               }}>
