@@ -25,7 +25,7 @@ import plusIconBlue from "@/assets/00plus_blue.png";
 import plusIconPink from "@/assets/00plus_pink.png";
 import recordIcon from '@/assets/01record.png';
 import pauseIcon from '@/assets/01pause.png';
-import playIcon from '@/assets/01play.png';
+
 import stopIcon from '@/assets/01stop.png';
 import noteRecordRed from '@/assets/01noterecord_red.png';
 import noteRecordGreen from '@/assets/01noterecord_green.png';
@@ -93,18 +93,8 @@ const Note = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [isTranscribing, setIsTranscribing] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const fullAudioChunksRef = useRef<Blob[]>([]);
   const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const chunkIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const audioPlaybackRef = useRef<HTMLAudioElement | null>(null);
-  const mimeTypeRef = useRef<string>('audio/webm');
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const [audioLevels, setAudioLevels] = useState<number[]>([0, 0, 0, 0, 0, 0, 0, 0]);
+  const recognitionRef = useRef<any>(null);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -220,36 +210,39 @@ const Note = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const transcribeAudio = async (audioBlob: Blob) => {
-    setIsTranscribing(true);
-    try {
-      // Convert blob to base64
-      const arrayBuffer = await audioBlob.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      let binary = '';
-      for (let i = 0; i < uint8Array.length; i++) {
-        binary += String.fromCharCode(uint8Array[i]);
+
+  const startRecording = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      console.error('Speech recognition not supported');
+      return;
+    }
+    
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-GB';
+    
+    recognition.onresult = (event: any) => {
+      let finalTranscript = '';
+      
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript + ' ';
+        }
       }
-      const base64Audio = btoa(binary);
-
-      const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-        body: { audio: base64Audio }
-      });
-
-      if (error) {
-        console.error('Transcription error:', error);
-        return;
-      }
-
-      if (data?.text && data.text.trim()) {
-        // Add transcribed text to note
+      
+      if (finalTranscript) {
         setContentBlocks(prev => {
           const lastBlock = prev[prev.length - 1];
           if (lastBlock && lastBlock.type === 'text') {
             const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
             const newContent = currentContent 
-              ? currentContent + ' ' + data.text.trim()
-              : data.text.trim();
+              ? currentContent + finalTranscript
+              : finalTranscript;
             return [
               ...prev.slice(0, -1),
               { ...lastBlock, content: newContent }
@@ -257,136 +250,57 @@ const Note = () => {
           }
           return prev;
         });
-        
-        // Resize textarea after content updates
-        setTimeout(() => {
-          const textareas = document.querySelectorAll('.note-textarea');
-          textareas.forEach((textarea) => {
-            const el = textarea as HTMLTextAreaElement;
-            el.style.height = 'auto';
-            el.style.height = Math.max(24, el.scrollHeight) + 'px';
-          });
-        }, 50);
       }
-    } catch (error) {
-      console.error('Transcription error:', error);
-    } finally {
-      setIsTranscribing(false);
-    }
-  };
-
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-
-      // Set up audio analyser for visualizer
-      const audioContext = new AudioContext();
-      audioContextRef.current = audioContext;
-      const analyser = audioContext.createAnalyser();
-      analyserRef.current = analyser;
-      analyser.fftSize = 32;
-      const source = audioContext.createMediaStreamSource(stream);
-      source.connect(analyser);
-
-      // Start visualizer update loop
-      const updateLevels = () => {
-        if (analyserRef.current) {
-          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-          analyserRef.current.getByteFrequencyData(dataArray);
-          const levels = Array.from(dataArray.slice(0, 8)).map(v => v / 255);
-          setAudioLevels(levels);
-        }
-        if (streamRef.current && streamRef.current.active) {
-          requestAnimationFrame(updateLevels);
-        }
-      };
-      updateLevels();
-      
-      const mediaRecorder = new MediaRecorder(stream);
-      mimeTypeRef.current = mediaRecorder.mimeType;
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-      
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-          fullAudioChunksRef.current.push(event.data);
-        }
-      };
-      
-      mediaRecorder.onstop = async () => {
-        if (audioChunksRef.current.length > 0) {
-          const audioBlob = new Blob(audioChunksRef.current, { type: mimeTypeRef.current });
-          await transcribeAudio(audioBlob);
-          audioChunksRef.current = [];
-        }
-      };
-      
-      mediaRecorder.start();
-      setIsRecording(true);
-      setIsPaused(false);
-      
-      // Start timer
-      recordingIntervalRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
-      
-      // Send chunks every 25 seconds for transcription (OpenAI rate limit: 3 requests/min)
-      chunkIntervalRef.current = setInterval(() => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-          mediaRecorderRef.current.stop();
-          mediaRecorderRef.current.start();
-        }
-      }, 25000);
-      
-    } catch (error) {
-      console.error('Error starting recording:', error);
-    }
+    };
+    
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+    };
+    
+    recognition.onend = () => {
+      // Restart if still recording (handles auto-stop)
+      if (isRecording && !isPaused) {
+        recognition.start();
+      }
+    };
+    
+    recognition.start();
+    setIsRecording(true);
+    setIsPaused(false);
+    
+    // Start timer
+    recordingIntervalRef.current = setInterval(() => {
+      setRecordingTime(prev => prev + 1);
+    }, 1000);
   };
 
   const pauseRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.pause();
-      setIsPaused(true);
-      setIsRecording(false);
-      if (recordingIntervalRef.current) {
-        clearInterval(recordingIntervalRef.current);
-      }
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    setIsPaused(true);
+    setIsRecording(false);
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current);
     }
   };
 
   const resumeRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
-      mediaRecorderRef.current.resume();
-      setIsPaused(false);
-      setIsRecording(true);
-      recordingIntervalRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
+    if (recognitionRef.current) {
+      recognitionRef.current.start();
     }
+    setIsPaused(false);
+    setIsRecording(true);
+    recordingIntervalRef.current = setInterval(() => {
+      setRecordingTime(prev => prev + 1);
+    }, 1000);
   };
 
   const stopRecording = () => {
-    if (chunkIntervalRef.current) {
-      clearInterval(chunkIntervalRef.current);
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
     }
-    
-    if (mediaRecorderRef.current) {
-      if (mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
-      }
-    }
-    
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-    }
-
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-    setAudioLevels([0, 0, 0, 0, 0, 0, 0, 0]);
     
     if (recordingIntervalRef.current) {
       clearInterval(recordingIntervalRef.current);
@@ -397,36 +311,11 @@ const Note = () => {
     setIsPlaying(false);
     setRecordingTime(0);
     setIsRecordingModuleOpen(false);
-    fullAudioChunksRef.current = [];
-  };
-
-  const playRecording = () => {
-    if (fullAudioChunksRef.current.length > 0) {
-      const audioBlob = new Blob(fullAudioChunksRef.current, { type: mimeTypeRef.current });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      audioPlaybackRef.current = audio;
-      
-      audio.onended = () => {
-        setIsPlaying(false);
-      };
-      
-      audio.play();
-      setIsPlaying(true);
-    }
-  };
-
-  const pausePlayback = () => {
-    if (audioPlaybackRef.current) {
-      audioPlaybackRef.current.pause();
-      setIsPlaying(false);
-    }
   };
 
   const openRecordingModule = () => {
     setIsRecordingModuleOpen(true);
     setRecordingTime(0);
-    fullAudioChunksRef.current = [];
   };
 
   // Load existing note on mount
@@ -1319,27 +1208,6 @@ const Note = () => {
                 </span>
               </button>
               
-              {/* PLAY Button */}
-              <button
-                onClick={() => {
-                  if (isPlaying) {
-                    pausePlayback();
-                  } else {
-                    playRecording();
-                  }
-                }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'none', border: 'none', cursor: 'pointer', opacity: fullAudioChunksRef.current.length === 0 && !isPlaying ? 0.5 : 1 }}
-              >
-                <img 
-                  src={isPlaying ? pauseIcon : playIcon} 
-                  alt={isPlaying ? "Pause" : "Play"} 
-                  style={{ width: '44px', height: '44px' }}
-                />
-                <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', fontFamily: 'Outfit', letterSpacing: '0.5px' }}>
-                  {isPlaying ? 'PAUSE' : 'PLAY'}
-                </span>
-              </button>
-              
               {/* STOP Button */}
               <button
                 onClick={stopRecording}
@@ -1354,30 +1222,16 @@ const Note = () => {
               </button>
             </div>
             
-            {/* Visual Feedback - Audio Waveform Bars */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', height: '40px' }}>
+            {/* Visual Feedback */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               {isRecording ? (
-                audioLevels.map((level, i) => (
-                  <div
-                    key={i}
-                    style={{ 
-                      width: '4px', 
-                      backgroundColor: 'rgba(255,255,255,0.7)', 
-                      borderRadius: '2px',
-                      height: `${Math.max(4, level * 36)}px`
-                    }}
-                  />
-                ))
+                <>
+                  <div style={{ width: '8px', height: '8px', backgroundColor: 'white', borderRadius: '50%', animation: 'pulse 1s infinite' }} />
+                  <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', fontFamily: 'Outfit' }}>Recording...</span>
+                </>
               ) : isPaused ? (
                 <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px', fontFamily: 'Outfit' }}>PAUSED</span>
-              ) : (
-                audioLevels.map((_, i) => (
-                  <div
-                    key={i}
-                    style={{ width: '4px', height: '4px', backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: '2px' }}
-                  />
-                ))
-              )}
+              ) : null}
             </div>
             
             {/* Timer */}
