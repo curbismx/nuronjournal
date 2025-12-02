@@ -82,7 +82,7 @@ const DatePicker = ({ value, onChange, isOpen, onClose }: DatePickerProps) => {
             ? 'bg-[#007AFF] text-white' 
             : isToday(day)
               ? 'text-[#007AFF]'
-              : 'text-[#000] hover:bg-[#f0f0f0]'
+              : 'text-white hover:bg-white/10'
           }`}
       >
         {day}
@@ -91,21 +91,21 @@ const DatePicker = ({ value, onChange, isOpen, onClose }: DatePickerProps) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div 
         ref={pickerRef}
-        className="bg-[#f9f9f9] rounded-[14px] shadow-xl overflow-hidden"
+        className="bg-[#2E2E2E]/95 rounded-[14px] shadow-xl overflow-hidden backdrop-blur-sm"
         style={{ width: '320px' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-[#f9f9f9] border-b border-[#e5e5e5]">
+        <div className="flex items-center justify-between px-4 py-3 bg-transparent border-b border-white/10">
           <button 
             onClick={prevMonth}
             className="w-10 h-10 flex items-center justify-center text-[#007AFF] text-[20px]"
           >
             ‹
           </button>
-          <span className="text-[17px] font-semibold text-[#000]">{monthName}</span>
+          <span className="text-[17px] font-semibold text-white">{monthName}</span>
           <button 
             onClick={nextMonth}
             className="w-10 h-10 flex items-center justify-center text-[#007AFF] text-[20px]"
@@ -115,11 +115,11 @@ const DatePicker = ({ value, onChange, isOpen, onClose }: DatePickerProps) => {
         </div>
 
         {/* Calendar */}
-        <div className="p-3 bg-white">
+        <div className="p-3 bg-transparent">
           {/* Weekday headers */}
           <div className="grid grid-cols-7 mb-2">
             {weekDays.map((day) => (
-              <div key={day} className="w-10 h-8 flex items-center justify-center text-[13px] font-semibold text-[#8e8e93]">
+              <div key={day} className="w-10 h-8 flex items-center justify-center text-[13px] font-semibold text-white/50">
                 {day}
               </div>
             ))}
@@ -132,7 +132,7 @@ const DatePicker = ({ value, onChange, isOpen, onClose }: DatePickerProps) => {
         </div>
 
         {/* Today button */}
-        <div className="border-t border-[#e5e5e5] bg-[#f9f9f9]">
+        <div className="border-t border-white/10 bg-transparent">
           <button
             onClick={() => {
               const now = new Date();
