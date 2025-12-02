@@ -1081,8 +1081,8 @@ const Note = () => {
                 gap: '8px',
                 backgroundColor: '#E07B6B',
                 borderRadius: '50px',
-                padding: '0 16px 0 4px',
-                height: '21px',
+                padding: '0 16px 0 6px',
+                height: '31px',
                 cursor: 'pointer'
               }}
               onClick={() => {
@@ -1099,8 +1099,8 @@ const Note = () => {
             >
               {/* Play/Pause button icon */}
               <div style={{
-                width: '15px',
-                height: '15px',
+                width: '21px',
+                height: '21px',
                 borderRadius: '50%',
                 border: '1.5px solid white',
                 display: 'flex',
@@ -1109,17 +1109,17 @@ const Note = () => {
               }}>
                 {isPlayingAudio ? (
                   <div style={{ display: 'flex', gap: '2px' }}>
-                    <div style={{ width: '2px', height: '6px', backgroundColor: 'white', borderRadius: '1px' }} />
-                    <div style={{ width: '2px', height: '6px', backgroundColor: 'white', borderRadius: '1px' }} />
+                    <div style={{ width: '3px', height: '9px', backgroundColor: 'white', borderRadius: '1px' }} />
+                    <div style={{ width: '3px', height: '9px', backgroundColor: 'white', borderRadius: '1px' }} />
                   </div>
                 ) : (
                   <div style={{
                     width: 0,
                     height: 0,
-                    borderLeft: '5px solid white',
-                    borderTop: '3px solid transparent',
-                    borderBottom: '3px solid transparent',
-                    marginLeft: '1px'
+                    borderLeft: '7px solid white',
+                    borderTop: '4px solid transparent',
+                    borderBottom: '4px solid transparent',
+                    marginLeft: '2px'
                   }} />
                 )}
               </div>
@@ -1127,7 +1127,7 @@ const Note = () => {
               {/* Duration timestamp */}
               <span style={{
                 color: 'white',
-                fontSize: '12px',
+                fontSize: '14px',
                 fontFamily: 'Outfit',
                 fontWeight: '400'
               }}>
