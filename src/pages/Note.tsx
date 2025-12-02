@@ -1399,15 +1399,23 @@ const Note = () => {
               alt="Recording" 
               className="w-[80px] h-[80px]"
               style={{ 
-                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))',
-                animation: isPaused ? 'none' : 'pulse 1.5s ease-in-out infinite'
+                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))'
               }}
             />
             
-            {/* Timer overlay */}
+            {/* White center circle with timer */}
             <button
               onClick={handleRecorderTap}
-              className="absolute inset-0 flex items-center justify-center"
+              className="absolute rounded-full flex items-center justify-center"
+              style={{
+                width: '52px',
+                height: '52px',
+                backgroundColor: '#FAF9F6',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                animation: isPaused ? 'none' : 'centerPulse 1.2s ease-in-out infinite'
+              }}
             >
               <span 
                 style={{ 
