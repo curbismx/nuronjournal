@@ -102,58 +102,6 @@ const Note = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // TEMPORARY TEST - DELETE LATER
-  const [testAudioUrl, setTestAudioUrl] = useState<string | null>(null);
-  const testRecorderRef = useRef<MediaRecorder | null>(null);
-  const testChunksRef = useRef<Blob[]>([]);
-
-  const testStartRecording = async () => {
-    console.log('TEST: Starting recording...');
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    console.log('TEST: Got stream');
-    
-    const recorder = new MediaRecorder(stream);
-    testRecorderRef.current = recorder;
-    testChunksRef.current = [];
-    
-    recorder.ondataavailable = (e) => {
-      console.log('TEST: Data available, size:', e.data.size);
-      testChunksRef.current.push(e.data);
-    };
-    
-    recorder.start(1000); // Get data every second
-    console.log('TEST: Recording started');
-  };
-
-  const testStopRecording = () => {
-    console.log('TEST: Stopping recording...');
-    if (testRecorderRef.current) {
-      testRecorderRef.current.onstop = () => {
-        console.log('TEST: Recorder stopped, chunks:', testChunksRef.current.length);
-        const blob = new Blob(testChunksRef.current);
-        console.log('TEST: Blob created, size:', blob.size, 'type:', blob.type);
-        const url = URL.createObjectURL(blob);
-        console.log('TEST: URL created:', url);
-        setTestAudioUrl(url);
-      };
-      testRecorderRef.current.stop();
-      testRecorderRef.current.stream.getTracks().forEach(t => t.stop());
-    }
-  };
-
-  const testPlayRecording = () => {
-    console.log('TEST: Playing, url:', testAudioUrl);
-    if (testAudioUrl) {
-      const audio = new Audio(testAudioUrl);
-      audio.play().then(() => {
-        console.log('TEST: Playing!');
-      }).catch(err => {
-        console.error('TEST: Play error:', err);
-      });
-    }
-  };
-  // END TEMPORARY TEST
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -1089,20 +1037,6 @@ const Note = () => {
               )}
             </div>
           </div>
-
-          {/* TEMPORARY TEST BUTTONS - DELETE LATER */}
-          <div style={{ display: 'flex', gap: '10px', padding: '10px', background: '#333', marginBottom: '10px', borderRadius: '8px' }}>
-            <button onClick={testStartRecording} style={{ padding: '10px', background: 'red', color: 'white', borderRadius: '4px' }}>
-              TEST REC
-            </button>
-            <button onClick={testStopRecording} style={{ padding: '10px', background: 'blue', color: 'white', borderRadius: '4px' }}>
-              TEST STOP
-            </button>
-            <button onClick={testPlayRecording} style={{ padding: '10px', background: 'green', color: 'white', opacity: testAudioUrl ? 1 : 0.5, borderRadius: '4px' }}>
-              TEST PLAY
-            </button>
-          </div>
-          {/* END TEMPORARY TEST BUTTONS */}
 
           {/* Title */}
           <input
