@@ -992,15 +992,17 @@ const Index = () => {
                     <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-3 py-2 text-[16px]">
                       ••••••••
                     </div>
-                    <button
-                      onClick={() => {
-                        setShowChangePassword(true);
-                        setPasswordFormError("");
-                      }}
-                      className="text-red-500 hover:text-red-400 text-[14px] transition-colors text-left mt-[8px]"
-                    >
-                      Change Password
-                    </button>
+                    <div className="pt-[8px]">
+                      <button
+                        onClick={() => {
+                          setShowChangePassword(true);
+                          setPasswordFormError("");
+                        }}
+                        className="text-red-500 hover:text-red-400 text-[14px] transition-colors text-left"
+                      >
+                        Change Password
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-4">
