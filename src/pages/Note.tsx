@@ -429,14 +429,6 @@ const Note = () => {
       recognitionRef.current = null;
     }
     
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-    }
-    
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-    }
-    
     if (recordingIntervalRef.current) {
       clearInterval(recordingIntervalRef.current);
     }
@@ -455,6 +447,36 @@ const Note = () => {
       return prev;
     });
     
+    // Stop media recorder and wait for it to finish before closing stream
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.onstop = () => {
+        const newBlob = new Blob(audioChunksRef.current, { type: mediaRecorderRef.current?.mimeType || 'audio/webm' });
+        
+        if (audioBlobRef.current) {
+          const combinedBlob = new Blob([audioBlobRef.current, newBlob], { type: newBlob.type });
+          setAudioBlob(combinedBlob);
+          audioBlobRef.current = combinedBlob;
+          setAudioUrl(URL.createObjectURL(combinedBlob));
+        } else {
+          setAudioBlob(newBlob);
+          audioBlobRef.current = newBlob;
+          setAudioUrl(URL.createObjectURL(newBlob));
+        }
+        
+        // Stop stream tracks AFTER saving audio
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+        }
+      };
+      
+      mediaRecorderRef.current.stop();
+    } else {
+      // No active recording, just stop stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    }
+    
     setIsRecording(false);
     setIsPaused(false);
     setRecordingTime(0);
@@ -463,6 +485,12 @@ const Note = () => {
 
   const playRecording = () => {
     if (audioUrl) {
+      // Stop any existing playback
+      if (audioPlaybackRef.current) {
+        audioPlaybackRef.current.pause();
+        audioPlaybackRef.current = null;
+      }
+      
       const audio = new Audio(audioUrl);
       audioPlaybackRef.current = audio;
       
@@ -470,8 +498,23 @@ const Note = () => {
         setIsPlaying(false);
       };
       
-      audio.play();
-      setIsPlaying(true);
+      audio.onerror = (e) => {
+        console.error('Audio playback error:', e);
+        setIsPlaying(false);
+      };
+      
+      // Handle iOS audio promise
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch((error) => {
+            console.error('Playback failed:', error);
+            setIsPlaying(false);
+          });
+      }
     }
   };
 
@@ -1421,9 +1464,9 @@ const Note = () => {
                   background: 'none', 
                   border: 'none', 
                   cursor: 'pointer',
-                  opacity: audioUrl ? 1 : 0.4
+                  opacity: (audioUrl || audioBlobRef.current) ? 1 : 0.4
                 }}
-                disabled={!audioUrl}
+                disabled={!audioUrl && !audioBlobRef.current}
               >
                 <img 
                   src={isPlaying ? pauseIcon : playIcon} 
