@@ -434,6 +434,33 @@ const Note = () => {
     }
   };
 
+  const deleteAudio = async (index: number) => {
+    const urlToDelete = audioUrls[index];
+    
+    // Delete from Supabase Storage if it's a Supabase URL
+    if (urlToDelete.includes('supabase.co/storage')) {
+      try {
+        const urlParts = urlToDelete.split('/storage/v1/object/public/audio-recordings/');
+        if (urlParts.length > 1) {
+          const filePath = urlParts[1];
+          await supabase.storage.from('audio-recordings').remove([filePath]);
+        }
+      } catch (error) {
+        console.error('Error deleting audio from storage:', error);
+      }
+    }
+    
+    // Stop playback if this audio is playing
+    if (playingAudioIndex === index) {
+      audioPlayerRefs.current[index]?.pause();
+      setPlayingAudioIndex(null);
+    }
+    
+    // Remove from arrays
+    setAudioUrls(prev => prev.filter((_, i) => i !== index));
+    setAudioDurations(prev => prev.filter((_, i) => i !== index));
+  };
+
   // Load existing note on mount
   useEffect(() => {
     if (id) {
@@ -1135,39 +1162,41 @@ const Note = () => {
                     gap: '8px',
                     backgroundColor: '#E07B6B',
                     borderRadius: '50px',
-                    padding: '0 16px 0 6px',
+                    padding: '0 8px 0 6px',
                     height: '31px',
                     minWidth: '90px',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => {
-                    const audioEl = audioPlayerRefs.current[index];
-                    if (audioEl) {
-                      if (playingAudioIndex === index) {
-                        audioEl.pause();
-                        setPlayingAudioIndex(null);
-                      } else {
-                        // Pause any currently playing audio
-                        if (playingAudioIndex !== null && audioPlayerRefs.current[playingAudioIndex]) {
-                          audioPlayerRefs.current[playingAudioIndex]?.pause();
-                        }
-                        audioEl.play();
-                        setPlayingAudioIndex(index);
-                      }
-                    }
+                    position: 'relative'
                   }}
                 >
-                  {/* Play/Pause button icon */}
-                  <div style={{
-                    width: '21px',
-                    height: '21px',
-                    borderRadius: '50%',
-                    border: '1.5px solid white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
-                  }}>
+                  {/* Play/Pause button */}
+                  <div 
+                    style={{
+                      width: '21px',
+                      height: '21px',
+                      borderRadius: '50%',
+                      border: '1.5px solid white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => {
+                      const audioEl = audioPlayerRefs.current[index];
+                      if (audioEl) {
+                        if (playingAudioIndex === index) {
+                          audioEl.pause();
+                          setPlayingAudioIndex(null);
+                        } else {
+                          if (playingAudioIndex !== null && audioPlayerRefs.current[playingAudioIndex]) {
+                            audioPlayerRefs.current[playingAudioIndex]?.pause();
+                          }
+                          audioEl.play();
+                          setPlayingAudioIndex(index);
+                        }
+                      }
+                    }}
+                  >
                     {playingAudioIndex === index ? (
                       <div style={{ display: 'flex', gap: '2px' }}>
                         <div style={{ width: '3px', height: '9px', backgroundColor: 'white', borderRadius: '1px' }} />
@@ -1196,21 +1225,45 @@ const Note = () => {
                     {audioDurations[index] || '00:00'}
                   </span>
                   
+                  {/* Delete button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteAudio(index);
+                    }}
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(255,255,255,0.3)',
+                      border: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      padding: 0,
+                      marginLeft: '4px'
+                    }}
+                  >
+                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '600', lineHeight: 1 }}>×</span>
+                  </button>
+                  
                   {/* Hidden audio element */}
                   <audio 
-                    ref={el => { audioPlayerRefs.current[index] = el; }}
+                    ref={(el) => { audioPlayerRefs.current[index] = el; }}
                     src={url}
+                    onEnded={() => setPlayingAudioIndex(null)}
                     onLoadedMetadata={(e) => {
-                      const duration = e.currentTarget.duration;
+                      const duration = (e.target as HTMLAudioElement).duration;
                       const mins = Math.floor(duration / 60);
                       const secs = Math.floor(duration % 60);
+                      const formatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
                       setAudioDurations(prev => {
-                        const updated = [...prev];
-                        updated[index] = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-                        return updated;
+                        const newDurations = [...prev];
+                        newDurations[index] = formatted;
+                        return newDurations;
                       });
                     }}
-                    onEnded={() => setPlayingAudioIndex(null)}
                   />
                 </div>
               ))}
