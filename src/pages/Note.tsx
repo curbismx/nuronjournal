@@ -25,7 +25,7 @@ import plusIconBlue from "@/assets/00plus_blue.png";
 import plusIconPink from "@/assets/00plus_pink.png";
 import recordIcon from '@/assets/01record.png';
 import pauseIcon from '@/assets/01pause.png';
-
+import playIcon from '@/assets/01play.png';
 import stopIcon from '@/assets/01stop.png';
 import noteRecordRed from '@/assets/01noterecord_red.png';
 import noteRecordGreen from '@/assets/01noterecord_green.png';
@@ -96,6 +96,11 @@ const Note = () => {
   const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recognitionRef = useRef<any>(null);
   const isRecordingRef = useRef(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const audioPlaybackRef = useRef<HTMLAudioElement | null>(null);
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -212,7 +217,7 @@ const Note = () => {
   };
 
 
-  const startRecording = () => {
+  const startRecording = async () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
@@ -220,6 +225,33 @@ const Note = () => {
       return;
     }
     
+    // Start audio recording
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType });
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+      };
+      
+      mediaRecorder.start();
+    } catch (error) {
+      console.error('Error starting audio recording:', error);
+    }
+    
+    // Start speech recognition
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
     
@@ -244,8 +276,6 @@ const Note = () => {
         const lastBlock = prev[prev.length - 1];
         if (lastBlock && lastBlock.type === 'text') {
           const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
-          
-          // Remove any previous interim text (marked with ||)
           const baseContent = currentContent.replace(/\|\|.*$/, '').trimEnd();
           
           let newContent = baseContent;
@@ -295,6 +325,7 @@ const Note = () => {
     setIsRecording(true);
     isRecordingRef.current = true;
     setIsPaused(false);
+    setAudioUrl(null);
     
     recordingIntervalRef.current = setInterval(() => {
       setRecordingTime(prev => prev + 1);
@@ -303,10 +334,16 @@ const Note = () => {
 
   const pauseRecording = () => {
     isRecordingRef.current = false;
+    
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
-    // Clean up any remaining interim markers
+    
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.pause();
+    }
+    
+    // Clean up interim markers
     setContentBlocks(prev => {
       const lastBlock = prev[prev.length - 1];
       if (lastBlock && lastBlock.type === 'text') {
@@ -319,6 +356,7 @@ const Note = () => {
       }
       return prev;
     });
+    
     setIsPaused(true);
     setIsRecording(false);
     if (recordingIntervalRef.current) {
@@ -328,13 +366,19 @@ const Note = () => {
 
   const resumeRecording = () => {
     isRecordingRef.current = true;
+    
     if (recognitionRef.current) {
       try {
         recognitionRef.current.start();
       } catch (e) {
-        console.log('Resume failed:', e);
+        console.log('Resume recognition failed:', e);
       }
     }
+    
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
+      mediaRecorderRef.current.resume();
+    }
+    
     setIsPaused(false);
     setIsRecording(true);
     recordingIntervalRef.current = setInterval(() => {
@@ -344,16 +388,25 @@ const Note = () => {
 
   const stopRecording = () => {
     isRecordingRef.current = false;
+    
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
+    }
+    
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
     }
     
     if (recordingIntervalRef.current) {
       clearInterval(recordingIntervalRef.current);
     }
     
-    // Clean up any remaining interim markers
+    // Clean up interim markers
     setContentBlocks(prev => {
       const lastBlock = prev[prev.length - 1];
       if (lastBlock && lastBlock.type === 'text') {
@@ -371,6 +424,27 @@ const Note = () => {
     setIsPaused(false);
     setRecordingTime(0);
     setIsRecordingModuleOpen(false);
+  };
+
+  const playRecording = () => {
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      audioPlaybackRef.current = audio;
+      
+      audio.onended = () => {
+        setIsPlaying(false);
+      };
+      
+      audio.play();
+      setIsPlaying(true);
+    }
+  };
+
+  const pausePlayback = () => {
+    if (audioPlaybackRef.current) {
+      audioPlaybackRef.current.pause();
+      setIsPlaying(false);
+    }
   };
 
   const openRecordingModule = () => {
@@ -1244,7 +1318,7 @@ const Note = () => {
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             {/* Buttons */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
               {/* REC/PAUSE Button */}
               <button
                 onClick={() => {
@@ -1265,6 +1339,37 @@ const Note = () => {
                 />
                 <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', fontFamily: 'Outfit', letterSpacing: '0.5px' }}>
                   {isRecording ? 'PAUSE' : 'REC'}
+                </span>
+              </button>
+              
+              {/* PLAY/PAUSE Button */}
+              <button
+                onClick={() => {
+                  if (isPlaying) {
+                    pausePlayback();
+                  } else {
+                    playRecording();
+                  }
+                }}
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  gap: '4px', 
+                  background: 'none', 
+                  border: 'none', 
+                  cursor: 'pointer',
+                  opacity: audioUrl ? 1 : 0.4
+                }}
+                disabled={!audioUrl}
+              >
+                <img 
+                  src={isPlaying ? pauseIcon : playIcon} 
+                  alt={isPlaying ? "Pause" : "Play"} 
+                  style={{ width: '44px', height: '44px' }}
+                />
+                <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '11px', fontFamily: 'Outfit', letterSpacing: '0.5px' }}>
+                  {isPlaying ? 'PAUSE' : 'PLAY'}
                 </span>
               </button>
               
