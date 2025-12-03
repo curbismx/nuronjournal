@@ -14,7 +14,7 @@ import plusIcon from "@/assets/plusbig.png";
 import expandIcon from "@/assets/00expand-3.png";
 import condenseIcon from "@/assets/00condense-3.png";
 import floatingAddButton from "@/assets/bigredbuttonnoshadow.png";
-import smallArrow from "@/assets/00notearrow-4.png";
+
 import backIcon from "@/assets/back.png";
 import accountArrow from "@/assets/00settingsarrow-2.png";
 import searchIcon from "@/assets/00search-3.png";
@@ -1274,57 +1274,50 @@ const Index = () => {
                             </div>
                           )}
                           
-                          {/* Title and Body Container */}
-                          <div className="pr-[50px] relative">
-                            {/* Arrow icon */}
-                            <img 
-                              src={smallArrow} 
-                              alt="" 
-                              className="absolute right-[-2px] top-1/2 -translate-y-1/2 w-[20px] h-auto"
-                            />
-
-                            {menuOpen ? (
-                              /* EXPANDED VIEW */
-                              <div>
-                                <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 ${index === 0 ? '-mt-[10px]' : ''}`}>
-                                  {note.title || 'Untitled'}
-                                </h3>
-                                <div className="-mt-[10px]" style={{ maxHeight: '273px', overflow: 'hidden' }}>
-                                  {firstImage && (
-                                    <img 
-                                      src={firstImage.url} 
-                                      alt=""
-                                      className="float-right w-[70px] h-[70px] rounded-[10px] object-cover ml-[15px] mb-[10px]"
-                                      style={{ shapeOutside: 'margin-box' }}
-                                    />
-                                  )}
-                                  <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)]" style={{ display: 'block' }}>
-                                    {preview || 'No content'}
-                                  </p>
-                                  <div style={{ clear: 'both' }} />
-                                </div>
-                              </div>
-                            ) : (
-                              /* COLLAPSED VIEW */
-                              <div className="flex items-center gap-[15px]">
-                                <div className="flex-1">
-                                  <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 ${index === 0 ? '-mt-[10px]' : ''}`}>
-                                    {note.title || 'Untitled'}
-                                  </h3>
-                                  <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px]">
-                                    {preview || 'No content'}
-                                  </p>
-                                </div>
-                                {firstImage && (
-                                  <img 
-                                    src={firstImage.url} 
-                                    alt=""
-                                    className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0"
-                                  />
-                                )}
-                              </div>
-                            )}
-                          </div>
+                {/* Title and Body Container */}
+                <div>
+                  {menuOpen ? (
+                    /* EXPANDED VIEW */
+                    <div className="pr-[30px]">
+                      <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 ${index === 0 ? '-mt-[10px]' : ''}`}>
+                        {note.title || 'Untitled'}
+                      </h3>
+                      <div className="-mt-[10px]" style={{ maxHeight: '273px', overflow: 'hidden' }}>
+                        {firstImage && (
+                          <img 
+                            src={firstImage.url} 
+                            alt=""
+                            className="float-right w-[70px] h-[70px] rounded-[10px] object-cover ml-[15px] mb-[10px]"
+                            style={{ shapeOutside: 'margin-box' }}
+                          />
+                        )}
+                        <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)]" style={{ display: 'block' }}>
+                          {preview || 'No content'}
+                        </p>
+                        <div style={{ clear: 'both' }} />
+                      </div>
+                    </div>
+                  ) : (
+                    /* COLLAPSED VIEW */
+                    <div className="flex items-center gap-[15px] pr-[30px]">
+                      <div className="flex-1">
+                        <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 ${index === 0 ? '-mt-[10px]' : ''}`}>
+                          {note.title || 'Untitled'}
+                        </h3>
+                        <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px]">
+                          {preview || 'No content'}
+                        </p>
+                      </div>
+                      {firstImage && (
+                        <img 
+                          src={firstImage.url} 
+                          alt=""
+                          className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0"
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
                         </div>
                       </div>
                     );
