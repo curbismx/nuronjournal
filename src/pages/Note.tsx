@@ -352,6 +352,19 @@ const Note = () => {
           }
           return prev;
         });
+        
+        // Auto-scroll to bottom while recording (only on final transcript to avoid jitter)
+        if (finalTranscript) {
+          setTimeout(() => {
+            const textareas = document.querySelectorAll('.note-textarea');
+            const lastTextarea = textareas[textareas.length - 1] as HTMLTextAreaElement;
+            if (lastTextarea) {
+              lastTextarea.style.height = 'auto';
+              lastTextarea.style.height = Math.max(24, lastTextarea.scrollHeight) + 'px';
+              lastTextarea.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+          }, 50);
+        }
       };
       
       recognition.onend = () => {
