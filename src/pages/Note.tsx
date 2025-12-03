@@ -28,6 +28,9 @@ import recordIconGreen from "@/assets/01noterecord_green.png";
 import recordIconBlue from "@/assets/01noterecord_blue.png";
 import recordIconPink from "@/assets/01noterecord_pink.png";
 import recorderIcon from '@/assets/00recorder.png';
+import recorderIconGreen from '@/assets/00recorder_green.png';
+import recorderIconBlue from '@/assets/00recorder_blue.png';
+import recorderIconPink from '@/assets/00recorder_pink.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 type ContentBlock = 
@@ -84,6 +87,13 @@ const Note = () => {
     green: recordIconGreen,
     blue: recordIconBlue,
     pink: recordIconPink
+  };
+
+  const themeRecorderIcons = {
+    default: recorderIcon,
+    green: recorderIconGreen,
+    blue: recorderIconBlue,
+    pink: recorderIconPink
   };
 
   // Recording state (speech-to-text + audio recording)
@@ -1460,7 +1470,7 @@ const Note = () => {
             }}
           >
             <img 
-              src={recorderIcon}
+              src={themeRecorderIcons[theme]}
               alt="Recording"
               style={{
                 width: '120px',
