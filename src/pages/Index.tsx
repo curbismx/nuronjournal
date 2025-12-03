@@ -24,6 +24,8 @@ import { User } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Capacitor } from '@capacitor/core';
+import { restorePurchases } from '@/lib/purchases';
 
 
 interface SavedNote {
@@ -99,6 +101,7 @@ const Index = () => {
   });
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isRestoring, setIsRestoring] = useState(false);
 
   const themeColors = {
     default: '#2E2E2E',
@@ -348,6 +351,30 @@ const Index = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRestorePurchases = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      alert('Restore is only available on iOS');
+      return;
+    }
+    
+    setIsRestoring(true);
+    
+    try {
+      const customerInfo = await restorePurchases();
+      if (customerInfo && customerInfo.activeSubscriptions.length > 0) {
+        localStorage.setItem('nuron-subscribed', 'true');
+        alert('Purchases restored successfully!');
+      } else {
+        alert('No active subscriptions found');
+      }
+    } catch (error) {
+      console.error('Restore failed:', error);
+      alert('Failed to restore purchases. Please try again.');
+    }
+    
+    setIsRestoring(false);
   };
 
   const loadNotesFromSupabase = async (userId: string) => {
@@ -1079,6 +1106,19 @@ const Index = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Restore Purchases */}
+              <button
+                onClick={handleRestorePurchases}
+                disabled={isRestoring}
+                className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[20px] font-light"
+              >
+                <span>{isRestoring ? 'Restoring...' : 'Restore Purchases'}</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+              </button>
             </div>
           ) : showSignUp ? (
             /* Sign Up / Sign In Form */
