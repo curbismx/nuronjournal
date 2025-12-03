@@ -408,6 +408,7 @@ const Onboarding = () => {
             <button
               onClick={() => {
                 localStorage.setItem('nuron-onboarding-complete', 'true');
+                localStorage.setItem('nuron-trial-start', Date.now().toString());
                 navigate('/');
               }}
               className="w-full mt-2 py-3 text-[16px]"

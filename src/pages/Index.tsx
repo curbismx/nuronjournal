@@ -25,7 +25,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Capacitor } from '@capacitor/core';
-import { restorePurchases } from '@/lib/purchases';
+import { restorePurchases, isTrialExpired } from '@/lib/purchases';
+import SubscriptionModal from '@/components/SubscriptionModal';
 
 
 interface SavedNote {
@@ -102,6 +103,7 @@ const Index = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isRestoring, setIsRestoring] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   const themeColors = {
     default: '#2E2E2E',
@@ -143,6 +145,13 @@ const Index = () => {
   useEffect(() => {
     localStorage.setItem('nuron-theme', theme);
   }, [theme]);
+
+  // Check if trial has expired
+  useEffect(() => {
+    if (isTrialExpired()) {
+      setShowSubscriptionModal(true);
+    }
+  }, []);
 
   // Check authentication status and set up auth listener
   useEffect(() => {
@@ -1469,6 +1478,12 @@ const Index = () => {
           </div>
         </div>
       )}
+
+      <SubscriptionModal 
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+        onSubscribed={() => setShowSubscriptionModal(false)}
+      />
     </div>
   );
 };

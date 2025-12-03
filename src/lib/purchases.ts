@@ -83,3 +83,30 @@ export const restorePurchases = async (): Promise<CustomerInfo | null> => {
     return null;
   }
 };
+
+export const isTrialExpired = (): boolean => {
+  const subscribed = localStorage.getItem('nuron-subscribed') === 'true';
+  if (subscribed) return false;
+  
+  const trialStart = localStorage.getItem('nuron-trial-start');
+  if (!trialStart) return false;
+  
+  const trialStartDate = parseInt(trialStart, 10);
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  
+  return now - trialStartDate > sevenDaysMs;
+};
+
+export const getDaysRemaining = (): number => {
+  const trialStart = localStorage.getItem('nuron-trial-start');
+  if (!trialStart) return 7;
+  
+  const trialStartDate = parseInt(trialStart, 10);
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const elapsed = now - trialStartDate;
+  const remaining = Math.ceil((sevenDaysMs - elapsed) / (24 * 60 * 60 * 1000));
+  
+  return Math.max(0, remaining);
+};
