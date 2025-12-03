@@ -27,7 +27,7 @@ import recordIconRed from "@/assets/01noterecord_red.png";
 import recordIconGreen from "@/assets/01noterecord_green.png";
 import recordIconBlue from "@/assets/01noterecord_blue.png";
 import recordIconPink from "@/assets/01noterecord_pink.png";
-import recorderTeardrop from "@/assets/recorder-teardrop.png";
+import recorderIcon from '@/assets/00recorder.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 type ContentBlock = 
@@ -1432,67 +1432,99 @@ const Note = () => {
       {!isRecordingOpen ? (
         <button
           onClick={openRecorder}
-          className="fixed bottom-[30px] right-[30px] z-50"
+          className="fixed bottom-[30px] right-[30px] z-50 w-[51px] h-[51px] rounded-[12px] flex items-center justify-center"
+          style={{ 
+            backgroundColor: '#E57373',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+          }}
         >
-          <img src={themeRecordIcons[theme]} alt="Record" className="w-[51px] h-[51px]" />
+          <svg width="24" height="24" viewBox="0 0 100 100">
+            <path
+              d="M 20,50 Q 35,30 50,50 T 80,50"
+              stroke="white"
+              strokeWidth="8"
+              strokeLinecap="round"
+              fill="none"
+            />
+          </svg>
         </button>
       ) : (
         <>
-          {/* Backdrop to detect tap outside */}
+          {/* Backdrop to close */}
           <div 
             className="fixed inset-0 z-40"
             onClick={stopRecording}
           />
           
-          {/* Teardrop Recording Button */}
+          {/* Animated Recording Button */}
           <div
-            className="fixed z-50"
+            className="fixed z-50 flex items-center justify-center"
             style={{
-              bottom: '30px',
-              right: '30px',
-              width: '80px',
-              height: '80px',
-              animation: 'growIn 0.3s ease-out'
+              bottom: '20px',
+              right: '20px',
+              width: '120px',
+              height: '120px'
             }}
           >
-            <img 
-              src={recorderTeardrop} 
-              alt="Recording" 
-              className="w-[80px] h-[80px]"
-              style={{ 
-                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))'
-              }}
-            />
-            
-            {/* White center circle - pulsates */}
+            {/* Rotating gradient border */}
             <div
-              className="absolute rounded-full"
               style={{
-                width: '52px',
-                height: '52px',
-                backgroundColor: '#FAF9F6',
-                top: '50%',
+                position: 'absolute',
+                width: '140px',
+                height: '140px',
                 left: '50%',
-                transform: 'translate(-50%, -50%)',
-                animation: isPaused ? 'none' : 'centerPulse 1.2s ease-in-out infinite'
+                top: '50%',
+                borderRadius: '50%',
+                background: 'conic-gradient(from 0deg, transparent, rgba(255,255,255,0.8), transparent, transparent)',
+                animation: isRecording && !isPaused ? 'borderRotate 2s linear infinite' : 'none',
+                opacity: isRecording && !isPaused ? 1 : 0,
+                transition: 'opacity 0.3s'
               }}
             />
             
-            {/* Timer text - static, on top */}
+            {/* Main button with icon */}
             <button
               onClick={handleRecorderTap}
-              className="absolute inset-0 flex items-center justify-center"
+              style={{
+                position: 'relative',
+                width: '120px',
+                height: '120px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                animation: isRecording && !isPaused ? 'recorderPulse 2s ease-in-out infinite' : 'none'
+              }}
             >
-              <span 
-                style={{ 
-                  color: '#E57373', 
-                  fontSize: '16px', 
+              {/* Teardrop icon */}
+              <img 
+                src={recorderIcon}
+                alt="Recording"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  filter: isRecording && !isPaused 
+                    ? 'drop-shadow(0 0 15px rgba(255,255,255,0.5))' 
+                    : 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))'
+                }}
+              />
+              
+              {/* Timer in center */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -55%)',
+                  color: 'white',
+                  fontSize: '22px',
                   fontFamily: 'Outfit',
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  textShadow: '0 1px 3px rgba(0,0,0,0.2)'
                 }}
               >
                 {formatTime(recordingTime)}
-              </span>
+              </div>
             </button>
           </div>
         </>
