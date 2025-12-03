@@ -239,13 +239,27 @@ const Note = () => {
       shareData.files = filesToShare;
     }
     
+    // Helper function for clipboard fallback
+    const copyToClipboard = async () => {
+      try {
+        const textToCopy = `${noteTitle}\n\n${noteContent}`;
+        await navigator.clipboard.writeText(textToCopy);
+        setShowCopyConfirm(true);
+      } catch (error) {
+        console.error('Copy to clipboard failed:', error);
+      }
+    };
+    
     // Check if Web Share API is available and can share this data
     if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
       try {
         await navigator.share(shareData);
       } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          console.error('Share failed:', error);
+        if ((error as Error).name === 'AbortError') {
+          // User cancelled - do nothing
+        } else {
+          // Share failed (e.g. iframe restriction) - fall back to clipboard
+          await copyToClipboard();
         }
       }
     } else if (navigator.share) {
@@ -254,18 +268,12 @@ const Note = () => {
         await navigator.share({ title: noteTitle, text: noteContent });
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
-          console.error('Share failed:', error);
+          await copyToClipboard();
         }
       }
     } else {
-      // Fallback: Copy text to clipboard with popup
-      try {
-        const textToCopy = `${noteTitle}\n\n${noteContent}`;
-        await navigator.clipboard.writeText(textToCopy);
-        setShowCopyConfirm(true);
-      } catch (error) {
-        console.error('Copy to clipboard failed:', error);
-      }
+      // No share API - use clipboard
+      await copyToClipboard();
     }
   };
 
