@@ -619,7 +619,9 @@ const Note = () => {
             if (data && !error) {
               setNoteTitle(data.title || '');
               setContentBlocks(data.content_blocks as ContentBlock[]);
-              setTitleGenerated(true);
+              if (data.title) {
+                setTitleGenerated(true);
+              }
               setNoteDate(new Date(data.created_at));
               existingCreatedAt.current = data.created_at;
               if (data.audio_data) {
@@ -647,7 +649,9 @@ const Note = () => {
           if (existingNote) {
             setNoteTitle(existingNote.title);
             setContentBlocks(existingNote.contentBlocks);
-            setTitleGenerated(true);
+            if (existingNote.title) {
+              setTitleGenerated(true);
+            }
             setNoteDate(new Date(existingNote.createdAt));
             existingCreatedAt.current = existingNote.createdAt;
           }
@@ -734,7 +738,7 @@ const Note = () => {
   // Auto-generate title when user has written enough (only once)
   useEffect(() => {
     const noteContent = getNoteContent();
-    if (noteContent.trim().split(/\s+/).length >= 10 && !titleGenerated && !titleManuallyEdited) {
+    if (noteContent.trim().split(/\s+/).length >= 10 && !titleGenerated && !titleManuallyEdited && !noteTitle) {
       generateTitle(noteContent);
     }
   }, [contentBlocks, titleGenerated, titleManuallyEdited]);
