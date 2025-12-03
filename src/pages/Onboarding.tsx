@@ -127,7 +127,7 @@ const Onboarding = () => {
               className="text-center font-light text-[24px] leading-relaxed"
               style={{ color: '#8A8A8A', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
-              simple journal for<br />everyday life
+              never forget anything<br />ever again
             </p>
           </div>
         </>
