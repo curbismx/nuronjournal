@@ -1,14 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import { PurchasesPackage } from '@revenuecat/purchases-capacitor';
 import logo from '@/assets/logo.png';
 import arrow from '@/assets/arrow.png';
 import mic from '@/assets/mic.png';
+import { getOfferings, purchasePackage } from '@/lib/purchases';
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
   const [selectedUses, setSelectedUses] = useState<string[]>([]);
+  const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const toggleUse = (use: string) => {
     setSelectedUses(prev => 
@@ -23,6 +28,48 @@ const Onboarding = () => {
       setCurrentPage(currentPage + 1);
     }
     // Page 4 (subscription) has its own subscribe/skip buttons
+  };
+
+  // Fetch offerings when reaching subscription page
+  useEffect(() => {
+    if (currentPage === 3 && Capacitor.isNativePlatform()) {
+      const fetchOfferings = async () => {
+        const availablePackages = await getOfferings();
+        setPackages(availablePackages);
+      };
+      fetchOfferings();
+    }
+  }, [currentPage]);
+
+  const handleSubscribe = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      // Web fallback - just complete onboarding
+      localStorage.setItem('nuron-onboarding-complete', 'true');
+      navigate('/');
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    // Find the correct package based on selected plan
+    const packageId = selectedPlan === 'monthly' ? '$rc_monthly' : '$rc_annual';
+    const selectedPackage = packages.find(p => p.identifier === packageId);
+    
+    if (selectedPackage) {
+      const customerInfo = await purchasePackage(selectedPackage);
+      if (customerInfo && customerInfo.activeSubscriptions.length > 0) {
+        localStorage.setItem('nuron-onboarding-complete', 'true');
+        localStorage.setItem('nuron-subscribed', 'true');
+        navigate('/');
+      }
+    } else {
+      // Fallback if packages not loaded
+      console.log('Package not found, completing onboarding anyway');
+      localStorage.setItem('nuron-onboarding-complete', 'true');
+      navigate('/');
+    }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -308,12 +355,9 @@ const Onboarding = () => {
             style={{ bottom: '80px', maxWidth: '360px' }}
           >
             <button
-              onClick={() => {
-                // TODO: Link to Apple App Store subscription
-                localStorage.setItem('nuron-onboarding-complete', 'true');
-                navigate('/');
-              }}
-              className="w-full py-4 rounded-full text-[18px] font-medium transition-all"
+              onClick={handleSubscribe}
+              disabled={isLoading}
+              className="w-full py-4 rounded-full text-[18px] font-medium transition-all disabled:opacity-70"
               style={{ 
                 backgroundColor: '#E57373', 
                 color: '#FFFFFF', 
@@ -321,7 +365,7 @@ const Onboarding = () => {
                 letterSpacing: '1px'
               }}
             >
-              Subscribe for {selectedPlan === 'monthly' ? '$3.99/month' : '$39.99/year'}
+              {isLoading ? 'Processing...' : `Subscribe for ${selectedPlan === 'monthly' ? '$3.99/month' : '$39.99/year'}`}
             </button>
             
             {/* Skip for now */}
