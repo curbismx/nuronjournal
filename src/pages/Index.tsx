@@ -45,6 +45,14 @@ interface GroupedNotes {
 
 const Index = () => {
   const navigate = useNavigate();
+
+  // Check if onboarding is complete
+  useEffect(() => {
+    const onboardingComplete = localStorage.getItem('nuron-onboarding-complete');
+    if (!onboardingComplete) {
+      navigate('/onboarding');
+    }
+  }, [navigate]);
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>(() => {
     // Try cache first (for logged-in users)
     const cached = localStorage.getItem('nuron-notes-cache');
