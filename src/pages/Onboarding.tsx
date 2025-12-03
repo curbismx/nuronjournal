@@ -5,7 +5,7 @@ import { PurchasesPackage } from '@revenuecat/purchases-capacitor';
 import logo from '@/assets/logo.png';
 import arrow from '@/assets/arrow.png';
 import mic from '@/assets/mic.png';
-import { getOfferings, purchasePackage } from '@/lib/purchases';
+import { getOfferings, purchasePackage, restorePurchases } from '@/lib/purchases';
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -14,6 +14,7 @@ const Onboarding = () => {
   const [selectedUses, setSelectedUses] = useState<string[]>([]);
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   const toggleUse = (use: string) => {
     setSelectedUses(prev => 
@@ -70,6 +71,31 @@ const Onboarding = () => {
     }
     
     setIsLoading(false);
+  };
+
+  const handleRestore = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      alert('Restore is only available on iOS');
+      return;
+    }
+    
+    setIsRestoring(true);
+    
+    try {
+      const customerInfo = await restorePurchases();
+      if (customerInfo && customerInfo.activeSubscriptions.length > 0) {
+        localStorage.setItem('nuron-onboarding-complete', 'true');
+        localStorage.setItem('nuron-subscribed', 'true');
+        navigate('/');
+      } else {
+        alert('No active subscriptions found');
+      }
+    } catch (error) {
+      console.error('Restore failed:', error);
+      alert('Failed to restore purchases. Please try again.');
+    }
+    
+    setIsRestoring(false);
   };
 
   return (
@@ -368,13 +394,23 @@ const Onboarding = () => {
               {isLoading ? 'Processing...' : `Subscribe for ${selectedPlan === 'monthly' ? '$3.99/month' : '$39.99/year'}`}
             </button>
             
+            {/* Restore Purchases */}
+            <button
+              onClick={handleRestore}
+              disabled={isRestoring}
+              className="w-full mt-4 py-3 text-[14px]"
+              style={{ color: '#E57373', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
+            >
+              {isRestoring ? 'Restoring...' : 'Restore Purchases'}
+            </button>
+
             {/* Skip for now */}
             <button
               onClick={() => {
                 localStorage.setItem('nuron-onboarding-complete', 'true');
                 navigate('/');
               }}
-              className="w-full mt-4 py-3 text-[16px]"
+              className="w-full mt-2 py-3 text-[16px]"
               style={{ color: '#888888', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
               Skip for now
