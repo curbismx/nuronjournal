@@ -42,7 +42,31 @@ const Note = () => {
   const { id } = useParams();
   const noteIdRef = useRef<string>(id || crypto.randomUUID());
   const [user, setUser] = useState<User | null>(null);
-  const [noteTitle, setNoteTitle] = useState('');
+  const [noteTitle, setNoteTitle] = useState(() => {
+    if (id) {
+      const cached = localStorage.getItem('nuron-notes-cache');
+      if (cached) {
+        try {
+          const notes = JSON.parse(cached);
+          const existingNote = notes.find((n: any) => n.id === id);
+          if (existingNote?.title) {
+            return existingNote.title;
+          }
+        } catch {}
+      }
+      const local = localStorage.getItem('nuron-notes');
+      if (local) {
+        try {
+          const notes = JSON.parse(local);
+          const existingNote = notes.find((n: any) => n.id === id);
+          if (existingNote?.title) {
+            return existingNote.title;
+          }
+        } catch {}
+      }
+    }
+    return '';
+  });
   const [noteDate, setNoteDate] = useState<Date>(new Date());
   const [weather, setWeather] = useState<{ temp: number; weatherCode: number; WeatherIcon: React.ComponentType<any> } | null>(null);
   const [isRewriting, setIsRewriting] = useState(false);
@@ -53,9 +77,33 @@ const Note = () => {
   const [showCopyConfirm, setShowCopyConfirm] = useState(false);
   const [titleGenerated, setTitleGenerated] = useState(false);
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
-  const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([
-    { type: 'text', id: 'initial', content: '' }
-  ]);
+  const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>(() => {
+    if (id) {
+      // Try to load from cache immediately
+      const cached = localStorage.getItem('nuron-notes-cache');
+      if (cached) {
+        try {
+          const notes = JSON.parse(cached);
+          const existingNote = notes.find((n: any) => n.id === id);
+          if (existingNote?.contentBlocks) {
+            return existingNote.contentBlocks;
+          }
+        } catch {}
+      }
+      // Also try local storage for non-logged-in users
+      const local = localStorage.getItem('nuron-notes');
+      if (local) {
+        try {
+          const notes = JSON.parse(local);
+          const existingNote = notes.find((n: any) => n.id === id);
+          if (existingNote?.contentBlocks) {
+            return existingNote.contentBlocks;
+          }
+        } catch {}
+      }
+    }
+    return [{ type: 'text', id: 'initial', content: '' }];
+  });
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const touchStartX = useRef<number>(0);
@@ -107,7 +155,23 @@ const Note = () => {
   const isRecordingRef = useRef(false);
   
   // Audio recording state - supports multiple recordings
-  const [audioUrls, setAudioUrls] = useState<string[]>([]);
+  const [audioUrls, setAudioUrls] = useState<string[]>(() => {
+    if (id) {
+      const cached = localStorage.getItem('nuron-notes-cache');
+      if (cached) {
+        try {
+          const notes = JSON.parse(cached);
+          const existingNote = notes.find((n: any) => n.id === id);
+          if (existingNote?.audio_data) {
+            const parsed = JSON.parse(existingNote.audio_data);
+            if (Array.isArray(parsed)) return parsed;
+            return [existingNote.audio_data];
+          }
+        } catch {}
+      }
+    }
+    return [];
+  });
   const [audioDurations, setAudioDurations] = useState<string[]>([]);
   const [playingAudioIndex, setPlayingAudioIndex] = useState<number | null>(null);
   const audioPlayerRefs = useRef<(HTMLAudioElement | null)[]>([]);
