@@ -27,7 +27,7 @@ import recordIconRed from "@/assets/01noterecord_red.png";
 import recordIconGreen from "@/assets/01noterecord_green.png";
 import recordIconBlue from "@/assets/01noterecord_blue.png";
 import recordIconPink from "@/assets/01noterecord_pink.png";
-import recorderTeardrop from "@/assets/recorder-teardrop.png";
+import recorderIcon from '@/assets/00recorder.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 type ContentBlock = 
@@ -1444,57 +1444,47 @@ const Note = () => {
             onClick={stopRecording}
           />
           
-          {/* Teardrop Recording Button */}
-          <div
+          {/* Recording Icon - 120px */}
+          <button
+            onClick={handleRecorderTap}
             className="fixed z-50"
             style={{
               bottom: '30px',
               right: '30px',
-              width: '80px',
-              height: '80px',
-              animation: 'growIn 0.3s ease-out'
+              width: '120px',
+              height: '120px',
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer'
             }}
           >
             <img 
-              src={recorderTeardrop} 
-              alt="Recording" 
-              className="w-[80px] h-[80px]"
-              style={{ 
+              src={recorderIcon}
+              alt="Recording"
+              style={{
+                width: '120px',
+                height: '120px',
                 filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))'
               }}
             />
             
-            {/* White center circle - pulsates */}
+            {/* White timer in center */}
             <div
-              className="absolute rounded-full"
               style={{
-                width: '52px',
-                height: '52px',
-                backgroundColor: '#FAF9F6',
+                position: 'absolute',
                 top: '50%',
                 left: '50%',
-                transform: 'translate(-50%, -50%)',
-                animation: isPaused ? 'none' : 'centerPulse 1.2s ease-in-out infinite'
+                transform: 'translate(-50%, -55%)',
+                color: 'white',
+                fontSize: '24px',
+                fontFamily: 'Outfit',
+                fontWeight: '500'
               }}
-            />
-            
-            {/* Timer text - static, on top */}
-            <button
-              onClick={handleRecorderTap}
-              className="absolute inset-0 flex items-center justify-center"
             >
-              <span 
-                style={{ 
-                  color: '#E57373', 
-                  fontSize: '16px', 
-                  fontFamily: 'Outfit',
-                  fontWeight: '500'
-                }}
-              >
-                {formatTime(recordingTime)}
-              </span>
-            </button>
-          </div>
+              {formatTime(recordingTime)}
+            </div>
+          </button>
         </>
       )}
 
