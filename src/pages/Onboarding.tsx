@@ -109,10 +109,10 @@ const Onboarding = () => {
             </p>
           </div>
           
-          {/* Features list with ticks */}
+          {/* Features list - centered with inline ticks */}
           <div 
-            className="absolute left-1/2 transform -translate-x-1/2 px-10 w-full"
-            style={{ top: '310px', maxWidth: '360px' }}
+            className="absolute left-1/2 transform -translate-x-1/2 w-full text-center"
+            style={{ top: '300px' }}
           >
             {[
               'Record everything',
@@ -125,9 +125,9 @@ const Onboarding = () => {
             ].map((feature, index) => (
               <div 
                 key={index}
-                className="flex items-center gap-4 mb-5"
+                className="inline-flex items-center justify-center gap-2 mb-4 w-full"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E57373" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E57373" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
                 <span 
@@ -140,10 +140,10 @@ const Onboarding = () => {
             ))}
           </div>
           
-          {/* Plan options */}
+          {/* Plan options - centered between features and button */}
           <div 
-            className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full flex gap-4"
-            style={{ bottom: '220px', maxWidth: '360px' }}
+            className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 px-8 w-full flex gap-4"
+            style={{ top: 'calc(50% + 180px)', maxWidth: '360px' }}
           >
             {/* Monthly option */}
             <button
