@@ -168,7 +168,7 @@ const Onboarding = () => {
               </span>
               <span 
                 className="block text-[12px]"
-                style={{ color: '#666666', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
+                style={{ color: '#444444', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 per month
               </span>
@@ -183,12 +183,26 @@ const Onboarding = () => {
                 borderColor: selectedPlan === 'yearly' ? '#E57373' : '#555555'
               }}
             >
-              {/* Best value badge */}
+              {/* Save badge - circle at top right */}
               <div 
-                className="absolute -top-3 left-1/2 transform -translate-x-1/2 px-3 py-1 rounded-full text-[11px] font-medium"
-                style={{ backgroundColor: '#E57373', color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
+                className="absolute flex items-center justify-center"
+                style={{ 
+                  top: '-14px', 
+                  right: '-14px',
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(229,115,115,0.7)', 
+                  color: '#FFFFFF', 
+                  fontFamily: 'Advent Pro', 
+                  fontSize: '10px',
+                  fontWeight: '500',
+                  letterSpacing: '0.5px',
+                  lineHeight: '1.2',
+                  textAlign: 'center'
+                }}
               >
-                SAVE 17%
+                SAVE<br />17%
               </div>
               <span 
                 className="block text-[16px] mb-1"
@@ -204,7 +218,7 @@ const Onboarding = () => {
               </span>
               <span 
                 className="block text-[12px]"
-                style={{ color: '#666666', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
+                style={{ color: '#444444', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 per year
               </span>
