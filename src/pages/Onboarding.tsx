@@ -8,12 +8,21 @@ const Onboarding = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
+  const [selectedUses, setSelectedUses] = useState<string[]>([]);
+
+  const toggleUse = (use: string) => {
+    setSelectedUses(prev => 
+      prev.includes(use) 
+        ? prev.filter(u => u !== use)
+        : [...prev, use]
+    );
+  };
 
   const handleNext = () => {
-    if (currentPage < 2) {
+    if (currentPage < 3) {
       setCurrentPage(currentPage + 1);
     }
-    // Page 3 has its own subscribe/skip buttons
+    // Page 4 (subscription) has its own subscribe/skip buttons
   };
 
   return (
@@ -91,8 +100,72 @@ const Onboarding = () => {
         </>
       )}
       
-      {/* Page 3 content - Subscription */}
+      {/* Page 3 content - What do you want to do */}
       {currentPage === 2 && (
+        <>
+          {/* Header */}
+          <div 
+            className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
+            style={{ top: '180px' }}
+          >
+            <h1 
+              className="text-center text-[26px] font-medium leading-relaxed"
+              style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
+            >
+              What do you want to do<br />with Nuron?
+            </h1>
+          </div>
+          
+          {/* Options */}
+          <div 
+            className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
+            style={{ top: '320px', maxWidth: '360px' }}
+          >
+            {[
+              'Messages and emails',
+              'Notes',
+              'Thoughts and ideas',
+              'Journaling',
+              'Social media posts'
+            ].map((option, index) => (
+              <button
+                key={index}
+                onClick={() => toggleUse(option)}
+                className="w-full mb-4 p-4 rounded-2xl border-2 transition-all flex items-center justify-between"
+                style={{
+                  backgroundColor: selectedUses.includes(option) ? 'rgba(229,115,115,0.15)' : 'transparent',
+                  borderColor: selectedUses.includes(option) ? '#E57373' : '#555555'
+                }}
+              >
+                <span 
+                  className="text-[18px]"
+                  style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
+                >
+                  {option}
+                </span>
+                
+                {/* Checkbox */}
+                <div 
+                  className="w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all"
+                  style={{
+                    borderColor: selectedUses.includes(option) ? '#E57373' : '#555555',
+                    backgroundColor: selectedUses.includes(option) ? '#E57373' : 'transparent'
+                  }}
+                >
+                  {selectedUses.includes(option) && (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      
+      {/* Page 4 content - Subscription */}
+      {currentPage === 3 && (
         <>
           {/* Header */}
           <div 
@@ -266,8 +339,8 @@ const Onboarding = () => {
         </>
       )}
       
-      {/* Arrow button - 30px, centered at bottom (hidden on page 3) */}
-      {currentPage < 2 && (
+      {/* Arrow button - 30px, centered at bottom (hidden on page 4) */}
+      {currentPage < 3 && (
         <button
           onClick={handleNext}
           className="absolute left-1/2 transform -translate-x-1/2"
