@@ -50,6 +50,7 @@ const Note = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showAudioDeleteConfirm, setShowAudioDeleteConfirm] = useState(false);
   const [audioToDelete, setAudioToDelete] = useState<number | null>(null);
+  const [showCopyConfirm, setShowCopyConfirm] = useState(false);
   const [titleGenerated, setTitleGenerated] = useState(false);
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>([
@@ -195,29 +196,73 @@ const Note = () => {
 
   const shareNote = async () => {
     const noteContent = getNoteContent();
-    const shareData = {
+    
+    // Gather files to share
+    const filesToShare: File[] = [];
+    
+    // Get images from content blocks
+    const imageBlocks = contentBlocks.filter(b => b.type === 'image') as Array<{ type: 'image'; id: string; url: string; width: number }>;
+    
+    for (const imageBlock of imageBlocks) {
+      try {
+        const response = await fetch(imageBlock.url);
+        const blob = await response.blob();
+        const fileName = `image-${imageBlock.id}.jpg`;
+        const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
+        filesToShare.push(file);
+      } catch (error) {
+        console.error('Failed to fetch image for sharing:', error);
+      }
+    }
+    
+    // Get audio files
+    for (let i = 0; i < audioUrls.length; i++) {
+      try {
+        const response = await fetch(audioUrls[i]);
+        const blob = await response.blob();
+        const fileName = `recording-${i + 1}.mp4`;
+        const file = new File([blob], fileName, { type: 'audio/mp4' });
+        filesToShare.push(file);
+      } catch (error) {
+        console.error('Failed to fetch audio for sharing:', error);
+      }
+    }
+    
+    // Build share data
+    const shareData: ShareData = {
       title: noteTitle,
       text: noteContent,
     };
-
-    // Check if Web Share API is available
-    if (navigator.share && navigator.canShare(shareData)) {
+    
+    // Add files if supported
+    if (filesToShare.length > 0) {
+      shareData.files = filesToShare;
+    }
+    
+    // Check if Web Share API is available and can share this data
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
       try {
         await navigator.share(shareData);
-        console.log('Share completed via Web Share API');
       } catch (error) {
-        // User cancelled or share failed - silently handle
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Share failed:', error);
+        }
+      }
+    } else if (navigator.share) {
+      // Try sharing without files
+      try {
+        await navigator.share({ title: noteTitle, text: noteContent });
+      } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           console.error('Share failed:', error);
         }
       }
     } else {
-      // Fallback: Silently copy to clipboard
-      console.log('Web Share API not available, using clipboard fallback');
+      // Fallback: Copy text to clipboard with popup
       try {
         const textToCopy = `${noteTitle}\n\n${noteContent}`;
         await navigator.clipboard.writeText(textToCopy);
-        console.log('Note copied to clipboard successfully');
+        setShowCopyConfirm(true);
       } catch (error) {
         console.error('Copy to clipboard failed:', error);
       }
@@ -1569,6 +1614,27 @@ const Note = () => {
                 delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Copy Confirmation */}
+      {showCopyConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl p-6 mx-8 max-w-sm w-full shadow-xl">
+            <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] text-center mb-2">
+              Note Copied
+            </h3>
+            <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] text-center mb-6">
+              Your note has been copied to the clipboard.
+            </p>
+            <button
+              onClick={() => setShowCopyConfirm(false)}
+              className="w-full py-3 px-4 rounded-xl text-white font-outfit font-medium"
+              style={{ backgroundColor: themeColors[theme] }}
+            >
+              OK
+            </button>
           </div>
         </div>
       )}
