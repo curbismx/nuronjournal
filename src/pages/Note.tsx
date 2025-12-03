@@ -1432,7 +1432,7 @@ const Note = () => {
       {!isRecordingOpen ? (
         <button
           onClick={openRecorder}
-          className="fixed bottom-[30px] right-[30px] z-50"
+          className="fixed bottom-[31px] right-[31px] z-50"
         >
           <img src={themeRecordIcons[theme]} alt="Record" className="w-[51px] h-[51px]" />
         </button>
@@ -1444,13 +1444,13 @@ const Note = () => {
             onClick={stopRecording}
           />
           
-          {/* Recording Icon - 120px */}
-          <button
-            onClick={handleRecorderTap}
-            className="fixed z-50"
-            style={{
-              bottom: '30px',
-              right: '30px',
+        {/* Recording Icon - 120px */}
+        <button
+          onClick={handleRecorderTap}
+          className="fixed z-50"
+          style={{
+            bottom: '31px',
+            right: '31px',
               width: '120px',
               height: '120px',
               background: 'none',
