@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '@/assets/logo.png';
 import arrow from '@/assets/arrow.png';
+import mic from '@/assets/mic.png';
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -52,11 +53,40 @@ const Onboarding = () => {
         </>
       )}
       
-      {/* Page 2 placeholder */}
+      {/* Page 2 content */}
       {currentPage === 1 && (
-        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <p className="text-white">Page 2</p>
-        </div>
+        <>
+          {/* Text - 120px from top */}
+          <div 
+            className="absolute left-1/2 transform -translate-x-1/2 px-8"
+            style={{ top: '120px', width: '100%', maxWidth: '400px' }}
+          >
+            <p 
+              className="text-center font-outfit font-medium text-[26px] leading-snug mb-8"
+              style={{ color: '#FFFFFF' }}
+            >
+              Turn your speech into well written text using our amazing AI
+            </p>
+            <p 
+              className="text-center font-outfit font-light text-[26px] leading-snug"
+              style={{ color: '#8A8A8A' }}
+            >
+              No more forgetting those great ideas, just jot it down in an instant and view later in a journal format
+            </p>
+          </div>
+          
+          {/* Microphone icon - centered vertically lower */}
+          <div 
+            className="absolute left-1/2 transform -translate-x-1/2"
+            style={{ top: '580px' }}
+          >
+            <img 
+              src={mic} 
+              alt="Microphone" 
+              style={{ width: '60px', height: 'auto' }}
+            />
+          </div>
+        </>
       )}
       
       {/* Page 3 placeholder */}
