@@ -93,126 +93,137 @@ const Onboarding = () => {
           {/* Header */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
-            style={{ top: '100px' }}
+            style={{ top: '80px' }}
           >
             <h1 
-              className="text-center text-[32px] font-medium tracking-wider mb-4"
+              className="text-center text-[36px] font-medium tracking-wider mb-3"
               style={{ color: '#FFFFFF', fontFamily: 'Advent Pro' }}
             >
               SUBSCRIPTION
             </h1>
             <p 
-              className="text-center text-[18px] font-light leading-relaxed"
+              className="text-center text-[16px] font-light leading-relaxed"
               style={{ color: '#8A8A8A', fontFamily: 'Advent Pro' }}
             >
-              Join the thousands of creatives in our community for less than the price of a coffee
+              Join the thousands of creatives in our community<br />for less than the price of a coffee
             </p>
           </div>
           
-          {/* Plan options */}
+          {/* Features list with ticks */}
           <div 
-            className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
-            style={{ top: '280px', maxWidth: '340px' }}
+            className="absolute left-1/2 transform -translate-x-1/2 px-10 w-full"
+            style={{ top: '220px', maxWidth: '360px' }}
           >
-            {/* Monthly option */}
-            <button
-              onClick={() => setSelectedPlan('monthly')}
-              className="w-full mb-4 p-4 rounded-2xl border-2 transition-all"
-              style={{
-                backgroundColor: selectedPlan === 'monthly' ? 'rgba(255,255,255,0.1)' : 'transparent',
-                borderColor: selectedPlan === 'monthly' ? '#FFFFFF' : '#555555'
-              }}
-            >
-              <div className="flex justify-between items-center">
+            {[
+              '7 days free trial',
+              'Record everything',
+              'Journal your life',
+              'Export everywhere',
+              'Add images & audio',
+              'Cancel anytime',
+              "And lot's more..."
+            ].map((feature, index) => (
+              <div 
+                key={index}
+                className="flex items-center gap-4 mb-4"
+              >
+                <div 
+                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: '#E57373' }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
                 <span 
                   className="text-[18px]"
                   style={{ color: '#FFFFFF', fontFamily: 'Advent Pro' }}
                 >
-                  Monthly
-                </span>
-                <span 
-                  className="text-[24px] font-medium"
-                  style={{ color: '#FFFFFF', fontFamily: 'Advent Pro' }}
-                >
-                  $3.99
+                  {feature}
                 </span>
               </div>
-              <p 
-                className="text-left text-[14px] mt-1"
-                style={{ color: '#8A8A8A', fontFamily: 'Advent Pro' }}
+            ))}
+          </div>
+          
+          {/* Plan options */}
+          <div 
+            className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full flex gap-4"
+            style={{ top: '540px', maxWidth: '360px' }}
+          >
+            {/* Monthly option */}
+            <button
+              onClick={() => setSelectedPlan('monthly')}
+              className="flex-1 p-4 rounded-2xl border-2 transition-all"
+              style={{
+                backgroundColor: selectedPlan === 'monthly' ? 'rgba(229,115,115,0.15)' : 'transparent',
+                borderColor: selectedPlan === 'monthly' ? '#E57373' : '#555555'
+              }}
+            >
+              <span 
+                className="block text-[16px] mb-1"
+                style={{ color: '#AAAAAA', fontFamily: 'Advent Pro' }}
+              >
+                Monthly
+              </span>
+              <span 
+                className="block text-[28px] font-medium"
+                style={{ color: '#FFFFFF', fontFamily: 'Advent Pro' }}
+              >
+                $3.99
+              </span>
+              <span 
+                className="block text-[12px]"
+                style={{ color: '#666666', fontFamily: 'Advent Pro' }}
               >
                 per month
-              </p>
+              </span>
             </button>
             
             {/* Yearly option */}
             <button
               onClick={() => setSelectedPlan('yearly')}
-              className="w-full p-4 rounded-2xl border-2 transition-all relative"
+              className="flex-1 p-4 rounded-2xl border-2 transition-all relative"
               style={{
-                backgroundColor: selectedPlan === 'yearly' ? 'rgba(255,255,255,0.1)' : 'transparent',
-                borderColor: selectedPlan === 'yearly' ? '#FFFFFF' : '#555555'
+                backgroundColor: selectedPlan === 'yearly' ? 'rgba(229,115,115,0.15)' : 'transparent',
+                borderColor: selectedPlan === 'yearly' ? '#E57373' : '#555555'
               }}
             >
               {/* Best value badge */}
               <div 
-                className="absolute -top-3 left-1/2 transform -translate-x-1/2 px-3 py-1 rounded-full text-[12px]"
+                className="absolute -top-3 left-1/2 transform -translate-x-1/2 px-3 py-1 rounded-full text-[11px] font-medium"
                 style={{ backgroundColor: '#E57373', color: '#FFFFFF', fontFamily: 'Advent Pro' }}
               >
-                BEST VALUE
+                SAVE 17%
               </div>
-              <div className="flex justify-between items-center">
-                <span 
-                  className="text-[18px]"
-                  style={{ color: '#FFFFFF', fontFamily: 'Advent Pro' }}
-                >
-                  Yearly
-                </span>
-                <span 
-                  className="text-[24px] font-medium"
-                  style={{ color: '#FFFFFF', fontFamily: 'Advent Pro' }}
-                >
-                  $39.99
-                </span>
-              </div>
-              <p 
-                className="text-left text-[14px] mt-1"
-                style={{ color: '#8A8A8A', fontFamily: 'Advent Pro' }}
+              <span 
+                className="block text-[16px] mb-1"
+                style={{ color: '#AAAAAA', fontFamily: 'Advent Pro' }}
               >
-                per year (save 17%)
-              </p>
+                Yearly
+              </span>
+              <span 
+                className="block text-[28px] font-medium"
+                style={{ color: '#FFFFFF', fontFamily: 'Advent Pro' }}
+              >
+                $39.99
+              </span>
+              <span 
+                className="block text-[12px]"
+                style={{ color: '#666666', fontFamily: 'Advent Pro' }}
+              >
+                per year
+              </span>
             </button>
-          </div>
-          
-          {/* Features list */}
-          <div 
-            className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
-            style={{ top: '500px', maxWidth: '340px' }}
-          >
-            <div className="flex flex-wrap justify-center gap-2">
-              {['7 days free', 'Record everything', 'Journal your life', 'Export everywhere', 'Add images', 'Cancel anytime', "Lot's more..."].map((feature, index) => (
-                <span 
-                  key={index}
-                  className="px-3 py-1 rounded-full text-[14px]"
-                  style={{ 
-                    backgroundColor: 'rgba(255,255,255,0.1)', 
-                    color: '#AAAAAA', 
-                    fontFamily: 'Advent Pro' 
-                  }}
-                >
-                  {feature}
-                </span>
-              ))}
-            </div>
           </div>
           
           {/* Subscribe button */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
-            style={{ bottom: '120px', maxWidth: '340px' }}
+            style={{ bottom: '100px', maxWidth: '360px' }}
           >
             <button
               onClick={() => {
+                // TODO: Link to Apple App Store subscription
                 localStorage.setItem('nuron-onboarding-complete', 'true');
                 navigate('/');
               }}
@@ -232,8 +243,8 @@ const Onboarding = () => {
                 localStorage.setItem('nuron-onboarding-complete', 'true');
                 navigate('/');
               }}
-              className="w-full mt-4 py-2 text-[14px]"
-              style={{ color: '#666666', fontFamily: 'Advent Pro' }}
+              className="w-full mt-4 py-3 text-[16px]"
+              style={{ color: '#888888', fontFamily: 'Advent Pro' }}
             >
               Skip for now
             </button>
