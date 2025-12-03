@@ -56,20 +56,20 @@ const Onboarding = () => {
       {/* Page 2 content */}
       {currentPage === 1 && (
         <>
-          {/* Text - 120px from top */}
+          {/* Text - 180px from top */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 px-8"
-            style={{ top: '120px', width: '100%', maxWidth: '400px' }}
+            style={{ top: '180px', width: '100%', maxWidth: '400px' }}
           >
             <p 
-              className="text-center font-outfit font-medium text-[26px] leading-snug mb-8"
-              style={{ color: '#FFFFFF' }}
+              className="text-center font-medium text-[26px] leading-snug mb-8"
+              style={{ color: '#FFFFFF', fontFamily: 'Advent Pro' }}
             >
               Turn your speech into well written text using our amazing AI
             </p>
             <p 
-              className="text-center font-outfit font-light text-[26px] leading-snug"
-              style={{ color: '#8A8A8A' }}
+              className="text-center font-light text-[26px] leading-snug"
+              style={{ color: '#8A8A8A', fontFamily: 'Advent Pro' }}
             >
               No more forgetting those great ideas, just jot it down in an instant and view later in a journal format
             </p>
