@@ -1278,7 +1278,7 @@ const Index = () => {
                 <div>
                   {menuOpen ? (
                     /* EXPANDED VIEW */
-                    <div className="pr-[30px]">
+                    <div>
                       <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 ${index === 0 ? '-mt-[10px]' : ''}`}>
                         {note.title || 'Untitled'}
                       </h3>
@@ -1299,7 +1299,7 @@ const Index = () => {
                     </div>
                   ) : (
                     /* COLLAPSED VIEW */
-                    <div className="flex items-center gap-[15px] pr-[30px]">
+                    <div className="flex items-center gap-[15px]">
                       <div className="flex-1">
                         <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 ${index === 0 ? '-mt-[10px]' : ''}`}>
                           {note.title || 'Untitled'}
