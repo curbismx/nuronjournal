@@ -19,58 +19,63 @@ const Onboarding = () => {
 
   return (
     <div 
-      className="min-h-screen flex flex-col items-center justify-between px-8"
+      className="min-h-screen relative"
       style={{ backgroundColor: '#2E2E2E' }}
     >
-      {/* Top spacer */}
-      <div className="flex-1" />
-      
       {/* Page 1 content */}
       {currentPage === 0 && (
-        <div className="flex flex-col items-center">
-          {/* Logo */}
-          <img 
-            src={logo} 
-            alt="Nuron Journal" 
-            className="w-[180px] h-auto mb-8"
-          />
-          
-          {/* Tagline */}
-          <p 
-            className="text-center font-outfit font-light text-[24px] leading-relaxed"
-            style={{ color: '#8A8A8A' }}
+        <>
+          {/* Logo - 239px wide, 180px from top */}
+          <div 
+            className="absolute left-1/2 transform -translate-x-1/2"
+            style={{ top: '180px' }}
           >
-            simple journal for<br />everyday life
-          </p>
-        </div>
+            <img 
+              src={logo} 
+              alt="Nuron Journal" 
+              style={{ width: '239px', height: 'auto' }}
+            />
+          </div>
+          
+          {/* Tagline - 600px from top */}
+          <div 
+            className="absolute left-1/2 transform -translate-x-1/2"
+            style={{ top: '600px' }}
+          >
+            <p 
+              className="text-center font-outfit font-light text-[24px] leading-relaxed"
+              style={{ color: '#8A8A8A' }}
+            >
+              simple journal for<br />everyday life
+            </p>
+          </div>
+        </>
       )}
       
       {/* Page 2 placeholder */}
       {currentPage === 1 && (
-        <div className="flex flex-col items-center">
+        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
           <p className="text-white">Page 2</p>
         </div>
       )}
       
       {/* Page 3 placeholder */}
       {currentPage === 2 && (
-        <div className="flex flex-col items-center">
+        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
           <p className="text-white">Page 3</p>
         </div>
       )}
       
-      {/* Bottom spacer */}
-      <div className="flex-1" />
-      
-      {/* Arrow button */}
+      {/* Arrow button - 30px, centered at bottom */}
       <button
         onClick={handleNext}
-        className="mb-16"
+        className="absolute left-1/2 transform -translate-x-1/2"
+        style={{ bottom: '80px' }}
       >
         <img 
           src={arrow} 
           alt="Next" 
-          className="w-[50px] h-[50px]"
+          style={{ width: '30px', height: '30px' }}
         />
       </button>
     </div>
