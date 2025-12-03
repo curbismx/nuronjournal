@@ -81,7 +81,11 @@ const Onboarding = () => {
             <img 
               src={mic} 
               alt="Microphone" 
-              style={{ width: '60px', height: 'auto' }}
+              style={{ 
+                width: '60px', 
+                height: 'auto',
+                filter: 'brightness(0) saturate(100%) invert(56%) sepia(57%) saturate(594%) hue-rotate(314deg) brightness(97%) contrast(84%)'
+              }}
             />
           </div>
         </>
@@ -168,7 +172,7 @@ const Onboarding = () => {
               </span>
               <span 
                 className="block text-[12px]"
-                style={{ color: '#444444', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
+                style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 per month
               </span>
@@ -218,7 +222,7 @@ const Onboarding = () => {
               </span>
               <span 
                 className="block text-[12px]"
-                style={{ color: '#444444', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
+                style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 per year
               </span>
