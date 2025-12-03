@@ -42,8 +42,8 @@ const Onboarding = () => {
             style={{ top: '600px' }}
           >
             <p 
-              className="text-center font-outfit font-light text-[24px] leading-relaxed"
-              style={{ color: '#8A8A8A' }}
+              className="text-center font-light text-[24px] leading-relaxed"
+              style={{ color: '#8A8A8A', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
               simple journal for<br />everyday life
             </p>
@@ -61,13 +61,13 @@ const Onboarding = () => {
           >
             <p 
               className="text-center font-medium text-[26px] leading-snug mb-8"
-              style={{ color: '#FFFFFF', fontFamily: 'Advent Pro' }}
+              style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
               Turn your speech into well written text using our amazing AI
             </p>
             <p 
               className="text-center font-light text-[26px] leading-snug"
-              style={{ color: '#8A8A8A', fontFamily: 'Advent Pro' }}
+              style={{ color: '#8A8A8A', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
               No more forgetting those great ideas, just jot it down in an instant and view later in a journal format
             </p>
@@ -112,7 +112,7 @@ const Onboarding = () => {
           {/* Features list with ticks */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 px-10 w-full"
-            style={{ top: '280px', maxWidth: '360px' }}
+            style={{ top: '310px', maxWidth: '360px' }}
           >
             {[
               'Record everything',
@@ -143,7 +143,7 @@ const Onboarding = () => {
           {/* Plan options */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full flex gap-4"
-            style={{ top: '600px', maxWidth: '360px' }}
+            style={{ bottom: '220px', maxWidth: '360px' }}
           >
             {/* Monthly option */}
             <button
@@ -214,7 +214,7 @@ const Onboarding = () => {
           {/* Subscribe button */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
-            style={{ bottom: '100px', maxWidth: '360px' }}
+            style={{ bottom: '80px', maxWidth: '360px' }}
           >
             <button
               onClick={() => {
