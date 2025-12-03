@@ -96,48 +96,43 @@ const Onboarding = () => {
             style={{ top: '80px' }}
           >
             <h1 
-              className="text-center text-[36px] font-medium tracking-wider mb-3"
-              style={{ color: '#FFFFFF', fontFamily: 'Advent Pro' }}
+              className="text-center text-[36px] font-medium mb-6"
+              style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '3px' }}
             >
               SUBSCRIPTION
             </h1>
             <p 
-              className="text-center text-[16px] font-light leading-relaxed"
-              style={{ color: '#8A8A8A', fontFamily: 'Advent Pro' }}
+              className="text-center text-[22px] font-light leading-relaxed"
+              style={{ color: '#8A8A8A', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
-              Join the thousands of creatives in our community<br />for less than the price of a coffee
+              Join the thousands of creatives<br />in our community for less than<br />the price of a coffee
             </p>
           </div>
           
           {/* Features list with ticks */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 px-10 w-full"
-            style={{ top: '220px', maxWidth: '360px' }}
+            style={{ top: '280px', maxWidth: '360px' }}
           >
             {[
-              '7 days free trial',
               'Record everything',
               'Journal your life',
               'Export everywhere',
               'Add images & audio',
               'Cancel anytime',
-              "And lot's more..."
+              "And lot's more...",
+              '7 days free trial'
             ].map((feature, index) => (
               <div 
                 key={index}
-                className="flex items-center gap-4 mb-4"
+                className="flex items-center gap-4 mb-5"
               >
-                <div 
-                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: '#E57373' }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </div>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E57373" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
                 <span 
                   className="text-[18px]"
-                  style={{ color: '#FFFFFF', fontFamily: 'Advent Pro' }}
+                  style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
                 >
                   {feature}
                 </span>
@@ -148,7 +143,7 @@ const Onboarding = () => {
           {/* Plan options */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full flex gap-4"
-            style={{ top: '540px', maxWidth: '360px' }}
+            style={{ top: '600px', maxWidth: '360px' }}
           >
             {/* Monthly option */}
             <button
@@ -161,19 +156,19 @@ const Onboarding = () => {
             >
               <span 
                 className="block text-[16px] mb-1"
-                style={{ color: '#AAAAAA', fontFamily: 'Advent Pro' }}
+                style={{ color: '#AAAAAA', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 Monthly
               </span>
               <span 
                 className="block text-[28px] font-medium"
-                style={{ color: '#FFFFFF', fontFamily: 'Advent Pro' }}
+                style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 $3.99
               </span>
               <span 
                 className="block text-[12px]"
-                style={{ color: '#666666', fontFamily: 'Advent Pro' }}
+                style={{ color: '#666666', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 per month
               </span>
@@ -191,25 +186,25 @@ const Onboarding = () => {
               {/* Best value badge */}
               <div 
                 className="absolute -top-3 left-1/2 transform -translate-x-1/2 px-3 py-1 rounded-full text-[11px] font-medium"
-                style={{ backgroundColor: '#E57373', color: '#FFFFFF', fontFamily: 'Advent Pro' }}
+                style={{ backgroundColor: '#E57373', color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 SAVE 17%
               </div>
               <span 
                 className="block text-[16px] mb-1"
-                style={{ color: '#AAAAAA', fontFamily: 'Advent Pro' }}
+                style={{ color: '#AAAAAA', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 Yearly
               </span>
               <span 
                 className="block text-[28px] font-medium"
-                style={{ color: '#FFFFFF', fontFamily: 'Advent Pro' }}
+                style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 $39.99
               </span>
               <span 
                 className="block text-[12px]"
-                style={{ color: '#666666', fontFamily: 'Advent Pro' }}
+                style={{ color: '#666666', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 per year
               </span>
@@ -231,7 +226,8 @@ const Onboarding = () => {
               style={{ 
                 backgroundColor: '#E57373', 
                 color: '#FFFFFF', 
-                fontFamily: 'Advent Pro' 
+                fontFamily: 'Advent Pro',
+                letterSpacing: '1px'
               }}
             >
               Subscribe for {selectedPlan === 'monthly' ? '$3.99/month' : '$39.99/year'}
@@ -244,7 +240,7 @@ const Onboarding = () => {
                 navigate('/');
               }}
               className="w-full mt-4 py-3 text-[16px]"
-              style={{ color: '#888888', fontFamily: 'Advent Pro' }}
+              style={{ color: '#888888', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
               Skip for now
             </button>
