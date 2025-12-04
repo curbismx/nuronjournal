@@ -165,7 +165,9 @@ const Note = () => {
           const existingNote = notes.find((n: any) => n.id === id);
           if (existingNote?.audio_data) {
             const parsed = JSON.parse(existingNote.audio_data);
-            if (Array.isArray(parsed)) return parsed;
+            if (Array.isArray(parsed)) {
+              return parsed;
+            }
             return [existingNote.audio_data];
           }
         } catch {}
@@ -176,7 +178,12 @@ const Note = () => {
   const [audioDurations, setAudioDurations] = useState<string[]>([]);
   const [playingAudioIndex, setPlayingAudioIndex] = useState<number | null>(null);
   const audioPlayerRefs = useRef<(HTMLAudioElement | null)[]>([]);
+  const audioUrlsRef = useRef<string[]>([]);
   
+  // Initialize audioUrlsRef when audioUrls state is set
+  useEffect(() => {
+    audioUrlsRef.current = audioUrls;
+  }, [audioUrls]);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -343,14 +350,40 @@ const Note = () => {
   };
 
 
+  // Helper function to convert blob to base64
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        resolve(base64String);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  // Helper function to convert base64 to blob URL
+  const base64ToBlobUrl = (base64String: string): string => {
+    // base64String format: "data:audio/mp4;base64,..."
+    return base64String; // Can be used directly as src in audio element
+  };
+
   const uploadAudioToSupabase = async (blob: Blob): Promise<string | null> => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
-        // User not logged in - use local blob URL (won't sync across devices)
-        const blobUrl = URL.createObjectURL(blob);
-        console.log('User not logged in, using local blob URL for audio');
-        return blobUrl;
+        // User not logged in - convert to base64 and store in localStorage
+        try {
+          const base64String = await blobToBase64(blob);
+          console.log('User not logged in, storing audio as base64 in localStorage');
+          // Return base64 data URL (can be used directly in audio src)
+          return base64String;
+        } catch (error) {
+          console.error('Failed to convert blob to base64:', error);
+          // Fallback to blob URL (temporary)
+          return URL.createObjectURL(blob);
+        }
       }
       
       const contentType = blob.type || 'audio/mp4';
@@ -603,8 +636,16 @@ const Note = () => {
         console.log('Created blob with type:', blob.type, 'size:', blob.size);
         const url = await uploadAudioToSupabase(blob);
         if (url) {
-          setAudioUrls(prev => [...prev, url]);
+          setAudioUrls(prev => {
+            const newUrls = [...prev, url];
+            audioUrlsRef.current = newUrls;
+            return newUrls;
+          });
           setAudioDurations(prev => [...prev, '00:00']);
+          // Save note after audio is added
+          setTimeout(() => {
+            saveNote();
+          }, 100);
         }
       };
       
@@ -661,9 +702,10 @@ const Note = () => {
         console.error('Error deleting audio from storage:', error);
       }
     } else if (urlToDelete.startsWith('blob:')) {
-      // Revoke blob URL to free memory for local blob URLs
+      // Revoke blob URL to free memory for local blob URLs (temporary fallback)
       URL.revokeObjectURL(urlToDelete);
     }
+    // Base64 data URLs don't need cleanup - they're just strings
     
     // Stop playback if this audio is playing
     if (playingAudioIndex === index) {
@@ -671,9 +713,35 @@ const Note = () => {
       setPlayingAudioIndex(null);
     }
     
-    // Remove from arrays
-    setAudioUrls(prev => prev.filter((_, i) => i !== index));
+    // Remove from arrays and update ref immediately
+    const newUrls = audioUrls.filter((_, i) => i !== index);
+    audioUrlsRef.current = newUrls;
+    
+    setAudioUrls(newUrls);
     setAudioDurations(prev => prev.filter((_, i) => i !== index));
+    
+    // Check if note should be deleted (no content, no images, no audio)
+    const noteContent = getNoteContent();
+    const hasImages = contentBlocks.filter(b => b.type === 'image').length > 0;
+    const hasAudio = newUrls.length > 0;
+    
+    // If note is empty (no content, images, or audio), delete the entire note
+    if (!noteContent.trim() && !hasImages && !hasAudio) {
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          deleteNote();
+        }, 50);
+      });
+      return;
+    }
+    
+    // Save note after audio is deleted (ref is already updated)
+    // Use requestAnimationFrame to ensure state updates are processed
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        saveNote();
+      }, 50);
+    });
   };
 
   // Load existing note on mount
@@ -702,11 +770,13 @@ const Note = () => {
                 try {
                   const parsed = JSON.parse(data.audio_data);
                   if (Array.isArray(parsed)) {
+                    audioUrlsRef.current = parsed;
                     setAudioUrls(parsed);
                     setAudioDurations(parsed.map(() => '00:00'));
                   }
                 } catch {
                   // Old format: single URL string
+                  audioUrlsRef.current = [data.audio_data];
                   setAudioUrls([data.audio_data]);
                   setAudioDurations(['00:00']);
                 }
@@ -727,6 +797,25 @@ const Note = () => {
             }
             setNoteDate(new Date(existingNote.createdAt));
             existingCreatedAt.current = existingNote.createdAt;
+            // Load audio_data from localStorage if available
+            if ((existingNote as any).audio_data) {
+              try {
+                const parsed = JSON.parse((existingNote as any).audio_data);
+                if (Array.isArray(parsed)) {
+                  audioUrlsRef.current = parsed;
+                  setAudioUrls(parsed);
+                  setAudioDurations(parsed.map(() => '00:00'));
+                } else {
+                  audioUrlsRef.current = [(existingNote as any).audio_data];
+                  setAudioUrls([(existingNote as any).audio_data]);
+                  setAudioDurations(['00:00']);
+                }
+              } catch {
+                audioUrlsRef.current = [(existingNote as any).audio_data];
+                setAudioUrls([(existingNote as any).audio_data]);
+                setAudioDurations(['00:00']);
+              }
+            }
           }
         }
       }
@@ -839,9 +928,17 @@ const Note = () => {
     if (isDeletedRef.current) return;
     
     const noteContent = getNoteContent();
-    if (!noteContent.trim() && contentBlocks.filter(b => b.type === 'image').length === 0) {
+    const hasImages = contentBlocks.filter(b => b.type === 'image').length > 0;
+    const hasAudio = audioUrlsRef.current.length > 0 || audioUrls.length > 0;
+    
+    // Save if there's content, images, or audio
+    if (!noteContent.trim() && !hasImages && !hasAudio) {
       return;
     }
+
+    // Use ref to get the most up-to-date audioUrls (in case async operations haven't updated state yet)
+    // Ref is always kept in sync with state via useEffect, so use it as the source of truth
+    const currentAudioUrls = audioUrlsRef.current;
 
     const noteData = {
       id: noteIdRef.current,
@@ -850,6 +947,7 @@ const Note = () => {
       createdAt: existingCreatedAt.current || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       weather: weather ? { temp: weather.temp, weatherCode: weather.weatherCode } : undefined,
+      audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : undefined,
     };
 
     // ALWAYS check auth directly - don't use React state
@@ -865,17 +963,21 @@ const Note = () => {
         created_at: noteData.createdAt,
         updated_at: noteData.updatedAt,
         weather: noteData.weather,
-        audio_data: audioUrls.length > 0 ? JSON.stringify(audioUrls) : null
+        audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : null
       });
       
       if (!error) {
         // UPDATE LOCAL CACHE so Index loads instantly
         const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
         const existingIndex = cached.findIndex((n: any) => n.id === noteData.id);
+        const noteDataWithAudio = {
+          ...noteData,
+          audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : undefined
+        };
         if (existingIndex >= 0) {
-          cached[existingIndex] = noteData;
+          cached[existingIndex] = noteDataWithAudio;
         } else {
-          cached.unshift(noteData);
+          cached.unshift(noteDataWithAudio);
         }
         localStorage.setItem('nuron-notes-cache', JSON.stringify(cached));
       }
@@ -887,7 +989,7 @@ const Note = () => {
       const existingIndex = notes.findIndex((n: any) => n.id === noteIdRef.current);
       const noteDataWithAudio = {
         ...noteData,
-        audio_data: audioUrls.length > 0 ? JSON.stringify(audioUrls) : undefined
+        audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : undefined
       };
       if (existingIndex >= 0) {
         notes[existingIndex] = noteDataWithAudio;
