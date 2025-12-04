@@ -13,6 +13,7 @@ interface SavedNote {
 }
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import backIcon from '@/assets/00backbutton-3.png';
 import threeDotsIcon from '@/assets/00threedots-3.png';
 import starIcon from '@/assets/star.png';
@@ -346,8 +347,10 @@ const Note = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
-        console.error('User not logged in');
-        return null;
+        // User not logged in - use local blob URL (won't sync across devices)
+        const blobUrl = URL.createObjectURL(blob);
+        console.log('User not logged in, using local blob URL for audio');
+        return blobUrl;
       }
       
       const contentType = blob.type || 'audio/mp4';
@@ -363,7 +366,9 @@ const Note = () => {
       
       if (error) {
         console.error('Upload error:', error);
-        return null;
+        // Fallback to local blob URL if upload fails
+        const blobUrl = URL.createObjectURL(blob);
+        return blobUrl;
       }
       
       const { data: { publicUrl } } = supabase.storage
@@ -373,78 +378,51 @@ const Note = () => {
       return publicUrl;
     } catch (error) {
       console.error('Upload failed:', error);
-      return null;
+      // Fallback to local blob URL if anything fails
+      try {
+        const blobUrl = URL.createObjectURL(blob);
+        return blobUrl;
+      } catch (e) {
+        console.error('Failed to create blob URL:', e);
+        return null;
+      }
     }
   };
 
   const startRecording = async () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognitionRef.current = recognition;
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'en-GB';
+    // Check if getUserMedia is available
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast.error('Microphone access is not available in this browser.');
+      setIsRecordingOpen(false);
+      return;
+    }
+
+    // Start audio recording first (this will request permission)
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+    } catch (error: any) {
+      console.error('Audio recording error:', error);
+      let errorMessage = 'Failed to access microphone. ';
       
-      recognition.onresult = (event: any) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
-        
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-          } else {
-            interimTranscript += transcript;
-          }
-        }
-        
-        setContentBlocks(prev => {
-          const lastBlock = prev[prev.length - 1];
-          if (lastBlock && lastBlock.type === 'text') {
-            const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
-            const baseContent = currentContent.replace(/\|\|.*$/, '').trimEnd();
-            let newContent = baseContent;
-            if (finalTranscript) {
-              newContent = baseContent ? baseContent + ' ' + finalTranscript : finalTranscript;
-            }
-            if (interimTranscript) {
-              newContent = newContent + '||' + interimTranscript;
-            }
-            return [...prev.slice(0, -1), { ...lastBlock, content: newContent }];
-          }
-          return prev;
-        });
-        
-        // Auto-scroll to bottom while recording (only on final transcript to avoid jitter)
-        if (finalTranscript) {
-          setTimeout(() => {
-            const textareas = document.querySelectorAll('.note-textarea');
-            const lastTextarea = textareas[textareas.length - 1] as HTMLTextAreaElement;
-            if (lastTextarea) {
-              lastTextarea.style.height = 'auto';
-              lastTextarea.style.height = Math.max(24, lastTextarea.scrollHeight) + 'px';
-              lastTextarea.scrollIntoView({ behavior: 'smooth', block: 'end' });
-            }
-          }, 50);
-        }
-      };
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        errorMessage += 'Please allow microphone access in your browser settings.';
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        errorMessage += 'No microphone found.';
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        errorMessage += 'Microphone is already in use by another application.';
+      } else {
+        errorMessage += 'Please check your microphone settings.';
+      }
       
-      recognition.onend = () => {
-        if (isRecordingRef.current) {
-          try { recognition.start(); } catch (e) {}
-        }
-      };
-      
-      recognition.start();
+      toast.error(errorMessage);
+      setIsRecordingOpen(false);
+      return;
     }
     
-    // Start audio recording
+    // Set up MediaRecorder
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      
       let options: MediaRecorderOptions = {};
       if (MediaRecorder.isTypeSupported('audio/mp4')) {
         options = { mimeType: 'audio/mp4' };
@@ -463,11 +441,103 @@ const Note = () => {
         }
       };
       
+      mediaRecorder.onerror = (event: any) => {
+        console.error('MediaRecorder error:', event);
+        toast.error('Recording error occurred. Please try again.');
+      };
+      
       mediaRecorder.start(1000);
     } catch (error) {
-      console.error('Audio recording error:', error);
+      console.error('MediaRecorder setup error:', error);
+      toast.error('Failed to start recording. Please try again.');
+      // Clean up stream if MediaRecorder fails
+      stream.getTracks().forEach(track => track.stop());
+      setIsRecordingOpen(false);
+      return;
     }
     
+    // Set up speech recognition (optional - don't fail if not available)
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (SpeechRecognition) {
+      try {
+        const recognition = new SpeechRecognition();
+        recognitionRef.current = recognition;
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-GB';
+        
+        recognition.onresult = (event: any) => {
+          let interimTranscript = '';
+          let finalTranscript = '';
+          
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript + ' ';
+            } else {
+              interimTranscript += transcript;
+            }
+          }
+          
+          setContentBlocks(prev => {
+            const lastBlock = prev[prev.length - 1];
+            if (lastBlock && lastBlock.type === 'text') {
+              const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
+              const baseContent = currentContent.replace(/\|\|.*$/, '').trimEnd();
+              let newContent = baseContent;
+              if (finalTranscript) {
+                newContent = baseContent ? baseContent + ' ' + finalTranscript : finalTranscript;
+              }
+              if (interimTranscript) {
+                newContent = newContent + '||' + interimTranscript;
+              }
+              return [...prev.slice(0, -1), { ...lastBlock, content: newContent }];
+            }
+            return prev;
+          });
+          
+          // Auto-scroll to bottom while recording (only on final transcript to avoid jitter)
+          if (finalTranscript) {
+            setTimeout(() => {
+              const textareas = document.querySelectorAll('.note-textarea');
+              const lastTextarea = textareas[textareas.length - 1] as HTMLTextAreaElement;
+              if (lastTextarea) {
+                lastTextarea.style.height = 'auto';
+                lastTextarea.style.height = Math.max(24, lastTextarea.scrollHeight) + 'px';
+                lastTextarea.scrollIntoView({ behavior: 'smooth', block: 'end' });
+              }
+            }, 50);
+          }
+        };
+        
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          // Don't show error for 'no-speech' as it's common
+          if (event.error !== 'no-speech' && event.error !== 'aborted') {
+            // Only log, don't interrupt recording
+            console.warn('Speech recognition issue:', event.error);
+          }
+        };
+        
+        recognition.onend = () => {
+          if (isRecordingRef.current) {
+            try { 
+              recognition.start(); 
+            } catch (e) {
+              console.warn('Speech recognition restart failed:', e);
+            }
+          }
+        };
+        
+        recognition.start();
+      } catch (error) {
+        console.warn('Speech recognition not available:', error);
+        // Continue with audio recording even if speech recognition fails
+      }
+    }
+    
+    // Only set recording state if we successfully got here
     setIsRecording(true);
     isRecordingRef.current = true;
     setIsPaused(false);
@@ -590,6 +660,9 @@ const Note = () => {
       } catch (error) {
         console.error('Error deleting audio from storage:', error);
       }
+    } else if (urlToDelete.startsWith('blob:')) {
+      // Revoke blob URL to free memory for local blob URLs
+      URL.revokeObjectURL(urlToDelete);
     }
     
     // Stop playback if this audio is playing
@@ -812,10 +885,14 @@ const Note = () => {
       // Not logged in - save to localStorage
       const notes = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
       const existingIndex = notes.findIndex((n: any) => n.id === noteIdRef.current);
+      const noteDataWithAudio = {
+        ...noteData,
+        audio_data: audioUrls.length > 0 ? JSON.stringify(audioUrls) : undefined
+      };
       if (existingIndex >= 0) {
-        notes[existingIndex] = noteData;
+        notes[existingIndex] = noteDataWithAudio;
       } else {
-        notes.unshift(noteData);
+        notes.unshift(noteDataWithAudio);
       }
       localStorage.setItem('nuron-notes', JSON.stringify(notes));
     }
