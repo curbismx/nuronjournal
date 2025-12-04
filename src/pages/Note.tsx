@@ -1171,7 +1171,17 @@ const Note = () => {
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: themeColors[theme] }}>
       {/* Fixed dark header */}
-      <header className="flex-shrink-0 pl-[30px] pt-[30px] pr-4 pb-[30px] h-[150px] z-30" style={{ backgroundColor: themeColors[theme] }}>
+      <header 
+        className="flex-shrink-0 z-30" 
+        style={{ 
+          backgroundColor: themeColors[theme],
+          paddingTop: `calc(30px + env(safe-area-inset-top))`,
+          paddingLeft: `calc(30px + env(safe-area-inset-left))`,
+          paddingRight: `calc(16px + env(safe-area-inset-right))`,
+          paddingBottom: '30px',
+          minHeight: `calc(150px + env(safe-area-inset-top))`
+        }}
+      >
         <div className="flex items-center justify-between mb-auto -mt-[15px]">
           <Button
             variant="ghost"
@@ -1188,7 +1198,10 @@ const Note = () => {
           </h1>
           <button 
             onClick={() => setMenuOpen(!menuOpen)}
-            className="absolute right-[30px] top-0"
+            className="absolute top-0"
+            style={{
+              right: `calc(30px + env(safe-area-inset-right))`
+            }}
           >
             <img src={threeDotsIcon} alt="Menu" className="h-[24px] w-auto" />
           </button>
@@ -1507,7 +1520,11 @@ const Note = () => {
       {menuOpen && (
         <div 
           ref={menuRef}
-          className="fixed right-[20px] top-[140px] z-50 bg-white rounded-2xl shadow-lg py-4 w-[220px] animate-in fade-in-0 zoom-in-95 duration-200"
+          className="fixed z-50 bg-white rounded-2xl shadow-lg py-4 w-[220px] animate-in fade-in-0 zoom-in-95 duration-200"
+          style={{
+            right: `calc(20px + env(safe-area-inset-right))`,
+            top: `calc(140px + env(safe-area-inset-top))`
+          }}
         >
           {/* Section 1 - Actions */}
           <div className="flex flex-col">
@@ -1653,7 +1670,11 @@ const Note = () => {
       {!isRecordingOpen ? (
         <button
           onClick={openRecorder}
-          className="fixed bottom-[30px] right-[30px] z-50"
+          className="fixed z-50"
+          style={{
+            bottom: `calc(30px + env(safe-area-inset-bottom))`,
+            right: `calc(30px + env(safe-area-inset-right))`
+          }}
         >
           <img src={themeRecordIcons[theme]} alt="Record" className="w-[51px] h-[51px]" />
         </button>
@@ -1670,8 +1691,8 @@ const Note = () => {
             onClick={handleRecorderTap}
             className="fixed z-50"
             style={{
-              bottom: '30px',
-              right: '30px',
+              bottom: `calc(30px + env(safe-area-inset-bottom))`,
+              right: `calc(30px + env(safe-area-inset-right))`,
               width: '120px',
               height: '120px',
               background: 'none',

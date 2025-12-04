@@ -542,7 +542,13 @@ const Index = () => {
     return (
       <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: themeColors[theme] }}>
         {/* Header with settings button */}
-        <div className="pl-[30px] pt-[30px] z-50">
+        <div 
+          className="z-50"
+          style={{
+            paddingTop: `calc(30px + env(safe-area-inset-top))`,
+            paddingLeft: `calc(30px + env(safe-area-inset-left))`
+          }}
+        >
         <button 
           onClick={() => {
             if (showChangePassword) {
@@ -565,7 +571,13 @@ const Index = () => {
 
         {/* Title for settings/account */}
       {(showSettings || showAccountDetails || showChangePassword) && (
-        <div className="px-[30px] mt-[20px]">
+        <div 
+          className="mt-[20px]"
+          style={{
+            paddingLeft: `calc(30px + env(safe-area-inset-left))`,
+            paddingRight: `calc(30px + env(safe-area-inset-right))`
+          }}
+        >
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider">
             {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : 'SETTINGS'}
           </h1>
@@ -573,7 +585,15 @@ const Index = () => {
       )}
 
         {/* Settings panel */}
-      <div className={`absolute inset-x-0 top-[120px] bottom-0 px-8 pt-[80px] overflow-y-auto transition-opacity duration-200 ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} style={{ backgroundColor: themeColors[theme] }}>
+      <div 
+        className={`absolute inset-x-0 bottom-0 px-8 pt-[80px] overflow-y-auto transition-opacity duration-200 ${showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+        style={{ 
+          backgroundColor: themeColors[theme],
+          top: `calc(120px + env(safe-area-inset-top))`,
+          paddingLeft: `calc(32px + env(safe-area-inset-left))`,
+          paddingRight: `calc(32px + env(safe-area-inset-right))`
+        }}
+      >
         <div className="text-white font-outfit space-y-6">
           {showChangePassword ? (
             /* Change Password Form */
@@ -906,7 +926,17 @@ const Index = () => {
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: themeColors[theme] }}>
       {/* Fixed dark header */}
-      <header className="flex-shrink-0 pl-[30px] pt-[30px] pb-[30px] h-[150px] z-30" style={{ backgroundColor: themeColors[theme] }}>
+      <header 
+        className="flex-shrink-0 z-30" 
+        style={{ 
+          backgroundColor: themeColors[theme],
+          paddingTop: `calc(30px + env(safe-area-inset-top))`,
+          paddingLeft: `calc(30px + env(safe-area-inset-left))`,
+          paddingRight: `calc(30px + env(safe-area-inset-right))`,
+          paddingBottom: '30px',
+          minHeight: `calc(150px + env(safe-area-inset-top))`
+        }}
+      >
         <div className="flex items-center justify-between mb-auto -mt-[15px]">
           <button 
             onClick={() => {
@@ -1388,15 +1418,25 @@ const Index = () => {
 
       {/* Floating add button */}
       {!showSettings && (
-        <img 
-          src={themePlusIcons[theme]} 
-          alt="Add Note"
+        <button
           onClick={() => navigate('/note')}
-          className="fixed bottom-[30px] right-[30px] z-50 cursor-pointer w-[51px] h-[51px]"
+          className="fixed z-50 cursor-pointer p-0 border-0 bg-transparent"
           style={{
-            filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
+            bottom: `calc(30px + env(safe-area-inset-bottom))`,
+            right: `calc(30px + env(safe-area-inset-right))`,
+            width: '51px',
+            height: '51px'
           }}
-        />
+        >
+          <img 
+            src={themePlusIcons[theme]} 
+            alt="Add Note"
+            className="w-full h-full"
+            style={{
+              filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))'
+            }}
+          />
+        </button>
       )}
 
       {/* Delete account confirmation dialog */}
