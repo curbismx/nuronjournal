@@ -963,23 +963,25 @@ const Index = () => {
             {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : visibleMonthYear}
           </h1>
           {!showSettings && !showAccountDetails && !showChangePassword && (
-            <>
+            <div 
+              className="absolute top-0 right-0 flex items-center gap-4"
+            >
               <button 
                 onClick={() => {
                   setIsSearching(!isSearching);
                   if (isSearching) setSearchQuery("");
                 }}
-                className="absolute right-[110px] top-0"
+                className="p-0 m-0 border-0 bg-transparent"
               >
                 <img src={searchIcon} alt="Search" className="h-[24px] w-auto" />
               </button>
               <button 
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="absolute right-[30px] top-0"
+                className="p-0 m-0 border-0 bg-transparent"
               >
                 <img src={menuOpen ? condenseIcon : expandIcon} alt="Menu" className="h-[24px] w-auto" />
               </button>
-            </>
+            </div>
           )}
         </div>
       </header>
@@ -1362,11 +1364,11 @@ const Index = () => {
                           )}
                           
                 {/* Title and Body Container */}
-                <div>
+                <div className="min-w-0">
                   {menuOpen ? (
                     /* EXPANDED VIEW */
                     <div>
-                      <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 ${index === 0 ? '-mt-[10px]' : ''}`}>
+                      <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 break-words overflow-wrap-anywhere ${index === 0 ? '-mt-[10px]' : ''}`}>
                         {note.title || 'Untitled'}
                       </h3>
                       <div className="-mt-[10px]" style={{ maxHeight: '273px', overflow: 'hidden' }}>
@@ -1378,7 +1380,7 @@ const Index = () => {
                             style={{ shapeOutside: 'margin-box' }}
                           />
                         )}
-                        <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)]" style={{ display: 'block' }}>
+                        <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] break-words overflow-wrap-anywhere" style={{ display: 'block' }}>
                           {preview || 'No content'}
                         </p>
                         <div style={{ clear: 'both' }} />
@@ -1387,11 +1389,11 @@ const Index = () => {
                   ) : (
                     /* COLLAPSED VIEW */
                     <div className="flex items-center gap-[15px]">
-                      <div className="flex-1">
-                        <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 ${index === 0 ? '-mt-[10px]' : ''}`}>
+                      <div className="flex-1 min-w-0">
+                        <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 break-words overflow-wrap-anywhere ${index === 0 ? '-mt-[10px]' : ''}`}>
                           {note.title || 'Untitled'}
                         </h3>
-                        <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px]">
+                        <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px] break-words overflow-wrap-anywhere">
                           {preview || 'No content'}
                         </p>
                       </div>
