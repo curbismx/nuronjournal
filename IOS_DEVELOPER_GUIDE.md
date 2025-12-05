@@ -201,7 +201,19 @@ Add these keys to `ios/App/App/Info.plist`:
 <!-- Camera Permission (if needed) -->
 <key>NSCameraUsageDescription</key>
 <string>Nuron Journal needs camera access to take photos for your notes.</string>
+
+<!-- Location Permission (for weather) -->
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>Nuron Journal needs your location to show local weather in your notes.</string>
 ```
+
+### Capacitor Plugins Required
+
+The app uses these Capacitor plugins for permissions:
+- `@capacitor/camera` - For photo library and camera access
+- `@capacitor/geolocation` - For location access (weather feature)
+
+After cloning, run `npm install` to install all dependencies including these plugins.
 
 ### 5. Set Deployment Target
 
