@@ -6,6 +6,7 @@ import logo from '@/assets/logo.png';
 import arrow from '@/assets/arrow.png';
 import mic from '@/assets/mic.png';
 import { getOfferings, purchasePackage, restorePurchases } from '@/lib/purchases';
+import { supabase } from '@/integrations/supabase/client';
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -15,6 +16,14 @@ const Onboarding = () => {
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
+  
+  // Account setup state
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [isSignInMode, setIsSignInMode] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
 
   const toggleUse = (use: string) => {
     setSelectedUses(prev => 
@@ -25,10 +34,9 @@ const Onboarding = () => {
   };
 
   const handleNext = () => {
-    if (currentPage < 3) {
+    if (currentPage < 4) {
       setCurrentPage(currentPage + 1);
     }
-    // Page 4 (subscription) has its own subscribe/skip buttons
   };
 
   // Fetch offerings when reaching subscription page
@@ -44,9 +52,8 @@ const Onboarding = () => {
 
   const handleSubscribe = async () => {
     if (!Capacitor.isNativePlatform()) {
-      // Web fallback - just complete onboarding
-      localStorage.setItem('nuron-onboarding-complete', 'true');
-      navigate('/');
+      // Web fallback - go to account setup page
+      setCurrentPage(4);
       return;
     }
     
@@ -59,15 +66,13 @@ const Onboarding = () => {
     if (selectedPackage) {
       const customerInfo = await purchasePackage(selectedPackage);
       if (customerInfo && customerInfo.activeSubscriptions.length > 0) {
-        localStorage.setItem('nuron-onboarding-complete', 'true');
         localStorage.setItem('nuron-subscribed', 'true');
-        navigate('/');
+        setCurrentPage(4); // Go to account setup
       }
     } else {
       // Fallback if packages not loaded
-      console.log('Package not found, completing onboarding anyway');
-      localStorage.setItem('nuron-onboarding-complete', 'true');
-      navigate('/');
+      console.log('Package not found, going to account setup');
+      setCurrentPage(4);
     }
     
     setIsLoading(false);
@@ -84,9 +89,8 @@ const Onboarding = () => {
     try {
       const customerInfo = await restorePurchases();
       if (customerInfo && customerInfo.activeSubscriptions.length > 0) {
-        localStorage.setItem('nuron-onboarding-complete', 'true');
         localStorage.setItem('nuron-subscribed', 'true');
-        navigate('/');
+        setCurrentPage(4); // Go to account setup
       } else {
         alert('No active subscriptions found');
       }
@@ -96,6 +100,48 @@ const Onboarding = () => {
     }
     
     setIsRestoring(false);
+  };
+
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+    
+    try {
+      if (isSignInMode) {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          setAuthError(error.message);
+        } else {
+          localStorage.setItem('nuron-onboarding-complete', 'true');
+          navigate('/');
+        }
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { 
+            data: { name },
+            emailRedirectTo: `${window.location.origin}/`
+          }
+        });
+        if (error) {
+          setAuthError(error.message);
+        } else {
+          localStorage.setItem('nuron-onboarding-complete', 'true');
+          navigate('/');
+        }
+      }
+    } catch (error) {
+      setAuthError('An unexpected error occurred');
+    }
+    
+    setAuthLoading(false);
+  };
+
+  const completeOnboarding = () => {
+    localStorage.setItem('nuron-onboarding-complete', 'true');
+    navigate('/');
   };
 
   return (
@@ -407,9 +453,8 @@ const Onboarding = () => {
             {/* Skip for now */}
             <button
               onClick={() => {
-                localStorage.setItem('nuron-onboarding-complete', 'true');
                 localStorage.setItem('nuron-trial-start', Date.now().toString());
-                navigate('/');
+                setCurrentPage(4); // Go to account setup
               }}
               className="w-full mt-2 py-3 text-[16px]"
               style={{ color: '#888888', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
@@ -419,8 +464,146 @@ const Onboarding = () => {
           </div>
         </>
       )}
+
+      {/* Page 5 content - Account Setup */}
+      {currentPage === 4 && (
+        <>
+          {/* Header */}
+          <div 
+            className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
+            style={{ top: '80px' }}
+          >
+            <h1 
+              className="text-center text-[36px] font-medium mb-6"
+              style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '3px' }}
+            >
+              SET UP ACCOUNT
+            </h1>
+            <p 
+              className="text-center text-[22px] font-light leading-relaxed"
+              style={{ color: '#8A8A8A', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
+            >
+              Sync your notes across devices<br />and never lose them
+            </p>
+          </div>
+          
+          {/* Form */}
+          <form 
+            onSubmit={handleAuthSubmit}
+            className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
+            style={{ top: '260px', maxWidth: '360px' }}
+          >
+            {/* Name field - only for sign up */}
+            {!isSignInMode && (
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Name (optional)"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full p-4 rounded-2xl border-2 bg-transparent outline-none transition-all"
+                  style={{ 
+                    borderColor: '#555555',
+                    color: '#FFFFFF',
+                    fontFamily: 'Advent Pro',
+                    fontSize: '18px',
+                    letterSpacing: '1px'
+                  }}
+                />
+              </div>
+            )}
+            
+            {/* Email field */}
+            <div className="mb-4">
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full p-4 rounded-2xl border-2 bg-transparent outline-none transition-all"
+                style={{ 
+                  borderColor: '#555555',
+                  color: '#FFFFFF',
+                  fontFamily: 'Advent Pro',
+                  fontSize: '18px',
+                  letterSpacing: '1px'
+                }}
+              />
+            </div>
+            
+            {/* Password field */}
+            <div className="mb-4">
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full p-4 rounded-2xl border-2 bg-transparent outline-none transition-all"
+                style={{ 
+                  borderColor: '#555555',
+                  color: '#FFFFFF',
+                  fontFamily: 'Advent Pro',
+                  fontSize: '18px',
+                  letterSpacing: '1px'
+                }}
+              />
+            </div>
+            
+            {/* Error message */}
+            {authError && (
+              <p 
+                className="text-center mb-4 text-[14px]"
+                style={{ color: '#E57373', fontFamily: 'Advent Pro' }}
+              >
+                {authError}
+              </p>
+            )}
+            
+            {/* Submit button */}
+            <button
+              type="submit"
+              disabled={authLoading}
+              className="w-full py-4 rounded-full text-[18px] font-medium transition-all disabled:opacity-70"
+              style={{ 
+                backgroundColor: '#E57373', 
+                color: '#FFFFFF', 
+                fontFamily: 'Advent Pro',
+                letterSpacing: '1px'
+              }}
+            >
+              {authLoading ? 'Please wait...' : (isSignInMode ? 'Sign In' : 'Create Account')}
+            </button>
+            
+            {/* Toggle sign in/sign up */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignInMode(!isSignInMode);
+                setAuthError('');
+              }}
+              className="w-full mt-4 py-3 text-[14px]"
+              style={{ color: '#E57373', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
+            >
+              {isSignInMode ? "Don't have an account? Sign Up" : 'Already have an account? Sign In'}
+            </button>
+
+            {/* Skip for now */}
+            <button
+              type="button"
+              onClick={completeOnboarding}
+              className="w-full mt-2 py-3 text-[16px]"
+              style={{ color: '#888888', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
+            >
+              Skip for now
+            </button>
+          </form>
+        </>
+      )}
       
-      {/* Arrow button - 30px, centered at bottom (hidden on page 4) */}
+      {/* Arrow button - 30px, centered at bottom (hidden on page 4 and 5) */}
       {currentPage < 3 && (
         <button
           onClick={handleNext}
