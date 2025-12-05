@@ -57,5 +57,9 @@
     <!-- Camera Permission (if needed) -->
     <key>NSCameraUsageDescription</key>
     <string>Nuron Journal needs camera access to take photos for your notes.</string>
+
+    <!-- Location Permission (for weather) -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Nuron Journal needs your location to show local weather in your notes.</string>
 </dict>
 </plist>
