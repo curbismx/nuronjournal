@@ -213,7 +213,7 @@ const Onboarding = () => {
           {/* Logo - 239px wide, 180px from top */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2"
-            style={{ top: '180px' }}
+            style={{ top: '100px' }}
           >
             <img 
               src={logo} 
@@ -225,10 +225,10 @@ const Onboarding = () => {
           {/* Tagline - 600px from top */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2"
-            style={{ top: '600px' }}
+            style={{ top: '400px' }}
           >
             <p 
-              className="text-center font-light text-[24px] leading-relaxed"
+              className="text-center font-light text-[22px] leading-relaxed"
               style={{ color: '#8A8A8A', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
               never forget anything<br />ever again
@@ -848,12 +848,12 @@ const Onboarding = () => {
         </>
       )}
       
-      {/* Arrow button - 30px, centered at bottom (hidden on page 4, 5, 6) */}
+      {/* Arrow button - 30px, positioned higher (hidden on page 4, 5, 6) */}
       {currentPage < 3 && (
         <button
           onClick={handleNext}
           className="absolute left-1/2 transform -translate-x-1/2"
-          style={{ bottom: '80px' }}
+          style={{ top: '650px' }}
         >
           <img 
             src={arrow} 
