@@ -243,7 +243,7 @@ const Onboarding = () => {
           {/* Text - 180px from top */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 px-8"
-            style={{ top: '180px', width: '100%', maxWidth: '400px' }}
+            style={{ top: '100px', width: '100%', maxWidth: '400px' }}
           >
             <p 
               className="text-center font-medium text-[26px] leading-snug mb-8"
@@ -262,7 +262,7 @@ const Onboarding = () => {
           {/* Microphone icon - centered vertically lower */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2"
-            style={{ top: '580px' }}
+            style={{ top: '450px' }}
           >
             <img 
               src={mic} 
