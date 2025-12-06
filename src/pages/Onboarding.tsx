@@ -347,10 +347,10 @@ const Onboarding = () => {
           {/* Header */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
-            style={{ top: '80px' }}
+            style={{ top: '50px' }}
           >
             <h1 
-              className="text-center text-[36px] font-medium mb-6"
+              className="text-center text-[36px] font-medium mb-3"
               style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '3px' }}
             >
               SUBSCRIPTION
@@ -366,7 +366,7 @@ const Onboarding = () => {
           {/* Features list - centered with inline ticks */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 w-full text-center"
-            style={{ top: '300px' }}
+            style={{ top: '240px' }}
           >
             {[
               'Record everything',
@@ -379,7 +379,7 @@ const Onboarding = () => {
             ].map((feature, index) => (
               <div 
                 key={index}
-                className="inline-flex items-center justify-center gap-2 mb-4 w-full"
+                className="inline-flex items-center justify-center gap-2 mb-1.5 w-full"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E57373" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12"></polyline>
@@ -394,10 +394,10 @@ const Onboarding = () => {
             ))}
           </div>
           
-          {/* Plan options - centered between features and button */}
+          {/* Plan options - positioned below features */}
           <div 
-            className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 px-8 w-full flex gap-4"
-            style={{ top: 'calc(50% + 180px)', maxWidth: '360px' }}
+            className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full flex gap-4"
+            style={{ top: '480px', maxWidth: '360px' }}
           >
             {/* Monthly option */}
             <button
@@ -482,7 +482,7 @@ const Onboarding = () => {
           {/* Subscribe button */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
-            style={{ bottom: '80px', maxWidth: '360px' }}
+            style={{ top: '620px', maxWidth: '360px' }}
           >
             <button
               onClick={handleSubscribe}
