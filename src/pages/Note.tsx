@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { User } from "@supabase/supabase-js";
+import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 import DatePicker from '@/components/DatePicker';
 
 interface SavedNote {
@@ -838,64 +840,113 @@ const Note = () => {
 
   useEffect(() => {
     const fetchWeather = async () => {
+      if (!showWeatherSetting) {
+        setWeather(null);
+        return;
+      }
+
       try {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            const { latitude, longitude } = position.coords;
+        let latitude: number;
+        let longitude: number;
+
+        // Get location - use Capacitor API on native platforms
+        if (Capacitor.isNativePlatform()) {
+          try {
+            // First check permissions
+            const permissionStatus = await Geolocation.checkPermissions();
             
-            const today = new Date();
-            const isToday = noteDate.getDate() === today.getDate() &&
-                           noteDate.getMonth() === today.getMonth() &&
-                           noteDate.getFullYear() === today.getFullYear();
-            
-            let temp: number;
-            let weatherCode: number;
-            
-            if (isToday) {
-              // Today: fetch current weather
-              const response = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&temperature_unit=celsius`
-              );
-              const data = await response.json();
-              temp = Math.round(data.current.temperature_2m);
-              weatherCode = data.current.weather_code;
-            } else {
-              // Past day: fetch daily high and dominant weather for that date
-              const dateStr = noteDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-              const response = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,weather_code&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`
-              );
-              const data = await response.json();
-              temp = Math.round(data.daily.temperature_2m_max[0]);
-              weatherCode = data.daily.weather_code[0];
+            if (permissionStatus.location !== 'granted') {
+              // Request permission
+              const requestResult = await Geolocation.requestPermissions();
+              if (requestResult.location !== 'granted') {
+                console.log('Location permission not granted. Please enable it in Settings > Nuron > Location');
+                return;
+              }
             }
             
-            let WeatherIcon = Sun;
-            if (weatherCode >= 61 && weatherCode <= 67) WeatherIcon = CloudRain;
-            else if (weatherCode >= 71 && weatherCode <= 77) WeatherIcon = CloudSnow;
-            else if (weatherCode >= 80 && weatherCode <= 82) WeatherIcon = CloudRain;
-            else if (weatherCode >= 51 && weatherCode <= 57) WeatherIcon = CloudDrizzle;
-            else if (weatherCode >= 2 && weatherCode <= 3) WeatherIcon = Cloud;
-            else if (weatherCode === 45 || weatherCode === 48) WeatherIcon = CloudFog;
-            else if (weatherCode >= 95) WeatherIcon = CloudLightning;
-            
-            setWeather({
-              temp,
-              weatherCode,
-              WeatherIcon
+            // Get position with options
+            const position = await Geolocation.getCurrentPosition({
+              enableHighAccuracy: false,
+              timeout: 10000,
+              maximumAge: 300000 // 5 minutes cache
             });
-          },
-          (error) => {
-            console.error('Geolocation error:', error);
+            latitude = position.coords.latitude;
+            longitude = position.coords.longitude;
+          } catch (error: any) {
+            console.error('Geolocation error (native):', error);
+            // Check specific error codes
+            if (error.code === 'OS-PLUG-GLOC-0002' || error.message?.includes('locationUnavailable')) {
+              console.log('Location unavailable. Please check that Location Services are enabled on your device.');
+            } else if (error.message?.includes('permission') || error.message?.includes('denied')) {
+              console.log('Location permission denied. Please enable it in Settings > Nuron > Location');
+            }
+            return;
           }
-        );
+        } else {
+          // Web platform
+          await new Promise<void>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                latitude = position.coords.latitude;
+                longitude = position.coords.longitude;
+                resolve();
+              },
+              (error) => {
+                console.error('Geolocation error (web):', error);
+                reject(error);
+              }
+            );
+          });
+        }
+        
+        const today = new Date();
+        const isToday = noteDate.getDate() === today.getDate() &&
+                       noteDate.getMonth() === today.getMonth() &&
+                       noteDate.getFullYear() === today.getFullYear();
+        
+        let temp: number;
+        let weatherCode: number;
+        
+        if (isToday) {
+          // Today: fetch current weather
+          const response = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&temperature_unit=celsius`
+          );
+          const data = await response.json();
+          temp = Math.round(data.current.temperature_2m);
+          weatherCode = data.current.weather_code;
+        } else {
+          // Past day: fetch daily high and dominant weather for that date
+          const dateStr = noteDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+          const response = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,weather_code&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`
+          );
+          const data = await response.json();
+          temp = Math.round(data.daily.temperature_2m_max[0]);
+          weatherCode = data.daily.weather_code[0];
+        }
+        
+        let WeatherIcon = Sun;
+        if (weatherCode >= 61 && weatherCode <= 67) WeatherIcon = CloudRain;
+        else if (weatherCode >= 71 && weatherCode <= 77) WeatherIcon = CloudSnow;
+        else if (weatherCode >= 80 && weatherCode <= 82) WeatherIcon = CloudRain;
+        else if (weatherCode >= 51 && weatherCode <= 57) WeatherIcon = CloudDrizzle;
+        else if (weatherCode >= 2 && weatherCode <= 3) WeatherIcon = Cloud;
+        else if (weatherCode === 45 || weatherCode === 48) WeatherIcon = CloudFog;
+        else if (weatherCode >= 95) WeatherIcon = CloudLightning;
+        
+        setWeather({
+          temp,
+          weatherCode,
+          WeatherIcon
+        });
       } catch (error) {
         console.error('Weather fetch error:', error);
       }
     };
     
     fetchWeather();
-  }, [noteDate]);
+  }, [noteDate, showWeatherSetting]);
 
   // Auto-generate title when user has written enough (only once)
   useEffect(() => {
