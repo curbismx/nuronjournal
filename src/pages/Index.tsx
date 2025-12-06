@@ -968,7 +968,7 @@ const Index = () => {
           </h1>
           {!showSettings && !showAccountDetails && !showChangePassword && (
             <div 
-              className="absolute top-0 right-0 flex items-center gap-4"
+              className="absolute top-0 right-0 flex items-center gap-[30px]"
             >
               <button 
                 onClick={() => {
