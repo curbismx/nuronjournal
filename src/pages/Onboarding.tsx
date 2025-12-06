@@ -283,7 +283,7 @@ const Onboarding = () => {
           {/* Header */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
-            style={{ top: '180px' }}
+            style={{ top: '100px' }}
           >
             <h1 
               className="text-center text-[26px] font-medium leading-relaxed"
@@ -296,7 +296,7 @@ const Onboarding = () => {
           {/* Options */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
-            style={{ top: '320px', maxWidth: '360px' }}
+            style={{ top: '240px', maxWidth: '360px' }}
           >
             {[
               'Messages and emails',
