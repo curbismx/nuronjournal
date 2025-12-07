@@ -65,5 +65,9 @@
     <!-- Location Permission (Always and When In Use) -->
     <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>Nuron Journal needs your location to show local weather in your notes.</string>
+    
+    <!-- Speech Recognition Permission -->
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Nuron Journal needs speech recognition to transcribe your voice notes into text.</string>
 </dict>
 </plist>

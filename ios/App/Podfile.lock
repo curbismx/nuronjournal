@@ -3,6 +3,8 @@ PODS:
     - CapacitorCordova
   - CapacitorCamera (7.0.2):
     - Capacitor
+  - CapacitorCommunitySpeechRecognition (7.0.1):
+    - Capacitor
   - CapacitorCordova (7.4.4)
   - CapacitorGeolocation (7.1.6):
     - Capacitor
@@ -18,6 +20,7 @@ PODS:
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorCamera (from `../../node_modules/@capacitor/camera`)"
+  - "CapacitorCommunitySpeechRecognition (from `../../node_modules/@capacitor-community/speech-recognition`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorGeolocation (from `../../node_modules/@capacitor/geolocation`)"
   - "RevenuecatPurchasesCapacitor (from `../../node_modules/@revenuecat/purchases-capacitor`)"
@@ -33,6 +36,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorCamera:
     :path: "../../node_modules/@capacitor/camera"
+  CapacitorCommunitySpeechRecognition:
+    :path: "../../node_modules/@capacitor-community/speech-recognition"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorGeolocation:
@@ -43,6 +48,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Capacitor: 09d9ff8e9618e8c4b3cab2bbee34a17215dd2fef
   CapacitorCamera: 6e18d54c8ab30d7dc7b8cd93d96f9b4f57e9202a
+  CapacitorCommunitySpeechRecognition: b133f6f6ba84316639fc2fd1760a6d7ab99fb23b
   CapacitorCordova: bf648a636f3c153f652d312ae145fb508b6ffced
   CapacitorGeolocation: 0f143aec09027ee55ff5b0aa2e9e7fe9a180f01b
   IONGeolocationLib: 20f9d0248a0b5264511fb57a37e25dd2badf797a
@@ -50,6 +56,6 @@ SPEC CHECKSUMS:
   RevenueCat: fa9ad7e1c8817deddb737646946b6b3d8b25f54b
   RevenuecatPurchasesCapacitor: b6b2edc502f419a22facde96874a9ff0000bf15e
 
-PODFILE CHECKSUM: b348dce4a27b136db72264e987a4c959333c710d
+PODFILE CHECKSUM: 6836b0c9258627893330cdac7a57bc35c708a2fd
 
 COCOAPODS: 1.16.2
