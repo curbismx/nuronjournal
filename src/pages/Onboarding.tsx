@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { PurchasesPackage } from '@revenuecat/purchases-capacitor';
 import { Camera } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
+import { SpeechRecognition } from '@capacitor-community/speech-recognition';
 import logo from '@/assets/logo.png';
 import arrow from '@/assets/arrow.png';
 import mic from '@/assets/mic.png';
@@ -29,7 +30,7 @@ const Onboarding = () => {
 
   // Permissions state
   const [permissions, setPermissions] = useState({
-    microphone: false,
+    speechRecognition: false,
     photoLibrary: false,
     location: false,
   });
@@ -49,14 +50,24 @@ const Onboarding = () => {
   };
 
   // Permission request handlers
-  const requestMicrophonePermission = async () => {
+  const requestSpeechRecognitionPermission = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(track => track.stop());
-      setPermissions(prev => ({ ...prev, microphone: true }));
+      if (Capacitor.isNativePlatform()) {
+        const result = await SpeechRecognition.requestPermissions();
+        const granted = result.speechRecognition === 'granted';
+        setPermissions(prev => ({ ...prev, speechRecognition: granted }));
+      } else {
+        // Web fallback - check if Speech Recognition API is available
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+          setPermissions(prev => ({ ...prev, speechRecognition: true }));
+        } else {
+          console.log('Speech Recognition not available on this platform');
+          setPermissions(prev => ({ ...prev, speechRecognition: false }));
+        }
+      }
     } catch (error) {
-      console.log('Microphone permission denied');
-      setPermissions(prev => ({ ...prev, microphone: false }));
+      console.log('Speech Recognition permission denied');
+      setPermissions(prev => ({ ...prev, speechRecognition: false }));
     }
   };
 
@@ -356,7 +367,7 @@ const Onboarding = () => {
               SUBSCRIPTION
             </h1>
             <p 
-              className="text-center text-[22px] font-light leading-relaxed"
+              className="text-center text-[21px] font-light leading-tight"
               style={{ color: '#8A8A8A', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
               Join the thousands of creatives<br />in our community for less than<br />the price of a coffee
@@ -366,7 +377,7 @@ const Onboarding = () => {
           {/* Features list - centered with inline ticks */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 w-full text-center"
-            style={{ top: '240px' }}
+            style={{ top: '210px' }}
           >
             {[
               'Record everything',
@@ -397,7 +408,7 @@ const Onboarding = () => {
           {/* Plan options - positioned below features */}
           <div 
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full flex gap-4"
-            style={{ top: '480px', maxWidth: '360px' }}
+            style={{ top: '455px', maxWidth: '360px' }}
           >
             {/* Monthly option */}
             <button
@@ -688,29 +699,29 @@ const Onboarding = () => {
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
             style={{ top: '260px', maxWidth: '360px' }}
           >
-            {/* Microphone */}
+            {/* Speech Recognition */}
             <button
-              onClick={requestMicrophonePermission}
+              onClick={requestSpeechRecognitionPermission}
               className="w-full mb-4 p-4 rounded-2xl border-2 transition-all flex items-center justify-between"
               style={{
-                backgroundColor: permissions.microphone ? 'rgba(229,115,115,0.15)' : 'transparent',
-                borderColor: permissions.microphone ? '#E57373' : '#555555'
+                backgroundColor: permissions.speechRecognition ? 'rgba(229,115,115,0.15)' : 'transparent',
+                borderColor: permissions.speechRecognition ? '#E57373' : '#555555'
               }}
             >
               <div className="flex items-center gap-3">
-                <span className="text-[24px]">🎤</span>
+                <span className="text-[24px]">🎙️</span>
                 <div className="text-left">
                   <span 
                     className="block text-[18px]"
                     style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
                   >
-                    MICROPHONE
+                    SPEECH RECOGNITION
                   </span>
                   <span 
                     className="block text-[14px]"
                     style={{ color: '#8A8A8A', fontFamily: 'Advent Pro' }}
                   >
-                    Record voice notes
+                    Convert speech to text
                   </span>
                 </div>
               </div>
@@ -719,11 +730,11 @@ const Onboarding = () => {
               <div 
                 className="w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all"
                 style={{
-                  borderColor: permissions.microphone ? '#E57373' : '#555555',
-                  backgroundColor: permissions.microphone ? '#E57373' : 'transparent'
+                  borderColor: permissions.speechRecognition ? '#E57373' : '#555555',
+                  backgroundColor: permissions.speechRecognition ? '#E57373' : 'transparent'
                 }}
               >
-                {permissions.microphone && (
+                {permissions.speechRecognition && (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
