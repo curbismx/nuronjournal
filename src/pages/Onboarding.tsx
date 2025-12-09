@@ -853,7 +853,7 @@ const Onboarding = () => {
         <button
           onClick={handleNext}
           className="absolute left-1/2 transform -translate-x-1/2"
-          style={{ top: '650px' }}
+          style={{ top: '680px' }}
         >
           <img 
             src={arrow} 
