@@ -10,6 +10,8 @@ import themeIconGreen from "@/assets/00green.png";
 import themeIconBlue from "@/assets/00blue.png";
 import themeIconPink from "@/assets/00pink.png";
 import textImage from "@/assets/text.png";
+import text2Image from "@/assets/text2.png";
+import text3Image from "@/assets/text3.png";
 import plusIcon from "@/assets/plusbig.png";
 import expandIcon from "@/assets/00expand-3.png";
 import condenseIcon from "@/assets/00condense-3.png";
@@ -608,24 +610,36 @@ const Index = () => {
             paddingLeft: `calc(30px + env(safe-area-inset-left))`
           }}
         >
-        <button 
-          onClick={() => {
-            if (showChangePassword) {
-              setShowChangePassword(false);
-            } else if (showAccountDetails) {
-              setShowAccountDetails(false);
-            } else {
-              setShowSettings(!showSettings);
-            }
-          }}
-          className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
-        >
-          <img 
-            src={showSettings || showAccountDetails || showChangePassword ? backIcon : settingsIcon} 
-            alt={showSettings || showAccountDetails || showChangePassword ? "Back" : "Settings"} 
-            className="w-[30px] h-[30px]" 
-          />
-        </button>
+        <div className="relative">
+          <button 
+            onClick={() => {
+              if (showChangePassword) {
+                setShowChangePassword(false);
+              } else if (showAccountDetails) {
+                setShowAccountDetails(false);
+              } else {
+                setShowSettings(!showSettings);
+              }
+            }}
+            className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
+          >
+            <img 
+              src={showSettings || showAccountDetails || showChangePassword ? backIcon : settingsIcon} 
+              alt={showSettings || showAccountDetails || showChangePassword ? "Back" : "Settings"} 
+              className="w-[30px] h-[30px]" 
+            />
+          </button>
+          {!showSettings && !showAccountDetails && !showChangePassword && !user && (
+             <div className="absolute top-[30px] left-[40px]">
+             <img 
+               src={text3Image} 
+               alt="Set up account" 
+               className="h-auto"
+               style={{ maxWidth: '400px' }}
+             />
+           </div>
+          )}
+        </div>
         </div>
 
         {/* Title for settings/account */}
@@ -918,16 +932,25 @@ const Index = () => {
         </div>
 
         {/* Main Content - slides down when settings open */}
-        <main className={`flex-1 flex flex-col items-center justify-center px-8 transition-transform duration-300 ${showSettings ? 'translate-y-[100%]' : ''}`}>
-          <div className="relative">
-            <img src={textImage} alt="Instructions" className="w-full max-w-[320px] mt-[60px]" />
-            <button 
-              onClick={() => navigate('/note')}
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -mt-[15px] hover:scale-105 transition-transform"
-            >
-              <img src={newPlusIcon} alt="Record" className="w-[51px] h-[51px]" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))' }} />
-            </button>
+        <main className={`flex-1 flex flex-col transition-transform duration-300 ${showSettings ? 'translate-y-[100%]' : ''}`} style={{ minHeight: 0 }}>
+          {/* Center section with textImage and plus button */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="relative flex items-center justify-center" style={{ marginTop: '150px' }}>
+              <img src={textImage} alt="Instructions" style={{ width: '320px', maxWidth: '90vw' }} />
+              <button 
+                onClick={() => navigate('/note')}
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -mt-[15px] hover:scale-105 transition-transform"
+              >
+                <img src={newPlusIcon} alt="Record" className="w-[51px] h-[51px]" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))' }} />
+              </button>
+            </div>
           </div>
+          {/* Bottom section with text2Image */}
+          {!showSettings && (
+            <div className="w-full flex justify-center px-8 pb-[120px]">
+              <img src={text2Image} alt="Instructions" className="w-full max-w-[300px]" />
+            </div>
+          )}
         </main>
 
         {/* Merge notes dialog */}
@@ -1001,24 +1024,36 @@ const Index = () => {
         }}
       >
         <div className="flex items-center justify-between mb-auto -mt-[15px]">
-          <button 
-            onClick={() => {
-              if (showChangePassword) {
-                setShowChangePassword(false);
-              } else if (showAccountDetails) {
-                setShowAccountDetails(false);
-              } else {
-                setShowSettings(!showSettings);
-              }
-            }}
-            className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
-          >
-            <img 
-              src={showSettings || showAccountDetails || showChangePassword ? backIcon : settingsIcon} 
-              alt={showSettings || showAccountDetails || showChangePassword ? "Back" : "Settings"} 
-              className="w-[30px] h-[30px]" 
-            />
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => {
+                if (showChangePassword) {
+                  setShowChangePassword(false);
+                } else if (showAccountDetails) {
+                  setShowAccountDetails(false);
+                } else {
+                  setShowSettings(!showSettings);
+                }
+              }}
+              className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
+            >
+              <img 
+                src={showSettings || showAccountDetails || showChangePassword ? backIcon : settingsIcon} 
+                alt={showSettings || showAccountDetails || showChangePassword ? "Back" : "Settings"} 
+                className="w-[30px] h-[30px]" 
+              />
+            </button>
+            {!showSettings && !showAccountDetails && !showChangePassword && !user && savedNotes.length === 0 && (
+              <div className="absolute top-[35px] left-[40px] z-10">
+              <img 
+                src={text3Image} 
+                alt="Set up account" 
+                className="h-auto"
+                style={{ maxWidth: '280px' }}
+              />
+            </div>
+            )}
+          </div>
           <div className="flex-1" />
         </div>
         <div className="relative mt-[41px]">
