@@ -104,6 +104,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isRestoring, setIsRestoring] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showRateAppDialog, setShowRateAppDialog] = useState(false);
 
   const themeColors = {
     default: '#2E2E2E',
@@ -152,6 +153,33 @@ const Index = () => {
       setShowSubscriptionModal(true);
     }
   }, []);
+
+  // Track app usage and show rate app dialog
+  useEffect(() => {
+    // Only track after onboarding is complete
+    const onboardingComplete = localStorage.getItem('nuron-onboarding-complete');
+    if (!onboardingComplete) return;
+
+    // Check if user has already rated
+    const hasRated = localStorage.getItem('nuron-has-rated') === 'true';
+    if (hasRated) return;
+
+    // Get current usage count
+    const usageCountStr = localStorage.getItem('nuron-app-usage-count');
+    const usageCount = usageCountStr ? parseInt(usageCountStr, 10) : 0;
+    const lastPromptCountStr = localStorage.getItem('nuron-last-rate-prompt');
+    const lastPromptCount = lastPromptCountStr ? parseInt(lastPromptCountStr, 10) : 0;
+
+    // Increment usage count
+    const newUsageCount = usageCount + 1;
+    localStorage.setItem('nuron-app-usage-count', newUsageCount.toString());
+
+    // Show dialog after 3 uses, then every 10 uses if dismissed
+    if (newUsageCount === 3 || (newUsageCount > 3 && (newUsageCount - lastPromptCount) >= 10)) {
+      setShowRateAppDialog(true);
+      localStorage.setItem('nuron-last-rate-prompt', newUsageCount.toString());
+    }
+  }, []); // Run once on mount
 
   // Check authentication status and set up auth listener
   useEffect(() => {
@@ -384,6 +412,37 @@ const Index = () => {
     }
     
     setIsRestoring(false);
+  };
+
+  const handleRateApp = () => {
+    // Mark as rated
+    localStorage.setItem('nuron-has-rated', 'true');
+    setShowRateAppDialog(false);
+
+    // Open App Store rating page
+    if (Capacitor.isNativePlatform()) {
+      // iOS App Store URL format: itms-apps://itunes.apple.com/app/id{APP_ID}?action=write-review
+      // Get your App Store ID from App Store Connect after app submission
+      // It's a numeric ID (e.g., 1234567890) found in your app's App Store URL
+      const appStoreId = '6756124553'; // TODO: Replace with actual App Store ID from App Store Connect
+      if (appStoreId !== '6756124553') {
+        const appStoreUrl = `itms-apps://itunes.apple.com/app/id${appStoreId}?action=write-review`;
+        window.open(appStoreUrl, '_blank');
+      } else {
+        // Fallback if App Store ID not set yet
+        console.log('App Store ID not configured. Please set it in Index.tsx');
+        toast.error('App Store ID not configured');
+      }
+    } else {
+      // Web fallback - could open a feedback form or just close
+      console.log('Rate app on web');
+    }
+  };
+
+  const handleDismissRateApp = () => {
+    // Don't mark as rated, just dismiss
+    // It will show again after 10 more uses
+    setShowRateAppDialog(false);
   };
 
   const loadNotesFromSupabase = async (userId: string) => {
@@ -1530,6 +1589,35 @@ const Index = () => {
         onClose={() => setShowSubscriptionModal(false)}
         onSubscribed={() => setShowSubscriptionModal(false)}
       />
+
+      {/* Rate App Dialog */}
+      {showRateAppDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl p-6 mx-8 max-w-sm w-full shadow-xl">
+            <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] text-center mb-2">
+              Enjoying Nuron?
+            </h3>
+            <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] text-center mb-6">
+              If you're enjoying Nuron Journal, we'd love to hear from you! Please consider rating us on the App Store.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleDismissRateApp}
+                className="flex-1 py-3 px-4 rounded-xl bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium"
+              >
+                Maybe Later
+              </button>
+              <button
+                onClick={handleRateApp}
+                className="flex-1 py-3 px-4 rounded-xl text-white font-outfit font-medium"
+                style={{ backgroundColor: themeColors[theme] }}
+              >
+                Rate App
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
