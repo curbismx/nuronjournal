@@ -242,7 +242,7 @@ const Onboarding = () => {
               className="text-center font-light text-[22px] leading-relaxed"
               style={{ color: '#8A8A8A', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
-              never forget anything<br />ever again
+              remember everything
             </p>
           </div>
         </>
