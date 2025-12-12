@@ -845,7 +845,10 @@ const Index = () => {
                   <Input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setAuthFormError("");
+                    }}
                     required
                     placeholder="you@example.com"
                     className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
@@ -856,13 +859,19 @@ const Index = () => {
                   <Input
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setAuthFormError("");
+                    }}
                     required
                     placeholder="••••••••"
                     minLength={6}
                     className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
                   />
                 </div>
+                {authFormError && (
+                  <p className="text-red-400 text-[14px]">{authFormError}</p>
+                )}
                 <button type="submit" disabled={loading} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors">
                   {loading ? "Loading..." : isSignInMode ? "Sign In" : "Create Account"}
                 </button>
