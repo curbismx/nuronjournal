@@ -157,6 +157,9 @@ const Note = () => {
   const [isPaused, setIsPaused] = useState(false);
   const recognitionRef = useRef<any>(null);
   const isRecordingRef = useRef(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [transcriptionDots, setTranscriptionDots] = useState(0);
+  const transcriptionDotsIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Audio recording state - supports multiple recordings
   const [audioUrls, setAudioUrls] = useState<string[]>(() => {
@@ -191,6 +194,9 @@ const Note = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const [audioLevel, setAudioLevel] = useState(0); // 0-100
   
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -438,6 +444,76 @@ const Note = () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         streamRef.current = stream;
+        
+        // Set up AnalyserNode for audio level detection
+        try {
+          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+          const audioContext = new AudioContextClass();
+          
+          // Resume audio context if suspended (required on iOS)
+          if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+          }
+          
+          const analyser = audioContext.createAnalyser();
+          analyser.fftSize = 256; // Good balance
+          analyser.smoothingTimeConstant = 0.5; // Balanced: smooth but responsive
+          const source = audioContext.createMediaStreamSource(stream);
+          source.connect(analyser);
+          analyserRef.current = analyser;
+          
+          console.log('AnalyserNode set up successfully, audioContext state:', audioContext.state);
+          
+          // Start monitoring audio level
+          const monitorAudioLevel = () => {
+            if (!analyserRef.current) {
+              return;
+            }
+            
+            try {
+              const dataArray = new Uint8Array(analyser.fftSize);
+              analyser.getByteFrequencyData(dataArray);
+              
+              // Calculate average and max volume
+              let sum = 0;
+              let maxValue = 0;
+              for (let i = 0; i < dataArray.length; i++) {
+                sum += dataArray[i];
+                if (dataArray[i] > maxValue) {
+                  maxValue = dataArray[i];
+                }
+              }
+              const average = sum / dataArray.length;
+              // Use a combination of max and average for smoother, more accurate feedback
+              const combinedLevel = (maxValue * 0.6 + average * 0.4) / 255;
+              const normalizedLevel = Math.min(100, combinedLevel * 100 * 2.5);
+              
+              // Smooth interpolation for better visual feedback
+              setAudioLevel(prev => {
+                // Smooth interpolation: 80% new value, 20% previous (faster but still smooth)
+                const newLevel = prev * 0.2 + normalizedLevel * 0.8;
+                return newLevel;
+              });
+              
+              // Continue monitoring (will stop when animationFrameRef is cancelled)
+              animationFrameRef.current = requestAnimationFrame(monitorAudioLevel);
+            } catch (err) {
+              console.error('Error monitoring audio level:', err);
+              // Try to continue anyway if analyser still exists
+              if (analyserRef.current) {
+                animationFrameRef.current = requestAnimationFrame(monitorAudioLevel);
+              }
+            }
+          };
+          
+          // Start monitoring after a small delay to ensure everything is ready
+          setTimeout(() => {
+            monitorAudioLevel();
+          }, 50);
+        } catch (audioContextError) {
+          console.error('Failed to set up AnalyserNode:', audioContextError);
+          // Continue without audio level monitoring
+        }
       } catch (error: any) {
         console.error('Audio recording error:', error);
         let errorMessage = 'Failed to access microphone. ';
@@ -495,6 +571,25 @@ const Note = () => {
               });
               setAudioDurations(prev => [...prev, '00:00']);
               
+              // Add "listening and transcribing" placeholder text
+              setIsTranscribing(true);
+              setTranscriptionDots(0);
+              const transcriptionPlaceholderId = crypto.randomUUID();
+              setContentBlocks(prev => {
+                const lastBlock = prev[prev.length - 1];
+                if (lastBlock && lastBlock.type === 'text') {
+                  const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
+                  const newContent = currentContent ? currentContent + ' ' : '';
+                  return [...prev.slice(0, -1), { ...lastBlock, content: newContent }, { type: 'text', id: transcriptionPlaceholderId, content: 'listening and transcribing' }];
+                }
+                return [...prev, { type: 'text', id: transcriptionPlaceholderId, content: 'listening and transcribing' }];
+              });
+              
+              // Start dots animation
+              transcriptionDotsIntervalRef.current = setInterval(() => {
+                setTranscriptionDots(prev => (prev + 1) % 4); // 0, 1, 2, 3 -> ., .., ..., (empty)
+              }, 500);
+              
               // Transcribe audio file to text
               try {
                 // Convert blob to base64 for transcription
@@ -508,16 +603,31 @@ const Note = () => {
 
                 if (error) {
                   console.error('Transcription error:', error);
+                  // Remove placeholder on error
+                  setIsTranscribing(false);
+                  if (transcriptionDotsIntervalRef.current) {
+                    clearInterval(transcriptionDotsIntervalRef.current);
+                    transcriptionDotsIntervalRef.current = null;
+                  }
+                  setContentBlocks(prev => prev.filter(b => b.id !== transcriptionPlaceholderId));
                 } else if (data?.text) {
-                  // Add transcribed text to content blocks
+                  // Remove placeholder and add transcribed text
+                  setIsTranscribing(false);
+                  if (transcriptionDotsIntervalRef.current) {
+                    clearInterval(transcriptionDotsIntervalRef.current);
+                    transcriptionDotsIntervalRef.current = null;
+                  }
                   setContentBlocks(prev => {
-                    const lastBlock = prev[prev.length - 1];
+                    // Remove placeholder
+                    const withoutPlaceholder = prev.filter(b => b.id !== transcriptionPlaceholderId);
+                    // Add transcribed text
+                    const lastBlock = withoutPlaceholder[withoutPlaceholder.length - 1];
                     if (lastBlock && lastBlock.type === 'text') {
                       const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
                       const newContent = currentContent ? currentContent + ' ' + data.text : data.text;
-                      return [...prev.slice(0, -1), { ...lastBlock, content: newContent }];
+                      return [...withoutPlaceholder.slice(0, -1), { ...lastBlock, content: newContent }];
                     }
-                    return [...prev, { type: 'text', id: crypto.randomUUID(), content: data.text }];
+                    return [...withoutPlaceholder, { type: 'text', id: crypto.randomUUID(), content: data.text }];
                   });
                   
                   // Resize textarea after content updates
@@ -529,9 +639,24 @@ const Note = () => {
                       el.style.height = Math.max(24, el.scrollHeight) + 'px';
                     });
                   }, 50);
+                } else {
+                  // No text returned, remove placeholder
+                  setIsTranscribing(false);
+                  if (transcriptionDotsIntervalRef.current) {
+                    clearInterval(transcriptionDotsIntervalRef.current);
+                    transcriptionDotsIntervalRef.current = null;
+                  }
+                  setContentBlocks(prev => prev.filter(b => b.id !== transcriptionPlaceholderId));
                 }
               } catch (transcribeError) {
                 console.error('Failed to transcribe audio:', transcribeError);
+                // Remove placeholder on error
+                setIsTranscribing(false);
+                if (transcriptionDotsIntervalRef.current) {
+                  clearInterval(transcriptionDotsIntervalRef.current);
+                  transcriptionDotsIntervalRef.current = null;
+                }
+                setContentBlocks(prev => prev.filter(b => b.id !== transcriptionPlaceholderId));
               }
               
               // Save note after audio is added
@@ -585,6 +710,69 @@ const Note = () => {
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
+      
+      // Set up AnalyserNode for audio level detection
+      try {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256; // Good balance
+        analyser.smoothingTimeConstant = 0.5; // Balanced: smooth but responsive
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(analyser);
+        analyserRef.current = analyser;
+        
+        console.log('AnalyserNode set up successfully (web)');
+        
+        // Start monitoring audio level
+        const monitorAudioLevel = () => {
+          if (!analyserRef.current) {
+            return;
+          }
+          
+          try {
+            const dataArray = new Uint8Array(analyser.fftSize);
+            analyser.getByteFrequencyData(dataArray);
+            
+            // Calculate average and max volume
+            let sum = 0;
+            let maxValue = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+              sum += dataArray[i];
+              if (dataArray[i] > maxValue) {
+                maxValue = dataArray[i];
+              }
+            }
+            const average = sum / dataArray.length;
+            // Use a combination of max and average for smoother, more accurate feedback
+            const combinedLevel = (maxValue * 0.6 + average * 0.4) / 255;
+            const normalizedLevel = Math.min(100, combinedLevel * 100 * 2.5);
+            
+            // Smooth interpolation for better visual feedback
+            setAudioLevel(prev => {
+              // Smooth interpolation: 80% new value, 20% previous (faster but still smooth)
+              const newLevel = prev * 0.2 + normalizedLevel * 0.8;
+              return newLevel;
+            });
+            
+            // Continue monitoring (will stop when animationFrameRef is cancelled)
+            animationFrameRef.current = requestAnimationFrame(monitorAudioLevel);
+          } catch (err) {
+            console.error('Error monitoring audio level:', err);
+            // Try to continue anyway if analyser still exists
+            if (analyserRef.current) {
+              animationFrameRef.current = requestAnimationFrame(monitorAudioLevel);
+            }
+          }
+        };
+        
+        // Start monitoring after a small delay
+        setTimeout(() => {
+          monitorAudioLevel();
+        }, 50);
+      } catch (audioContextError) {
+        console.error('Failed to set up AnalyserNode:', audioContextError);
+        // Continue without audio level monitoring
+      }
     } catch (error: any) {
       console.error('Audio recording error:', error);
       let errorMessage = 'Failed to access microphone. ';
@@ -787,6 +975,14 @@ const Note = () => {
     if (recordingIntervalRef.current) {
       clearInterval(recordingIntervalRef.current);
     }
+    
+    // Pause audio level monitoring
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    setAudioLevel(0);
+    
     setIsPaused(true);
     isRecordingRef.current = false;
   };
@@ -811,12 +1007,49 @@ const Note = () => {
     recordingIntervalRef.current = setInterval(() => {
       setRecordingTime(prev => prev + 1);
     }, 1000);
+    
+    // Resume audio level monitoring
+    if (streamRef.current && analyserRef.current) {
+      const monitorAudioLevel = () => {
+        if (!analyserRef.current || !isRecordingRef.current) {
+          return;
+        }
+        
+        const dataArray = new Uint8Array(analyserRef.current.fftSize);
+        analyserRef.current.getByteFrequencyData(dataArray);
+        
+        // Calculate average volume
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          sum += dataArray[i];
+        }
+        const average = sum / dataArray.length;
+        const normalizedLevel = Math.min(100, (average / 255) * 100);
+        
+        setAudioLevel(normalizedLevel);
+        
+        if (isRecordingRef.current) {
+          animationFrameRef.current = requestAnimationFrame(monitorAudioLevel);
+        }
+      };
+      
+      monitorAudioLevel();
+    }
+    
     setIsPaused(false);
     isRecordingRef.current = true;
   };
 
   const stopRecording = async () => {
     isRecordingRef.current = false;
+    
+    // Stop audio level monitoring
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    setAudioLevel(0);
+    
     const isNativePlatform = Capacitor.isNativePlatform();
     
     if (isNativePlatform) {
@@ -888,7 +1121,7 @@ const Note = () => {
       resumeRecording();
     } else {
       // If recording is active
-      stopRecording();
+      pauseRecording();
     }
   };
 
@@ -948,6 +1181,16 @@ const Note = () => {
       }, 50);
     });
   };
+
+  // Cleanup transcription dots interval on unmount
+  useEffect(() => {
+    return () => {
+      if (transcriptionDotsIntervalRef.current) {
+        clearInterval(transcriptionDotsIntervalRef.current);
+        transcriptionDotsIntervalRef.current = null;
+      }
+    };
+  }, []);
 
   // Load existing note on mount
   useEffect(() => {
@@ -1620,12 +1863,19 @@ const Note = () => {
         <div className="px-8 -mt-[10px]">
           {contentBlocks.map((block, index) => {
             if (block.type === 'text') {
+              const isTranscriptionPlaceholder = block.content === 'listening and transcribing';
+              const dots = '.'.repeat(transcriptionDots);
+              const displayValue = isTranscriptionPlaceholder 
+                ? `listening and transcribing${dots}`
+                : block.content;
               return (
                 <textarea
                   key={block.id}
                   rows={1}
-                  value={block.content}
+                  value={displayValue}
+                  readOnly={isTranscriptionPlaceholder}
                   onChange={(e) => {
+                    if (isTranscriptionPlaceholder) return;
                     const newBlocks = [...contentBlocks];
                     newBlocks[index] = { ...block, content: e.target.value };
                     setContentBlocks(newBlocks);
@@ -1687,7 +1937,13 @@ const Note = () => {
                   }}
                   placeholder={index === 0 ? "Start writing..." : ""}
                   className="note-textarea w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
-                  style={{ minHeight: '24px' }}
+                  style={{
+                    minHeight: '24px',
+                    ...(isTranscriptionPlaceholder && {
+                      fontStyle: 'italic',
+                      color: 'rgba(0, 0, 0, 0.5)',
+                    }),
+                  }}
                 />
               );
             } else {
@@ -2042,28 +2298,28 @@ const Note = () => {
             onClick={stopRecording}
           />
           
-          {/* Recording Icon - 120px */}
+          {/* Recording Icon - dynamically sized based on audio level */}
           <button
             onClick={handleRecorderTap}
             className="fixed z-50"
             style={{
               bottom: `calc(30px + env(safe-area-inset-bottom))`,
               right: `calc(30px + env(safe-area-inset-right))`,
-              width: '120px',
-              height: '120px',
               background: 'none',
               border: 'none',
               padding: 0,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              transition: 'transform 0.1s ease-out'
             }}
           >
             <img 
               src={themeRecorderIcons[theme]}
               alt="Recording"
               style={{
-                width: '120px',
-                height: '120px',
-                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))'
+                width: `${120 + (audioLevel * 0.5)}px`,
+                height: `${120 + (audioLevel * 0.5)}px`,
+                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))',
+                transition: 'width 0.05s cubic-bezier(0.4, 0, 0.2, 1), height 0.05s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             />
             
@@ -2075,9 +2331,10 @@ const Note = () => {
                 left: '50%',
                 transform: 'translate(-50%, -55%)',
                 color: 'white',
-                fontSize: '24px',
+                fontSize: `${24 + (audioLevel * 0.06)}px`,
                 fontFamily: 'Outfit',
-                fontWeight: '500'
+                fontWeight: '500',
+                transition: 'font-size 0.05s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             >
               {formatTime(recordingTime)}
