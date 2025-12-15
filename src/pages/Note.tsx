@@ -1970,34 +1970,87 @@ const Note = () => {
 
         {/* Content blocks - text and images */}
         <div className="px-8 -mt-[10px]">
-          {contentBlocks.map((block, index) => {
-            if (block.type === 'text') {
-              const isTranscriptionPlaceholder = block.content === 'listening and transcribing';
-              const isRecordingPlaceholder = block.content === 'listening...' || block.content === 'paused...';
-              const transcriptionDotsStr = '.'.repeat(transcriptionDots);
+          {/* Recording/Transcription status indicator */}
+          {(() => {
+            const recordingPlaceholder = contentBlocks.find(b => {
+              if (b.type === 'text') {
+                const tb = b as { type: 'text'; id: string; content: string };
+                return tb.content === 'listening...' || tb.content === 'paused...';
+              }
+              return false;
+            });
+            const transcriptionPlaceholder = contentBlocks.find(b => {
+              if (b.type === 'text') {
+                const tb = b as { type: 'text'; id: string; content: string };
+                return tb.content === 'listening and transcribing';
+              }
+              return false;
+            });
+            
+            if (recordingPlaceholder && recordingPlaceholder.type === 'text') {
+              const recordingPlaceholderText = recordingPlaceholder as { type: 'text'; id: string; content: string };
               const recordingDotsStr = '.'.repeat(recordingDots);
-              const displayValue = isTranscriptionPlaceholder 
-                ? `listening and transcribing${transcriptionDotsStr}`
-                : isRecordingPlaceholder
-                ? `${block.content.replace('...', '')}${recordingDotsStr}`
-                : block.content;
-              
-              // Check if any block is transcription or recording placeholder to hide "Start writing..." on first textarea
-              const hasPlaceholder = contentBlocks.some(b => 
-                b.type === 'text' && (b.content === 'listening and transcribing' || b.content === 'listening...' || b.content === 'paused...')
+              const baseText = recordingPlaceholderText.content === 'listening...' ? 'listening' : 'paused';
+              return (
+                <div 
+                  key="recording-status"
+                  className="text-[16px] font-outfit italic text-[rgba(0,0,0,0.5)] mb-2"
+                >
+                  {baseText}{recordingDotsStr}
+                </div>
               );
+            }
+            
+            if (transcriptionPlaceholder && transcriptionPlaceholder.type === 'text') {
+              const transcriptionDotsStr = '.'.repeat(transcriptionDots);
+              return (
+                <div 
+                  key="transcription-status"
+                  className="text-[16px] font-outfit italic text-[rgba(0,0,0,0.5)] mb-2"
+                >
+                  listening and transcribing{transcriptionDotsStr}
+                </div>
+              );
+            }
+            
+            return null;
+          })()}
+          
+          {contentBlocks
+            .filter(block => {
+              // Filter out placeholder blocks from contentBlocks
+              if (block.type === 'text') {
+                const tb = block as { type: 'text'; id: string; content: string };
+                return tb.content !== 'listening...' && 
+                       tb.content !== 'paused...' && 
+                       tb.content !== 'listening and transcribing';
+              }
+              return true;
+            })
+            .map((block, index) => {
+            if (block.type === 'text') {
+              const textBlock = block as { type: 'text'; id: string; content: string };
+              // Check if any block is transcription or recording placeholder to hide "Start writing..." on first textarea
+              const hasPlaceholder = contentBlocks.some(b => {
+                if (b.type === 'text') {
+                  const tb = b as { type: 'text'; id: string; content: string };
+                  return tb.content === 'listening and transcribing' || tb.content === 'listening...' || tb.content === 'paused...';
+                }
+                return false;
+              });
               
               return (
                 <textarea
                   key={block.id}
                   rows={1}
-                  value={displayValue}
-                  readOnly={isTranscriptionPlaceholder || isRecordingPlaceholder}
+                  value={textBlock.content}
                   onChange={(e) => {
-                    if (isTranscriptionPlaceholder || isRecordingPlaceholder) return;
                     const newBlocks = [...contentBlocks];
-                    newBlocks[index] = { ...block, content: e.target.value };
-                    setContentBlocks(newBlocks);
+                    const originalIndex = contentBlocks.findIndex(b => b.id === block.id);
+                    if (originalIndex !== -1) {
+                      newBlocks[originalIndex] = { ...textBlock, content: e.target.value };
+                      setContentBlocks(newBlocks);
+                    }
                     e.target.style.height = 'auto';
                     e.target.style.height = Math.max(24, e.target.scrollHeight) + 'px';
                   }}
@@ -2025,8 +2078,9 @@ const Note = () => {
                           } else if (prevBlock.type === 'text') {
                             e.preventDefault();
                             // Merge with previous text block
-                            const prevContent = prevBlock.content;
-                            const currentContent = block.content;
+                            const prevTextBlock = prevBlock as { type: 'text'; id: string; content: string };
+                            const prevContent = prevTextBlock.content;
+                            const currentContent = textBlock.content;
                             const mergedContent = prevContent + currentContent;
                             const cursorPosition = prevContent.length;
                             
@@ -2054,14 +2108,10 @@ const Note = () => {
                       }
                     }
                   }}
-                  placeholder={isTranscriptionPlaceholder || isRecordingPlaceholder || hasPlaceholder ? "" : (index === 0 ? "Start writing..." : "")}
+                  placeholder={hasPlaceholder ? "" : (index === 0 ? "Start writing..." : "")}
                   className="note-textarea w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
                   style={{
                     minHeight: '24px',
-                    ...((isTranscriptionPlaceholder || isRecordingPlaceholder) && {
-                      fontStyle: 'italic',
-                      color: 'rgba(0, 0, 0, 0.5)',
-                    }),
                   }}
                 />
               );
