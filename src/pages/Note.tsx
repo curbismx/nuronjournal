@@ -792,7 +792,8 @@ const Note = () => {
     if (isPaused) {
       resumeRecording();
     } else {
-      pauseRecording();
+      // If recording is active
+      stopRecording();
     }
   };
 
