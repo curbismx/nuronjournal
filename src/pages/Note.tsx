@@ -422,71 +422,152 @@ const Note = () => {
   const startRecording = async () => {
     const isNativePlatform = Capacitor.isNativePlatform();
     
-    // On native iOS, use Capacitor Speech Recognition plugin
+    // On native iOS, record audio first, then transcribe from audio file
     if (isNativePlatform) {
-      console.log('Using native Capacitor Speech Recognition');
+      console.log('Using native iOS audio recording with post-transcription');
       
-      try {
-        // Check and request permissions
-        const permissionStatus = await SpeechRecognition.checkPermissions();
-        console.log('Speech recognition permission status:', permissionStatus);
-        
-        if (permissionStatus.speechRecognition !== 'granted') {
-          const requestResult = await SpeechRecognition.requestPermissions();
-          if (requestResult.speechRecognition !== 'granted') {
-            toast.error('Speech recognition permission denied. Please enable it in Settings.');
-            setIsRecordingOpen(false);
-            return;
-          }
-        }
-        
-        // Set up listener for partial results
-        await SpeechRecognition.addListener('partialResults', (data: { matches: string[] }) => {
-          if (data.matches && data.matches.length > 0) {
-            const transcript = data.matches[0];
-            console.log('Partial result:', transcript);
-            
-            setContentBlocks(prev => {
-              const lastBlock = prev[prev.length - 1];
-              if (lastBlock && lastBlock.type === 'text') {
-                const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
-                const baseContent = currentContent.replace(/\|\|.*$/, '').trimEnd();
-                const newContent = baseContent ? baseContent + '||' + transcript : '||' + transcript;
-                return [...prev.slice(0, -1), { ...lastBlock, content: newContent }];
-              }
-              return prev;
-            });
-          }
-        });
-        
-        // Start listening
-        await SpeechRecognition.start({
-          language: 'en-US',
-          maxResults: 5,
-          prompt: 'Speak now...',
-          partialResults: true,
-          popup: false,
-        });
-        
-        console.log('Native speech recognition started');
-        
-        // Set up recording state
-        setIsRecording(true);
-        isRecordingRef.current = true;
-        setIsPaused(false);
-        
-        // Start timer
-        recordingIntervalRef.current = setInterval(() => {
-          setRecordingTime(prev => prev + 1);
-        }, 1000);
-        
-        return;
-      } catch (error) {
-        console.error('Native speech recognition error:', error);
-        toast.error('Failed to start speech recognition. Please try again.');
+      // Check if getUserMedia is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        toast.error('Microphone access is not available.');
         setIsRecordingOpen(false);
         return;
       }
+
+      // Start audio recording
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        streamRef.current = stream;
+      } catch (error: any) {
+        console.error('Audio recording error:', error);
+        let errorMessage = 'Failed to access microphone. ';
+        
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+          errorMessage += 'Please allow microphone access in your browser settings.';
+        } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+          errorMessage += 'No microphone found.';
+        } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+          errorMessage += 'Microphone is already in use by another application.';
+        } else {
+          errorMessage += 'Please check your microphone settings.';
+        }
+        
+        toast.error(errorMessage);
+        setIsRecordingOpen(false);
+        return;
+      }
+      
+      // Set up MediaRecorder
+      try {
+        let options: MediaRecorderOptions = {};
+        if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          options = { mimeType: 'audio/mp4' };
+        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+          options = { mimeType: 'audio/webm' };
+        }
+        
+        const mediaRecorder = new MediaRecorder(stream, options);
+        console.log('Native recording with mimeType:', mediaRecorder.mimeType);
+        mediaRecorderRef.current = mediaRecorder;
+        audioChunksRef.current = [];
+        
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            audioChunksRef.current.push(e.data);
+          }
+        };
+        
+        mediaRecorder.onstop = async () => {
+          // Create blob from audio chunks
+          if (audioChunksRef.current.length > 0) {
+            const blob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType });
+            console.log('Native: Created blob with type:', blob.type, 'size:', blob.size);
+            
+            // Upload audio to Supabase and get URL
+            const audioUrl = await uploadAudioToSupabase(blob);
+            
+            if (audioUrl) {
+              // Add audio URL to audioUrls state
+              setAudioUrls(prev => {
+                const newUrls = [...prev, audioUrl];
+                audioUrlsRef.current = newUrls;
+                return newUrls;
+              });
+              setAudioDurations(prev => [...prev, '00:00']);
+              
+              // Transcribe audio file to text
+              try {
+                // Convert blob to base64 for transcription
+                const base64String = await blobToBase64(blob);
+                // Remove data URL prefix (e.g., "data:audio/mp4;base64,")
+                const base64Audio = base64String.split(',')[1] || base64String;
+                
+                const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+                  body: { audio: base64Audio },
+                });
+
+                if (error) {
+                  console.error('Transcription error:', error);
+                } else if (data?.text) {
+                  // Add transcribed text to content blocks
+                  setContentBlocks(prev => {
+                    const lastBlock = prev[prev.length - 1];
+                    if (lastBlock && lastBlock.type === 'text') {
+                      const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
+                      const newContent = currentContent ? currentContent + ' ' + data.text : data.text;
+                      return [...prev.slice(0, -1), { ...lastBlock, content: newContent }];
+                    }
+                    return [...prev, { type: 'text', id: crypto.randomUUID(), content: data.text }];
+                  });
+                  
+                  // Resize textarea after content updates
+                  setTimeout(() => {
+                    const textareas = document.querySelectorAll('.note-textarea');
+                    textareas.forEach((textarea) => {
+                      const el = textarea as HTMLTextAreaElement;
+                      el.style.height = 'auto';
+                      el.style.height = Math.max(24, el.scrollHeight) + 'px';
+                    });
+                  }, 50);
+                }
+              } catch (transcribeError) {
+                console.error('Failed to transcribe audio:', transcribeError);
+              }
+              
+              // Save note after audio is added
+              setTimeout(() => {
+                saveNote();
+              }, 100);
+            }
+            
+            // Clear audio chunks for next recording
+            audioChunksRef.current = [];
+          }
+        };
+        
+        mediaRecorder.onerror = (event: any) => {
+          console.error('MediaRecorder error:', event);
+        };
+        
+        mediaRecorder.start(1000);
+      } catch (error) {
+        console.error('MediaRecorder setup error:', error);
+        toast.error('Failed to start audio recording. Please try again.');
+        setIsRecordingOpen(false);
+        return;
+      }
+      
+      // Set up recording state
+      setIsRecording(true);
+      isRecordingRef.current = true;
+      setIsPaused(false);
+      
+      // Start timer
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      
+      return;
     }
     
     // Web platform - use Web Speech Recognition API
@@ -541,6 +622,29 @@ const Note = () => {
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           audioChunksRef.current.push(e.data);
+        }
+      };
+      
+      mediaRecorder.onstop = async () => {
+        // Create blob from audio chunks
+        if (audioChunksRef.current.length > 0) {
+          const blob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType });
+          
+          // Upload audio to Supabase and get URL
+          const audioUrl = await uploadAudioToSupabase(blob);
+          
+          if (audioUrl) {
+            // Add audio URL to audioUrls state
+            setAudioUrls(prev => {
+              const newUrls = [...prev, audioUrl];
+              audioUrlsRef.current = newUrls;
+              return newUrls;
+            });
+            setAudioDurations(prev => [...prev, '00:00']);
+          }
+          
+          // Clear audio chunks for next recording
+          audioChunksRef.current = [];
         }
       };
       
@@ -667,10 +771,9 @@ const Note = () => {
     });
     
     if (isNativePlatform) {
-      try {
-        await SpeechRecognition.stop();
-      } catch (e) {
-        console.warn('Failed to stop native speech recognition:', e);
+      // On native iOS, only pause MediaRecorder (no Speech Recognition)
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.pause();
       }
     } else {
       if (recognitionRef.current) {
@@ -692,15 +795,9 @@ const Note = () => {
     const isNativePlatform = Capacitor.isNativePlatform();
     
     if (isNativePlatform) {
-      try {
-        await SpeechRecognition.start({
-          language: 'en-US',
-          maxResults: 5,
-          partialResults: true,
-          popup: false,
-        });
-      } catch (e) {
-        console.warn('Failed to resume native speech recognition:', e);
+      // On native iOS, only resume MediaRecorder (no Speech Recognition)
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
+        mediaRecorderRef.current.resume();
       }
     } else {
       if (recognitionRef.current) {
@@ -723,12 +820,13 @@ const Note = () => {
     const isNativePlatform = Capacitor.isNativePlatform();
     
     if (isNativePlatform) {
-      // Stop native speech recognition
-      try {
-        await SpeechRecognition.stop();
-        await SpeechRecognition.removeAllListeners();
-      } catch (e) {
-        console.warn('Failed to stop native speech recognition:', e);
+      // On native iOS, only stop MediaRecorder (onstop handler will process the audio and transcribe)
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
     } else {
       // Stop web speech recognition
@@ -737,13 +835,10 @@ const Note = () => {
         recognitionRef.current = null;
       }
       
-      // Stop media recorder
+      // Stop media recorder (onstop handler will process the audio)
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         mediaRecorderRef.current.stop();
       }
-      
-      // Clear audio chunks
-      audioChunksRef.current = [];
       
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
