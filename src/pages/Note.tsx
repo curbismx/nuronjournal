@@ -990,6 +990,10 @@ const Note = () => {
   const resumeRecording = async () => {
     const isNativePlatform = Capacitor.isNativePlatform();
     
+    // Set recording state first
+    setIsPaused(false);
+    isRecordingRef.current = true;
+    
     if (isNativePlatform) {
       // On native iOS, only resume MediaRecorder (no Speech Recognition)
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
@@ -1011,33 +1015,51 @@ const Note = () => {
     // Resume audio level monitoring
     if (streamRef.current && analyserRef.current) {
       const monitorAudioLevel = () => {
-        if (!analyserRef.current || !isRecordingRef.current) {
+        if (!analyserRef.current) {
           return;
         }
         
-        const dataArray = new Uint8Array(analyserRef.current.fftSize);
-        analyserRef.current.getByteFrequencyData(dataArray);
-        
-        // Calculate average volume
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-          sum += dataArray[i];
-        }
-        const average = sum / dataArray.length;
-        const normalizedLevel = Math.min(100, (average / 255) * 100);
-        
-        setAudioLevel(normalizedLevel);
-        
-        if (isRecordingRef.current) {
+        try {
+          const dataArray = new Uint8Array(analyserRef.current.fftSize);
+          analyserRef.current.getByteFrequencyData(dataArray);
+          
+          // Calculate average and max volume
+          let sum = 0;
+          let maxValue = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            sum += dataArray[i];
+            if (dataArray[i] > maxValue) {
+              maxValue = dataArray[i];
+            }
+          }
+          const average = sum / dataArray.length;
+          // Use a combination of max and average for smoother, more accurate feedback
+          const combinedLevel = (maxValue * 0.6 + average * 0.4) / 255;
+          const normalizedLevel = Math.min(100, combinedLevel * 100 * 2.5);
+          
+          // Smooth interpolation for better visual feedback
+          setAudioLevel(prev => {
+            // Smooth interpolation: 80% new value, 20% previous (faster but still smooth)
+            const newLevel = prev * 0.2 + normalizedLevel * 0.8;
+            return newLevel;
+          });
+          
+          // Continue monitoring (will stop when animationFrameRef is cancelled)
           animationFrameRef.current = requestAnimationFrame(monitorAudioLevel);
+        } catch (err) {
+          console.error('Error monitoring audio level:', err);
+          // Try to continue anyway if analyser still exists
+          if (analyserRef.current) {
+            animationFrameRef.current = requestAnimationFrame(monitorAudioLevel);
+          }
         }
       };
       
-      monitorAudioLevel();
+      // Start monitoring after a small delay
+      setTimeout(() => {
+        monitorAudioLevel();
+      }, 50);
     }
-    
-    setIsPaused(false);
-    isRecordingRef.current = true;
   };
 
   const stopRecording = async () => {
@@ -1868,6 +1890,12 @@ const Note = () => {
               const displayValue = isTranscriptionPlaceholder 
                 ? `listening and transcribing${dots}`
                 : block.content;
+              
+              // Check if any block is transcription placeholder to hide "Start writing..." on first textarea
+              const hasTranscriptionPlaceholder = contentBlocks.some(b => 
+                b.type === 'text' && b.content === 'listening and transcribing'
+              );
+              
               return (
                 <textarea
                   key={block.id}
@@ -1935,7 +1963,7 @@ const Note = () => {
                       }
                     }
                   }}
-                  placeholder={index === 0 ? "Start writing..." : ""}
+                  placeholder={isTranscriptionPlaceholder || hasTranscriptionPlaceholder ? "" : (index === 0 ? "Start writing..." : "")}
                   className="note-textarea w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
                   style={{
                     minHeight: '24px',
