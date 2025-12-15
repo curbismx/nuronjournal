@@ -2485,8 +2485,8 @@ const Note = () => {
               src={themeRecorderIcons[theme]}
               alt="Recording"
               style={{
-                width: `${120 + (audioLevel * 0.5)}px`,
-                height: `${120 + (audioLevel * 0.5)}px`,
+                width: `${120 + (audioLevel * 0.20)}px`,
+                height: `${120 + (audioLevel * 0.20)}px`,
                 filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))',
                 transition: 'width 0.05s cubic-bezier(0.4, 0, 0.2, 1), height 0.05s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
