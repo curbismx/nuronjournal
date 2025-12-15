@@ -160,6 +160,9 @@ const Note = () => {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcriptionDots, setTranscriptionDots] = useState(0);
   const transcriptionDotsIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const recordingPlaceholderIdRef = useRef<string | null>(null);
+  const [recordingDots, setRecordingDots] = useState(0);
+  const recordingDotsIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Audio recording state - supports multiple recordings
   const [audioUrls, setAudioUrls] = useState<string[]>(() => {
@@ -571,19 +574,32 @@ const Note = () => {
               });
               setAudioDurations(prev => [...prev, '00:00']);
               
-              // Add "listening and transcribing" placeholder text
+              // Replace "listening..." placeholder with "listening and transcribing..."
               setIsTranscribing(true);
               setTranscriptionDots(0);
+              
+              // Stop recording dots animation
+              if (recordingDotsIntervalRef.current) {
+                clearInterval(recordingDotsIntervalRef.current);
+                recordingDotsIntervalRef.current = null;
+              }
+              
               const transcriptionPlaceholderId = crypto.randomUUID();
               setContentBlocks(prev => {
-                const lastBlock = prev[prev.length - 1];
+                // Remove all recording placeholders (listening... and paused...)
+                const withoutRecordingPlaceholders = prev.filter(b => 
+                  !(b.type === 'text' && (b.content === 'listening...' || b.content === 'paused...'))
+                );
+                
+                const lastBlock = withoutRecordingPlaceholders[withoutRecordingPlaceholders.length - 1];
                 if (lastBlock && lastBlock.type === 'text') {
                   const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
                   const newContent = currentContent ? currentContent + ' ' : '';
-                  return [...prev.slice(0, -1), { ...lastBlock, content: newContent }, { type: 'text', id: transcriptionPlaceholderId, content: 'listening and transcribing' }];
+                  return [...withoutRecordingPlaceholders.slice(0, -1), { ...lastBlock, content: newContent }, { type: 'text', id: transcriptionPlaceholderId, content: 'listening and transcribing' }];
                 }
-                return [...prev, { type: 'text', id: transcriptionPlaceholderId, content: 'listening and transcribing' }];
+                return [...withoutRecordingPlaceholders, { type: 'text', id: transcriptionPlaceholderId, content: 'listening and transcribing' }];
               });
+              recordingPlaceholderIdRef.current = null;
               
               // Start dots animation
               transcriptionDotsIntervalRef.current = setInterval(() => {
@@ -686,6 +702,24 @@ const Note = () => {
       setIsRecording(true);
       isRecordingRef.current = true;
       setIsPaused(false);
+      
+      // Add "listening..." placeholder text
+      recordingPlaceholderIdRef.current = crypto.randomUUID();
+      setRecordingDots(0);
+      setContentBlocks(prev => {
+        const lastBlock = prev[prev.length - 1];
+        if (lastBlock && lastBlock.type === 'text') {
+          const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
+          const newContent = currentContent ? currentContent + ' ' : '';
+          return [...prev.slice(0, -1), { ...lastBlock, content: newContent }, { type: 'text', id: recordingPlaceholderIdRef.current!, content: 'listening...' }];
+        }
+        return [...prev, { type: 'text', id: recordingPlaceholderIdRef.current!, content: 'listening...' }];
+      });
+      
+      // Start dots animation for recording
+      recordingDotsIntervalRef.current = setInterval(() => {
+        setRecordingDots(prev => (prev + 1) % 4); // 0, 1, 2, 3 -> ., .., ..., (empty)
+      }, 500);
       
       // Start timer
       recordingIntervalRef.current = setInterval(() => {
@@ -937,6 +971,24 @@ const Note = () => {
     isRecordingRef.current = true;
     setIsPaused(false);
     
+    // Add "listening..." placeholder text
+    recordingPlaceholderIdRef.current = crypto.randomUUID();
+    setRecordingDots(0);
+    setContentBlocks(prev => {
+      const lastBlock = prev[prev.length - 1];
+      if (lastBlock && lastBlock.type === 'text') {
+        const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
+        const newContent = currentContent ? currentContent + ' ' : '';
+        return [...prev.slice(0, -1), { ...lastBlock, content: newContent }, { type: 'text', id: recordingPlaceholderIdRef.current!, content: 'listening...' }];
+      }
+      return [...prev, { type: 'text', id: recordingPlaceholderIdRef.current!, content: 'listening...' }];
+    });
+    
+    // Start dots animation for recording
+    recordingDotsIntervalRef.current = setInterval(() => {
+      setRecordingDots(prev => (prev + 1) % 4); // 0, 1, 2, 3 -> ., .., ..., (empty)
+    }, 500);
+    
     // Start timer
     recordingIntervalRef.current = setInterval(() => {
       setRecordingTime(prev => prev + 1);
@@ -983,6 +1035,15 @@ const Note = () => {
     }
     setAudioLevel(0);
     
+    // Update placeholder to "paused..." (dots animation continues)
+    if (recordingPlaceholderIdRef.current) {
+      setContentBlocks(prev => prev.map(b => 
+        b.id === recordingPlaceholderIdRef.current 
+          ? { ...b, content: 'paused...' }
+          : b
+      ));
+    }
+    
     setIsPaused(true);
     isRecordingRef.current = false;
   };
@@ -993,6 +1054,15 @@ const Note = () => {
     // Set recording state first
     setIsPaused(false);
     isRecordingRef.current = true;
+    
+    // Update placeholder to "listening..."
+    if (recordingPlaceholderIdRef.current) {
+      setContentBlocks(prev => prev.map(b => 
+        b.id === recordingPlaceholderIdRef.current 
+          ? { ...b, content: 'listening...' }
+          : b
+      ));
+    }
     
     if (isNativePlatform) {
       // On native iOS, only resume MediaRecorder (no Speech Recognition)
@@ -1076,6 +1146,7 @@ const Note = () => {
     
     if (isNativePlatform) {
       // On native iOS, only stop MediaRecorder (onstop handler will process the audio and transcribe)
+      // Placeholder will be replaced with "listening and transcribing..." in onstop handler
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         mediaRecorderRef.current.stop();
       }
@@ -1097,6 +1168,18 @@ const Note = () => {
       
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      
+      // Remove "listening..." placeholder on web (real-time transcription already happened)
+      if (recordingPlaceholderIdRef.current) {
+        setContentBlocks(prev => prev.filter(b => b.id !== recordingPlaceholderIdRef.current));
+        recordingPlaceholderIdRef.current = null;
+      }
+      
+      // Stop recording dots animation
+      if (recordingDotsIntervalRef.current) {
+        clearInterval(recordingDotsIntervalRef.current);
+        recordingDotsIntervalRef.current = null;
       }
     }
     
@@ -1204,12 +1287,16 @@ const Note = () => {
     });
   };
 
-  // Cleanup transcription dots interval on unmount
+  // Cleanup transcription and recording dots intervals on unmount
   useEffect(() => {
     return () => {
       if (transcriptionDotsIntervalRef.current) {
         clearInterval(transcriptionDotsIntervalRef.current);
         transcriptionDotsIntervalRef.current = null;
+      }
+      if (recordingDotsIntervalRef.current) {
+        clearInterval(recordingDotsIntervalRef.current);
+        recordingDotsIntervalRef.current = null;
       }
     };
   }, []);
@@ -1886,14 +1973,18 @@ const Note = () => {
           {contentBlocks.map((block, index) => {
             if (block.type === 'text') {
               const isTranscriptionPlaceholder = block.content === 'listening and transcribing';
-              const dots = '.'.repeat(transcriptionDots);
+              const isRecordingPlaceholder = block.content === 'listening...' || block.content === 'paused...';
+              const transcriptionDotsStr = '.'.repeat(transcriptionDots);
+              const recordingDotsStr = '.'.repeat(recordingDots);
               const displayValue = isTranscriptionPlaceholder 
-                ? `listening and transcribing${dots}`
+                ? `listening and transcribing${transcriptionDotsStr}`
+                : isRecordingPlaceholder
+                ? `${block.content.replace('...', '')}${recordingDotsStr}`
                 : block.content;
               
-              // Check if any block is transcription placeholder to hide "Start writing..." on first textarea
-              const hasTranscriptionPlaceholder = contentBlocks.some(b => 
-                b.type === 'text' && b.content === 'listening and transcribing'
+              // Check if any block is transcription or recording placeholder to hide "Start writing..." on first textarea
+              const hasPlaceholder = contentBlocks.some(b => 
+                b.type === 'text' && (b.content === 'listening and transcribing' || b.content === 'listening...' || b.content === 'paused...')
               );
               
               return (
@@ -1901,9 +1992,9 @@ const Note = () => {
                   key={block.id}
                   rows={1}
                   value={displayValue}
-                  readOnly={isTranscriptionPlaceholder}
+                  readOnly={isTranscriptionPlaceholder || isRecordingPlaceholder}
                   onChange={(e) => {
-                    if (isTranscriptionPlaceholder) return;
+                    if (isTranscriptionPlaceholder || isRecordingPlaceholder) return;
                     const newBlocks = [...contentBlocks];
                     newBlocks[index] = { ...block, content: e.target.value };
                     setContentBlocks(newBlocks);
@@ -1963,11 +2054,11 @@ const Note = () => {
                       }
                     }
                   }}
-                  placeholder={isTranscriptionPlaceholder || hasTranscriptionPlaceholder ? "" : (index === 0 ? "Start writing..." : "")}
+                  placeholder={isTranscriptionPlaceholder || isRecordingPlaceholder || hasPlaceholder ? "" : (index === 0 ? "Start writing..." : "")}
                   className="note-textarea w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
                   style={{
                     minHeight: '24px',
-                    ...(isTranscriptionPlaceholder && {
+                    ...((isTranscriptionPlaceholder || isRecordingPlaceholder) && {
                       fontStyle: 'italic',
                       color: 'rgba(0, 0, 0, 0.5)',
                     }),
