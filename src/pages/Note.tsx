@@ -171,7 +171,6 @@ const Note = () => {
   const recordingMessages = [
     'listening',
     'teaching monkeys to type',
-    'feeding them bananas',
     'calibrating the universe',
     'adding slow-motion clapping sounds',
     'checking to see if you actually pressed the stop button',
@@ -262,9 +261,21 @@ const Note = () => {
   };
 
   // Get combined note content from all text blocks
+  // Exclude recording/transcription placeholder messages
   const getNoteContent = () => {
     return contentBlocks
-      .filter(b => b.type === 'text')
+      .filter(b => {
+        if (b.type === 'text') {
+          const tb = b as { type: 'text'; id: string; content: string };
+          // Filter out recording messages, paused, and transcription placeholders
+          const isRecordingMessage = recordingMessages.some(msg => tb.content === msg + '...');
+          return !isRecordingMessage && 
+                 tb.content !== 'paused...' && 
+                 tb.content !== 'listening and transcribing' &&
+                 tb.content !== 'nearly there...';
+        }
+        return false;
+      })
       .map(b => (b as { type: 'text'; id: string; content: string }).content)
       .join('\n\n');
   };
