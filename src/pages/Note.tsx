@@ -180,10 +180,6 @@ const Note = () => {
     'nearly there'
   ];
   
-  // Helper function to get a random message index (can include listening after first message)
-  const getRandomMessageIndex = () => {
-    return Math.floor(Math.random() * recordingMessages.length);
-  };
   // Audio recording state - supports multiple recordings
   const [audioUrls, setAudioUrls] = useState<string[]>(() => {
     if (id) {
@@ -800,11 +796,20 @@ const Note = () => {
       });
       
       // Start message cycling animation for recording (5 seconds per message)
-      // First message is always "listening", then random after that
+      // Messages go in order, stop at the last message ("nearly there")
       recordingMessageIntervalRef.current = setInterval(() => {
         setRecordingMessageIndex(prev => {
-          // Get a random message index (can include listening after first message)
-          const nextIndex = getRandomMessageIndex();
+          const nextIndex = prev + 1;
+          
+          // Stop at the last message
+          if (nextIndex >= recordingMessages.length) {
+            // Clear interval and stay on last message
+            if (recordingMessageIntervalRef.current) {
+              clearInterval(recordingMessageIntervalRef.current);
+              recordingMessageIntervalRef.current = null;
+            }
+            return recordingMessages.length - 1;
+          }
           
           // Update the placeholder content in contentBlocks
           if (recordingPlaceholderIdRef.current) {
@@ -1085,11 +1090,20 @@ const Note = () => {
     });
     
     // Start message cycling animation for recording (5 seconds per message)
-    // First message is always "listening", then random after that
+    // Messages go in order, stop at the last message ("nearly there")
     recordingMessageIntervalRef.current = setInterval(() => {
       setRecordingMessageIndex(prev => {
-        // Get a random message index (can include listening after first message)
-        const nextIndex = getRandomMessageIndex();
+        const nextIndex = prev + 1;
+        
+        // Stop at the last message
+        if (nextIndex >= recordingMessages.length) {
+          // Clear interval and stay on last message
+          if (recordingMessageIntervalRef.current) {
+            clearInterval(recordingMessageIntervalRef.current);
+            recordingMessageIntervalRef.current = null;
+          }
+          return recordingMessages.length - 1;
+        }
         
         // Update the placeholder content in contentBlocks
         if (recordingPlaceholderIdRef.current) {
@@ -1186,14 +1200,23 @@ const Note = () => {
       ));
       
       // Restart message cycling
-      // First message is always "listening", then random after that
+      // Messages go in order, stop at the last message ("nearly there")
       if (recordingMessageIntervalRef.current) {
         clearInterval(recordingMessageIntervalRef.current);
       }
       recordingMessageIntervalRef.current = setInterval(() => {
         setRecordingMessageIndex(prev => {
-          // Get a random message index (can include listening after first message)
-          const nextIndex = getRandomMessageIndex();
+          const nextIndex = prev + 1;
+          
+          // Stop at the last message
+          if (nextIndex >= recordingMessages.length) {
+            // Clear interval and stay on last message
+            if (recordingMessageIntervalRef.current) {
+              clearInterval(recordingMessageIntervalRef.current);
+              recordingMessageIntervalRef.current = null;
+            }
+            return recordingMessages.length - 1;
+          }
           
           // Update the placeholder content in contentBlocks
           if (recordingPlaceholderIdRef.current) {
