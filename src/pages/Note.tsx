@@ -171,18 +171,13 @@ const Note = () => {
   const recordingMessages = [
     'listening',
     'teaching monkeys to type',
+    'feeding them bananas',
     'calibrating the universe',
     'adding slow-motion clapping sounds',
-    'checking to see if you actually pressed the stop button',
     'automatically deleting all "uhms" and "ahs"',
-    'locating the optimal audio channel',
-    'brewing coffee for the ai on playback duty',
     'currently translating everything into whale song',
-    'please wait while i find the perfect gif response',
-    'looking for a dramatic soundtrack. (might use an 80s synth)',
     'making sure the flux capacitor is properly fluxing',
-    'fact-checking your spoken claims. (just kidding... mostly)',
-    'applying the final touches of sparkle and polish' 
+    'nearly there'
   ];
   
   // Helper function to get a random message index (can include listening after first message)
