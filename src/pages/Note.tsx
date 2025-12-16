@@ -258,8 +258,15 @@ const Note = () => {
       if (error) throw error;
 
       if (data.rewrittenText) {
-        // Replace all text blocks with the rewritten content
-        setContentBlocks([{ type: 'text', id: crypto.randomUUID(), content: data.rewrittenText }]);
+        // Replace all text blocks with the rewritten content, but preserve image blocks
+        setContentBlocks(prev => {
+          // Keep all image blocks
+          const imageBlocks = prev.filter(b => b.type === 'image');
+          // Replace all text blocks with the rewritten content as a single text block
+          const rewrittenTextBlock = { type: 'text' as const, id: crypto.randomUUID(), content: data.rewrittenText };
+          // Combine: rewritten text first, then images (or you could preserve order - this is simpler)
+          return [rewrittenTextBlock, ...imageBlocks];
+        });
         
         // Resize textarea after content updates
         setTimeout(() => {
