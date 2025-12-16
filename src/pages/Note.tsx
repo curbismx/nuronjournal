@@ -160,10 +160,36 @@ const Note = () => {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcriptionDots, setTranscriptionDots] = useState(0);
   const transcriptionDotsIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const transcriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showTranscriptionNearlyThere, setShowTranscriptionNearlyThere] = useState(false);
   const recordingPlaceholderIdRef = useRef<string | null>(null);
   const [recordingDots, setRecordingDots] = useState(0);
   const recordingDotsIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [recordingMessageIndex, setRecordingMessageIndex] = useState(0);
+  const recordingMessageIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
+  const recordingMessages = [
+    'listening',
+    'teaching monkeys to type',
+    'feeding them bananas',
+    'calibrating the universe',
+    'adding slow-motion clapping sounds',
+    'checking to see if you actually pressed the stop button',
+    'automatically deleting all "uhms" and "ahs"',
+    'locating the optimal audio channel',
+    'brewing coffee for the ai on playback duty',
+    'currently translating everything into whale song',
+    'please wait while i find the perfect gif response',
+    'looking for a dramatic soundtrack. (might use an 80s synth)',
+    'making sure the flux capacitor is properly fluxing',
+    'fact-checking your spoken claims. (just kidding... mostly)',
+    'applying the final touches of sparkle and polish' 
+  ];
+  
+  // Helper function to get a random message index (can include listening after first message)
+  const getRandomMessageIndex = () => {
+    return Math.floor(Math.random() * recordingMessages.length);
+  };
   // Audio recording state - supports multiple recordings
   const [audioUrls, setAudioUrls] = useState<string[]>(() => {
     if (id) {
@@ -591,12 +617,23 @@ const Note = () => {
                 recordingDotsIntervalRef.current = null;
               }
               
+              // Stop message cycling animation
+              if (recordingMessageIntervalRef.current) {
+                clearInterval(recordingMessageIntervalRef.current);
+                recordingMessageIntervalRef.current = null;
+              }
+              
               const transcriptionPlaceholderId = crypto.randomUUID();
               setContentBlocks(prev => {
-                // Remove all recording placeholders (listening... and paused...)
-                const withoutRecordingPlaceholders = prev.filter(b => 
-                  !(b.type === 'text' && (b.content === 'listening...' || b.content === 'paused...'))
-                );
+                // Remove all recording placeholders (all recording messages and paused...)
+                const withoutRecordingPlaceholders = prev.filter(b => {
+                  if (b.type === 'text') {
+                    const tb = b as { type: 'text'; id: string; content: string };
+                    const isRecordingMessage = recordingMessages.some(msg => tb.content === msg + '...');
+                    return !isRecordingMessage && tb.content !== 'paused...';
+                  }
+                  return true;
+                });
                 
                 const lastBlock = withoutRecordingPlaceholders[withoutRecordingPlaceholders.length - 1];
                 if (lastBlock && lastBlock.type === 'text') {
@@ -613,6 +650,18 @@ const Note = () => {
                 setTranscriptionDots(prev => (prev + 1) % 4); // 0, 1, 2, 3 -> ., .., ..., (empty)
               }, 500);
               
+              // Show "nearly there" if transcription takes too long (after 5 seconds)
+              setShowTranscriptionNearlyThere(false);
+              transcriptionTimeoutRef.current = setTimeout(() => {
+                setShowTranscriptionNearlyThere(true);
+                // Update placeholder to show "nearly there"
+                setContentBlocks(prev => prev.map(b => 
+                  b.id === transcriptionPlaceholderId 
+                    ? { ...b, content: 'nearly there...' }
+                    : b
+                ));
+              }, 5000);
+              
               // Transcribe audio file to text
               try {
                 // Convert blob to base64 for transcription
@@ -628,17 +677,27 @@ const Note = () => {
                   console.error('Transcription error:', error);
                   // Remove placeholder on error
                   setIsTranscribing(false);
+                  setShowTranscriptionNearlyThere(false);
                   if (transcriptionDotsIntervalRef.current) {
                     clearInterval(transcriptionDotsIntervalRef.current);
                     transcriptionDotsIntervalRef.current = null;
+                  }
+                  if (transcriptionTimeoutRef.current) {
+                    clearTimeout(transcriptionTimeoutRef.current);
+                    transcriptionTimeoutRef.current = null;
                   }
                   setContentBlocks(prev => prev.filter(b => b.id !== transcriptionPlaceholderId));
                 } else if (data?.text) {
                   // Remove placeholder and add transcribed text
                   setIsTranscribing(false);
+                  setShowTranscriptionNearlyThere(false);
                   if (transcriptionDotsIntervalRef.current) {
                     clearInterval(transcriptionDotsIntervalRef.current);
                     transcriptionDotsIntervalRef.current = null;
+                  }
+                  if (transcriptionTimeoutRef.current) {
+                    clearTimeout(transcriptionTimeoutRef.current);
+                    transcriptionTimeoutRef.current = null;
                   }
                   setContentBlocks(prev => {
                     // Remove placeholder
@@ -665,9 +724,14 @@ const Note = () => {
                 } else {
                   // No text returned, remove placeholder
                   setIsTranscribing(false);
+                  setShowTranscriptionNearlyThere(false);
                   if (transcriptionDotsIntervalRef.current) {
                     clearInterval(transcriptionDotsIntervalRef.current);
                     transcriptionDotsIntervalRef.current = null;
+                  }
+                  if (transcriptionTimeoutRef.current) {
+                    clearTimeout(transcriptionTimeoutRef.current);
+                    transcriptionTimeoutRef.current = null;
                   }
                   setContentBlocks(prev => prev.filter(b => b.id !== transcriptionPlaceholderId));
                 }
@@ -675,9 +739,14 @@ const Note = () => {
                 console.error('Failed to transcribe audio:', transcribeError);
                 // Remove placeholder on error
                 setIsTranscribing(false);
+                setShowTranscriptionNearlyThere(false);
                 if (transcriptionDotsIntervalRef.current) {
                   clearInterval(transcriptionDotsIntervalRef.current);
                   transcriptionDotsIntervalRef.current = null;
+                }
+                if (transcriptionTimeoutRef.current) {
+                  clearTimeout(transcriptionTimeoutRef.current);
+                  transcriptionTimeoutRef.current = null;
                 }
                 setContentBlocks(prev => prev.filter(b => b.id !== transcriptionPlaceholderId));
               }
@@ -710,23 +779,40 @@ const Note = () => {
       isRecordingRef.current = true;
       setIsPaused(false);
       
-      // Add "listening..." placeholder text
+      // Add recording placeholder text
       recordingPlaceholderIdRef.current = crypto.randomUUID();
-      setRecordingDots(0);
+      setRecordingMessageIndex(0);
+      const firstMessage = recordingMessages[0] + '...';
       setContentBlocks(prev => {
         const lastBlock = prev[prev.length - 1];
         if (lastBlock && lastBlock.type === 'text') {
           const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
           const newContent = currentContent ? currentContent + ' ' : '';
-          return [...prev.slice(0, -1), { ...lastBlock, content: newContent }, { type: 'text', id: recordingPlaceholderIdRef.current!, content: 'listening...' }];
+          return [...prev.slice(0, -1), { ...lastBlock, content: newContent }, { type: 'text', id: recordingPlaceholderIdRef.current!, content: firstMessage }];
         }
-        return [...prev, { type: 'text', id: recordingPlaceholderIdRef.current!, content: 'listening...' }];
+        return [...prev, { type: 'text', id: recordingPlaceholderIdRef.current!, content: firstMessage }];
       });
       
-      // Start dots animation for recording
-      recordingDotsIntervalRef.current = setInterval(() => {
-        setRecordingDots(prev => (prev + 1) % 4); // 0, 1, 2, 3 -> ., .., ..., (empty)
-      }, 500);
+      // Start message cycling animation for recording (5 seconds per message)
+      // First message is always "listening", then random after that
+      recordingMessageIntervalRef.current = setInterval(() => {
+        setRecordingMessageIndex(prev => {
+          // Get a random message index (can include listening after first message)
+          const nextIndex = getRandomMessageIndex();
+          
+          // Update the placeholder content in contentBlocks
+          if (recordingPlaceholderIdRef.current) {
+            const message = recordingMessages[nextIndex] + '...';
+            setContentBlocks(prevBlocks => prevBlocks.map(b => 
+              b.id === recordingPlaceholderIdRef.current 
+                ? { ...b, content: message }
+                : b
+            ));
+          }
+          
+          return nextIndex;
+        });
+      }, 5000);
       
       // Start timer
       recordingIntervalRef.current = setInterval(() => {
@@ -978,23 +1064,40 @@ const Note = () => {
     isRecordingRef.current = true;
     setIsPaused(false);
     
-    // Add "listening..." placeholder text
+    // Add recording placeholder text
     recordingPlaceholderIdRef.current = crypto.randomUUID();
-    setRecordingDots(0);
+    setRecordingMessageIndex(0);
+    const firstMessage = recordingMessages[0] + '...';
     setContentBlocks(prev => {
       const lastBlock = prev[prev.length - 1];
       if (lastBlock && lastBlock.type === 'text') {
         const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
         const newContent = currentContent ? currentContent + ' ' : '';
-        return [...prev.slice(0, -1), { ...lastBlock, content: newContent }, { type: 'text', id: recordingPlaceholderIdRef.current!, content: 'listening...' }];
+        return [...prev.slice(0, -1), { ...lastBlock, content: newContent }, { type: 'text', id: recordingPlaceholderIdRef.current!, content: firstMessage }];
       }
-      return [...prev, { type: 'text', id: recordingPlaceholderIdRef.current!, content: 'listening...' }];
+      return [...prev, { type: 'text', id: recordingPlaceholderIdRef.current!, content: firstMessage }];
     });
     
-    // Start dots animation for recording
-    recordingDotsIntervalRef.current = setInterval(() => {
-      setRecordingDots(prev => (prev + 1) % 4); // 0, 1, 2, 3 -> ., .., ..., (empty)
-    }, 500);
+    // Start message cycling animation for recording (5 seconds per message)
+    // First message is always "listening", then random after that
+    recordingMessageIntervalRef.current = setInterval(() => {
+      setRecordingMessageIndex(prev => {
+        // Get a random message index (can include listening after first message)
+        const nextIndex = getRandomMessageIndex();
+        
+        // Update the placeholder content in contentBlocks
+        if (recordingPlaceholderIdRef.current) {
+          const message = recordingMessages[nextIndex] + '...';
+          setContentBlocks(prevBlocks => prevBlocks.map(b => 
+            b.id === recordingPlaceholderIdRef.current 
+              ? { ...b, content: message }
+              : b
+          ));
+        }
+        
+        return nextIndex;
+      });
+    }, 5000);
     
     // Start timer
     recordingIntervalRef.current = setInterval(() => {
@@ -1042,7 +1145,11 @@ const Note = () => {
     }
     setAudioLevel(0);
     
-    // Update placeholder to "paused..." (dots animation continues)
+    // Stop message cycling and update placeholder to "paused..."
+    if (recordingMessageIntervalRef.current) {
+      clearInterval(recordingMessageIntervalRef.current);
+      recordingMessageIntervalRef.current = null;
+    }
     if (recordingPlaceholderIdRef.current) {
       setContentBlocks(prev => prev.map(b => 
         b.id === recordingPlaceholderIdRef.current 
@@ -1062,13 +1169,39 @@ const Note = () => {
     setIsPaused(false);
     isRecordingRef.current = true;
     
-    // Update placeholder to "listening..."
+    // Update placeholder to first message and restart message cycling
     if (recordingPlaceholderIdRef.current) {
+      setRecordingMessageIndex(0);
+      const firstMessage = recordingMessages[0] + '...';
       setContentBlocks(prev => prev.map(b => 
         b.id === recordingPlaceholderIdRef.current 
-          ? { ...b, content: 'listening...' }
+          ? { ...b, content: firstMessage }
           : b
       ));
+      
+      // Restart message cycling
+      // First message is always "listening", then random after that
+      if (recordingMessageIntervalRef.current) {
+        clearInterval(recordingMessageIntervalRef.current);
+      }
+      recordingMessageIntervalRef.current = setInterval(() => {
+        setRecordingMessageIndex(prev => {
+          // Get a random message index (can include listening after first message)
+          const nextIndex = getRandomMessageIndex();
+          
+          // Update the placeholder content in contentBlocks
+          if (recordingPlaceholderIdRef.current) {
+            const message = recordingMessages[nextIndex] + '...';
+            setContentBlocks(prevBlocks => prevBlocks.map(b => 
+              b.id === recordingPlaceholderIdRef.current 
+                ? { ...b, content: message }
+                : b
+            ));
+          }
+          
+          return nextIndex;
+        });
+      }, 5000);
     }
     
     if (isNativePlatform) {
@@ -1190,6 +1323,12 @@ const Note = () => {
       }
     }
     
+    // Stop message cycling animation
+    if (recordingMessageIntervalRef.current) {
+      clearInterval(recordingMessageIntervalRef.current);
+      recordingMessageIntervalRef.current = null;
+    }
+    
     // Convert interim markers to final text (keep the text, just remove ||)
     setContentBlocks(prev => {
       const lastBlock = prev[prev.length - 1];
@@ -1301,9 +1440,17 @@ const Note = () => {
         clearInterval(transcriptionDotsIntervalRef.current);
         transcriptionDotsIntervalRef.current = null;
       }
+      if (transcriptionTimeoutRef.current) {
+        clearTimeout(transcriptionTimeoutRef.current);
+        transcriptionTimeoutRef.current = null;
+      }
       if (recordingDotsIntervalRef.current) {
         clearInterval(recordingDotsIntervalRef.current);
         recordingDotsIntervalRef.current = null;
+      }
+      if (recordingMessageIntervalRef.current) {
+        clearInterval(recordingMessageIntervalRef.current);
+        recordingMessageIntervalRef.current = null;
       }
     };
   }, []);
@@ -1982,42 +2129,55 @@ const Note = () => {
             const recordingPlaceholder = contentBlocks.find(b => {
               if (b.type === 'text') {
                 const tb = b as { type: 'text'; id: string; content: string };
-                return tb.content === 'listening...' || tb.content === 'paused...';
+                // Check if it's any of our recording messages or paused
+                return recordingMessages.some(msg => tb.content === msg + '...') || tb.content === 'paused...';
               }
               return false;
             });
             const transcriptionPlaceholder = contentBlocks.find(b => {
               if (b.type === 'text') {
                 const tb = b as { type: 'text'; id: string; content: string };
-                return tb.content === 'listening and transcribing';
+                return tb.content === 'listening and transcribing' || tb.content === 'nearly there...';
               }
               return false;
             });
             
             if (recordingPlaceholder && recordingPlaceholder.type === 'text') {
               const recordingPlaceholderText = recordingPlaceholder as { type: 'text'; id: string; content: string };
-              const recordingDotsStr = '.'.repeat(recordingDots);
-              const baseText = recordingPlaceholderText.content === 'listening...' ? 'listening' : 'paused';
+              // Display the message directly (it already includes "...")
               return (
                 <div 
                   key="recording-status"
                   className="text-[16px] font-outfit italic text-[rgba(0,0,0,0.5)] mb-2"
                 >
-                  {baseText}{recordingDotsStr}
+                  {recordingPlaceholderText.content}
                 </div>
               );
             }
             
             if (transcriptionPlaceholder && transcriptionPlaceholder.type === 'text') {
-              const transcriptionDotsStr = '.'.repeat(transcriptionDots);
-              return (
-                <div 
-                  key="transcription-status"
-                  className="text-[16px] font-outfit italic text-[rgba(0,0,0,0.5)] mb-2"
-                >
-                  listening and transcribing{transcriptionDotsStr}
-                </div>
-              );
+              const transcriptionPlaceholderText = transcriptionPlaceholder as { type: 'text'; id: string; content: string };
+              // If it's "nearly there...", show it directly, otherwise show "listening and transcribing" with dots
+              if (transcriptionPlaceholderText.content === 'nearly there...') {
+                return (
+                  <div 
+                    key="transcription-status"
+                    className="text-[16px] font-outfit italic text-[rgba(0,0,0,0.5)] mb-2"
+                  >
+                    nearly there...
+                  </div>
+                );
+              } else {
+                const transcriptionDotsStr = '.'.repeat(transcriptionDots);
+                return (
+                  <div 
+                    key="transcription-status"
+                    className="text-[16px] font-outfit italic text-[rgba(0,0,0,0.5)] mb-2"
+                  >
+                    listening and transcribing{transcriptionDotsStr}
+                  </div>
+                );
+              }
             }
             
             return null;
@@ -2028,9 +2188,12 @@ const Note = () => {
               // Filter out placeholder blocks from contentBlocks
               if (block.type === 'text') {
                 const tb = block as { type: 'text'; id: string; content: string };
-                return tb.content !== 'listening...' && 
+                // Check if it's any of our recording messages, paused, or transcribing
+                const isRecordingMessage = recordingMessages.some(msg => tb.content === msg + '...');
+                return !isRecordingMessage && 
                        tb.content !== 'paused...' && 
-                       tb.content !== 'listening and transcribing';
+                       tb.content !== 'listening and transcribing' &&
+                       tb.content !== 'nearly there...';
               }
               return true;
             })
@@ -2041,7 +2204,11 @@ const Note = () => {
               const hasPlaceholder = contentBlocks.some(b => {
                 if (b.type === 'text') {
                   const tb = b as { type: 'text'; id: string; content: string };
-                  return tb.content === 'listening and transcribing' || tb.content === 'listening...' || tb.content === 'paused...';
+                  const isRecordingMessage = recordingMessages.some(msg => tb.content === msg + '...');
+                  return tb.content === 'listening and transcribing' || 
+                         tb.content === 'nearly there...' ||
+                         isRecordingMessage || 
+                         tb.content === 'paused...';
                 }
                 return false;
               });
