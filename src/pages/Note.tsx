@@ -36,6 +36,8 @@ import recorderIconGreen from '@/assets/00recorder_green.png';
 import recorderIconBlue from '@/assets/00recorder_blue.png';
 import recorderIconPink from '@/assets/00recorder_pink.png';
 import moveIcon from '@/assets/move.png';
+import folderIcon from '@/assets/folder_icon.png';
+import folderArrow from '@/assets/folder_arrow.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 type ContentBlock = 
@@ -114,7 +116,8 @@ const Note = () => {
   const touchStartX = useRef<number>(0);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [showMoveNote, setShowMoveNote] = useState(false);
-  const [folders, setFolders] = useState<{id: string; name: string}[]>([]);
+  const [folders, setFolders] = useState<{id: string; name: string; sort_order: number}[]>([]);
+  const [selectedMoveFolder, setSelectedMoveFolder] = useState<string | null>(null);
   const [showWeatherSetting, setShowWeatherSetting] = useState(() => {
     const stored = localStorage.getItem('nuron-show-weather');
     return stored !== null ? JSON.parse(stored) : true;
@@ -240,7 +243,7 @@ const Note = () => {
       if (session?.user) {
         const { data } = await supabase
           .from('folders')
-          .select('id, name')
+          .select('id, name, sort_order')
           .eq('user_id', session.user.id)
           .order('sort_order', { ascending: true });
         if (data) setFolders(data);
@@ -250,6 +253,8 @@ const Note = () => {
   }, [showMoveNote]);
 
   const handleMoveNote = async (folderId: string) => {
+    setSelectedMoveFolder(folderId);
+    
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user || !noteIdRef.current) return;
     
@@ -260,10 +265,12 @@ const Note = () => {
     
     localStorage.setItem('nuron-current-folder-id', folderId);
     
+    // Brief blink then close
     setTimeout(() => {
+      setSelectedMoveFolder(null);
       setShowMoveNote(false);
       setMenuOpen(false);
-    }, 300);
+    }, 400);
   };
 
   const generateTitle = async (text: string) => {
@@ -2124,57 +2131,66 @@ const Note = () => {
           <div className="flex-1" />
         </div>
         <div className="relative mt-[41px]">
-          <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
-            {monthYear}
-          </h1>
-          <button 
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="absolute top-0"
-            style={{
-              right: `calc(30px + env(safe-area-inset-right))`
-            }}
-          >
-            <img src={threeDotsIcon} alt="Menu" className="h-[24px] w-auto" />
-          </button>
+          {showMoveNote ? (
+            <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none">
+              FOLDERS
+            </h1>
+          ) : (
+            <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
+              {monthYear}
+            </h1>
+          )}
+          {!showMoveNote && (
+            <button 
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="absolute top-0"
+              style={{
+                right: `calc(30px + env(safe-area-inset-right))`
+              }}
+            >
+              <img src={threeDotsIcon} alt="Menu" className="h-[24px] w-auto" />
+            </button>
+          )}
         </div>
       </header>
 
-      {/* Move Note Folders Panel */}
-      {showMoveNote && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center" style={{ backgroundColor: themeColors[theme] }}>
-          <div className="w-full max-w-sm px-8">
-            <h2 className="text-white/90 text-[20px] font-outfit font-semibold tracking-wider text-center mb-8">
-              MOVE TO FOLDER
-            </h2>
-            <div className="flex flex-col gap-3">
-              {folders.map((folder) => {
-                const currentFolderId = localStorage.getItem('nuron-current-folder-id');
-                const isCurrentFolder = folder.id === currentFolderId;
-                return (
-                  <button
-                    key={folder.id}
-                    onClick={() => handleMoveNote(folder.id)}
-                    className={`w-full text-left py-3 px-4 rounded-lg transition-all duration-300 ${
-                      isCurrentFolder ? 'bg-white/20' : 'bg-white/5 hover:bg-white/10'
-                    } active:bg-white/40`}
-                  >
-                    <span className="text-white font-outfit text-[18px] flex items-center justify-between">
-                      {folder.name}
-                      {isCurrentFolder && <span className="text-white/60 text-[14px]">(current)</span>}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            <button
-              onClick={() => setShowMoveNote(false)}
-              className="mt-8 text-white/60 text-[16px] font-outfit w-full text-center"
-            >
-              Cancel
-            </button>
-          </div>
+      {/* Move Note Folders Panel - EXACT same as Index.tsx */}
+      <div 
+        className={`absolute inset-x-0 bottom-0 transition-opacity duration-200 overflow-y-auto ${showMoveNote ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+        style={{ 
+          backgroundColor: themeColors[theme],
+          top: `calc(150px + env(safe-area-inset-top))`,
+          paddingLeft: `calc(30px + env(safe-area-inset-left))`,
+          paddingRight: `calc(32px + env(safe-area-inset-right))`,
+          paddingTop: '30px'
+        }}
+      >
+        {/* Folders list */}
+        <div className="space-y-4 pt-[70px]">
+          {folders.map((folder) => {
+            const currentFolderId = localStorage.getItem('nuron-current-folder-id');
+            const isSelected = selectedMoveFolder === folder.id;
+            return (
+              <div 
+                key={folder.id}
+                onClick={() => handleMoveNote(folder.id)}
+                className={`flex items-center gap-3 py-2 cursor-pointer transition-all duration-200 ${
+                  isSelected ? 'bg-white/30 mx-[-32px] px-[32px]' : 
+                  folder.id === currentFolderId ? 'bg-white/10 mx-[-32px] px-[32px]' : 'px-0'
+                }`}
+              >
+                <img src={folderIcon} alt="Folder" className="w-[20px] h-[20px] mr-4 opacity-70" />
+                <span className="flex-1 text-left text-white text-[24px] font-outfit font-light">
+                  {folder.name}
+                </span>
+                <div className="p-2 m-0 mr-[20px] border-0 bg-transparent">
+                  <img src={folderArrow} alt="Select" className="h-[16px] w-auto opacity-70" />
+                </div>
+              </div>
+            );
+          })}
         </div>
-      )}
+      </div>
 
       {/* Scrollable content area */}
       <div 
