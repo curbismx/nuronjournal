@@ -212,11 +212,17 @@ const Note = () => {
   const [playingAudioIndex, setPlayingAudioIndex] = useState<number | null>(null);
   const audioPlayerRefs = useRef<(HTMLAudioElement | null)[]>([]);
   const audioUrlsRef = useRef<string[]>([]);
+  const contentBlocksRef = useRef<ContentBlock[]>([]);
   
   // Initialize audioUrlsRef when audioUrls state is set
   useEffect(() => {
     audioUrlsRef.current = audioUrls;
   }, [audioUrls]);
+  
+  // Initialize contentBlocksRef when contentBlocks state is set
+  useEffect(() => {
+    contentBlocksRef.current = contentBlocks;
+  }, [contentBlocks]);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -1781,12 +1787,31 @@ const Note = () => {
   const saveNote = async () => {
     if (isDeletedRef.current) return;
     
-    const noteContent = getNoteContent();
-    console.log('saveNote called, content:', noteContent);
-    console.log('contentBlocks:', contentBlocks);
+    // Use refs to get the most up-to-date state (fixes stale closure issue)
+    const currentContentBlocks = contentBlocksRef.current;
+    const currentAudioUrls = audioUrlsRef.current;
     
-    const hasImages = contentBlocks.filter(b => b.type === 'image').length > 0;
-    const hasAudio = audioUrlsRef.current.length > 0 || audioUrls.length > 0;
+    // Get note content from the current content blocks
+    const noteContent = currentContentBlocks
+      .filter(b => {
+        if (b.type === 'text') {
+          const tb = b as { type: 'text'; id: string; content: string };
+          const isRecordingMessage = recordingMessages.some(msg => tb.content === msg + '...');
+          return !isRecordingMessage && 
+                 tb.content !== 'paused...' && 
+                 tb.content !== 'listening and transcribing' &&
+                 tb.content !== 'nearly there...';
+        }
+        return false;
+      })
+      .map(b => (b as { type: 'text'; id: string; content: string }).content)
+      .join('\n\n');
+    
+    console.log('saveNote called, content:', noteContent);
+    console.log('contentBlocks:', currentContentBlocks);
+    
+    const hasImages = currentContentBlocks.filter(b => b.type === 'image').length > 0;
+    const hasAudio = currentAudioUrls.length > 0 || audioUrls.length > 0;
     
     // Save if there's content, images, or audio
     if (!noteContent.trim() && !hasImages && !hasAudio) {
@@ -1796,14 +1821,10 @@ const Note = () => {
     
     console.log('Proceeding to save...');
 
-    // Use ref to get the most up-to-date audioUrls (in case async operations haven't updated state yet)
-    // Ref is always kept in sync with state via useEffect, so use it as the source of truth
-    const currentAudioUrls = audioUrlsRef.current;
-
     const noteData = {
       id: noteIdRef.current,
       title: noteTitle,
-      contentBlocks,
+      contentBlocks: currentContentBlocks,
       createdAt: existingCreatedAt.current || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       weather: weather ? { temp: weather.temp, weatherCode: weather.weatherCode } : undefined,
