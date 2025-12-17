@@ -1534,18 +1534,24 @@ const themeSettingsIcons = {
                 <div className="flex-1 flex items-center justify-end gap-[25px]">
                   <button 
                     onClick={() => setIsSearching(true)}
-                    className="p-0 m-0 border-0 bg-transparent"
+                    className="p-0 m-0 border-0 bg-transparent flex items-center justify-center"
+                    style={{ width: '24px', height: '24px' }}
                   >
-                    <img src={greySearchIcon} alt="Search" className="h-[20px] w-auto object-contain" />
+                    <img 
+                      src={greySearchIcon} 
+                      alt="Search" 
+                      style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+                    />
                   </button>
                   <button 
                     onClick={() => setViewMode(prev => prev === 'collapsed' ? 'compact' : 'collapsed')}
-                    className="p-0 m-0 border-0 bg-transparent"
+                    className="p-0 m-0 border-0 bg-transparent flex items-center justify-center"
+                    style={{ width: '24px', height: '24px' }}
                   >
                     <img 
                       src={viewMode === 'collapsed' ? greyExpandViewIcon : greyListViewIcon} 
                       alt="View" 
-                      className="h-[20px] w-auto object-contain" 
+                      style={{ width: '24px', height: '24px', objectFit: 'contain' }}
                     />
                   </button>
                 </div>
@@ -1632,8 +1638,7 @@ const themeSettingsIcons = {
                 <img 
                   src={themePlusIcons[theme]} 
                   alt="Add Note"
-                  className="w-full h-full"
-                  style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))' }}
+                  style={{ width: '51px', height: '51px', filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))' }}
                 />
               </button>
             )}
