@@ -49,6 +49,7 @@ const Note = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEmbedded = new URLSearchParams(window.location.search).get('desktop') === 'true';
+  const initialFolderId = new URLSearchParams(window.location.search).get('folder_id');
   const noteIdRef = useRef<string>(id || crypto.randomUUID());
   const [user, setUser] = useState<User | null>(null);
   const [noteTitle, setNoteTitle] = useState(() => {
@@ -1838,7 +1839,7 @@ const Note = () => {
     
     if (session?.user) {
       // Logged in - save to Supabase
-      const currentFolderId = localStorage.getItem('nuron-current-folder-id');
+      const currentFolderId = initialFolderId || localStorage.getItem('nuron-current-folder-id');
       const { error } = await supabase.from('notes').upsert({
         id: noteData.id,
         user_id: session.user.id,
@@ -1895,9 +1896,14 @@ const Note = () => {
     if (!noteExistsInCache) {
       allCached.unshift({
         ...noteData,
-        folder_id: localStorage.getItem('nuron-current-folder-id') || null
+        folder_id: initialFolderId || localStorage.getItem('nuron-current-folder-id') || null
       });
       localStorage.setItem('nuron-notes-cache', JSON.stringify(allCached));
+    }
+
+    // Notify parent window (for desktop view)
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'note-saved', noteId: noteData.id }, '*');
     }
   };
 
