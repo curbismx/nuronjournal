@@ -1435,7 +1435,7 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
 
         <div 
 
-          className="flex flex-col pt-[40px] pl-[20px] pr-[20px]"
+          className="flex flex-col pt-[30px] pl-[20px] pr-[20px]"
 
           style={{ width: '20%', backgroundColor: themeColors[theme] }}
 
