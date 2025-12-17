@@ -1442,7 +1442,6 @@ const Index = () => {
                   setShowAccountDetails(false);
                 } else if (showSettings) {
                   setShowSettings(false);
-                  setShowFolders(true);
                 } else if (showFolders) {
                   setShowFolders(false);
                 } else {
