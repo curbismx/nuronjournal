@@ -262,10 +262,22 @@ const Index = () => {
           setFolders(typedFolders);
           
           if (!currentFolder) {
-            const notesFolder = typedFolders.find(f => f.name === 'Notes') || typedFolders[0];
-            setCurrentFolder(notesFolder);
-            setViewMode(notesFolder.default_view);
-            localStorage.setItem('nuron-current-folder-id', notesFolder.id);
+            const savedFolderId = localStorage.getItem('nuron-current-folder-id');
+            if (savedFolderId) {
+              const savedFolder = typedFolders.find(f => f.id === savedFolderId);
+              if (savedFolder) {
+                setCurrentFolder(savedFolder);
+                setViewMode(savedFolder.default_view || 'collapsed');
+              } else if (typedFolders.length > 0) {
+                setCurrentFolder(typedFolders[0]);
+                setViewMode(typedFolders[0].default_view);
+              }
+            } else if (typedFolders.length > 0) {
+              const notesFolder = typedFolders.find(f => f.name === 'Notes') || typedFolders[0];
+              setCurrentFolder(notesFolder);
+              setViewMode(notesFolder.default_view);
+              localStorage.setItem('nuron-current-folder-id', notesFolder.id);
+            }
           }
         }
       }
