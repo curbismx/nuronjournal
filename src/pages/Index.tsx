@@ -1079,7 +1079,7 @@ const Index = () => {
                   setIsSearching(!isSearching);
                   if (isSearching) setSearchQuery("");
                 }}
-                className="p-0 m-0 border-0 bg-transparent"
+                className="p-0 m-0 mr-[20px] border-0 bg-transparent"
               >
                 <img src={searchIcon} alt="Search" className="h-[24px] w-auto" />
               </button>
