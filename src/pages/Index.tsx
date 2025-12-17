@@ -281,11 +281,36 @@ const Index = () => {
       if (!user || !currentFolder || currentFolder.id === 'local-notes') return;
       
       // Update any notes without a folder_id to use the current folder
-      await supabase
+      const { data: updatedNotes } = await supabase
         .from('notes')
         .update({ folder_id: currentFolder.id })
         .eq('user_id', user.id)
-        .is('folder_id', null);
+        .is('folder_id', null)
+        .select();
+      
+      // If notes were migrated, reload all notes
+      if (updatedNotes && updatedNotes.length > 0) {
+        const { data } = await supabase
+          .from('notes')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('folder_id', currentFolder.id)
+          .order('created_at', { ascending: false });
+        
+        if (data) {
+          const notes = data.map(note => ({
+            id: note.id,
+            title: note.title || 'Untitled',
+            contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
+            createdAt: note.created_at,
+            updatedAt: note.updated_at,
+            weather: note.weather as SavedNote['weather'],
+            folder_id: note.folder_id
+          }));
+          setSavedNotes(notes);
+          localStorage.setItem('nuron-notes-cache', JSON.stringify(notes));
+        }
+      }
     };
     
     migrateNotes();
@@ -446,7 +471,7 @@ const Index = () => {
         .from('notes')
         .select('*')
         .eq('user_id', uid)
-        .eq('folder_id', currentFolder.id)
+        .or(`folder_id.eq.${currentFolder.id},folder_id.is.null`)
         .order('created_at', { ascending: false });
       
       if (data) {
@@ -489,7 +514,7 @@ const Index = () => {
           .order('created_at', { ascending: false });
         
         if (currentFolder && currentFolder.id !== 'local-notes') {
-          query = query.eq('folder_id', currentFolder.id);
+          query = query.or(`folder_id.eq.${currentFolder.id},folder_id.is.null`);
         }
         
         const { data } = await query;
