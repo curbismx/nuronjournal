@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import settingsIcon from "@/assets/00settings-4.png";
 import newPlusIcon from "@/assets/00plus-3.png";
+import plusIconRed from "@/assets/00plus_red.png";
 import plusIconGreen from "@/assets/00plus_green.png";
 import plusIconBlue from "@/assets/00plus_blue.png";
 import plusIconPink from "@/assets/00plus_pink.png";
@@ -157,7 +158,7 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
   };
 
   const themePlusIcons = {
-    default: newPlusIcon,
+    default: plusIconRed,
     green: plusIconGreen,
     blue: plusIconBlue,
     pink: plusIconPink
