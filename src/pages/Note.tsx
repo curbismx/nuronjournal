@@ -1919,6 +1919,28 @@ const Note = () => {
     };
   }, [imageViewerOpen]);
 
+  // Auto-save note when content changes (for desktop view)
+  useEffect(() => {
+    if (isEmbedded) {
+      // Only auto-save if there's actual content
+      const hasContent = noteTitle.trim() || 
+        contentBlocks.some(b => 
+          (b.type === 'text' && (b as { type: 'text'; id: string; content: string }).content.trim()) ||
+          b.type === 'image'
+        ) ||
+        audioUrls.length > 0;
+      
+      if (hasContent) {
+        // Debounce the save - wait 1 second after user stops typing
+        const timer = setTimeout(() => {
+          saveNote();
+        }, 1000);
+        
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [noteTitle, contentBlocks, audioUrls, isEmbedded]);
+
   const handleBack = async () => {
     console.log('handleBack called');
     await saveNote();
