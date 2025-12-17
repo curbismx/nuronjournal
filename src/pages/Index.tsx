@@ -265,26 +265,19 @@ const Index = () => {
           }));
           setFolders(typedFolders);
           
-          // Restore previously selected folder - check current state first, then localStorage
-          const savedFolderId = currentFolder?.id || localStorage.getItem('nuron-current-folder-id');
-          if (savedFolderId) {
-            const savedFolder = typedFolders.find(f => f.id === savedFolderId);
-            if (savedFolder) {
-              setCurrentFolder(savedFolder);
-              setViewMode(savedFolder.default_view);
-            } else {
-              // Saved folder no longer exists, fall back to Notes or first folder
-              const notesFolder = typedFolders.find(f => f.name === 'Notes') || typedFolders[0];
-              setCurrentFolder(notesFolder);
-              setViewMode(notesFolder.default_view);
-              localStorage.setItem('nuron-current-folder-id', notesFolder.id);
-            }
+          // ALWAYS check localStorage first to restore the previously selected folder
+          const savedFolderId = localStorage.getItem('nuron-current-folder-id');
+          const savedFolder = savedFolderId ? typedFolders.find(f => f.id === savedFolderId) : null;
+          
+          if (savedFolder) {
+            setCurrentFolder(savedFolder);
+            setViewMode(savedFolder.default_view);
           } else {
-            // No saved folder, default to Notes or first folder
-            const notesFolder = typedFolders.find(f => f.name === 'Notes') || typedFolders[0];
-            setCurrentFolder(notesFolder);
-            setViewMode(notesFolder.default_view);
-            localStorage.setItem('nuron-current-folder-id', notesFolder.id);
+            // No saved folder or it was deleted - default to Notes or first folder
+            const defaultFolder = typedFolders.find(f => f.name === 'Notes') || typedFolders[0];
+            setCurrentFolder(defaultFolder);
+            setViewMode(defaultFolder.default_view);
+            localStorage.setItem('nuron-current-folder-id', defaultFolder.id);
           }
         }
       }
