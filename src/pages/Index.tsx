@@ -128,7 +128,11 @@ const Index = () => {
   // Folder state
   const [showFolders, setShowFolders] = useState(false);
   const [folders, setFolders] = useState<Folder[]>([]);
-  const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
+  const [currentFolder, setCurrentFolder] = useState<Folder | null>(() => {
+    const savedFolderId = localStorage.getItem('nuron-current-folder-id');
+    // Just store the ID for now, the full folder object will be set when folders load
+    return savedFolderId ? { id: savedFolderId } as Folder : null;
+  });
   const [showFolderPopup, setShowFolderPopup] = useState(false);
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
@@ -261,8 +265,8 @@ const Index = () => {
           }));
           setFolders(typedFolders);
           
-          // Restore previously selected folder from localStorage
-          const savedFolderId = localStorage.getItem('nuron-current-folder-id');
+          // Restore previously selected folder - check current state first, then localStorage
+          const savedFolderId = currentFolder?.id || localStorage.getItem('nuron-current-folder-id');
           if (savedFolderId) {
             const savedFolder = typedFolders.find(f => f.id === savedFolderId);
             if (savedFolder) {
