@@ -875,8 +875,9 @@ const Index = () => {
   };
 
 
-  // Show original start page only for truly new users (no notes AND no folder selected yet)
-  if (savedNotes.length === 0 && !currentFolder) {
+  // Show original start page only for truly new users (no notes ever created)
+  const hasCreatedNote = localStorage.getItem('nuron-has-created-note') === 'true';
+  if (savedNotes.length === 0 && !hasCreatedNote) {
     return (
       <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: themeColors[theme] }}>
         {/* Header with settings button */}

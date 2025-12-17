@@ -1758,6 +1758,7 @@ const Note = () => {
       });
       
       if (!error) {
+        localStorage.setItem('nuron-has-created-note', 'true');
         // UPDATE LOCAL CACHE so Index loads instantly
         const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
         const existingIndex = cached.findIndex((n: any) => n.id === noteData.id);
