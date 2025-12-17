@@ -1476,7 +1476,7 @@ const Index = () => {
                 user && (
                   <button 
                     onClick={openCreateFolder}
-                    className="p-0 m-0 border-0 bg-transparent"
+                    className="p-0 m-0 mr-[5px] border-0 bg-transparent"
                   >
                     <img src={folderPlusIcon} alt="Add Folder" className="w-[24px] h-[24px]" />
                   </button>
