@@ -875,7 +875,7 @@ const Index = () => {
   };
 
 
-  // Show original start page only for truly new users (no notes ever created)
+  // Show original start page only when user has no notes
   const hasCreatedNote = localStorage.getItem('nuron-has-created-note') === 'true';
   if (savedNotes.length === 0 && !hasCreatedNote) {
     return (
@@ -895,27 +895,17 @@ const Index = () => {
                 setShowChangePassword(false);
               } else if (showAccountDetails) {
                 setShowAccountDetails(false);
-              } else if (showSettings) {
-                setShowSettings(false);
               } else {
-                setShowSettings(true);
+                setShowSettings(!showSettings);
               }
             }}
             className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
           >
-            {showSettings || showAccountDetails || showChangePassword ? (
-              <img 
-                src={backIcon} 
-                alt="Back" 
-                className="h-[24px] w-[24px]" 
-              />
-            ) : (
-              <img 
-                src={settingsIcon} 
-                alt="Settings" 
-                className="h-[24px] w-[24px]" 
-              />
-            )}
+            <img 
+              src={showSettings || showAccountDetails || showChangePassword ? backIcon : settingsIcon}
+              alt={showSettings || showAccountDetails || showChangePassword ? "Back" : "Settings"}
+              className="w-[30px] h-[30px]"
+            />
           </button>
           {!showSettings && !showAccountDetails && !showChangePassword && !showFolders && !user && (
              <div className="absolute top-[30px] left-[40px]">
@@ -1231,28 +1221,30 @@ const Index = () => {
         {/* Center content area (only shown when no panels are open) */}
         {!showSettings && !showAccountDetails && !showChangePassword && (
           <div className="flex-1 flex flex-col items-center justify-center px-8">
-            <img 
-              src={textImage} 
-              alt="Nuron Journal" 
-              className="w-auto mb-6"
-              style={{ maxWidth: '280px' }}
-            />
+            {/* textImage with plus button overlaid in center */}
+            <div className="relative mb-6">
+              <img 
+                src={textImage} 
+                alt="Nuron Journal" 
+                style={{ width: '320px' }}
+              />
+              <button 
+                onClick={() => navigate('/note')}
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-0 border-0 bg-transparent"
+              >
+                <img 
+                  src={plusIcon} 
+                  alt="Add Note" 
+                  className="w-[100px] h-[100px]"
+                />
+              </button>
+            </div>
+            {/* text2Image at bottom */}
             <img 
               src={text2Image} 
               alt="Start your journal" 
-              className="w-auto mb-8"
-              style={{ maxWidth: '320px' }}
+              style={{ maxWidth: '300px' }}
             />
-            <button 
-              onClick={() => navigate('/note')}
-              className="p-0 border-0 bg-transparent"
-            >
-              <img 
-                src={plusIcon} 
-                alt="Add Note" 
-                className="w-[100px] h-[100px]"
-              />
-            </button>
           </div>
         )}
 
