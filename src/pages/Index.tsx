@@ -5,7 +5,7 @@ import newPlusIcon from "@/assets/00plus-3.png";
 import plusIconGreen from "@/assets/00plus_green.png";
 import plusIconBlue from "@/assets/00plus_blue.png";
 import plusIconPink from "@/assets/00plus_pink.png";
-import themeIconRed from "@/assets/00red.png";
+import themeIconDark from "@/assets/00dark.png";
 import themeIconGreen from "@/assets/00green.png";
 import themeIconBlue from "@/assets/00blue.png";
 import themeIconPink from "@/assets/00pink.png";
@@ -123,7 +123,7 @@ const Index = () => {
   };
 
   const themeSettingsIcons = {
-    default: themeIconRed,
+    default: themeIconDark,
     green: themeIconGreen,
     blue: themeIconBlue,
     pink: themeIconPink
