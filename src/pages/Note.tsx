@@ -38,6 +38,7 @@ import recorderIconPink from '@/assets/00recorder_pink.png';
 import moveIcon from '@/assets/move.png';
 import folderIcon from '@/assets/folder_icon.png';
 import folderArrow from '@/assets/folder_arrow.png';
+import recordHelpImage from '@/assets/record_help.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 type ContentBlock = 
@@ -118,6 +119,7 @@ const Note = () => {
   const [showMoveNote, setShowMoveNote] = useState(false);
   const [folders, setFolders] = useState<{id: string; name: string; sort_order: number}[]>([]);
   const [selectedMoveFolder, setSelectedMoveFolder] = useState<string | null>(null);
+  const [showRecordHelp, setShowRecordHelp] = useState(false);
   const [showWeatherSetting, setShowWeatherSetting] = useState(() => {
     const stored = localStorage.getItem('nuron-show-weather');
     return stored !== null ? JSON.parse(stored) : true;
@@ -1433,9 +1435,20 @@ const Note = () => {
   };
 
   const openRecorder = () => {
+    // Show recording help once per session
+    const hasSeenRecordHelpThisSession = sessionStorage.getItem('nuron-seen-record-help');
+    if (!hasSeenRecordHelpThisSession) {
+      setShowRecordHelp(true);
+      sessionStorage.setItem('nuron-seen-record-help', 'true');
+    }
+    
     setIsRecordingOpen(true);
     audioChunksRef.current = [];
     startRecording();
+  };
+
+  const dismissRecordHelp = () => {
+    setShowRecordHelp(false);
   };
 
   const handleRecorderTap = () => {
@@ -2932,6 +2945,21 @@ const Note = () => {
         isOpen={datePickerOpen}
         onClose={() => setDatePickerOpen(false)}
       />
+
+      {/* Recording Help Overlay */}
+      {showRecordHelp && (
+        <div 
+          className="fixed inset-0 z-[60] flex items-end justify-end"
+          onClick={dismissRecordHelp}
+        >
+          <div 
+            className="mb-[140px] mr-[20px]"
+            style={{ marginBottom: `calc(140px + env(safe-area-inset-bottom))` }}
+          >
+            <img src={recordHelpImage} alt="Recording help" className="w-[220px] h-auto" />
+          </div>
+        </div>
+      )}
 
     </div>
   );
