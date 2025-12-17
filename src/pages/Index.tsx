@@ -1498,41 +1498,69 @@ const themeSettingsIcons = {
             {/* Invisible 50px header */}
             <div className="h-[50px] flex-shrink-0 bg-journal-content" />
             
-            {/* Scrollable notes list - scrolls under the header */}
-            <div className="flex-1 overflow-y-auto">
-              {savedNotes.filter(n => !currentFolder || n.folder_id === currentFolder.id || !n.folder_id).map((note) => {
-                const noteDate = new Date(note.createdAt);
-                const dayNumber = noteDate.getDate().toString().padStart(2, '0');
-                const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
-                const preview = getNotePreview(note);
-                const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; url: string } | undefined;
-                
-                return (
-                  <div
-                    key={note.id}
-                    onClick={() => setDesktopSelectedNoteId(note.id)}
-                    className={`px-8 py-4 border-b border-[hsl(0,0%,85%)] cursor-pointer ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'}`}
-                  >
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
-                        {dayNumber}
-                      </div>
-                      <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
-                        {dayName}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-[15px]">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-2">{note.title || 'Untitled'}</h3>
-                        <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2">{preview || '-'}</p>
-                      </div>
-                      {firstImage && (
-                        <img src={firstImage.url} alt="" className="w-[70px] h-[70px] rounded-[10px] object-cover" />
+            {/* Scrollable notes list */}
+            <div 
+              className="flex-1 overflow-y-auto overscroll-y-auto"
+              style={{ 
+                WebkitOverflowScrolling: 'touch',
+                overscrollBehaviorY: 'auto'
+              }}
+            >
+              <div style={{ minHeight: 'calc(100% + 1px)' }}>
+                {(isSearching ? filteredGroupedNotes : groupedNotes).map((group, groupIndex, allGroups) => {
+                  const groupMonthYear = new Date(group.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+                  const prevGroup = groupIndex > 0 ? allGroups[groupIndex - 1] : null;
+                  const prevMonthYear = prevGroup ? new Date(prevGroup.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase() : null;
+                  const showMonthHeader = groupIndex === 0 || groupMonthYear !== prevMonthYear;
+                  
+                  return (
+                    <div key={group.date}>
+                      {showMonthHeader && (
+                        <div className="sticky top-0 z-10 bg-[#CACAC2] px-8 py-[3px]">
+                          <span className="text-white text-[20px] font-outfit font-light tracking-wider leading-tight">
+                            {groupMonthYear}
+                          </span>
+                        </div>
                       )}
+                      {group.notes.map((note, index) => {
+                        const noteDate = new Date(note.createdAt);
+                        const dayNumber = noteDate.getDate().toString().padStart(2, '0');
+                        const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+                        const preview = getNotePreview(note);
+                        const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; url: string } | undefined;
+                        
+                        return (
+                          <div
+                            key={note.id}
+                            onClick={() => setDesktopSelectedNoteId(note.id)}
+                            className={`px-8 py-4 border-b border-[hsl(0,0%,85%)] cursor-pointer ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'}`}
+                          >
+                            {index === 0 && (
+                              <div className="flex items-start gap-4 mb-4">
+                                <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
+                                  {dayNumber}
+                                </div>
+                                <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
+                                  {dayName}
+                                </div>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-[15px]">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-2">{note.title || 'Untitled'}</h3>
+                                <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2">{preview || '-'}</p>
+                              </div>
+                              {firstImage && (
+                                <img src={firstImage.url} alt="" className="w-[70px] h-[70px] rounded-[10px] object-cover" />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
 
