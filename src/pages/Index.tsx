@@ -868,11 +868,8 @@ const Index = () => {
                 setShowAccountDetails(false);
               } else if (showSettings) {
                 setShowSettings(false);
-                setShowFolders(true);
-              } else if (showFolders) {
-                setShowFolders(false);
               } else {
-                setShowFolders(true);
+                setShowSettings(true);
               }
             }}
             className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
@@ -884,7 +881,11 @@ const Index = () => {
                 className="w-[30px] h-[30px]" 
               />
             ) : (
-              <Menu className="w-[30px] h-[30px] text-white" strokeWidth={1.5} />
+              <img 
+                src={settingsIcon} 
+                alt="Settings" 
+                className="w-[30px] h-[30px]" 
+              />
             )}
           </button>
           {!showSettings && !showAccountDetails && !showChangePassword && !showFolders && !user && (
@@ -900,8 +901,8 @@ const Index = () => {
         </div>
         </div>
 
-        {/* Title for settings/account/folders */}
-      {(showSettings || showAccountDetails || showChangePassword || showFolders) && (
+      {/* Title for settings/account */}
+      {(showSettings || showAccountDetails || showChangePassword) && (
         <div 
           className="mt-[20px]"
           style={{
@@ -910,79 +911,11 @@ const Index = () => {
           }}
         >
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider">
-            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : showFolders ? 'FOLDERS' : currentFolder?.name?.toUpperCase() || ''}
+            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : 'SETTINGS'}
           </h1>
         </div>
       )}
 
-        {/* Folders panel */}
-        <div 
-          className={`absolute inset-x-0 bottom-0 px-8 pt-[30px] overflow-y-auto transition-opacity duration-200 ${showFolders && !showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
-          style={{ 
-            backgroundColor: themeColors[theme],
-            top: `calc(120px + env(safe-area-inset-top))`,
-            paddingLeft: `calc(32px + env(safe-area-inset-left))`,
-            paddingRight: `calc(32px + env(safe-area-inset-right))`
-          }}
-        >
-          {/* Plus icon row */}
-          {user && (
-            <div className="flex justify-center mb-6">
-              <button 
-                onClick={openCreateFolder}
-                className="p-2 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
-              >
-                <Plus className="w-[30px] h-[30px] text-white" strokeWidth={1.5} />
-              </button>
-            </div>
-          )}
-          
-          {/* Folders list */}
-          <div className="space-y-3">
-            {folders.map((folder) => (
-              <div 
-                key={folder.id}
-                className="bg-white/5 border border-white/20 rounded-[10px] px-4 py-4 flex items-center gap-3"
-              >
-                <FolderOpen className="w-[24px] h-[24px] text-white/60" strokeWidth={1.5} />
-                <button
-                  onClick={() => selectFolder(folder)}
-                  className="flex-1 text-left text-white text-[18px] font-outfit font-light"
-                >
-                  {folder.name}
-                </button>
-                {user && folder.id !== 'local-notes' && (
-                  <button 
-                    onClick={() => openEditFolder(folder)}
-                    className="p-2 m-0 border-0 bg-transparent"
-                  >
-                    <img src={threeDotsIcon} alt="Options" className="w-[20px] h-[20px] opacity-60" />
-                  </button>
-                )}
-                <button 
-                  onClick={() => selectFolder(folder)}
-                  className="p-2 m-0 border-0 bg-transparent"
-                >
-                  <ChevronRight className="w-[20px] h-[20px] text-white/60" strokeWidth={1.5} />
-                </button>
-              </div>
-            ))}
-          </div>
-          
-          {/* Settings link at bottom */}
-          <div className="mt-8 pt-6 border-t border-white/20">
-            <button
-              onClick={() => {
-                setShowFolders(false);
-                setShowSettings(true);
-              }}
-              className="flex items-center gap-3 p-0 m-0 border-0 bg-transparent text-white/80 hover:text-white transition-colors"
-            >
-              <Settings className="w-[24px] h-[24px]" strokeWidth={1.5} />
-              <span className="text-[18px] font-outfit font-light">Settings</span>
-            </button>
-          </div>
-        </div>
 
         {/* Settings panel */}
       <div 
@@ -1267,7 +1200,7 @@ const Index = () => {
         </div>
 
         {/* Center content area (only shown when no panels are open) */}
-        {!showSettings && !showAccountDetails && !showChangePassword && !showFolders && (
+        {!showSettings && !showAccountDetails && !showChangePassword && (
           <div className="flex-1 flex flex-col items-center justify-center px-8">
             <img 
               src={textImage} 
@@ -1490,7 +1423,7 @@ const Index = () => {
               }}
               className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
             >
-              {showSettings || showAccountDetails || showChangePassword ? (
+              {showSettings || showAccountDetails || showChangePassword || showFolders ? (
                 <img 
                   src={backIcon} 
                   alt="Back" 
@@ -1515,7 +1448,7 @@ const Index = () => {
         </div>
         <div className="relative mt-[41px]">
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
-            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : showFolders ? 'FOLDERS' : currentFolder?.name?.toUpperCase() || ''}
+            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : showFolders ? '' : currentFolder?.name?.toUpperCase() || ''}
           </h1>
           {!showSettings && !showAccountDetails && !showChangePassword && !showFolders && (
               <div 
@@ -1542,30 +1475,40 @@ const Index = () => {
       </header>
 
       {/* Folders panel - sits behind the card */}
-      <div className={`absolute inset-x-0 top-[150px] bottom-0 px-8 pt-[30px] transition-opacity duration-200 overflow-y-auto ${showFolders && !showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} style={{ backgroundColor: themeColors[theme] }}>
-        {/* Plus icon row */}
-        {user && (
-          <div className="flex justify-center mb-6">
+      <div 
+        className={`absolute inset-x-0 bottom-0 transition-opacity duration-200 overflow-y-auto ${showFolders && !showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+        style={{ 
+          backgroundColor: themeColors[theme],
+          top: `calc(150px + env(safe-area-inset-top))`,
+          paddingLeft: `calc(32px + env(safe-area-inset-left))`,
+          paddingRight: `calc(32px + env(safe-area-inset-right))`,
+          paddingTop: '30px'
+        }}
+      >
+        {/* Header row with FOLDERS title and plus icon */}
+        <div className="flex items-center justify-between mb-6">
+          <span className="text-white text-[24px] font-outfit font-light tracking-wider">FOLDERS</span>
+          {user && (
             <button 
               onClick={openCreateFolder}
-              className="p-2 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
+              className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
             >
-              <Plus className="w-[30px] h-[30px] text-white" strokeWidth={1.5} />
+              <img src={themePlusIcons[theme]} alt="Add folder" className="w-[24px] h-[24px]" />
             </button>
-          </div>
-        )}
+          )}
+        </div>
         
         {/* Folders list */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {folders.map((folder) => (
             <div 
               key={folder.id}
-              className="bg-white/5 border border-white/20 rounded-[10px] px-4 py-4 flex items-center gap-3"
+              className="flex items-center gap-3 py-2"
             >
               <FolderOpen className="w-[24px] h-[24px] text-white/60" strokeWidth={1.5} />
               <button
                 onClick={() => selectFolder(folder)}
-                className="flex-1 text-left text-white text-[18px] font-outfit font-light"
+                className="flex-1 text-left text-white text-[20px] font-outfit font-light"
               >
                 {folder.name}
               </button>
@@ -1581,23 +1524,23 @@ const Index = () => {
                 onClick={() => selectFolder(folder)}
                 className="p-2 m-0 border-0 bg-transparent"
               >
-                <ChevronRight className="w-[20px] h-[20px] text-white/60" strokeWidth={1.5} />
+                <img src={accountArrow} alt="Select" className="w-[20px] h-[20px] opacity-60" />
               </button>
             </div>
           ))}
         </div>
         
         {/* Settings link at bottom */}
-        <div className="mt-8 pt-6 border-t border-white/20">
+        <div className="absolute bottom-8 left-8">
           <button
             onClick={() => {
               setShowFolders(false);
               setShowSettings(true);
             }}
-            className="flex items-center gap-3 p-0 m-0 border-0 bg-transparent text-white/80 hover:text-white transition-colors"
+            className="flex items-center gap-3 p-0 m-0 border-0 bg-transparent"
           >
-            <Settings className="w-[24px] h-[24px]" strokeWidth={1.5} />
-            <span className="text-[18px] font-outfit font-light">Settings</span>
+            <img src={settingsIcon} alt="Settings" className="w-[24px] h-[24px]" />
+            <span className="text-white text-[18px] font-outfit font-light">Settings</span>
           </button>
         </div>
       </div>
