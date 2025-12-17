@@ -124,7 +124,8 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isRestoring, setIsRestoring] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-  const [showRateAppDialog, setShowRateAppDialog] = useState(false);
+const [showRateAppDialog, setShowRateAppDialog] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   // Folder state
   const [showFolders, setShowFolders] = useState(false);
@@ -221,8 +222,11 @@ const Index = () => {
   // Load folders when user is authenticated
   useEffect(() => {
     const loadFolders = async () => {
-      if (!user) {
-        // For non-logged-in users, use a local folder
+      // Wait for auth to be determined before loading folders
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        // Not logged in - use local folder
         const localFolder: Folder = {
           id: 'local-notes',
           user_id: 'local',
@@ -232,17 +236,17 @@ const Index = () => {
           updated_at: new Date().toISOString()
         };
         setFolders([localFolder]);
-        // Only set currentFolder if not already set (to avoid overwriting saved folder during auth load)
         if (!currentFolder || currentFolder.id === 'local-notes') {
           setCurrentFolder(localFolder);
         }
+        setIsInitializing(false);
         return;
       }
       
       const { data, error } = await supabase
         .from('folders')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', session.user.id)
         .order('sort_order', { ascending: true });
       
       if (data && !error) {
@@ -250,7 +254,7 @@ const Index = () => {
           // Only create default folder if user has NO folders at all
           const { data: newFolder, error: createError } = await supabase
             .from('folders')
-            .insert({ user_id: user.id, name: 'Notes', default_view: 'collapsed' })
+            .insert({ user_id: session.user.id, name: 'Notes', default_view: 'collapsed' })
             .select()
             .single();
           
@@ -287,6 +291,7 @@ const Index = () => {
           }
         }
       }
+      setIsInitializing(false);
     };
     
     loadFolders();
@@ -430,10 +435,25 @@ const Index = () => {
   };
 
   const selectFolder = (folder: Folder) => {
-    setCurrentFolder(folder);
-    setViewMode(folder.default_view);
-    setShowFolders(false);
-    localStorage.setItem('nuron-current-folder-id', folder.id);
+    // Brief fade out before switching
+    const contentEl = document.querySelector('.notes-list-container');
+    if (contentEl) {
+      contentEl.classList.add('opacity-0');
+      setTimeout(() => {
+        setCurrentFolder(folder);
+        localStorage.setItem('nuron-current-folder-id', folder.id);
+        setViewMode(folder.default_view || 'collapsed');
+        setShowFolders(false);
+        setTimeout(() => {
+          contentEl.classList.remove('opacity-0');
+        }, 50);
+      }, 150);
+    } else {
+      setCurrentFolder(folder);
+      localStorage.setItem('nuron-current-folder-id', folder.id);
+      setViewMode(folder.default_view || 'collapsed');
+      setShowFolders(false);
+    }
   };
 
   const updateFolderOrder = async (folderId: string, newIndex: number) => {
@@ -533,57 +553,10 @@ const Index = () => {
 
   // Reload notes when current folder changes
   useEffect(() => {
-    if (currentFolder && user) {
+    if (currentFolder) {
       loadNotesForCurrentFolder();
     }
   }, [currentFolder?.id, user?.id]);
-
-  // Load notes from Supabase or localStorage based on auth status
-  useEffect(() => {
-    const loadNotes = async () => {
-      // ALWAYS check auth directly
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        // Logged in - load from Supabase WITH user_id filter
-        // If we have a current folder, filter by it
-        let query = supabase
-          .from('notes')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .order('created_at', { ascending: false });
-        
-        if (currentFolder && currentFolder.id !== 'local-notes') {
-          query = query.or(`folder_id.eq.${currentFolder.id},folder_id.is.null`);
-        }
-        
-        const { data } = await query;
-        
-        if (data) {
-          const notes = data.map(note => ({
-            id: note.id,
-            title: note.title || 'Untitled',
-            contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
-            createdAt: note.created_at,
-            updatedAt: note.updated_at,
-            weather: note.weather as SavedNote['weather'],
-            folder_id: note.folder_id
-          }));
-          setSavedNotes(notes);
-          console.log('Loaded notes from Supabase:', notes.length);
-          // CACHE TO LOCALSTORAGE for instant load next time
-          localStorage.setItem('nuron-notes-cache', JSON.stringify(notes));
-        }
-      } else {
-        // Not logged in - load from localStorage
-        const stored = localStorage.getItem('nuron-notes');
-        setSavedNotes(stored ? JSON.parse(stored) : []);
-        console.log('Loaded notes from localStorage:', stored ? JSON.parse(stored).length : 0);
-      }
-    };
-
-    loadNotes();
-  }, [user?.id]);
 
   const loadUserProfile = async (userId: string) => {
     const { data } = await supabase
@@ -919,7 +892,7 @@ const Index = () => {
 
 
   // Show original start page only for logged-out users with no notes
-  if (savedNotes.length === 0 && !user) {
+  if (savedNotes.length === 0 && !user && !isInitializing) {
     return (
       <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: themeColors[theme] }}>
         {/* Header with settings button */}
@@ -1936,7 +1909,7 @@ const Index = () => {
       {/* Scrollable content area */}
       <div 
         ref={scrollContainerRef}
-        className={`flex-1 overflow-y-scroll overflow-x-hidden bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 transition-transform duration-300 ${showSettings || showFolders ? 'translate-y-[100%]' : '-mt-[25px]'}`}
+        className={`notes-list-container flex-1 overflow-y-scroll overflow-x-hidden bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 transition-all duration-200 ${showSettings || showFolders ? 'translate-y-[100%]' : '-mt-[25px]'} ${isInitializing ? 'opacity-0' : 'opacity-100'}`}
         style={{ 
           WebkitOverflowScrolling: 'touch',
           overscrollBehaviorY: 'auto',
