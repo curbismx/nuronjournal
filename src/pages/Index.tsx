@@ -23,6 +23,11 @@ import accountArrow from "@/assets/00settingsarrow-2.png";
 import searchIcon from "@/assets/00search-3.png";
 import searchArrow from "@/assets/00searcharrow.png";
 import threeDotsIcon from "@/assets/00threedots-3.png";
+import hamburgerIcon from "@/assets/hamburger.png";
+import folderIcon from "@/assets/folder_icon.png";
+import folderArrow from "@/assets/folder_arrow.png";
+import folderSettingsIcon from "@/assets/folder_settings.png";
+import folderPlusIcon from "@/assets/folder_plus.png";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
@@ -31,7 +36,6 @@ import { toast } from "sonner";
 import { Capacitor } from '@capacitor/core';
 import { restorePurchases, isTrialExpired } from '@/lib/purchases';
 import SubscriptionModal from '@/components/SubscriptionModal';
-import { Menu, FolderOpen, ChevronRight, Plus, Settings } from 'lucide-react';
 
 
 interface SavedNote {
@@ -1430,7 +1434,7 @@ const Index = () => {
                   className="w-[30px] h-[30px]" 
                 />
               ) : (
-                <Menu className="w-[30px] h-[30px] text-white" strokeWidth={1.5} />
+                <img src={hamburgerIcon} alt="Menu" className="w-[30px] h-[30px]" />
               )}
             </button>
             {!showSettings && !showAccountDetails && !showChangePassword && !showFolders && !user && savedNotes.length === 0 && (
@@ -1493,7 +1497,7 @@ const Index = () => {
               onClick={openCreateFolder}
               className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
             >
-              <img src={themePlusIcons[theme]} alt="Add folder" className="w-[24px] h-[24px]" />
+              <img src={folderPlusIcon} alt="Add folder" className="w-[24px] h-[24px]" />
             </button>
           )}
         </div>
@@ -1505,7 +1509,7 @@ const Index = () => {
               key={folder.id}
               className="flex items-center gap-3 py-2"
             >
-              <FolderOpen className="w-[24px] h-[24px] text-white/60" strokeWidth={1.5} />
+              <img src={folderIcon} alt="Folder" className="w-[24px] h-[24px] opacity-60" />
               <button
                 onClick={() => selectFolder(folder)}
                 className="flex-1 text-left text-white text-[20px] font-outfit font-light"
@@ -1517,14 +1521,14 @@ const Index = () => {
                   onClick={() => openEditFolder(folder)}
                   className="p-2 m-0 border-0 bg-transparent"
                 >
-                  <img src={threeDotsIcon} alt="Options" className="w-[20px] h-[20px] opacity-60" />
+                  <img src={folderSettingsIcon} alt="Options" className="w-[20px] h-[20px] opacity-60" />
                 </button>
               )}
               <button 
                 onClick={() => selectFolder(folder)}
                 className="p-2 m-0 border-0 bg-transparent"
               >
-                <img src={accountArrow} alt="Select" className="w-[20px] h-[20px] opacity-60" />
+                <img src={folderArrow} alt="Select" className="w-[20px] h-[20px] opacity-60" />
               </button>
             </div>
           ))}
