@@ -1423,27 +1423,29 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
 
     return (
 
-      <div 
+      <div className="fixed inset-0 flex">
 
-        className="fixed inset-0 flex items-stretch"
+        
 
-        style={{ backgroundColor: themeColors[theme] }}
+        {/* Column 1: Folders - 20% width, dark background */}
 
-      >
+        <div 
 
-        {/* Column 1: Folders - NO card, sits on dark background */}
+          className="flex flex-col pt-[40px] pl-[20px] pr-[20px]"
 
-        <div className="w-[220px] flex-shrink-0 pt-[50px] pl-[50px] flex flex-col">
+          style={{ width: '20%', backgroundColor: themeColors[theme] }}
 
-          <div className="flex items-center gap-4 mb-6">
+        >
 
-            <h2 className="text-white text-[16px] font-outfit font-light tracking-wider">FOLDERS</h2>
+          <div className="flex items-center gap-3 mb-8">
+
+            <span className="text-white text-[20px] font-outfit font-light tracking-wider">FOLDERS</span>
 
             {user && (
 
-              <button onClick={openCreateFolder} className="p-0 m-0 border-0 bg-transparent">
+              <button onClick={openCreateFolder}>
 
-                <img src={folderPlusIcon} alt="Add Folder" className="w-[16px] h-[16px] opacity-70" />
+                <img src={folderPlusIcon} alt="Add" className="w-[20px] h-[20px] opacity-70" />
 
               </button>
 
@@ -1465,23 +1467,17 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
 
                   localStorage.setItem('nuron-current-folder-id', folder.id);
 
-                  setViewMode(folder.default_view || 'collapsed');
-
                   setDesktopSelectedNoteId(null);
 
                 }}
 
-                className={`flex items-center gap-2 w-full text-left py-1 transition-colors ${
-
-                  currentFolder?.id === folder.id ? 'opacity-100' : 'opacity-60 hover:opacity-80'
-
-                }`}
+                className={`flex items-center gap-3 w-full text-left py-2 ${currentFolder?.id === folder.id ? 'opacity-100' : 'opacity-50 hover:opacity-70'}`}
 
               >
 
-                <img src={folderIcon} alt="" className="w-[14px] h-[14px]" />
+                <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
 
-                <span className="text-white text-[14px] font-outfit font-light">{folder.name}</span>
+                <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
 
               </button>
 
@@ -1489,135 +1485,81 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
 
           </div>
 
-          <div className="pb-[50px]">
+          <button onClick={() => setShowSettings(true)} className="pb-[40px] flex items-center gap-2 opacity-60 hover:opacity-80">
 
-            <button
+            <img src={settingsIcon} alt="" className="w-[20px] h-[20px]" />
 
-              onClick={() => setShowSettings(true)}
+            <span className="text-white text-[16px] font-outfit">Settings</span>
 
-              className="flex items-center gap-2 text-white/60 hover:text-white/80 transition-colors"
-
-            >
-
-              <img src={settingsIcon} alt="Settings" className="w-[16px] h-[16px] opacity-60" />
-
-              <span className="text-[12px] font-outfit">Settings</span>
-
-            </button>
-
-          </div>
+          </button>
 
         </div>
 
-        {/* Column 2: Notes List - EXACT same structure as mobile */}
+        {/* Column 2: Notes list - 30% width, full height, square edges */}
 
         <div 
 
-          className="w-[420px] flex-shrink-0 flex flex-col"
+          className="bg-journal-content overflow-y-auto"
 
-          style={{ marginTop: '0px', marginBottom: '50px' }}
+          style={{ width: '30%' }}
 
         >
 
-          {/* Dark header - same as mobile */}
+          {savedNotes.filter(n => !currentFolder || n.folder_id === currentFolder.id || !n.folder_id).map((note) => {
 
-          <div 
+            const noteDate = new Date(note.createdAt);
 
-            style={{ 
+            const dayNumber = noteDate.getDate().toString().padStart(2, '0');
 
-              backgroundColor: themeColors[theme],
+            const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
 
-              paddingTop: '30px',
+            const preview = getNotePreview(note);
 
-              paddingLeft: '30px',
+            const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; url: string } | undefined;
 
-              paddingRight: '30px',
+            
 
-              paddingBottom: '30px',
+            return (
 
-              minHeight: '120px'
+              <div
 
-            }}
+                key={note.id}
 
-          >
+                onClick={() => setDesktopSelectedNoteId(note.id)}
 
-            <div className="relative mt-[20px]">
+                className={`px-8 py-4 border-b border-[hsl(0,0%,85%)] cursor-pointer ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'}`}
 
-              <h1 className="text-white text-[24px] font-outfit font-light tracking-wider leading-none">
+              >
 
-                {currentFolder?.name?.toUpperCase() || 'NOTES'}
+                <div className="flex items-start gap-4 mb-4">
 
-              </h1>
+                  <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
 
-              <div className="absolute top-[-5px] right-0 flex items-center gap-[20px]">
+                    {dayNumber}
 
-                <button 
+                  </div>
 
-                  onClick={() => setIsSearching(!isSearching)}
+                  <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
 
-                  className="p-0 m-0 border-0 bg-transparent"
+                    {dayName}
 
-                >
+                  </div>
 
-                  <img src={searchIcon} alt="Search" className="h-[24px] w-auto" />
+                </div>
 
-                </button>
+                <div className="flex items-center gap-[15px]">
 
-                <button 
+                  <div className="flex-1 min-w-0">
 
-                  onClick={() => setViewMode(prev => prev === 'collapsed' ? 'compact' : 'collapsed')}
+                    <h3 className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-2">{note.title || 'Untitled'}</h3>
 
-                  className="p-0 m-0 border-0 bg-transparent"
+                    <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2">{preview || '-'}</p>
 
-                >
+                  </div>
 
-                  <img src={viewMode === 'collapsed' ? condenseIcon : listViewIcon} alt="View" className="h-[24px] w-[24px]" />
+                  {firstImage && (
 
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* Light content card - rounded top corners overlap header */}
-
-          <div 
-
-            className="flex-1 overflow-y-auto bg-journal-content rounded-t-[30px] -mt-[25px] relative"
-
-            style={{ borderBottomLeftRadius: '30px', borderBottomRightRadius: '30px' }}
-
-          >
-
-            {/* Search bar */}
-
-            {isSearching && (
-
-              <div className="px-[30px] pt-[30px] pb-2">
-
-                <div className="flex items-center bg-[#F6F6F6] rounded-full px-4 py-3 border border-[hsl(60,5%,80%)]">
-
-                  <input
-
-                    type="text"
-
-                    value={searchQuery}
-
-                    onChange={(e) => setSearchQuery(e.target.value)}
-
-                    placeholder="Search here"
-
-                    autoFocus
-
-                    className="flex-1 bg-transparent outline-none text-[16px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[#A4A4A4]"
-
-                  />
-
-                  {searchQuery && (
-
-                    <button onClick={() => setSearchQuery("")} className="ml-2 text-[#A4A4A4]">×</button>
+                    <img src={firstImage.url} alt="" className="w-[70px] h-[70px] rounded-[10px] object-cover" />
 
                   )}
 
@@ -1625,217 +1567,93 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
 
               </div>
 
-            )}
+            );
 
-            {/* Notes list - EXACT same as mobile */}
+          })}
 
-            <div>
+        </div>
 
-              {(isSearching ? filteredGroupedNotes : groupedNotes).map((group, groupIndex, allGroups) => {
+        {/* Divider line */}
 
-                const groupMonthYear = new Date(group.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+        <div className="w-[1px] bg-[hsl(0,0%,80%)]" />
 
-                const prevGroup = groupIndex > 0 ? allGroups[groupIndex - 1] : null;
+        {/* Column 3: Note view - 50% width, full height, square edges */}
 
-                const prevMonthYear = prevGroup ? new Date(prevGroup.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase() : null;
+        <div 
 
-                const showMonthHeader = viewMode !== 'compact' && (groupIndex === 0 || groupMonthYear !== prevMonthYear);
+          className="bg-journal-content overflow-y-auto"
 
-                
+          style={{ width: '50%' }}
 
-                return (
+        >
 
-                  <div key={group.date}>
+          {desktopSelectedNoteId && desktopSelectedNoteId !== 'new' ? (
 
-                    {showMonthHeader && (
+            (() => {
 
-                      <div className="sticky top-0 z-10 bg-[#CACAC2] px-8 py-[3px]">
+              const note = savedNotes.find(n => n.id === desktopSelectedNoteId);
 
-                        <span className="text-white text-[20px] font-outfit font-light tracking-wider leading-tight">
+              if (!note) return null;
 
-                          {groupMonthYear}
+              const noteDate = new Date(note.createdAt);
 
-                        </span>
+              return (
 
-                      </div>
+                <div className="p-8">
 
-                    )}
+                  <div className="text-[14px] font-outfit text-[hsl(60,1%,66%)] mb-4">
 
-                    {group.notes.map((note, index) => {
+                    {noteDate.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}
 
-                      const noteDate = new Date(note.createdAt);
+                  </div>
 
-                      const dayNumber = noteDate.getDate().toString().padStart(2, '0');
+                  <h1 className="text-[28px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-6">{note.title || 'Untitled'}</h1>
 
-                      const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+                  <div className="space-y-4">
 
-                      const preview = getNotePreview(note);
+                    {note.contentBlocks.map((block) => {
 
-                      const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; id: string; url: string; width: number } | undefined;
+                      if (block.type === 'text') {
 
-                      return (
+                        const textBlock = block as { type: 'text'; id: string; content: string };
 
-                        <div 
+                        return (
 
-                          key={note.id}
+                          <p key={block.id} className="text-[16px] font-outfit text-[hsl(0,0%,30%)] leading-relaxed whitespace-pre-wrap">
 
-                          className={`border-b border-[hsl(0,0%,85%)] cursor-pointer ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/20'}`}
+                            {textBlock.content}
 
-                          onClick={() => setDesktopSelectedNoteId(note.id)}
+                          </p>
 
-                        >
+                        );
 
-                          <div className={viewMode === 'compact' ? "px-8 pt-[17px] pb-4" : index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-4 pb-4"}>
+                      } else if (block.type === 'image') {
 
-                            {index === 0 && viewMode !== 'compact' && (
+                        const imageBlock = block as { type: 'image'; id: string; url: string; width: number };
 
-                              <div className="flex items-start gap-4 mb-4">
+                        return (
 
-                                <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
+                          <img key={block.id} src={imageBlock.url} alt="" className="rounded-[10px]" style={{ width: `${imageBlock.width}%` }} />
 
-                                  {dayNumber}
+                        );
 
-                                </div>
+                      }
 
-                                <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
-
-                                  {dayName}
-
-                                </div>
-
-                              </div>
-
-                            )}
-
-                            <div className="min-w-0">
-
-                              {viewMode === 'compact' ? (
-
-                                <div className="flex items-center gap-[12px]">
-
-                                  <div className="flex-1 min-w-0">
-
-                                    <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] break-words">
-
-                                      {note.title || 'Untitled'}
-
-                                    </h3>
-
-                                    <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-1 break-words">
-
-                                      {preview || '-'}
-
-                                    </p>
-
-                                  </div>
-
-                                  {firstImage && (
-
-                                    <img src={firstImage.url} alt="" className="w-[50px] h-[50px] rounded-[8px] object-cover flex-shrink-0" />
-
-                                  )}
-
-                                </div>
-
-                              ) : (
-
-                                <div className="flex items-center gap-[15px]">
-
-                                  <div className="flex-1 min-w-0">
-
-                                    <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 break-words ${index === 0 ? '-mt-[10px]' : ''}`}>
-
-                                      {note.title || 'Untitled'}
-
-                                    </h3>
-
-                                    <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px] break-words">
-
-                                      {preview || '-'}
-
-                                    </p>
-
-                                  </div>
-
-                                  {firstImage && (
-
-                                    <img src={firstImage.url} alt="" className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0" />
-
-                                  )}
-
-                                </div>
-
-                              )}
-
-                            </div>
-
-                          </div>
-
-                        </div>
-
-                      );
+                      return null;
 
                     })}
 
                   </div>
 
-                );
+                </div>
 
-              })}
+              );
 
-            </div>
-
-          </div>
-
-          {/* Plus button */}
-
-          <button
-
-            onClick={() => setDesktopSelectedNoteId('new')}
-
-            className="absolute z-50"
-
-            style={{ bottom: '80px', right: '30px', width: '51px', height: '51px' }}
-
-          >
-
-            <img src={themePlusIcons[theme]} alt="Add" className="w-full h-full" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }} />
-
-          </button>
-
-        </div>
-
-        {/* 30px gap */}
-
-        <div className="w-[30px] flex-shrink-0" />
-
-        {/* Column 3: Note Editor via iframe */}
-
-        <div 
-
-          className="flex-1 flex flex-col"
-
-          style={{ marginTop: '0px', marginBottom: '50px', marginRight: '50px' }}
-
-        >
-
-          {desktopSelectedNoteId ? (
-
-            <iframe
-
-              key={desktopSelectedNoteId}
-
-              src={desktopSelectedNoteId === 'new' ? '/note?desktop=true' : `/note/${desktopSelectedNoteId}?desktop=true`}
-
-              className="flex-1 w-full h-full border-0 rounded-[30px] bg-journal-content"
-
-              title="Note Editor"
-
-            />
+            })()
 
           ) : (
 
-            <div className="flex-1 flex items-center justify-center bg-journal-content rounded-[30px] text-[hsl(0,0%,60%)] font-outfit text-[18px]">
+            <div className="h-full flex items-center justify-center text-[hsl(0,0%,60%)] font-outfit text-[18px]">
 
               Select a note to view
 
@@ -1844,180 +1662,6 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
           )}
 
         </div>
-
-        {/* Keep existing Settings modal and other modals */}
-
-        {showSettings && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-            <div className="bg-[hsl(60,5%,96%)] rounded-[20px] p-8 max-w-md w-full mx-4">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-[20px] font-outfit font-light tracking-wider">SETTINGS</h2>
-                <button onClick={() => setShowSettings(false)} className="text-[30px] text-[hsl(0,0%,60%)] hover:text-[hsl(0,0%,30%)]">×</button>
-              </div>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between py-3">
-                  <span className="text-[16px] font-outfit text-[hsl(0,0%,30%)]">Theme colour</span>
-                  <div className="flex gap-3">
-                    {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
-                      <button
-                        key={t}
-                        onClick={() => setTheme(t)}
-                        className="relative"
-                      >
-                        <div className="w-[36px] h-[36px] rounded-full" style={{ backgroundColor: themeColors[t] }} />
-                        {theme === t && (
-                          <div className="absolute inset-0 flex items-center justify-center text-white text-[18px]">
-                            ✓
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between py-3">
-                  <span className="text-[16px] font-outfit text-[hsl(0,0%,30%)]">Show weather on notes</span>
-                  <button
-                    onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
-                    className={`relative w-[51px] h-[31px] rounded-full transition-colors ${showWeatherOnNotes ? 'bg-green-500' : 'bg-[hsl(0,0%,80%)]'}`}
-                  >
-                    <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`} />
-                  </button>
-                </div>
-                {user ? (
-                  <div className="pt-4 border-t border-[hsl(0,0%,85%)]">
-                    <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] mb-4">
-                      Signed in as {userProfile?.email}
-                    </p>
-                    <button
-                      onClick={handleSignOut}
-                      className="w-full py-3 bg-red-500 text-white rounded-[10px] font-outfit font-medium"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                ) : (
-                  <div className="pt-4 border-t border-[hsl(0,0%,85%)]">
-                    <button
-                      onClick={() => { setShowSettings(false); setShowSignUp(true); setIsSignInMode(true); }}
-                      className="w-full py-3 bg-black text-white rounded-[10px] font-outfit font-medium"
-                    >
-                      Sign In
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* SignUp Modal for desktop */}
-        {showSignUp && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-            <div className="bg-[hsl(60,5%,96%)] rounded-[20px] p-8 max-w-md w-full mx-4">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-[20px] font-outfit font-light tracking-wider">{isSignInMode ? 'SIGN IN' : 'SIGN UP'}</h2>
-                <button onClick={() => setShowSignUp(false)} className="text-[30px] text-[hsl(0,0%,60%)] hover:text-[hsl(0,0%,30%)]">×</button>
-              </div>
-              <form onSubmit={isSignInMode ? handleSignIn : handleSignUp} className="space-y-4">
-                {!isSignInMode && (
-                  <div>
-                    <Label htmlFor="name" className="text-[14px] font-outfit text-[hsl(0,0%,30%)]">Name</Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="mt-1 rounded-[10px]"
-                      required={!isSignInMode}
-                    />
-                  </div>
-                )}
-                <div>
-                  <Label htmlFor="email" className="text-[14px] font-outfit text-[hsl(0,0%,30%)]">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="mt-1 rounded-[10px]"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="password" className="text-[14px] font-outfit text-[hsl(0,0%,30%)]">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="mt-1 rounded-[10px]"
-                    required
-                  />
-                </div>
-                {authFormError && (
-                  <p className="text-red-500 text-[14px] font-outfit">{authFormError}</p>
-                )}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 bg-black text-white rounded-[10px] font-outfit font-medium disabled:opacity-50"
-                >
-                  {loading ? 'Loading...' : (isSignInMode ? 'Sign In' : 'Sign Up')}
-                </button>
-                <p className="text-center text-[14px] font-outfit text-[hsl(0,0%,50%)]">
-                  {isSignInMode ? "Don't have an account? " : "Already have an account? "}
-                  <button
-                    type="button"
-                    onClick={() => setIsSignInMode(!isSignInMode)}
-                    className="text-[hsl(0,0%,30%)] underline"
-                  >
-                    {isSignInMode ? 'Sign Up' : 'Sign In'}
-                  </button>
-                </p>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Folder Popup for desktop */}
-        {showFolderPopup && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-            <div className="bg-[hsl(60,5%,96%)] rounded-[20px] p-8 max-w-md w-full mx-4">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-[20px] font-outfit font-light tracking-wider">{editingFolder ? 'EDIT FOLDER' : 'NEW FOLDER'}</h2>
-                <button onClick={() => { setShowFolderPopup(false); setEditingFolder(null); }} className="text-[30px] text-[hsl(0,0%,60%)] hover:text-[hsl(0,0%,30%)]">×</button>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="folderName" className="text-[14px] font-outfit text-[hsl(0,0%,30%)]">Folder Name</Label>
-                  <Input
-                    id="folderName"
-                    type="text"
-                    value={newFolderName}
-                    onChange={(e) => setNewFolderName(e.target.value)}
-                    className="mt-1 rounded-[10px]"
-                    placeholder="Enter folder name"
-                  />
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => { setShowFolderPopup(false); setEditingFolder(null); }}
-                    className="flex-1 py-3 rounded-[10px] bg-[hsl(0,0%,85%)] text-[hsl(0,0%,30%)] font-outfit font-medium"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={editingFolder ? updateFolder : createFolder}
-                    className="flex-1 py-3 rounded-[10px] text-white font-outfit font-medium"
-                    style={{ backgroundColor: themeColors[theme] }}
-                  >
-                    {editingFolder ? 'Update' : 'Create'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
       </div>
 
