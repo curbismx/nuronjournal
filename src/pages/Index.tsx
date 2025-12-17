@@ -1584,7 +1584,7 @@ const themeSettingsIcons = {
                 </div>
               ) : (
                 /* Icons - right aligned */
-                <div className="flex-1 flex items-center justify-end gap-[25px]">
+                <div className="flex-1 flex items-center justify-end gap-[25px] pr-[8px]">
                   <button 
                     onClick={() => setIsSearching(true)}
                     className="p-0 m-0 border-0 bg-transparent"
@@ -1602,14 +1602,14 @@ const themeSettingsIcons = {
                     {viewMode === 'collapsed' ? (
                       <img 
                         src={greyExpandViewIcon} 
-                        alt="Expand View" 
-                        style={{ width: '25px', height: '37px' }}
+                        alt="Date View" 
+                        style={{ width: '12px', height: '18px' }}
                       />
                     ) : (
                       <img 
                         src={greyListViewIcon} 
                         alt="List View" 
-                        style={{ width: '24px', height: '16px' }}
+                        style={{ width: '12px', height: '8px' }}
                       />
                     )}
                   </button>
