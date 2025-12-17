@@ -1511,7 +1511,7 @@ const Index = () => {
         style={{ 
           backgroundColor: themeColors[theme],
           top: `calc(150px + env(safe-area-inset-top))`,
-          paddingLeft: `calc(32px + env(safe-area-inset-left))`,
+          paddingLeft: `calc(30px + env(safe-area-inset-left))`,
           paddingRight: `calc(32px + env(safe-area-inset-right))`,
           paddingTop: '30px'
         }}
@@ -1521,7 +1521,7 @@ const Index = () => {
           {folders.map((folder) => (
             <div 
               key={folder.id}
-              className={`flex items-center gap-3 py-2 px-4 ${currentFolder?.id === folder.id ? 'bg-[#353434] rounded-[20px]' : ''}`}
+              className={`flex items-center gap-3 py-3 ${currentFolder?.id === folder.id ? 'bg-[#353434] rounded-[20px] mx-[-10px] px-[10px]' : ''}`}
             >
               <img src={folderIcon} alt="Folder" className="w-[20px] h-[20px] mr-4 opacity-70" />
               <button
