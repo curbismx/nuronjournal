@@ -2953,8 +2953,8 @@ const Note = () => {
           onClick={dismissRecordHelp}
         >
           <div 
-            className="mb-[140px] mr-[20px]"
-            style={{ marginBottom: `calc(140px + env(safe-area-inset-bottom))` }}
+            className="mb-[190px] mr-[20px]"
+            style={{ marginBottom: `calc(190px + env(safe-area-inset-bottom))` }}
           >
             <img src={recordHelpImage} alt="Recording help" className="w-[220px] h-auto" />
           </div>
