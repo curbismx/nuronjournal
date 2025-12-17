@@ -1548,12 +1548,6 @@ const themeSettingsIcons = {
                       className="h-[20px] w-auto object-contain" 
                     />
                   </button>
-                  <button 
-                    onClick={() => setDesktopSelectedNoteId('new')}
-                    className="p-0 m-0 border-0 bg-transparent"
-                  >
-                    <img src={themePlusIcons[theme]} alt="Add" className="h-[30px] w-auto object-contain" />
-                  </button>
                 </div>
               )}
             </div>
@@ -1622,6 +1616,27 @@ const themeSettingsIcons = {
                 })}
               </div>
             </div>
+
+            {/* Floating plus button - bottom right, same as mobile */}
+            {!desktopShowSettings && (
+              <button
+                onClick={() => setDesktopSelectedNoteId('new')}
+                className="absolute z-50"
+                style={{
+                  bottom: '30px',
+                  right: '30px',
+                  width: '51px',
+                  height: '51px'
+                }}
+              >
+                <img 
+                  src={themePlusIcons[theme]} 
+                  alt="Add Note"
+                  className="w-full h-full"
+                  style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))' }}
+                />
+              </button>
+            )}
           </div>
 
           {/* Settings panel - slides in from left */}
