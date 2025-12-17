@@ -1424,6 +1424,14 @@ const Index = () => {
                   autoFocus
                   className="flex-1 bg-transparent outline-none text-[16px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[#A4A4A4] placeholder:tracking-wider focus:placeholder:opacity-0"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="w-[18px] h-[18px] bg-white rounded-full flex items-center justify-center ml-2 shadow-sm"
+                  >
+                    <span className="text-[12px] text-[hsl(0,0%,50%)] font-medium leading-none">×</span>
+                  </button>
+                )}
               </div>
             </div>
           )}
