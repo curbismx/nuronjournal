@@ -1469,7 +1469,7 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
                   <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
                 </button>
                 <button onClick={() => openEditFolder(folder)}>
-                  <img src={threeDotsIcon} alt="Options" className="w-[20px] h-auto opacity-70" />
+                  <img src={threeDotsIcon} alt="Options" className="h-[18px] w-auto opacity-70" />
                 </button>
               </div>
             ))}
