@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { Capacitor } from '@capacitor/core';
 import { restorePurchases, isTrialExpired } from '@/lib/purchases';
 import SubscriptionModal from '@/components/SubscriptionModal';
+import { useDesktop } from '@/hooks/use-desktop';
 
 
 interface SavedNote {
@@ -68,8 +69,8 @@ interface Folder {
 
 const Index = () => {
   const navigate = useNavigate();
-
-  // Check if onboarding is complete
+  const isDesktop = useDesktop();
+  const [desktopSelectedNoteId, setDesktopSelectedNoteId] = useState<string | null>(null);
   useEffect(() => {
     const onboardingComplete = localStorage.getItem('nuron-onboarding-complete');
     if (!onboardingComplete) {
@@ -1409,6 +1410,296 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
                 >
                   Delete
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // DESKTOP LAYOUT - 3 columns side by side
+  if (isDesktop) {
+    return (
+      <div className="h-screen flex bg-gray-100">
+        {/* Column 1: Folders Sidebar - fixed 250px dark */}
+        <div 
+          className="w-[250px] flex-shrink-0 flex flex-col"
+          style={{ backgroundColor: themeColors[theme] }}
+        >
+          <div className="p-6">
+            <h2 className="text-white text-[18px] font-outfit font-light tracking-wider mb-6">FOLDERS</h2>
+            {user && (
+              <button 
+                onClick={openCreateFolder}
+                className="mb-4 flex items-center gap-2 text-white/60 hover:text-white/80 transition-colors"
+              >
+                <img src={folderPlusIcon} alt="Add" className="w-[20px] h-[20px]" />
+                <span className="text-[14px] font-outfit">New Folder</span>
+              </button>
+            )}
+          </div>
+          
+          <div className="flex-1 overflow-y-auto px-4">
+            {folders.map((folder) => (
+              <button
+                key={folder.id}
+                onClick={() => selectFolder(folder)}
+                className={`flex items-center gap-3 w-full text-left py-3 px-3 rounded-lg transition-colors mb-1 ${
+                  currentFolder?.id === folder.id ? 'bg-white/15' : 'hover:bg-white/5'
+                }`}
+              >
+                <img src={folderIcon} alt="Folder" className="w-[18px] h-[18px] opacity-70" />
+                <span className="text-white text-[16px] font-outfit font-light">{folder.name}</span>
+              </button>
+            ))}
+          </div>
+          
+          <div className="p-6 border-t border-white/10">
+            <button
+              onClick={() => setShowSettings(true)}
+              className="flex items-center gap-3 text-white/60 hover:text-white/80 transition-colors"
+            >
+              <img src={settingsIcon} alt="Settings" className="h-[20px] w-auto opacity-70" />
+              <span className="text-[14px] font-outfit">Settings</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Column 2: Notes List - 350px with card styling */}
+        <div className="w-[350px] flex-shrink-0 flex flex-col bg-journal-content border-r border-gray-200">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-[20px] font-outfit font-light text-[hsl(0,0%,30%)] tracking-wider mb-4">
+              {currentFolder?.name?.toUpperCase() || 'NOTES'}
+            </h2>
+            
+            {/* Search box */}
+            <div className="flex items-center bg-[#F6F6F6] rounded-full px-4 py-2 border border-[hsl(60,5%,80%)]">
+              <img src={searchIcon} alt="Search" className="w-[16px] h-[16px] mr-2 opacity-50" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search notes..."
+                className="flex-1 bg-transparent outline-none text-[14px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[#A4A4A4]"
+              />
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto">
+            {filteredGroupedNotes.map((group) => (
+              <div key={group.date}>
+                {group.notes.map((note) => (
+                  <div
+                    key={note.id}
+                    onClick={() => setDesktopSelectedNoteId(note.id)}
+                    className={`px-6 py-4 border-b border-gray-100 cursor-pointer transition-colors ${
+                      desktopSelectedNoteId === note.id ? 'bg-[hsl(60,5%,90%)]' : 'hover:bg-[hsl(60,5%,95%)]'
+                    }`}
+                  >
+                    <div className="text-[16px] font-outfit font-medium text-[hsl(0,0%,25%)] mb-1 truncate">
+                      {note.title || 'Untitled'}
+                    </div>
+                    <div className="text-[13px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2">
+                      {getNotePreview(note) || '-'}
+                    </div>
+                    <div className="text-[11px] font-outfit text-[hsl(0,0%,60%)] mt-2">
+                      {new Date(note.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+          
+          <div className="p-4 border-t border-gray-200">
+            <button
+              onClick={() => navigate('/note')}
+              className="w-full py-3 rounded-full text-white font-outfit font-medium transition-colors"
+              style={{ backgroundColor: themeColors[theme] }}
+            >
+              + New Note
+            </button>
+          </div>
+        </div>
+
+        {/* Column 3: Note Editor - remaining space */}
+        <div className="flex-1 bg-white overflow-hidden">
+          {desktopSelectedNoteId ? (
+            <iframe
+              key={desktopSelectedNoteId}
+              src={`/note/${desktopSelectedNoteId}?desktop=true`}
+              className="w-full h-full border-0"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full text-[hsl(0,0%,60%)] font-outfit text-[18px]">
+              Select a note to view
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Settings Modal */}
+        {showSettings && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-[24px] font-outfit font-light">Settings</h2>
+                <button onClick={() => setShowSettings(false)} className="text-[28px] text-gray-400 hover:text-gray-600">×</button>
+              </div>
+              <div className="space-y-6">
+                {/* Theme selector */}
+                <div className="flex items-center justify-between py-3">
+                  <span className="text-[16px] font-outfit">Theme colour</span>
+                  <div className="flex gap-2">
+                    {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setTheme(t)}
+                        className={`w-[36px] h-[36px] rounded-full border-2 transition-all ${theme === t ? 'border-gray-800 scale-110' : 'border-transparent'}`}
+                        style={{ backgroundColor: themeColors[t] }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Weather toggle */}
+                <div className="flex items-center justify-between py-3">
+                  <span className="text-[16px] font-outfit">Show weather on notes</span>
+                  <button
+                    onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
+                    className={`relative w-[51px] h-[31px] rounded-full transition-colors ${showWeatherOnNotes ? 'bg-green-500' : 'bg-gray-300'}`}
+                  >
+                    <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+                
+                {/* Account section */}
+                <div className="pt-4 border-t">
+                  {user ? (
+                    <div className="space-y-4">
+                      <p className="text-[14px] font-outfit text-gray-500">{user.email}</p>
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full py-3 bg-red-500 text-white rounded-lg font-outfit hover:bg-red-600 transition-colors"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => { setShowSettings(false); setShowSignUp(true); }}
+                      className="w-full py-3 bg-gray-900 text-white rounded-lg font-outfit hover:bg-gray-800 transition-colors"
+                    >
+                      Sign In
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Reuse existing SignUp modal for desktop */}
+        {showSignUp && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-[24px] font-outfit font-light">{isSignInMode ? 'Sign In' : 'Sign Up'}</h2>
+                <button onClick={() => setShowSignUp(false)} className="text-[28px] text-gray-400 hover:text-gray-600">×</button>
+              </div>
+              <form onSubmit={isSignInMode ? handleSignIn : handleSignUp} className="space-y-4">
+                {!isSignInMode && (
+                  <div>
+                    <Label htmlFor="name" className="text-[14px] font-outfit">Name</Label>
+                    <Input
+                      id="name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="mt-1"
+                      required={!isSignInMode}
+                    />
+                  </div>
+                )}
+                <div>
+                  <Label htmlFor="email" className="text-[14px] font-outfit">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="mt-1"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="password" className="text-[14px] font-outfit">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="mt-1"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 bg-gray-900 text-white rounded-lg font-outfit hover:bg-gray-800 transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Loading...' : (isSignInMode ? 'Sign In' : 'Sign Up')}
+                </button>
+                <p className="text-center text-[14px] font-outfit text-gray-500">
+                  {isSignInMode ? "Don't have an account? " : "Already have an account? "}
+                  <button
+                    type="button"
+                    onClick={() => setIsSignInMode(!isSignInMode)}
+                    className="text-gray-900 underline"
+                  >
+                    {isSignInMode ? 'Sign Up' : 'Sign In'}
+                  </button>
+                </p>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Folder popup for desktop */}
+        {showFolderPopup && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-[24px] font-outfit font-light">{editingFolder ? 'Edit Folder' : 'New Folder'}</h2>
+                <button onClick={() => { setShowFolderPopup(false); setEditingFolder(null); }} className="text-[28px] text-gray-400 hover:text-gray-600">×</button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="folderName" className="text-[14px] font-outfit">Folder Name</Label>
+                  <Input
+                    id="folderName"
+                    type="text"
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    className="mt-1"
+                    placeholder="Enter folder name"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { setShowFolderPopup(false); setEditingFolder(null); }}
+                    className="flex-1 py-3 rounded-lg bg-gray-100 text-gray-700 font-outfit"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={editingFolder ? updateFolder : createFolder}
+                    className="flex-1 py-3 rounded-lg text-white font-outfit"
+                    style={{ backgroundColor: themeColors[theme] }}
+                  >
+                    {editingFolder ? 'Update' : 'Create'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
