@@ -1593,26 +1593,55 @@ const themeSettingsIcons = {
                           <div
                             key={note.id}
                             onClick={() => setDesktopSelectedNoteId(note.id)}
-                            className={`px-8 py-4 border-b border-[hsl(0,0%,85%)] cursor-pointer ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'}`}
+                            className={`border-b border-[hsl(0,0%,85%)] cursor-pointer ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'}`}
                           >
-                            {index === 0 && (
-                              <div className="flex items-start gap-4 mb-4">
-                                <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
-                                  {dayNumber}
+                            <div className={viewMode === 'compact' ? "px-8 pt-[17px] pb-4" : index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-4 pb-4"}>
+                              {/* Date - ONLY shows in collapsed view, ONLY for first note of day */}
+                              {index === 0 && viewMode !== 'compact' && (
+                                <div className="flex items-start gap-4 mb-4">
+                                  <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
+                                    {dayNumber}
+                                  </div>
+                                  <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
+                                    {dayName}
+                                  </div>
                                 </div>
-                                <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
-                                  {dayName}
-                                </div>
-                              </div>
-                            )}
-                            <div className="flex items-center gap-[15px]">
-                              <div className="flex-1 min-w-0">
-                                <h3 className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-2">{note.title || 'Untitled'}</h3>
-                                <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2">{preview || '-'}</p>
-                              </div>
-                              {firstImage && (
-                                <img src={firstImage.url} alt="" className="w-[70px] h-[70px] rounded-[10px] object-cover" />
                               )}
+                              
+                              {/* Title and preview - different layout for each view */}
+                              <div className="min-w-0">
+                                {viewMode === 'compact' ? (
+                                  /* COMPACT VIEW - no date, smaller layout */
+                                  <div className="flex items-center gap-[12px]">
+                                    <div className="flex-1 min-w-0">
+                                      <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] break-words">
+                                        {note.title || 'Untitled'}
+                                      </h3>
+                                      <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-1 break-words">
+                                        {preview || '-'}
+                                      </p>
+                                    </div>
+                                    {firstImage && (
+                                      <img src={firstImage.url} alt="" className="w-[50px] h-[50px] rounded-[8px] object-cover flex-shrink-0" />
+                                    )}
+                                  </div>
+                                ) : (
+                                  /* COLLAPSED VIEW - with date, larger layout */
+                                  <div className="flex items-center gap-[15px]">
+                                    <div className="flex-1 min-w-0">
+                                      <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 break-words ${index === 0 ? '-mt-[10px]' : ''}`}>
+                                        {note.title || 'Untitled'}
+                                      </h3>
+                                      <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px] break-words">
+                                        {preview || '-'}
+                                      </p>
+                                    </div>
+                                    {firstImage && (
+                                      <img src={firstImage.url} alt="" className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0" />
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );
@@ -1982,79 +2011,21 @@ const themeSettingsIcons = {
           
           {/* Scrollable note content */}
           <div className="flex-1 overflow-y-auto">
-          {desktopSelectedNoteId && desktopSelectedNoteId !== 'new' ? (
-
-            (() => {
-
-              const note = savedNotes.find(n => n.id === desktopSelectedNoteId);
-
-              if (!note) return null;
-
-              const noteDate = new Date(note.createdAt);
-
-              return (
-
-                <div className="p-8">
-
-                  <div className="text-[14px] font-outfit text-[hsl(60,1%,66%)] mb-4">
-
-                    {noteDate.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}
-
-                  </div>
-
-                  <h1 className="text-[28px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-6">{note.title || 'Untitled'}</h1>
-
-                  <div className="space-y-4">
-
-                    {note.contentBlocks.map((block) => {
-
-                      if (block.type === 'text') {
-
-                        const textBlock = block as { type: 'text'; id: string; content: string };
-
-                        return (
-
-                          <p key={block.id} className="text-[16px] font-outfit text-[hsl(0,0%,30%)] leading-relaxed whitespace-pre-wrap">
-
-                            {textBlock.content}
-
-                          </p>
-
-                        );
-
-                      } else if (block.type === 'image') {
-
-                        const imageBlock = block as { type: 'image'; id: string; url: string; width: number };
-
-                        return (
-
-                          <img key={block.id} src={imageBlock.url} alt="" className="rounded-[10px]" style={{ width: `${imageBlock.width}%` }} />
-
-                        );
-
-                      }
-
-                      return null;
-
-                    })}
-
-                  </div>
-
-                </div>
-
-              );
-
-            })()
-
-          ) : (
-
-            <div className="h-full flex items-center justify-center text-[hsl(0,0%,60%)] font-outfit text-[18px]">
-
-              Select a note to view
-
-            </div>
-
-          )}
+            {desktopSelectedNoteId === 'new' ? (
+              <iframe
+                src="/note?desktop=true"
+                className="w-full h-full border-0"
+              />
+            ) : desktopSelectedNoteId ? (
+              <iframe
+                src={`/note/${desktopSelectedNoteId}?desktop=true`}
+                className="w-full h-full border-0"
+              />
+            ) : (
+              <div className="h-full flex items-center justify-center text-[hsl(0,0%,60%)] font-outfit text-[18px]">
+                Select a note to view
+              </div>
+            )}
           </div>
 
         </div>
