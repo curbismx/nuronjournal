@@ -13,7 +13,7 @@ import textImage from "@/assets/text.png";
 import text2Image from "@/assets/text2.png";
 import text3Image from "@/assets/text3.png";
 import plusIcon from "@/assets/plusbig.png";
-import expandIcon from "@/assets/00expand-3.png";
+
 import condenseIcon from "@/assets/00condense-3.png";
 import listViewIcon from "@/assets/00listview.png";
 import floatingAddButton from "@/assets/bigredbuttonnoshadow.png";
@@ -80,7 +80,7 @@ const Index = () => {
     }
     return [];
   });
-  const [viewMode, setViewMode] = useState<'collapsed' | 'expanded' | 'compact'>('collapsed');
+  const [viewMode, setViewMode] = useState<'collapsed' | 'compact'>('collapsed');
   const [showSettings, setShowSettings] = useState(false);
   const [showAccountDetails, setShowAccountDetails] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -1084,10 +1084,10 @@ const Index = () => {
                 <img src={searchIcon} alt="Search" className="h-[24px] w-auto" />
               </button>
               <button 
-                onClick={() => setViewMode(prev => prev === 'collapsed' ? 'expanded' : prev === 'expanded' ? 'compact' : 'collapsed')}
+                onClick={() => setViewMode(prev => prev === 'collapsed' ? 'compact' : 'collapsed')}
                 className="p-0 m-0 border-0 bg-transparent"
               >
-                <img src={viewMode === 'collapsed' ? expandIcon : viewMode === 'expanded' ? condenseIcon : listViewIcon} alt="Menu" className="h-[24px] w-[24px] object-contain" />
+                <img src={viewMode === 'collapsed' ? condenseIcon : listViewIcon} alt="Menu" className="h-[24px] w-[24px] object-contain" />
               </button>
             </div>
           )}
@@ -1492,28 +1492,7 @@ const Index = () => {
                           
                 {/* Title and Body Container */}
                 <div className="min-w-0">
-                  {viewMode === 'expanded' ? (
-                    /* EXPANDED VIEW */
-                    <div>
-                      <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 break-words overflow-wrap-anywhere ${index === 0 ? '-mt-[10px]' : ''}`}>
-                        {note.title || 'Untitled'}
-                      </h3>
-                      <div className="-mt-[10px]" style={{ maxHeight: '273px', overflow: 'hidden' }}>
-                        {firstImage && (
-                          <img 
-                            src={firstImage.url} 
-                            alt=""
-                            className="float-right w-[70px] h-[70px] rounded-[10px] object-cover ml-[15px] mb-[10px]"
-                            style={{ shapeOutside: 'margin-box' }}
-                          />
-                        )}
-                        <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] break-words overflow-wrap-anywhere" style={{ display: 'block' }}>
-                          {preview || 'No content'}
-                        </p>
-                        <div style={{ clear: 'both' }} />
-                      </div>
-                    </div>
-                  ) : viewMode === 'compact' ? (
+                  {viewMode === 'compact' ? (
                     /* COMPACT VIEW - no date, smaller layout */
                     <div className="flex items-center gap-[12px]">
                       <div className="flex-1 min-w-0">
