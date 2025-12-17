@@ -1499,25 +1499,63 @@ const themeSettingsIcons = {
             className={`absolute inset-0 bg-journal-content flex flex-col transition-transform duration-300 ${desktopShowSettings ? 'translate-x-full' : 'translate-x-0'}`}
           >
             {/* 50px header with icons */}
-            <div className="h-[50px] flex-shrink-0 bg-journal-content flex items-center justify-end gap-[20px] pr-8">
-              <img 
-                src={plusIconRed} 
-                alt="New note" 
-                className="w-[30px] h-[30px] cursor-pointer" 
-                onClick={() => setDesktopSelectedNoteId('new')}
-              />
-              <img 
-                src={viewMode === 'collapsed' ? greyExpandViewIcon : greyListViewIcon} 
-                alt="Toggle view" 
-                className="w-[24px] h-[24px] cursor-pointer" 
-                onClick={() => setViewMode(prev => prev === 'collapsed' ? 'compact' : 'collapsed')}
-              />
-              <img 
-                src={greySearchIcon} 
-                alt="Search" 
-                className="w-[24px] h-[24px] cursor-pointer" 
-                onClick={() => setIsSearching(!isSearching)}
-              />
+            <div className="h-[50px] flex-shrink-0 bg-journal-content flex items-center px-8">
+              {isSearching ? (
+                /* Search box - fills the header */
+                <div className="flex-1 flex items-center bg-[#F6F6F6] rounded-full px-4 py-2 border border-[hsl(60,5%,80%)] mx-2">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search here"
+                    autoFocus
+                    className="flex-1 bg-transparent outline-none text-[16px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[#A4A4A4]"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="w-[18px] h-[18px] bg-white rounded-full flex items-center justify-center ml-2 shadow-sm"
+                    >
+                      <span className="text-[12px] text-[hsl(0,0%,50%)] font-medium leading-none">×</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      setIsSearching(false);
+                      setSearchQuery("");
+                    }}
+                    className="ml-3 text-[14px] font-outfit text-[hsl(0,0%,50%)]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                /* Icons - right aligned */
+                <div className="flex-1 flex items-center justify-end gap-[25px]">
+                  <button 
+                    onClick={() => setIsSearching(true)}
+                    className="p-0 m-0 border-0 bg-transparent"
+                  >
+                    <img src={greySearchIcon} alt="Search" className="h-[20px] w-auto object-contain" />
+                  </button>
+                  <button 
+                    onClick={() => setViewMode(prev => prev === 'collapsed' ? 'compact' : 'collapsed')}
+                    className="p-0 m-0 border-0 bg-transparent"
+                  >
+                    <img 
+                      src={viewMode === 'collapsed' ? greyExpandViewIcon : greyListViewIcon} 
+                      alt="View" 
+                      className="h-[20px] w-auto object-contain" 
+                    />
+                  </button>
+                  <button 
+                    onClick={() => setDesktopSelectedNoteId('new')}
+                    className="p-0 m-0 border-0 bg-transparent"
+                  >
+                    <img src={themePlusIcons[theme]} alt="Add" className="h-[30px] w-auto object-contain" />
+                  </button>
+                </div>
+              )}
             </div>
             
             {/* Scrollable notes list */}
