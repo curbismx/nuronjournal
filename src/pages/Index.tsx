@@ -1425,7 +1425,7 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
 
       <div 
 
-        className="fixed inset-0 flex"
+        className="fixed inset-0 flex items-stretch"
 
         style={{ backgroundColor: themeColors[theme] }}
 
@@ -1515,7 +1515,7 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
 
           className="w-[420px] flex-shrink-0 flex flex-col"
 
-          style={{ marginBottom: '50px' }}
+          style={{ marginTop: '0px', marginBottom: '50px' }}
 
         >
 
@@ -1815,7 +1815,7 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
 
           className="flex-1 flex flex-col"
 
-          style={{ marginBottom: '50px', marginRight: '50px' }}
+          style={{ marginTop: '0px', marginBottom: '50px', marginRight: '50px' }}
 
         >
 
