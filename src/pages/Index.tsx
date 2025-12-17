@@ -72,6 +72,9 @@ const Index = () => {
 const isDesktop = useDesktop();
 const [desktopSelectedNoteId, setDesktopSelectedNoteId] = useState<string | null>(null);
 const [desktopShowSettings, setDesktopShowSettings] = useState(false);
+const [desktopShowAccountDetails, setDesktopShowAccountDetails] = useState(false);
+const [desktopShowChangePassword, setDesktopShowChangePassword] = useState(false);
+const [desktopShowSignUp, setDesktopShowSignUp] = useState(false);
   useEffect(() => {
     const onboardingComplete = localStorage.getItem('nuron-onboarding-complete');
     if (!onboardingComplete) {
@@ -1534,55 +1537,311 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
           >
             {/* Back button */}
             <div className="p-6">
-              <button onClick={() => setDesktopShowSettings(false)} className="mb-6">
+              <button 
+                onClick={() => {
+                  if (desktopShowChangePassword) {
+                    setDesktopShowChangePassword(false);
+                  } else if (desktopShowAccountDetails) {
+                    setDesktopShowAccountDetails(false);
+                  } else {
+                    setDesktopShowSettings(false);
+                  }
+                }} 
+                className="mb-6"
+              >
                 <img src={backIcon} alt="Back" className="w-[24px] h-[24px]" />
               </button>
-              <h1 className="text-white text-[24px] font-outfit font-light tracking-wider mb-8">SETTINGS</h1>
-              
-              {/* Theme selector - same as mobile */}
-              <div className="mb-8">
-                <span className="text-white text-[18px] font-outfit font-light">Theme colour</span>
-                <div className="flex gap-4 mt-4">
-                  {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
-                    <button key={t} onClick={() => setTheme(t)}>
-                      <img src={themeSettingsIcons[t]} alt={t} className="w-[50px] h-[50px]" />
+
+              <h1 className="text-white text-[24px] font-outfit font-light tracking-wider mb-8">
+                {desktopShowChangePassword ? 'CHANGE PASSWORD' : desktopShowAccountDetails ? 'ACCOUNT DETAILS' : 'SETTINGS'}
+              </h1>
+
+              <div className="space-y-6">
+                {desktopShowChangePassword ? (
+                  /* Change Password Form */
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-white/80 text-[14px]">New Password</Label>
+                      <Input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => {
+                          setNewPassword(e.target.value);
+                          setPasswordFormError("");
+                        }}
+                        required
+                        placeholder="Enter new password"
+                        minLength={6}
+                        className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white/80 text-[14px]">Confirm New Password</Label>
+                      <Input
+                        type="password"
+                        value={confirmNewPassword}
+                        onChange={(e) => {
+                          setConfirmNewPassword(e.target.value);
+                          setPasswordFormError("");
+                        }}
+                        required
+                        placeholder="Confirm new password"
+                        minLength={6}
+                        className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                      />
+                    </div>
+                    {passwordFormError && (
+                      <p className="text-red-400 text-[14px]">{passwordFormError}</p>
+                    )}
+                    <div className="pt-4">
+                      <div className="flex gap-3">
+                        <button
+                          onClick={handleChangePassword}
+                          disabled={loading}
+                          className="flex-1 px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors disabled:opacity-50 text-[14px]"
+                        >
+                          {loading ? "Updating..." : "Update Password"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setDesktopShowChangePassword(false);
+                            setNewPassword("");
+                            setConfirmNewPassword("");
+                            setPasswordFormError("");
+                          }}
+                          className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : desktopShowAccountDetails ? (
+                  /* Account Details View */
+                  user && userProfile && (
+                    <>
+                      <div className="space-y-4">
+                        <div className="py-4 border-b border-white/10">
+                          <span className="text-white/60 text-[14px] block mb-1">Name</span>
+                          <span className="text-white text-[18px] font-outfit font-light">
+                            {userProfile.name || 'Not set'}
+                          </span>
+                        </div>
+                        <div className="py-4 border-b border-white/10">
+                          <span className="text-white/60 text-[14px] block mb-1">Email</span>
+                          <span className="text-white text-[18px] font-outfit font-light">
+                            {userProfile.email}
+                          </span>
+                        </div>
+                        <div className="py-4 border-b border-white/10">
+                          <span className="text-white/60 text-[14px] block mb-1">Password</span>
+                          <span className="text-white text-[18px] font-outfit font-light">
+                            ••••••••
+                          </span>
+                          <div className="mt-2">
+                            <button
+                              onClick={() => {
+                                setDesktopShowChangePassword(true);
+                                setPasswordFormError("");
+                              }}
+                              className="text-red-500 hover:text-red-400 text-[14px] transition-colors text-left"
+                            >
+                              Change Password
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-3 pt-4">
+                        <button 
+                          onClick={() => { handleSignOut(); setDesktopShowSettings(false); }} 
+                          className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]"
+                        >
+                          Sign Out
+                        </button>
+                        <button 
+                          onClick={() => setShowDeleteConfirmDialog(true)} 
+                          className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white rounded-[10px] transition-colors text-[14px]"
+                        >
+                          Delete Account
+                        </button>
+                      </div>
+                    </>
+                  )
+                ) : user && userProfile ? (
+                  /* Settings View - logged in */
+                  <div className="space-y-6">
+                    {/* Account section */}
+                    <button
+                      onClick={() => setDesktopShowAccountDetails(true)}
+                      className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[20px] font-light"
+                    >
+                      Account Details
+                      <img src={accountArrow} alt="" className="w-[24px] h-[24px] opacity-60" />
                     </button>
-                  ))}
-                </div>
-              </div>
+                    
+                    {/* Separator line */}
+                    <div className="border-t border-white/20 my-6" />
+                    
+                    {/* Show weather toggle */}
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-white text-[18px] font-outfit font-light">Show weather on notes</span>
+                      <button
+                        onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
+                        className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
+                      >
+                        <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-md transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`} />
+                      </button>
+                    </div>
 
-              {/* Weather toggle - same as mobile */}
-              <div className="flex items-center justify-between py-4">
-                <span className="text-white text-[18px] font-outfit font-light">Show weather on notes</span>
-                <button
-                  onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
-                  className={`relative w-[51px] h-[31px] rounded-full transition-colors ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/30'}`}
-                >
-                  <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`} />
-                </button>
-              </div>
+                    {/* Theme colour */}
+                    <div className="space-y-4">
+                      <span className="text-white text-[18px] font-outfit font-light">Theme colour</span>
+                      <div className="flex gap-4">
+                        {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setTheme(t)}
+                            className="flex flex-col items-center relative"
+                            style={{ height: '54px' }}
+                          >
+                            <img src={themeSettingsIcons[t]} alt={t} className="w-[50px] h-[50px]" />
+                            {theme === t && (
+                              <div className="w-[6px] h-[6px] rounded-full bg-white mt-1" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
-              {/* Account section - same as mobile */}
-              {user ? (
-                <div className="mt-8 pt-8 border-t border-white/20">
-                  <p className="text-white/60 text-[14px] font-outfit mb-4">Signed in as {userProfile?.email}</p>
-                  <button
-                    onClick={() => { handleSignOut(); setDesktopShowSettings(false); }}
-                    className="w-full py-3 bg-white/10 text-white rounded-[10px] font-outfit"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              ) : (
-                <div className="mt-8 pt-8 border-t border-white/20">
-                  <button
-                    onClick={() => { setDesktopShowSettings(false); setShowSignUp(true); setIsSignInMode(true); }}
-                    className="w-full py-3 bg-white/10 text-white rounded-[10px] font-outfit"
-                  >
-                    Sign In
-                  </button>
-                </div>
-              )}
+                    {/* Restore Purchases */}
+                    <button onClick={handleRestorePurchases} disabled={isRestoring} className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[18px] font-light disabled:opacity-50">
+                      {isRestoring ? 'Restoring...' : 'Restore Purchases'}
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 opacity-60">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : desktopShowSignUp ? (
+                  /* Sign Up / Sign In Form */
+                  <div className="space-y-6">
+                    {!isSignInMode && (
+                      <div className="space-y-2">
+                        <Label className="text-white/80 text-[14px]">Name</Label>
+                        <Input
+                          type="text"
+                          value={name}
+                          onChange={(e) => {
+                            setName(e.target.value);
+                            setAuthFormError("");
+                          }}
+                          required
+                          placeholder="Your name"
+                          className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                        />
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <Label className="text-white/80 text-[14px]">Email</Label>
+                      <Input
+                        type="email"
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          setAuthFormError("");
+                        }}
+                        required
+                        placeholder="you@example.com"
+                        className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white/80 text-[14px]">Password</Label>
+                      <Input
+                        type="password"
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setAuthFormError("");
+                        }}
+                        required
+                        placeholder="••••••••"
+                        minLength={6}
+                        className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                      />
+                    </div>
+                    {authFormError && (
+                      <p className="text-red-400 text-[14px]">{authFormError}</p>
+                    )}
+                    <button onClick={isSignInMode ? handleSignIn : handleSignUp} disabled={loading} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors disabled:opacity-50">
+                      {loading ? "Loading..." : isSignInMode ? "Sign In" : "Create Account"}
+                    </button>
+                    <button onClick={() => {
+                      setIsSignInMode(!isSignInMode);
+                      setAuthFormError("");
+                    }} className="w-full text-white/60 hover:text-white/80 text-[14px] transition-colors">
+                      {isSignInMode ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+                    </button>
+                    <button onClick={() => {
+                      setDesktopShowSignUp(false);
+                      setAuthFormError("");
+                    }} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  /* Initial buttons - not logged in */
+                  <div className="space-y-6">
+                    <button onClick={() => { 
+                      setDesktopShowSignUp(true); 
+                      setIsSignInMode(false);
+                      setAuthFormError("");
+                    }} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors">
+                      Create Account
+                    </button>
+                    <button onClick={() => { 
+                      setDesktopShowSignUp(true); 
+                      setIsSignInMode(true);
+                      setAuthFormError("");
+                    }} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
+                      Sign In
+                    </button>
+                    
+                    {/* Separator line */}
+                    <div className="border-t border-white/20 my-6" />
+                    
+                    {/* Show weather toggle */}
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-white text-[18px] font-outfit font-light">Show weather on notes</span>
+                      <button
+                        onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
+                        className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
+                      >
+                        <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-md transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`} />
+                      </button>
+                    </div>
+
+                    {/* Theme colour */}
+                    <div className="space-y-4">
+                      <span className="text-white text-[18px] font-outfit font-light">Theme colour</span>
+                      <div className="flex gap-4">
+                        {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setTheme(t)}
+                            className="flex flex-col items-center relative"
+                            style={{ height: '54px' }}
+                          >
+                            <img src={themeSettingsIcons[t]} alt={t} className="w-[50px] h-[50px]" />
+                            {theme === t && (
+                              <div className="w-[6px] h-[6px] rounded-full bg-white mt-1" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
