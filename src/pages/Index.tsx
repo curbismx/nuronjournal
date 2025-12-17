@@ -1535,14 +1535,14 @@ const Index = () => {
                   onClick={() => openEditFolder(folder)}
                   className="p-2 m-0 border-0 bg-transparent"
                 >
-                  <img src={folderSettingsIcon} alt="Options" className="w-[24px] h-[24px] opacity-70" />
+                  <img src={folderSettingsIcon} alt="Options" className="h-[24px] w-auto opacity-70" />
                 </button>
               )}
               <button 
                 onClick={() => selectFolder(folder)}
                 className="p-2 m-0 border-0 bg-transparent"
               >
-                <img src={folderArrow} alt="Select" className="w-[16px] h-[16px] opacity-70" />
+                <img src={folderArrow} alt="Select" className="h-[16px] w-auto opacity-70" />
               </button>
             </div>
           ))}
@@ -1557,7 +1557,7 @@ const Index = () => {
             }}
             className="flex items-center gap-3 p-0 m-0 border-0 bg-transparent"
           >
-            <img src={settingsIcon} alt="Settings" className="w-[20px] h-[20px] opacity-70" />
+            <img src={settingsIcon} alt="Settings" className="h-[24px] w-auto opacity-70" />
             <span className="text-white text-[18px] font-outfit font-light">Settings</span>
           </button>
         </div>
