@@ -1496,12 +1496,12 @@ const Index = () => {
                     </div>
                   ) : viewMode === 'compact' ? (
                     /* COMPACT VIEW - no date, smaller layout */
-                    <div className="flex items-center gap-[10px]">
+                    <div className="flex items-center gap-[12px]">
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-1 break-words overflow-wrap-anywhere truncate">
+                        <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] break-words overflow-wrap-anywhere">
                           {note.title || 'Untitled'}
                         </h3>
-                        <p className="text-[12px] font-outfit text-[hsl(0,0%,50%)] line-clamp-1 break-words overflow-wrap-anywhere">
+                        <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-1 break-words overflow-wrap-anywhere">
                           {preview || 'No content'}
                         </p>
                       </div>
