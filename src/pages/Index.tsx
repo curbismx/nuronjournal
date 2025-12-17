@@ -85,6 +85,59 @@ const [desktopShowSignUp, setDesktopShowSignUp] = useState(false);
       navigate('/onboarding');
     }
   }, [navigate]);
+
+  // Listen for storage changes from iframe (for desktop view)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'nuron-notes') {
+        const stored = localStorage.getItem('nuron-notes');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            setSavedNotes(parsed);
+          } catch (err) {
+            console.error('Failed to parse notes:', err);
+          }
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Listen for postMessage from iframe when note is saved
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data?.type === 'note-saved') {
+        // Refresh notes list from cache
+        const cached = localStorage.getItem('nuron-notes-cache');
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            setSavedNotes(parsed);
+          } catch (err) {
+            console.error('Failed to parse cache:', err);
+          }
+        }
+        // Also check local notes
+        const stored = localStorage.getItem('nuron-notes');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            setSavedNotes(parsed);
+          } catch (err) {
+            console.error('Failed to parse notes:', err);
+          }
+        }
+        // Select the newly saved note
+        if (e.data.noteId) {
+          setDesktopSelectedNoteId(e.data.noteId);
+        }
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>(() => {
     // Try cache first (for logged-in users)
     const cached = localStorage.getItem('nuron-notes-cache');
@@ -2019,7 +2072,7 @@ const themeSettingsIcons = {
           <div className="flex-1 overflow-y-auto">
             {desktopSelectedNoteId === 'new' ? (
               <iframe
-                src="/note?desktop=true"
+                src={`/note?desktop=true&folder_id=${currentFolder?.id || ''}`}
                 className="w-full h-full border-0"
               />
             ) : desktopSelectedNoteId ? (
