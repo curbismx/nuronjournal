@@ -581,7 +581,7 @@ const Index = () => {
     };
 
     loadNotes();
-  }, []);
+  }, [user?.id]);
 
   const loadUserProfile = async (userId: string) => {
     const { data } = await supabase
@@ -758,7 +758,7 @@ const Index = () => {
       .order('created_at', { ascending: false });
     
     if (currentFolder && currentFolder.id !== 'local-notes') {
-      query = query.eq('folder_id', currentFolder.id);
+      query = query.or(`folder_id.eq.${currentFolder.id},folder_id.is.null`);
     }
     
     const { data } = await query;
@@ -806,7 +806,7 @@ const Index = () => {
         .order('created_at', { ascending: false });
       
       if (currentFolder && currentFolder.id !== 'local-notes') {
-        query = query.eq('folder_id', currentFolder.id);
+        query = query.or(`folder_id.eq.${currentFolder.id},folder_id.is.null`);
       }
       
       const { data } = await query;
