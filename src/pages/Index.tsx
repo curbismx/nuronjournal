@@ -875,9 +875,8 @@ const Index = () => {
   };
 
 
-  // Show original start page only when user has no notes
-  const hasCreatedNote = localStorage.getItem('nuron-has-created-note') === 'true';
-  if (savedNotes.length === 0 && !hasCreatedNote) {
+  // Show original start page when user has no notes
+  if (savedNotes.length === 0) {
     return (
       <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: themeColors[theme] }}>
         {/* Header with settings button */}
@@ -1218,35 +1217,27 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Center content area (only shown when no panels are open) */}
-        {!showSettings && !showAccountDetails && !showChangePassword && (
-          <div className="flex-1 flex flex-col items-center justify-center px-8">
-            {/* textImage with plus button overlaid in center */}
-            <div className="relative mb-6">
-              <img 
-                src={textImage} 
-                alt="Nuron Journal" 
-                style={{ width: '320px' }}
-              />
+        {/* Main Content - slides down when settings open */}
+        <main className={`flex-1 flex flex-col transition-transform duration-300 ${showSettings ? 'translate-y-[100%]' : ''}`} style={{ minHeight: 0 }}>
+          {/* Center section with textImage and plus button */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="relative flex items-center justify-center" style={{ marginTop: '150px' }}>
+              <img src={textImage} alt="Instructions" style={{ width: '320px', maxWidth: '90vw' }} />
               <button 
                 onClick={() => navigate('/note')}
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-0 border-0 bg-transparent"
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -mt-[15px] hover:scale-105 transition-transform"
               >
-                <img 
-                  src={plusIcon} 
-                  alt="Add Note" 
-                  className="w-[100px] h-[100px]"
-                />
+                <img src={themePlusIcons[theme]} alt="Record" className="w-[51px] h-[51px]" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))' }} />
               </button>
             </div>
-            {/* text2Image at bottom */}
-            <img 
-              src={text2Image} 
-              alt="Start your journal" 
-              style={{ maxWidth: '300px' }}
-            />
           </div>
-        )}
+          {/* Bottom section with text2Image */}
+          {!showSettings && (
+            <div className="w-full flex justify-center px-8 pb-[120px]">
+              <img src={text2Image} alt="Instructions" className="w-full max-w-[300px]" />
+            </div>
+          )}
+        </main>
 
         {/* Merge notes dialog */}
         {showMergeDialog && (
