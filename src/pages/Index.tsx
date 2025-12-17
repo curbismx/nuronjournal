@@ -71,6 +71,7 @@ const Index = () => {
   const navigate = useNavigate();
 const isDesktop = useDesktop();
 const [desktopSelectedNoteId, setDesktopSelectedNoteId] = useState<string | null>(null);
+const [desktopShowSettings, setDesktopShowSettings] = useState(false);
   useEffect(() => {
     const onboardingComplete = localStorage.getItem('nuron-onboarding-complete');
     if (!onboardingComplete) {
@@ -1437,55 +1438,42 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
 
         >
 
-          <div className="flex items-center gap-3 mb-8">
-
+          <div className="flex items-center justify-between mb-8">
             <span className="text-white text-[20px] font-outfit font-light tracking-wider">FOLDERS</span>
-
             {user && (
-
               <button onClick={openCreateFolder}>
-
                 <img src={folderPlusIcon} alt="Add" className="w-[20px] h-[20px] opacity-70" />
-
               </button>
-
             )}
-
           </div>
 
           <div className="space-y-2 flex-1">
 
             {folders.map((folder) => (
-
-              <button
-
+              <div
                 key={folder.id}
-
-                onClick={() => {
-
-                  setCurrentFolder(folder);
-
-                  localStorage.setItem('nuron-current-folder-id', folder.id);
-
-                  setDesktopSelectedNoteId(null);
-
-                }}
-
-                className={`flex items-center gap-3 w-full text-left py-2 ${currentFolder?.id === folder.id ? 'opacity-100' : 'opacity-50 hover:opacity-70'}`}
-
+                className={`flex items-center gap-3 w-full py-2 ${currentFolder?.id === folder.id ? 'opacity-100' : 'opacity-50 hover:opacity-70'}`}
               >
-
-                <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
-
-                <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
-
-              </button>
-
+                <button
+                  onClick={() => {
+                    setCurrentFolder(folder);
+                    localStorage.setItem('nuron-current-folder-id', folder.id);
+                    setDesktopSelectedNoteId(null);
+                  }}
+                  className="flex items-center gap-3 flex-1 text-left"
+                >
+                  <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
+                  <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
+                </button>
+                <button onClick={() => openEditFolder(folder)}>
+                  <img src={threeDotsIcon} alt="Options" className="w-[20px] h-[20px] opacity-70" />
+                </button>
+              </div>
             ))}
 
           </div>
 
-          <button onClick={() => setShowSettings(true)} className="pb-[40px] flex items-center gap-2 opacity-60 hover:opacity-80">
+          <button onClick={() => setDesktopShowSettings(true)} className="pb-[40px] flex items-center gap-2 opacity-60 hover:opacity-80">
 
             <img src={settingsIcon} alt="" className="w-[20px] h-[20px]" />
 
@@ -1495,82 +1483,108 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
 
         </div>
 
-        {/* Column 2: Notes list - 30% width, full height, square edges */}
-
+        {/* Column 2: Notes list OR Settings */}
         <div 
-
-          className="bg-journal-content overflow-y-auto"
-
+          className="relative overflow-hidden"
           style={{ width: '30%' }}
-
         >
-
-          {savedNotes.filter(n => !currentFolder || n.folder_id === currentFolder.id || !n.folder_id).map((note) => {
-
-            const noteDate = new Date(note.createdAt);
-
-            const dayNumber = noteDate.getDate().toString().padStart(2, '0');
-
-            const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
-
-            const preview = getNotePreview(note);
-
-            const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; url: string } | undefined;
-
-            
-
-            return (
-
-              <div
-
-                key={note.id}
-
-                onClick={() => setDesktopSelectedNoteId(note.id)}
-
-                className={`px-8 py-4 border-b border-[hsl(0,0%,85%)] cursor-pointer ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'}`}
-
-              >
-
-                <div className="flex items-start gap-4 mb-4">
-
-                  <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
-
-                    {dayNumber}
-
+          {/* Notes list - slides right when settings shown */}
+          <div 
+            className={`absolute inset-0 bg-journal-content overflow-y-auto transition-transform duration-300 ${desktopShowSettings ? 'translate-x-full' : 'translate-x-0'}`}
+          >
+            {savedNotes.filter(n => !currentFolder || n.folder_id === currentFolder.id || !n.folder_id).map((note) => {
+              const noteDate = new Date(note.createdAt);
+              const dayNumber = noteDate.getDate().toString().padStart(2, '0');
+              const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+              const preview = getNotePreview(note);
+              const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; url: string } | undefined;
+              
+              return (
+                <div
+                  key={note.id}
+                  onClick={() => setDesktopSelectedNoteId(note.id)}
+                  className={`px-8 py-4 border-b border-[hsl(0,0%,85%)] cursor-pointer ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'}`}
+                >
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
+                      {dayNumber}
+                    </div>
+                    <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
+                      {dayName}
+                    </div>
                   </div>
-
-                  <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
-
-                    {dayName}
-
+                  <div className="flex items-center gap-[15px]">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-2">{note.title || 'Untitled'}</h3>
+                      <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2">{preview || '-'}</p>
+                    </div>
+                    {firstImage && (
+                      <img src={firstImage.url} alt="" className="w-[70px] h-[70px] rounded-[10px] object-cover" />
+                    )}
                   </div>
-
                 </div>
+              );
+            })}
+          </div>
 
-                <div className="flex items-center gap-[15px]">
-
-                  <div className="flex-1 min-w-0">
-
-                    <h3 className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-2">{note.title || 'Untitled'}</h3>
-
-                    <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2">{preview || '-'}</p>
-
-                  </div>
-
-                  {firstImage && (
-
-                    <img src={firstImage.url} alt="" className="w-[70px] h-[70px] rounded-[10px] object-cover" />
-
-                  )}
-
+          {/* Settings panel - slides in from left */}
+          <div 
+            className={`absolute inset-0 overflow-y-auto transition-transform duration-300 ${desktopShowSettings ? 'translate-x-0' : '-translate-x-full'}`}
+            style={{ backgroundColor: themeColors[theme] }}
+          >
+            {/* Back button */}
+            <div className="p-6">
+              <button onClick={() => setDesktopShowSettings(false)} className="mb-6">
+                <img src={backIcon} alt="Back" className="w-[24px] h-[24px]" />
+              </button>
+              <h1 className="text-white text-[24px] font-outfit font-light tracking-wider mb-8">SETTINGS</h1>
+              
+              {/* Theme selector - same as mobile */}
+              <div className="mb-8">
+                <span className="text-white text-[18px] font-outfit font-light">Theme colour</span>
+                <div className="flex gap-4 mt-4">
+                  {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
+                    <button key={t} onClick={() => setTheme(t)}>
+                      <img src={themeSettingsIcons[t]} alt={t} className="w-[50px] h-[50px]" />
+                    </button>
+                  ))}
                 </div>
-
               </div>
 
-            );
+              {/* Weather toggle - same as mobile */}
+              <div className="flex items-center justify-between py-4">
+                <span className="text-white text-[18px] font-outfit font-light">Show weather on notes</span>
+                <button
+                  onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
+                  className={`relative w-[51px] h-[31px] rounded-full transition-colors ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/30'}`}
+                >
+                  <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`} />
+                </button>
+              </div>
 
-          })}
-
+              {/* Account section - same as mobile */}
+              {user ? (
+                <div className="mt-8 pt-8 border-t border-white/20">
+                  <p className="text-white/60 text-[14px] font-outfit mb-4">Signed in as {userProfile?.email}</p>
+                  <button
+                    onClick={() => { handleSignOut(); setDesktopShowSettings(false); }}
+                    className="w-full py-3 bg-white/10 text-white rounded-[10px] font-outfit"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-8 pt-8 border-t border-white/20">
+                  <button
+                    onClick={() => { setDesktopShowSettings(false); setShowSignUp(true); setIsSignInMode(true); }}
+                    className="w-full py-3 bg-white/10 text-white rounded-[10px] font-outfit"
+                  >
+                    Sign In
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Divider line */}
