@@ -1458,8 +1458,8 @@ const Index = () => {
                   }}
                 >
                   {showMonthHeader && (
-                    <div className="sticky top-0 z-10 bg-[#CACAC2] px-8 py-1">
-                      <span className="text-white text-[24px] font-outfit font-light tracking-wider">
+                    <div className="sticky top-0 z-10 bg-[#CACAC2] px-8 py-0.5">
+                      <span className="text-white text-[20px] font-outfit font-light tracking-wider leading-tight">
                         {groupMonthYear}
                       </span>
                     </div>
