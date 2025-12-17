@@ -235,11 +235,17 @@ const Note = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      // Reset recording help flag on login so it shows once per login session
-      if (session?.user) {
+    });
+    
+    // Listen for auth changes to reset recording help on new login
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
         sessionStorage.removeItem('nuron-seen-record-help');
       }
+      setUser(session?.user ?? null);
     });
+    
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
