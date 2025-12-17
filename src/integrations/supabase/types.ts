@@ -14,11 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      folders: {
+        Row: {
+          created_at: string | null
+          default_view: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          default_view?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          default_view?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           audio_data: string | null
           content_blocks: Json
           created_at: string
+          folder_id: string | null
           id: string
           title: string | null
           updated_at: string
@@ -29,6 +57,7 @@ export type Database = {
           audio_data?: string | null
           content_blocks?: Json
           created_at?: string
+          folder_id?: string | null
           id?: string
           title?: string | null
           updated_at?: string
@@ -39,13 +68,22 @@ export type Database = {
           audio_data?: string | null
           content_blocks?: Json
           created_at?: string
+          folder_id?: string | null
           id?: string
           title?: string | null
           updated_at?: string
           user_id?: string
           weather?: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notes_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
