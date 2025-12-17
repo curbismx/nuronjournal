@@ -261,23 +261,26 @@ const Index = () => {
           }));
           setFolders(typedFolders);
           
-          if (!currentFolder) {
-            const savedFolderId = localStorage.getItem('nuron-current-folder-id');
-            if (savedFolderId) {
-              const savedFolder = typedFolders.find(f => f.id === savedFolderId);
-              if (savedFolder) {
-                setCurrentFolder(savedFolder);
-                setViewMode(savedFolder.default_view || 'collapsed');
-              } else if (typedFolders.length > 0) {
-                setCurrentFolder(typedFolders[0]);
-                setViewMode(typedFolders[0].default_view);
-              }
-            } else if (typedFolders.length > 0) {
+          // Restore previously selected folder from localStorage
+          const savedFolderId = localStorage.getItem('nuron-current-folder-id');
+          if (savedFolderId) {
+            const savedFolder = typedFolders.find(f => f.id === savedFolderId);
+            if (savedFolder) {
+              setCurrentFolder(savedFolder);
+              setViewMode(savedFolder.default_view);
+            } else {
+              // Saved folder no longer exists, fall back to Notes or first folder
               const notesFolder = typedFolders.find(f => f.name === 'Notes') || typedFolders[0];
               setCurrentFolder(notesFolder);
               setViewMode(notesFolder.default_view);
               localStorage.setItem('nuron-current-folder-id', notesFolder.id);
             }
+          } else {
+            // No saved folder, default to Notes or first folder
+            const notesFolder = typedFolders.find(f => f.name === 'Notes') || typedFolders[0];
+            setCurrentFolder(notesFolder);
+            setViewMode(notesFolder.default_view);
+            localStorage.setItem('nuron-current-folder-id', notesFolder.id);
           }
         }
       }
