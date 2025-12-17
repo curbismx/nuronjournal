@@ -2131,15 +2131,9 @@ const Note = () => {
           <div className="flex-1" />
         </div>
         <div className="relative mt-[41px]">
-          {showMoveNote ? (
-            <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none">
-              FOLDERS
-            </h1>
-          ) : (
-            <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
-              {monthYear}
-            </h1>
-          )}
+          <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
+            {showMoveNote ? 'FOLDERS' : monthYear}
+          </h1>
           {!showMoveNote && (
             <button 
               onClick={() => setMenuOpen(!menuOpen)}
@@ -2621,6 +2615,7 @@ const Note = () => {
             </button>
             <button 
               onClick={() => {
+                setMenuOpen(false);
                 setShowMoveNote(true);
               }}
               className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
@@ -2753,67 +2748,71 @@ const Note = () => {
       )}
 
       {/* Recording Button */}
-      {!isRecordingOpen ? (
-        <button
-          onClick={openRecorder}
-          className="fixed z-50"
-          style={{
-            bottom: `calc(30px + env(safe-area-inset-bottom))`,
-            right: `calc(30px + env(safe-area-inset-right))`
-          }}
-        >
-          <img src={themeRecordIcons[theme]} alt="Record" className="w-[51px] h-[51px]" />
-        </button>
-      ) : (
+      {!showMoveNote && (
         <>
-          {/* Backdrop to detect tap outside */}
-          <div 
-            className="fixed inset-0 z-40"
-            onClick={stopRecording}
-          />
-          
-          {/* Recording Icon - dynamically sized based on audio level */}
-          <button
-            onClick={handleRecorderTap}
-            className="fixed z-50"
-            style={{
-              bottom: `calc(30px + env(safe-area-inset-bottom))`,
-              right: `calc(30px + env(safe-area-inset-right))`,
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              cursor: 'pointer',
-              transition: 'transform 0.1s ease-out'
-            }}
-          >
-            <img 
-              src={themeRecorderIcons[theme]}
-              alt="Recording"
+          {!isRecordingOpen ? (
+            <button
+              onClick={openRecorder}
+              className="fixed z-50"
               style={{
-                width: `${120 + (audioLevel * 0.20)}px`,
-                height: `${120 + (audioLevel * 0.20)}px`,
-                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))',
-                transition: 'width 0.05s cubic-bezier(0.4, 0, 0.2, 1), height 0.05s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
-            />
-            
-            {/* White timer in center */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -55%)',
-                color: 'white',
-                fontSize: `${24 + (audioLevel * 0.06)}px`,
-                fontFamily: 'Outfit',
-                fontWeight: '500',
-                transition: 'font-size 0.05s cubic-bezier(0.4, 0, 0.2, 1)'
+                bottom: `calc(30px + env(safe-area-inset-bottom))`,
+                right: `calc(30px + env(safe-area-inset-right))`
               }}
             >
-              {formatTime(recordingTime)}
-            </div>
-          </button>
+              <img src={themeRecordIcons[theme]} alt="Record" className="w-[51px] h-[51px]" />
+            </button>
+          ) : (
+            <>
+              {/* Backdrop to detect tap outside */}
+              <div 
+                className="fixed inset-0 z-40"
+                onClick={stopRecording}
+              />
+              
+              {/* Recording Icon - dynamically sized based on audio level */}
+              <button
+                onClick={handleRecorderTap}
+                className="fixed z-50"
+                style={{
+                  bottom: `calc(30px + env(safe-area-inset-bottom))`,
+                  right: `calc(30px + env(safe-area-inset-right))`,
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  transition: 'transform 0.1s ease-out'
+                }}
+              >
+                <img 
+                  src={themeRecorderIcons[theme]}
+                  alt="Recording"
+                  style={{
+                    width: `${120 + (audioLevel * 0.20)}px`,
+                    height: `${120 + (audioLevel * 0.20)}px`,
+                    filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))',
+                    transition: 'width 0.05s cubic-bezier(0.4, 0, 0.2, 1), height 0.05s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                />
+                
+                {/* White timer in center */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -55%)',
+                    color: 'white',
+                    fontSize: `${24 + (audioLevel * 0.06)}px`,
+                    fontFamily: 'Outfit',
+                    fontWeight: '500',
+                    transition: 'font-size 0.05s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                >
+                  {formatTime(recordingTime)}
+                </div>
+              </button>
+            </>
+          )}
         </>
       )}
 
