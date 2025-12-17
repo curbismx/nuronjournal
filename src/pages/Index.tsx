@@ -1071,9 +1071,9 @@ const Index = () => {
             {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : ''}
           </h1>
           {!showSettings && !showAccountDetails && !showChangePassword && (
-            <div 
-              className="absolute top-0 right-0 flex items-center gap-[30px]"
-            >
+              <div 
+                className="absolute top-[-5px] right-0 flex items-center gap-[30px]"
+              >
               <button 
                 onClick={() => {
                   setIsSearching(!isSearching);
