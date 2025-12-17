@@ -1534,8 +1534,7 @@ const themeSettingsIcons = {
                 <div className="flex-1 flex items-center justify-end gap-[25px]">
                   <button 
                     onClick={() => setIsSearching(true)}
-                    className="p-0 m-0 border-0 bg-transparent flex items-center justify-center"
-                    style={{ width: '24px', height: '24px' }}
+                    className="p-0 m-0 border-0 bg-transparent"
                   >
                     <img 
                       src={greySearchIcon} 
@@ -1545,14 +1544,21 @@ const themeSettingsIcons = {
                   </button>
                   <button 
                     onClick={() => setViewMode(prev => prev === 'collapsed' ? 'compact' : 'collapsed')}
-                    className="p-0 m-0 border-0 bg-transparent flex items-center justify-center"
-                    style={{ width: '24px', height: '24px' }}
+                    className="p-0 m-0 border-0 bg-transparent"
                   >
-                    <img 
-                      src={viewMode === 'collapsed' ? greyExpandViewIcon : greyListViewIcon} 
-                      alt="View" 
-                      style={{ width: '24px', height: '24px', objectFit: 'contain' }}
-                    />
+                    {viewMode === 'collapsed' ? (
+                      <img 
+                        src={greyExpandViewIcon} 
+                        alt="Expand View" 
+                        style={{ width: '25px', height: '37px' }}
+                      />
+                    ) : (
+                      <img 
+                        src={greyListViewIcon} 
+                        alt="List View" 
+                        style={{ width: '24px', height: '16px' }}
+                      />
+                    )}
                   </button>
                 </div>
               )}
