@@ -22,6 +22,7 @@ import backIcon from "@/assets/back.png";
 import accountArrow from "@/assets/00settingsarrow-2.png";
 import searchIcon from "@/assets/00search-3.png";
 import searchArrow from "@/assets/00searcharrow.png";
+import threeDotsIcon from "@/assets/00threedots-3.png";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ import { toast } from "sonner";
 import { Capacitor } from '@capacitor/core';
 import { restorePurchases, isTrialExpired } from '@/lib/purchases';
 import SubscriptionModal from '@/components/SubscriptionModal';
+import { Menu, FolderOpen, ChevronRight, Plus, Settings } from 'lucide-react';
 
 
 interface SavedNote {
@@ -42,11 +44,21 @@ interface SavedNote {
   createdAt: string;
   updatedAt: string;
   weather?: { temp: number; weatherCode: number };
+  folder_id?: string;
 }
 
 interface GroupedNotes {
   date: string;
   notes: SavedNote[];
+}
+
+interface Folder {
+  id: string;
+  user_id: string;
+  name: string;
+  default_view: 'collapsed' | 'compact';
+  created_at: string;
+  updated_at: string;
 }
 
 const Index = () => {
@@ -108,6 +120,17 @@ const Index = () => {
   const [isRestoring, setIsRestoring] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showRateAppDialog, setShowRateAppDialog] = useState(false);
+
+  // Folder state
+  const [showFolders, setShowFolders] = useState(false);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
+  const [showFolderPopup, setShowFolderPopup] = useState(false);
+  const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderDefaultView, setNewFolderDefaultView] = useState<'collapsed' | 'compact'>('collapsed');
+  const [showDeleteFolderConfirm, setShowDeleteFolderConfirm] = useState(false);
+  const [folderToDelete, setFolderToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const themeColors = {
     default: '#2E2E2E',
@@ -184,6 +207,189 @@ const Index = () => {
     }
   }, []); // Run once on mount
 
+  // Load folders when user is authenticated
+  useEffect(() => {
+    const loadFolders = async () => {
+      if (!user) {
+        // For non-logged-in users, use a local folder
+        const localFolder: Folder = {
+          id: 'local-notes',
+          user_id: 'local',
+          name: 'Notes',
+          default_view: 'collapsed',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        setFolders([localFolder]);
+        setCurrentFolder(localFolder);
+        return;
+      }
+      
+      const { data, error } = await supabase
+        .from('folders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+      
+      if (data && !error) {
+        const typedFolders = data.map(f => ({
+          ...f,
+          default_view: (f.default_view || 'collapsed') as 'collapsed' | 'compact'
+        }));
+        setFolders(typedFolders);
+        
+        // Set default folder if none selected
+        if (!currentFolder && typedFolders.length > 0) {
+          const notesFolder = typedFolders.find(f => f.name === 'Notes') || typedFolders[0];
+          setCurrentFolder(notesFolder);
+          setViewMode(notesFolder.default_view);
+          // Store current folder id for Note.tsx
+          localStorage.setItem('nuron-current-folder-id', notesFolder.id);
+        }
+      }
+      
+      // Create default "Notes" folder if user has no folders
+      if (data && data.length === 0) {
+        const { data: newFolder, error: createError } = await supabase
+          .from('folders')
+          .insert({ user_id: user.id, name: 'Notes', default_view: 'collapsed' })
+          .select()
+          .single();
+        
+        if (newFolder && !createError) {
+          const typedFolder: Folder = {
+            ...newFolder,
+            default_view: (newFolder.default_view || 'collapsed') as 'collapsed' | 'compact'
+          };
+          setFolders([typedFolder]);
+          setCurrentFolder(typedFolder);
+          localStorage.setItem('nuron-current-folder-id', typedFolder.id);
+        }
+      }
+    };
+    
+    loadFolders();
+  }, [user]);
+
+  // Migrate existing notes without folder_id to the default folder
+  useEffect(() => {
+    const migrateNotes = async () => {
+      if (!user || !currentFolder || currentFolder.id === 'local-notes') return;
+      
+      // Update any notes without a folder_id to use the current folder
+      await supabase
+        .from('notes')
+        .update({ folder_id: currentFolder.id })
+        .eq('user_id', user.id)
+        .is('folder_id', null);
+    };
+    
+    migrateNotes();
+  }, [user, currentFolder]);
+
+  // Store current folder id for Note.tsx
+  useEffect(() => {
+    if (currentFolder) {
+      localStorage.setItem('nuron-current-folder-id', currentFolder.id);
+    }
+  }, [currentFolder]);
+
+  // Folder CRUD functions
+  const createFolder = async () => {
+    if (!user || !newFolderName.trim()) return;
+    
+    const { data, error } = await supabase
+      .from('folders')
+      .insert({ 
+        user_id: user.id, 
+        name: newFolderName.trim(), 
+        default_view: newFolderDefaultView 
+      })
+      .select()
+      .single();
+    
+    if (data && !error) {
+      const typedFolder: Folder = {
+        ...data,
+        default_view: (data.default_view || 'collapsed') as 'collapsed' | 'compact'
+      };
+      setFolders(prev => [...prev, typedFolder]);
+      setShowFolderPopup(false);
+      setNewFolderName("");
+      setNewFolderDefaultView('collapsed');
+    }
+  };
+
+  const updateFolder = async () => {
+    if (!editingFolder || !newFolderName.trim()) return;
+    
+    const { error } = await supabase
+      .from('folders')
+      .update({ 
+        name: newFolderName.trim(), 
+        default_view: newFolderDefaultView,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', editingFolder.id);
+    
+    if (!error) {
+      setFolders(prev => prev.map(f => 
+        f.id === editingFolder.id 
+          ? { ...f, name: newFolderName.trim(), default_view: newFolderDefaultView }
+          : f
+      ));
+      if (currentFolder?.id === editingFolder.id) {
+        setCurrentFolder({ ...currentFolder, name: newFolderName.trim(), default_view: newFolderDefaultView });
+      }
+      setShowFolderPopup(false);
+      setEditingFolder(null);
+      setNewFolderName("");
+      setNewFolderDefaultView('collapsed');
+    }
+  };
+
+  const deleteFolder = async () => {
+    if (!folderToDelete) return;
+    
+    const { error } = await supabase
+      .from('folders')
+      .delete()
+      .eq('id', folderToDelete.id);
+    
+    if (!error) {
+      setFolders(prev => prev.filter(f => f.id !== folderToDelete.id));
+      if (currentFolder?.id === folderToDelete.id) {
+        const remaining = folders.filter(f => f.id !== folderToDelete.id);
+        setCurrentFolder(remaining[0] || null);
+      }
+      setShowDeleteFolderConfirm(false);
+      setFolderToDelete(null);
+      setShowFolderPopup(false);
+      setEditingFolder(null);
+    }
+  };
+
+  const openEditFolder = (folder: Folder) => {
+    setEditingFolder(folder);
+    setNewFolderName(folder.name);
+    setNewFolderDefaultView(folder.default_view);
+    setShowFolderPopup(true);
+  };
+
+  const openCreateFolder = () => {
+    setEditingFolder(null);
+    setNewFolderName("");
+    setNewFolderDefaultView('collapsed');
+    setShowFolderPopup(true);
+  };
+
+  const selectFolder = (folder: Folder) => {
+    setCurrentFolder(folder);
+    setViewMode(folder.default_view);
+    setShowFolders(false);
+    localStorage.setItem('nuron-current-folder-id', folder.id);
+  };
+
   // Check authentication status and set up auth listener
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -212,26 +418,7 @@ const Index = () => {
           }
           
           // Reload notes from Supabase after sign in
-          supabase
-            .from('notes')
-            .select('*')
-            .eq('user_id', session!.user.id)
-            .order('created_at', { ascending: false })
-            .then(({ data }) => {
-              if (data) {
-                const notes = data.map(note => ({
-                  id: note.id,
-                  title: note.title || 'Untitled',
-                  contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
-                  createdAt: note.created_at,
-                  updatedAt: note.updated_at,
-                  weather: note.weather as SavedNote['weather']
-                }));
-                setSavedNotes(notes);
-                // CACHE TO LOCALSTORAGE
-                localStorage.setItem('nuron-notes-cache', JSON.stringify(notes));
-              }
-            });
+          loadNotesForCurrentFolder(session!.user.id);
         }, 0);
       } else if (event === 'SIGNED_OUT') {
         setUserProfile(null);
@@ -245,6 +432,43 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Load notes for current folder
+  const loadNotesForCurrentFolder = async (userId?: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const uid = userId || session?.user?.id;
+    
+    if (uid && currentFolder && currentFolder.id !== 'local-notes') {
+      const { data } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('user_id', uid)
+        .eq('folder_id', currentFolder.id)
+        .order('created_at', { ascending: false });
+      
+      if (data) {
+        const notes = data.map(note => ({
+          id: note.id,
+          title: note.title || 'Untitled',
+          contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
+          createdAt: note.created_at,
+          updatedAt: note.updated_at,
+          weather: note.weather as SavedNote['weather'],
+          folder_id: note.folder_id
+        }));
+        setSavedNotes(notes);
+        // CACHE TO LOCALSTORAGE
+        localStorage.setItem('nuron-notes-cache', JSON.stringify(notes));
+      }
+    }
+  };
+
+  // Reload notes when current folder changes
+  useEffect(() => {
+    if (currentFolder && user) {
+      loadNotesForCurrentFolder();
+    }
+  }, [currentFolder?.id, user?.id]);
+
   // Load notes from Supabase or localStorage based on auth status
   useEffect(() => {
     const loadNotes = async () => {
@@ -253,11 +477,18 @@ const Index = () => {
       
       if (session?.user) {
         // Logged in - load from Supabase WITH user_id filter
-        const { data } = await supabase
+        // If we have a current folder, filter by it
+        let query = supabase
           .from('notes')
           .select('*')
           .eq('user_id', session.user.id)
           .order('created_at', { ascending: false });
+        
+        if (currentFolder && currentFolder.id !== 'local-notes') {
+          query = query.eq('folder_id', currentFolder.id);
+        }
+        
+        const { data } = await query;
         
         if (data) {
           const notes = data.map(note => ({
@@ -266,7 +497,8 @@ const Index = () => {
             contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
             createdAt: note.created_at,
             updatedAt: note.updated_at,
-            weather: note.weather as SavedNote['weather']
+            weather: note.weather as SavedNote['weather'],
+            folder_id: note.folder_id
           }));
           setSavedNotes(notes);
           // CACHE TO LOCALSTORAGE for instant load next time
@@ -351,6 +583,7 @@ const Index = () => {
     if (!user) return;
     setShowDeleteConfirmDialog(false);
     await supabase.from("notes").delete().eq("user_id", user.id);
+    await supabase.from("folders").delete().eq("user_id", user.id);
     await supabase.from("profiles").delete().eq("id", user.id);
     await supabase.auth.signOut();
     setUser(null);
@@ -449,11 +682,17 @@ const Index = () => {
   };
 
   const loadNotesFromSupabase = async (userId: string) => {
-    const { data } = await supabase
+    let query = supabase
       .from('notes')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
+    
+    if (currentFolder && currentFolder.id !== 'local-notes') {
+      query = query.eq('folder_id', currentFolder.id);
+    }
+    
+    const { data } = await query;
     
     if (data) {
       setSavedNotes(data.map(note => ({
@@ -462,7 +701,8 @@ const Index = () => {
         contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
         createdAt: note.created_at,
         updatedAt: note.updated_at,
-        weather: note.weather as SavedNote['weather']
+        weather: note.weather as SavedNote['weather'],
+        folder_id: note.folder_id
       })));
     }
   };
@@ -481,7 +721,8 @@ const Index = () => {
           content_blocks: note.contentBlocks,
           created_at: note.createdAt,
           updated_at: note.updatedAt,
-          weather: note.weather
+          weather: note.weather,
+          folder_id: currentFolder?.id !== 'local-notes' ? currentFolder?.id : null
         });
       }
       
@@ -489,11 +730,17 @@ const Index = () => {
       localStorage.removeItem('nuron-notes');
       
       // Reload everything from Supabase
-      const { data } = await supabase
+      let query = supabase
         .from('notes')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
+      
+      if (currentFolder && currentFolder.id !== 'local-notes') {
+        query = query.eq('folder_id', currentFolder.id);
+      }
+      
+      const { data } = await query;
       
       if (data) {
         setSavedNotes(data.map(note => ({
@@ -502,7 +749,8 @@ const Index = () => {
           contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
           createdAt: note.created_at,
           updatedAt: note.updated_at,
-          weather: note.weather as SavedNote['weather']
+          weather: note.weather as SavedNote['weather'],
+          folder_id: note.folder_id
         })));
       }
       
@@ -618,19 +866,28 @@ const Index = () => {
                 setShowChangePassword(false);
               } else if (showAccountDetails) {
                 setShowAccountDetails(false);
+              } else if (showSettings) {
+                setShowSettings(false);
+                setShowFolders(true);
+              } else if (showFolders) {
+                setShowFolders(false);
               } else {
-                setShowSettings(!showSettings);
+                setShowFolders(true);
               }
             }}
             className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
           >
-            <img 
-              src={showSettings || showAccountDetails || showChangePassword ? backIcon : settingsIcon} 
-              alt={showSettings || showAccountDetails || showChangePassword ? "Back" : "Settings"} 
-              className="w-[30px] h-[30px]" 
-            />
+            {showSettings || showAccountDetails || showChangePassword ? (
+              <img 
+                src={backIcon} 
+                alt="Back" 
+                className="w-[30px] h-[30px]" 
+              />
+            ) : (
+              <Menu className="w-[30px] h-[30px] text-white" strokeWidth={1.5} />
+            )}
           </button>
-          {!showSettings && !showAccountDetails && !showChangePassword && !user && (
+          {!showSettings && !showAccountDetails && !showChangePassword && !showFolders && !user && (
              <div className="absolute top-[30px] left-[40px]">
              <img 
                src={text3Image} 
@@ -643,8 +900,8 @@ const Index = () => {
         </div>
         </div>
 
-        {/* Title for settings/account */}
-      {(showSettings || showAccountDetails || showChangePassword) && (
+        {/* Title for settings/account/folders */}
+      {(showSettings || showAccountDetails || showChangePassword || showFolders) && (
         <div 
           className="mt-[20px]"
           style={{
@@ -653,10 +910,79 @@ const Index = () => {
           }}
         >
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider">
-            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : 'SETTINGS'}
+            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : showFolders ? 'FOLDERS' : currentFolder?.name?.toUpperCase() || ''}
           </h1>
         </div>
       )}
+
+        {/* Folders panel */}
+        <div 
+          className={`absolute inset-x-0 bottom-0 px-8 pt-[30px] overflow-y-auto transition-opacity duration-200 ${showFolders && !showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+          style={{ 
+            backgroundColor: themeColors[theme],
+            top: `calc(120px + env(safe-area-inset-top))`,
+            paddingLeft: `calc(32px + env(safe-area-inset-left))`,
+            paddingRight: `calc(32px + env(safe-area-inset-right))`
+          }}
+        >
+          {/* Plus icon row */}
+          {user && (
+            <div className="flex justify-center mb-6">
+              <button 
+                onClick={openCreateFolder}
+                className="p-2 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
+              >
+                <Plus className="w-[30px] h-[30px] text-white" strokeWidth={1.5} />
+              </button>
+            </div>
+          )}
+          
+          {/* Folders list */}
+          <div className="space-y-3">
+            {folders.map((folder) => (
+              <div 
+                key={folder.id}
+                className="bg-white/5 border border-white/20 rounded-[10px] px-4 py-4 flex items-center gap-3"
+              >
+                <FolderOpen className="w-[24px] h-[24px] text-white/60" strokeWidth={1.5} />
+                <button
+                  onClick={() => selectFolder(folder)}
+                  className="flex-1 text-left text-white text-[18px] font-outfit font-light"
+                >
+                  {folder.name}
+                </button>
+                {user && folder.id !== 'local-notes' && (
+                  <button 
+                    onClick={() => openEditFolder(folder)}
+                    className="p-2 m-0 border-0 bg-transparent"
+                  >
+                    <img src={threeDotsIcon} alt="Options" className="w-[20px] h-[20px] opacity-60" />
+                  </button>
+                )}
+                <button 
+                  onClick={() => selectFolder(folder)}
+                  className="p-2 m-0 border-0 bg-transparent"
+                >
+                  <ChevronRight className="w-[20px] h-[20px] text-white/60" strokeWidth={1.5} />
+                </button>
+              </div>
+            ))}
+          </div>
+          
+          {/* Settings link at bottom */}
+          <div className="mt-8 pt-6 border-t border-white/20">
+            <button
+              onClick={() => {
+                setShowFolders(false);
+                setShowSettings(true);
+              }}
+              className="flex items-center gap-3 p-0 m-0 border-0 bg-transparent text-white/80 hover:text-white transition-colors"
+            >
+              <Settings className="w-[24px] h-[24px]" strokeWidth={1.5} />
+              <span className="text-[18px] font-outfit font-light">Settings</span>
+            </button>
+          </div>
+        </div>
 
         {/* Settings panel */}
       <div 
@@ -673,7 +999,7 @@ const Index = () => {
             /* Change Password Form */
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-white/80 text-[14px]">New Password</Label>
+                <Label className="text-white/80 text-[14px] uppercase tracking-wider">New Password</Label>
                 <Input
                   type="password"
                   value={newPassword}
@@ -688,7 +1014,7 @@ const Index = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-white/80 text-[14px]">Confirm New Password</Label>
+                <Label className="text-white/80 text-[14px] uppercase tracking-wider">Confirm New Password</Label>
                 <Input
                   type="password"
                   value={confirmNewPassword}
@@ -910,7 +1236,6 @@ const Index = () => {
                   </button>
                 </div>
 
-                {/* Theme selector */}
                 <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
                   <span className="text-[20px] font-light">Theme colour</span>
                   <div className="flex items-center gap-3">
@@ -941,27 +1266,33 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Main Content - slides down when settings open */}
-        <main className={`flex-1 flex flex-col transition-transform duration-300 ${showSettings ? 'translate-y-[100%]' : ''}`} style={{ minHeight: 0 }}>
-          {/* Center section with textImage and plus button */}
-          <div className="flex-1 flex items-center justify-center">
-            <div className="relative flex items-center justify-center" style={{ marginTop: '150px' }}>
-              <img src={textImage} alt="Instructions" style={{ width: '320px', maxWidth: '90vw' }} />
-              <button 
-                onClick={() => navigate('/note')}
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -mt-[15px] hover:scale-105 transition-transform"
-              >
-                <img src={newPlusIcon} alt="Record" className="w-[51px] h-[51px]" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))' }} />
-              </button>
-            </div>
+        {/* Center content area (only shown when no panels are open) */}
+        {!showSettings && !showAccountDetails && !showChangePassword && !showFolders && (
+          <div className="flex-1 flex flex-col items-center justify-center px-8">
+            <img 
+              src={textImage} 
+              alt="Nuron Journal" 
+              className="w-auto mb-6"
+              style={{ maxWidth: '280px' }}
+            />
+            <img 
+              src={text2Image} 
+              alt="Start your journal" 
+              className="w-auto mb-8"
+              style={{ maxWidth: '320px' }}
+            />
+            <button 
+              onClick={() => navigate('/note')}
+              className="p-0 border-0 bg-transparent"
+            >
+              <img 
+                src={plusIcon} 
+                alt="Add Note" 
+                className="w-[100px] h-[100px]"
+              />
+            </button>
           </div>
-          {/* Bottom section with text2Image */}
-          {!showSettings && (
-            <div className="w-full flex justify-center px-8 pb-[120px]">
-              <img src={text2Image} alt="Instructions" className="w-full max-w-[300px]" />
-            </div>
-          )}
-        </main>
+        )}
 
         {/* Merge notes dialog */}
         {showMergeDialog && (
@@ -971,32 +1302,13 @@ const Index = () => {
                 Sync Notes
               </h3>
               <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] text-center mb-6">
-                You have {localNotesToMerge.length} note{localNotesToMerge.length !== 1 ? 's' : ''} on this device that aren't in your account. Would you like to sync them so all your notes are available on all devices?
+                You have {localNotesToMerge.length} note{localNotesToMerge.length !== 1 ? 's' : ''} on this device. Would you like to sync them to your account?
               </p>
               <div className="flex gap-3">
                 <button
-                  onClick={async () => {
+                  onClick={() => {
                     setShowMergeDialog(false);
                     setLocalNotesToMerge([]);
-                    // Just load from Supabase, keep local notes in localStorage for now
-                    if (user) {
-                      const { data } = await supabase
-                        .from('notes')
-                        .select('*')
-                        .eq('user_id', user.id)
-                        .order('created_at', { ascending: false });
-                      
-                      if (data) {
-                        setSavedNotes(data.map(note => ({
-                          id: note.id,
-                          title: note.title || 'Untitled',
-                          contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
-                          createdAt: note.created_at,
-                          updatedAt: note.updated_at,
-                          weather: note.weather as SavedNote['weather']
-                        })));
-                      }
-                    }
                   }}
                   className="flex-1 py-3 px-4 rounded-xl bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium"
                 >
@@ -1009,6 +1321,132 @@ const Index = () => {
                   style={{ backgroundColor: themeColors[theme] }}
                 >
                   {loading ? 'Syncing...' : 'Sync'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Folder Create/Edit Popup */}
+        {showFolderPopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-2xl p-6 mx-8 max-w-sm w-full shadow-xl relative">
+              <button
+                onClick={() => {
+                  setShowFolderPopup(false);
+                  setEditingFolder(null);
+                  setNewFolderName("");
+                  setNewFolderDefaultView('collapsed');
+                }}
+                className="absolute top-4 right-4 text-[hsl(0,0%,60%)] text-xl font-light"
+              >
+                ×
+              </button>
+              
+              <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] text-center mb-6">
+                {editingFolder ? 'Edit Folder' : 'New Folder'}
+              </h3>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-[hsl(0,0%,40%)] text-[14px]">Folder Name</Label>
+                  <input
+                    type="text"
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    placeholder="Enter folder name"
+                    className="w-full px-4 py-3 rounded-xl border border-[hsl(0,0%,85%)] text-[16px] font-outfit outline-none focus:border-[hsl(0,0%,70%)]"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-[hsl(0,0%,40%)] text-[14px]">Default View</Label>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setNewFolderDefaultView('collapsed')}
+                      className={`flex-1 py-3 px-4 rounded-xl font-outfit font-medium text-[14px] ${
+                        newFolderDefaultView === 'collapsed' 
+                          ? 'bg-[hsl(0,0%,25%)] text-white' 
+                          : 'bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)]'
+                      }`}
+                    >
+                      Date View
+                    </button>
+                    <button
+                      onClick={() => setNewFolderDefaultView('compact')}
+                      className={`flex-1 py-3 px-4 rounded-xl font-outfit font-medium text-[14px] ${
+                        newFolderDefaultView === 'compact' 
+                          ? 'bg-[hsl(0,0%,25%)] text-white' 
+                          : 'bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)]'
+                      }`}
+                    >
+                      List View
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowFolderPopup(false);
+                    setEditingFolder(null);
+                    setNewFolderName("");
+                    setNewFolderDefaultView('collapsed');
+                  }}
+                  className="flex-1 py-3 px-4 rounded-full bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium text-[15px]"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={editingFolder ? updateFolder : createFolder}
+                  className="flex-1 py-3 px-4 rounded-full text-white font-outfit font-medium text-[15px]"
+                  style={{ backgroundColor: themeColors[theme] }}
+                >
+                  {editingFolder ? 'Save' : 'Create'}
+                </button>
+              </div>
+              
+              {editingFolder && (
+                <button
+                  onClick={() => {
+                    setFolderToDelete({ id: editingFolder.id, name: editingFolder.name });
+                    setShowDeleteFolderConfirm(true);
+                  }}
+                  className="w-full mt-4 py-3 text-[15px] font-outfit font-medium text-red-500"
+                >
+                  Delete Folder
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Delete Folder Confirmation */}
+        {showDeleteFolderConfirm && folderToDelete && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-2xl p-6 mx-8 max-w-sm w-full shadow-xl">
+              <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] text-center mb-2">
+                Delete Folder
+              </h3>
+              <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] text-center mb-6">
+                Are you sure you want to delete "{folderToDelete.name}"? All notes in this folder will be permanently deleted. This cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteFolderConfirm(false);
+                    setFolderToDelete(null);
+                  }}
+                  className="flex-1 py-3 px-4 rounded-full bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium text-[15px]"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={deleteFolder}
+                  className="flex-1 py-3 px-4 rounded-full bg-red-500 text-white font-outfit font-medium text-[15px]"
+                >
+                  Delete
                 </button>
               </div>
             </div>
@@ -1041,19 +1479,28 @@ const Index = () => {
                   setShowChangePassword(false);
                 } else if (showAccountDetails) {
                   setShowAccountDetails(false);
+                } else if (showSettings) {
+                  setShowSettings(false);
+                  setShowFolders(true);
+                } else if (showFolders) {
+                  setShowFolders(false);
                 } else {
-                  setShowSettings(!showSettings);
+                  setShowFolders(true);
                 }
               }}
               className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
             >
-              <img 
-                src={showSettings || showAccountDetails || showChangePassword ? backIcon : settingsIcon} 
-                alt={showSettings || showAccountDetails || showChangePassword ? "Back" : "Settings"} 
-                className="w-[30px] h-[30px]" 
-              />
+              {showSettings || showAccountDetails || showChangePassword ? (
+                <img 
+                  src={backIcon} 
+                  alt="Back" 
+                  className="w-[30px] h-[30px]" 
+                />
+              ) : (
+                <Menu className="w-[30px] h-[30px] text-white" strokeWidth={1.5} />
+              )}
             </button>
-            {!showSettings && !showAccountDetails && !showChangePassword && !user && savedNotes.length === 0 && (
+            {!showSettings && !showAccountDetails && !showChangePassword && !showFolders && !user && savedNotes.length === 0 && (
               <div className="absolute top-[35px] left-[40px] z-10">
               <img 
                 src={text3Image} 
@@ -1068,9 +1515,9 @@ const Index = () => {
         </div>
         <div className="relative mt-[41px]">
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
-            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : ''}
+            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : showFolders ? 'FOLDERS' : currentFolder?.name?.toUpperCase() || ''}
           </h1>
-          {!showSettings && !showAccountDetails && !showChangePassword && (
+          {!showSettings && !showAccountDetails && !showChangePassword && !showFolders && (
               <div 
                 className="absolute top-[-5px] right-0 flex items-center gap-[30px]"
               >
@@ -1093,6 +1540,67 @@ const Index = () => {
           )}
         </div>
       </header>
+
+      {/* Folders panel - sits behind the card */}
+      <div className={`absolute inset-x-0 top-[150px] bottom-0 px-8 pt-[30px] transition-opacity duration-200 overflow-y-auto ${showFolders && !showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} style={{ backgroundColor: themeColors[theme] }}>
+        {/* Plus icon row */}
+        {user && (
+          <div className="flex justify-center mb-6">
+            <button 
+              onClick={openCreateFolder}
+              className="p-2 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
+            >
+              <Plus className="w-[30px] h-[30px] text-white" strokeWidth={1.5} />
+            </button>
+          </div>
+        )}
+        
+        {/* Folders list */}
+        <div className="space-y-3">
+          {folders.map((folder) => (
+            <div 
+              key={folder.id}
+              className="bg-white/5 border border-white/20 rounded-[10px] px-4 py-4 flex items-center gap-3"
+            >
+              <FolderOpen className="w-[24px] h-[24px] text-white/60" strokeWidth={1.5} />
+              <button
+                onClick={() => selectFolder(folder)}
+                className="flex-1 text-left text-white text-[18px] font-outfit font-light"
+              >
+                {folder.name}
+              </button>
+              {user && folder.id !== 'local-notes' && (
+                <button 
+                  onClick={() => openEditFolder(folder)}
+                  className="p-2 m-0 border-0 bg-transparent"
+                >
+                  <img src={threeDotsIcon} alt="Options" className="w-[20px] h-[20px] opacity-60" />
+                </button>
+              )}
+              <button 
+                onClick={() => selectFolder(folder)}
+                className="p-2 m-0 border-0 bg-transparent"
+              >
+                <ChevronRight className="w-[20px] h-[20px] text-white/60" strokeWidth={1.5} />
+              </button>
+            </div>
+          ))}
+        </div>
+        
+        {/* Settings link at bottom */}
+        <div className="mt-8 pt-6 border-t border-white/20">
+          <button
+            onClick={() => {
+              setShowFolders(false);
+              setShowSettings(true);
+            }}
+            className="flex items-center gap-3 p-0 m-0 border-0 bg-transparent text-white/80 hover:text-white transition-colors"
+          >
+            <Settings className="w-[24px] h-[24px]" strokeWidth={1.5} />
+            <span className="text-[18px] font-outfit font-light">Settings</span>
+          </button>
+        </div>
+      </div>
 
       {/* Settings panel - sits behind the card */}
       <div className={`absolute inset-x-0 top-[150px] bottom-0 px-8 pt-[80px] transition-opacity duration-200 overflow-y-auto ${showSettings || showAccountDetails || showChangePassword ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} style={{ backgroundColor: themeColors[theme] }}>
@@ -1371,7 +1879,6 @@ const Index = () => {
                 </button>
               </div>
 
-              {/* Theme selector */}
               <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
                 <span className="text-[20px] font-light">Theme colour</span>
                 <div className="flex items-center gap-3">
@@ -1405,7 +1912,7 @@ const Index = () => {
       {/* Scrollable content area */}
       <div 
         ref={scrollContainerRef}
-        className={`flex-1 overflow-y-scroll overflow-x-hidden bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 transition-transform duration-300 ${showSettings ? 'translate-y-[100%]' : '-mt-[25px]'}`}
+        className={`flex-1 overflow-y-scroll overflow-x-hidden bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 transition-transform duration-300 ${showSettings || showFolders ? 'translate-y-[100%]' : '-mt-[25px]'}`}
         style={{ 
           WebkitOverflowScrolling: 'touch',
           overscrollBehaviorY: 'auto',
@@ -1544,7 +2051,7 @@ const Index = () => {
       </div>
 
       {/* Floating add button */}
-      {!showSettings && (
+      {!showSettings && !showFolders && (
         <button
           onClick={() => navigate('/note')}
           className="fixed z-50 cursor-pointer p-0 border-0 bg-transparent"
@@ -1611,22 +2118,7 @@ const Index = () => {
                   setLocalNotesToMerge([]);
                   // Just load from Supabase, keep local notes in localStorage for now
                   if (user) {
-                    const { data } = await supabase
-                      .from('notes')
-                      .select('*')
-                      .eq('user_id', user.id)
-                      .order('created_at', { ascending: false });
-                    
-                    if (data) {
-                      setSavedNotes(data.map(note => ({
-                        id: note.id,
-                        title: note.title || 'Untitled',
-                        contentBlocks: note.content_blocks as SavedNote['contentBlocks'],
-                        createdAt: note.created_at,
-                        updatedAt: note.updated_at,
-                        weather: note.weather as SavedNote['weather']
-                      })));
-                    }
+                    loadNotesForCurrentFolder(user.id);
                   }
                 }}
                 className="flex-1 py-3 px-4 rounded-xl bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium"
@@ -1675,6 +2167,132 @@ const Index = () => {
                 style={{ backgroundColor: themeColors[theme] }}
               >
                 Rate App
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Folder Create/Edit Popup */}
+      {showFolderPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl p-6 mx-8 max-w-sm w-full shadow-xl relative">
+            <button
+              onClick={() => {
+                setShowFolderPopup(false);
+                setEditingFolder(null);
+                setNewFolderName("");
+                setNewFolderDefaultView('collapsed');
+              }}
+              className="absolute top-4 right-4 text-[hsl(0,0%,60%)] text-xl font-light"
+            >
+              ×
+            </button>
+            
+            <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] text-center mb-6">
+              {editingFolder ? 'Edit Folder' : 'New Folder'}
+            </h3>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-[hsl(0,0%,40%)] text-[14px]">Folder Name</Label>
+                <input
+                  type="text"
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  placeholder="Enter folder name"
+                  className="w-full px-4 py-3 rounded-xl border border-[hsl(0,0%,85%)] text-[16px] font-outfit outline-none focus:border-[hsl(0,0%,70%)]"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-[hsl(0,0%,40%)] text-[14px]">Default View</Label>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setNewFolderDefaultView('collapsed')}
+                    className={`flex-1 py-3 px-4 rounded-xl font-outfit font-medium text-[14px] ${
+                      newFolderDefaultView === 'collapsed' 
+                        ? 'bg-[hsl(0,0%,25%)] text-white' 
+                        : 'bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)]'
+                    }`}
+                  >
+                    Date View
+                  </button>
+                  <button
+                    onClick={() => setNewFolderDefaultView('compact')}
+                    className={`flex-1 py-3 px-4 rounded-xl font-outfit font-medium text-[14px] ${
+                      newFolderDefaultView === 'compact' 
+                        ? 'bg-[hsl(0,0%,25%)] text-white' 
+                        : 'bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)]'
+                    }`}
+                  >
+                    List View
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowFolderPopup(false);
+                  setEditingFolder(null);
+                  setNewFolderName("");
+                  setNewFolderDefaultView('collapsed');
+                }}
+                className="flex-1 py-3 px-4 rounded-full bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium text-[15px]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={editingFolder ? updateFolder : createFolder}
+                className="flex-1 py-3 px-4 rounded-full text-white font-outfit font-medium text-[15px]"
+                style={{ backgroundColor: themeColors[theme] }}
+              >
+                {editingFolder ? 'Save' : 'Create'}
+              </button>
+            </div>
+            
+            {editingFolder && (
+              <button
+                onClick={() => {
+                  setFolderToDelete({ id: editingFolder.id, name: editingFolder.name });
+                  setShowDeleteFolderConfirm(true);
+                }}
+                className="w-full mt-4 py-3 text-[15px] font-outfit font-medium text-red-500"
+              >
+                Delete Folder
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Folder Confirmation */}
+      {showDeleteFolderConfirm && folderToDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl p-6 mx-8 max-w-sm w-full shadow-xl">
+            <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] text-center mb-2">
+              Delete Folder
+            </h3>
+            <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] text-center mb-6">
+              Are you sure you want to delete "{folderToDelete.name}"? All notes in this folder will be permanently deleted. This cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteFolderConfirm(false);
+                  setFolderToDelete(null);
+                }}
+                className="flex-1 py-3 px-4 rounded-full bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium text-[15px]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={deleteFolder}
+                className="flex-1 py-3 px-4 rounded-full bg-red-500 text-white font-outfit font-medium text-[15px]"
+              >
+                Delete
               </button>
             </div>
           </div>

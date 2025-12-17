@@ -1744,6 +1744,7 @@ const Note = () => {
     
     if (session?.user) {
       // Logged in - save to Supabase
+      const currentFolderId = localStorage.getItem('nuron-current-folder-id');
       const { error } = await supabase.from('notes').upsert({
         id: noteData.id,
         user_id: session.user.id,
@@ -1752,7 +1753,8 @@ const Note = () => {
         created_at: noteData.createdAt,
         updated_at: noteData.updatedAt,
         weather: noteData.weather,
-        audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : null
+        audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : null,
+        folder_id: currentFolderId && currentFolderId !== 'local-notes' ? currentFolderId : null
       });
       
       if (!error) {
