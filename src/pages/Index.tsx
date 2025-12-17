@@ -71,7 +71,6 @@ const Index = () => {
   const navigate = useNavigate();
 const isDesktop = useDesktop();
 const [desktopSelectedNoteId, setDesktopSelectedNoteId] = useState<string | null>(null);
-const [desktopSelectedNote, setDesktopSelectedNote] = useState<SavedNote | null>(null);
   useEffect(() => {
     const onboardingComplete = localStorage.getItem('nuron-onboarding-complete');
     if (!onboardingComplete) {
@@ -193,16 +192,6 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
       setShowSubscriptionModal(true);
     }
   }, []);
-
-  // Load desktop selected note
-  useEffect(() => {
-    if (desktopSelectedNoteId) {
-      const note = savedNotes.find(n => n.id === desktopSelectedNoteId);
-      setDesktopSelectedNote(note || null);
-    } else {
-      setDesktopSelectedNote(null);
-    }
-  }, [desktopSelectedNoteId, savedNotes]);
 
   // Track app usage and show rate app dialog
   useEffect(() => {
@@ -1563,14 +1552,13 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
             })}
           </div>
           
-          {/* Add note button */}
-          <div className="p-6 pt-4">
+          {/* Plus button - positioned at bottom */}
+          <div className="relative pb-8">
             <button
-              onClick={() => navigate('/note')}
-              className="w-full py-4 rounded-full font-outfit font-medium transition-opacity hover:opacity-90"
-              style={{ backgroundColor: themeColors[theme], color: 'white' }}
+              onClick={() => setDesktopSelectedNoteId('new')}
+              className="absolute bottom-[30px] left-1/2 -translate-x-1/2 z-50"
             >
-              + New Note
+              <img src={themePlusIcons[theme]} alt="Add" className="w-[70px] h-[70px]" />
             </button>
           </div>
         </div>
@@ -1578,54 +1566,18 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
         {/* 50px gap */}
         <div className="w-[50px] flex-shrink-0" />
 
-        {/* Column 3: Note Editor Card */}
+        {/* Column 3: Note Editor - embedded as iframe to get EXACT same functionality */}
         <div className="flex-1 flex flex-col bg-[hsl(60,5%,96%)] rounded-[20px] shadow-sm overflow-hidden">
-          {desktopSelectedNote ? (
-            <>
-              {/* Note header */}
-              <div className="p-6 pb-4 flex items-center gap-4">
-                <img src={backIcon} alt="Back" className="w-[24px] h-[24px] opacity-50" />
-                <span className="text-[14px] font-outfit text-[hsl(0,0%,50%)]">
-                  {new Date(desktopSelectedNote.createdAt).toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
-                </span>
-              </div>
-              {/* Note content */}
-              <div className="flex-1 overflow-y-auto px-6 pb-6">
-                {desktopSelectedNote.contentBlocks.map((block) => {
-                  if (block.type === 'text') {
-                    const textBlock = block as { type: 'text'; id: string; content: string };
-                    return (
-                      <p key={textBlock.id} className="text-[16px] font-outfit text-[hsl(0,0%,25%)] mb-4 whitespace-pre-wrap">
-                        {textBlock.content}
-                      </p>
-                    );
-                  } else if (block.type === 'image') {
-                    const imageBlock = block as { type: 'image'; id: string; url: string; width: number };
-                    return (
-                      <img key={imageBlock.id} src={imageBlock.url} alt="" className="max-w-full rounded-lg mb-4" />
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-              {/* Edit button */}
-              <div className="p-6 pt-4">
-                <button
-                  onClick={() => navigate(`/note/${desktopSelectedNote.id}`)}
-                  className="w-full py-4 rounded-full font-outfit font-medium transition-opacity hover:opacity-90 bg-[hsl(0,0%,85%)] text-[hsl(0,0%,30%)]"
-                >
-                  Edit Note
-                </button>
-              </div>
-            </>
+          {desktopSelectedNoteId ? (
+            <iframe
+              key={desktopSelectedNoteId}
+              src={desktopSelectedNoteId === 'new' ? '/note?desktop=true' : `/note/${desktopSelectedNoteId}?desktop=true`}
+              className="flex-1 w-full h-full border-0"
+              title="Note Editor"
+            />
           ) : (
             <div className="flex-1 flex items-center justify-center text-[hsl(0,0%,60%)] font-outfit text-[18px]">
-              Select a note to view
+              Select a note or create a new one
             </div>
           )}
         </div>
