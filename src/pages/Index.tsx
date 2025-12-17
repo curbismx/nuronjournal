@@ -1592,7 +1592,7 @@ const themeSettingsIcons = {
                     <img 
                       src={greySearchIcon} 
                       alt="Search" 
-                      style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+                      style={{ width: '18px', height: '18px' }}
                     />
                   </button>
                   <button 
@@ -1630,7 +1630,7 @@ const themeSettingsIcons = {
                   const groupMonthYear = new Date(group.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
                   const prevGroup = groupIndex > 0 ? allGroups[groupIndex - 1] : null;
                   const prevMonthYear = prevGroup ? new Date(prevGroup.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase() : null;
-                  const showMonthHeader = groupIndex === 0 || groupMonthYear !== prevMonthYear;
+                  const showMonthHeader = viewMode !== 'compact' && (groupIndex === 0 || groupMonthYear !== prevMonthYear);
                   
                   return (
                     <div key={group.date}>
