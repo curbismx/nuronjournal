@@ -1534,14 +1534,14 @@ const Index = () => {
         className={`absolute inset-x-0 bottom-0 transition-opacity duration-200 overflow-y-auto ${showFolders && !showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
         style={{ 
           backgroundColor: themeColors[theme],
-          top: `calc(50px + env(safe-area-inset-top))`,
+          top: `calc(60px + env(safe-area-inset-top))`,
           paddingLeft: `calc(30px + env(safe-area-inset-left))`,
           paddingRight: `calc(32px + env(safe-area-inset-right))`,
           paddingTop: '30px'
         }}
       >
         {/* Folders list */}
-        <div className="space-y-4 pt-[70px]">
+        <div className="space-y-1 pt-[70px]">
           {folders.map((folder) => (
             <div 
               key={folder.id}
