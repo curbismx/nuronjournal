@@ -48,6 +48,7 @@ type ContentBlock =
 const Note = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const isEmbedded = new URLSearchParams(window.location.search).get('desktop') === 'true';
   const noteIdRef = useRef<string>(id || crypto.randomUUID());
   const [user, setUser] = useState<User | null>(null);
   const [noteTitle, setNoteTitle] = useState(() => {
@@ -2173,7 +2174,7 @@ const Note = () => {
   const monthYear = noteDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: themeColors[theme] }}>
+    <div className={isEmbedded ? "h-full flex flex-col overflow-hidden" : "fixed inset-0 flex flex-col overflow-hidden"} style={{ backgroundColor: themeColors[theme] }}>
       {/* Fixed dark header */}
       <header 
         className="flex-shrink-0 z-30" 
@@ -2187,7 +2188,7 @@ const Note = () => {
         }}
       >
         <div className="flex items-center justify-between mb-auto -mt-[15px]">
-          {!showMoveNote && (
+          {!isEmbedded && !showMoveNote && (
             <Button
               variant="ghost"
               onClick={handleBack}
