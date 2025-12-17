@@ -229,7 +229,10 @@ const Index = () => {
           updated_at: new Date().toISOString()
         };
         setFolders([localFolder]);
-        setCurrentFolder(localFolder);
+        // Only set currentFolder if not already set (to avoid overwriting saved folder during auth load)
+        if (!currentFolder || currentFolder.id === 'local-notes') {
+          setCurrentFolder(localFolder);
+        }
         return;
       }
       
@@ -329,7 +332,7 @@ const Index = () => {
 
   // Store current folder id for Note.tsx
   useEffect(() => {
-    if (currentFolder) {
+    if (currentFolder && currentFolder.id !== 'local-notes') {
       localStorage.setItem('nuron-current-folder-id', currentFolder.id);
     }
   }, [currentFolder]);
