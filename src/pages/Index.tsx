@@ -1535,7 +1535,7 @@ const Index = () => {
                   onClick={() => openEditFolder(folder)}
                   className="p-2 m-0 border-0 bg-transparent"
                 >
-                  <img src={folderSettingsIcon} alt="Options" className="h-[24px] w-auto opacity-70" />
+                  <img src={folderSettingsIcon} alt="Options" className="h-[20px] w-auto opacity-70" />
                 </button>
               )}
               <button 
