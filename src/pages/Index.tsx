@@ -1068,7 +1068,7 @@ const Index = () => {
         </div>
         <div className="relative mt-[41px]">
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
-            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : visibleMonthYear}
+            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : ''}
           </h1>
           {!showSettings && !showAccountDetails && !showChangePassword && (
             <div 
@@ -1442,8 +1442,12 @@ const Index = () => {
           )}
           {/* Notes list */}
           <div>
-            {(isSearching ? filteredGroupedNotes : groupedNotes).map((group) => {
+            {(isSearching ? filteredGroupedNotes : groupedNotes).map((group, groupIndex, allGroups) => {
               const groupMonthYear = new Date(group.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+              const prevGroup = groupIndex > 0 ? allGroups[groupIndex - 1] : null;
+              const prevMonthYear = prevGroup ? new Date(prevGroup.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase() : null;
+              const showMonthHeader = viewMode !== 'compact' && (groupIndex === 0 || groupMonthYear !== prevMonthYear);
+              
               return (
                 <div 
                   key={group.date}
@@ -1453,6 +1457,13 @@ const Index = () => {
                     else dateGroupRefs.current.delete(group.date);
                   }}
                 >
+                  {showMonthHeader && (
+                    <div className="sticky top-0 z-10 bg-[#CACAC2] px-8 py-3">
+                      <span className="text-white text-[24px] font-outfit font-light tracking-wider">
+                        {groupMonthYear}
+                      </span>
+                    </div>
+                  )}
                   {group.notes.map((note, index) => {
                     const noteDate = new Date(note.createdAt);
                     const dayNumber = noteDate.getDate().toString().padStart(2, '0');
