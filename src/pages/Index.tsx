@@ -1456,22 +1456,12 @@ const Index = () => {
                 <img 
                   src={backIcon} 
                   alt="Back" 
-                  className="w-[30px] h-[30px]" 
+                  className="h-[24px] w-[24px]" 
                 />
               ) : (
-                <img src={hamburgerIcon} alt="Menu" className="w-[30px] h-[30px]" />
+                <img src={hamburgerIcon} alt="Menu" className="h-[24px] w-[24px] object-contain" />
               )}
             </button>
-            {!showSettings && !showAccountDetails && !showChangePassword && !showFolders && !user && savedNotes.length === 0 && (
-              <div className="absolute top-[35px] left-[40px] z-10">
-              <img 
-                src={text3Image} 
-                alt="Set up account" 
-                className="h-auto"
-                style={{ maxWidth: '280px' }}
-              />
-            </div>
-            )}
           </div>
           <div className="flex-1" />
         </div>
