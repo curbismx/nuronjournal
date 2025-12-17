@@ -1477,7 +1477,7 @@ const Index = () => {
                         className="border-b border-[hsl(0,0%,85%)] cursor-pointer"
                         onClick={() => navigate(`/note/${note.id}`)}
                       >
-                        <div className={index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-4 pb-4"}>
+                        <div className={viewMode === 'compact' ? "px-8 pt-[17px] pb-4" : index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-4 pb-4"}>
                           {/* Only show date for first note of each day - HIDDEN in compact view */}
                           {index === 0 && viewMode !== 'compact' && (
                             <div className="flex items-start gap-4 mb-4">
