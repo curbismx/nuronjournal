@@ -570,6 +570,7 @@ const Index = () => {
             folder_id: note.folder_id
           }));
           setSavedNotes(notes);
+          console.log('Loaded notes from Supabase:', notes.length);
           // CACHE TO LOCALSTORAGE for instant load next time
           localStorage.setItem('nuron-notes-cache', JSON.stringify(notes));
         }
@@ -577,6 +578,7 @@ const Index = () => {
         // Not logged in - load from localStorage
         const stored = localStorage.getItem('nuron-notes');
         setSavedNotes(stored ? JSON.parse(stored) : []);
+        console.log('Loaded notes from localStorage:', stored ? JSON.parse(stored).length : 0);
       }
     };
 

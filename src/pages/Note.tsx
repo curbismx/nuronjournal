@@ -1782,13 +1782,19 @@ const Note = () => {
     if (isDeletedRef.current) return;
     
     const noteContent = getNoteContent();
+    console.log('saveNote called, content:', noteContent);
+    console.log('contentBlocks:', contentBlocks);
+    
     const hasImages = contentBlocks.filter(b => b.type === 'image').length > 0;
     const hasAudio = audioUrlsRef.current.length > 0 || audioUrls.length > 0;
     
     // Save if there's content, images, or audio
     if (!noteContent.trim() && !hasImages && !hasAudio) {
+      console.log('No content to save, returning early');
       return;
     }
+    
+    console.log('Proceeding to save...');
 
     // Use ref to get the most up-to-date audioUrls (in case async operations haven't updated state yet)
     // Ref is always kept in sync with state via useEffect, so use it as the source of truth
@@ -1806,6 +1812,7 @@ const Note = () => {
 
     // ALWAYS check auth directly - don't use React state
     const { data: { session } } = await supabase.auth.getSession();
+    console.log('Session:', session ? 'logged in as ' + session.user.email : 'NOT logged in');
     
     if (session?.user) {
       // Logged in - save to Supabase
@@ -1821,6 +1828,7 @@ const Note = () => {
         audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : null,
         folder_id: currentFolderId && currentFolderId !== 'local-notes' ? currentFolderId : null
       });
+      console.log('Supabase upsert result:', error ? 'ERROR: ' + error.message : 'SUCCESS');
       
       if (!error) {
         localStorage.setItem('nuron-has-created-note', 'true');
@@ -1884,7 +1892,9 @@ const Note = () => {
   }, [imageViewerOpen]);
 
   const handleBack = async () => {
+    console.log('handleBack called');
     await saveNote();
+    console.log('saveNote completed');
     navigate('/');
   };
 
