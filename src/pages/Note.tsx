@@ -2246,12 +2246,12 @@ const Note = () => {
                   folder.id === currentFolderId ? 'bg-white/10 mx-[-32px] px-[32px]' : 'px-0'
                 }`}
               >
-                <img src={folderIcon} alt="Folder" className="w-[20px] h-[20px] mr-4 opacity-70" />
-                <span className={`flex-1 text-left text-[24px] font-outfit font-light ${folder.id === currentFolderId ? 'text-white/40' : 'text-white'}`}>
+                <img src={folderIcon} alt="Folder" className={`w-[20px] h-[20px] mr-4 ${folder.id === currentFolderId ? 'opacity-30' : 'opacity-70'}`} />
+                <span className={`flex-1 text-left text-[24px] font-outfit font-light ${folder.id === currentFolderId ? 'text-white/30' : 'text-white'}`}>
                   {folder.name}
                 </span>
                 <div className="p-2 m-0 mr-[20px] border-0 bg-transparent">
-                  <img src={folderArrow} alt="Select" className="h-[16px] w-auto opacity-70" />
+                  <img src={folderArrow} alt="Select" className={`h-[16px] w-auto ${folder.id === currentFolderId ? 'opacity-30' : 'opacity-70'}`} />
                 </div>
               </div>
             );
