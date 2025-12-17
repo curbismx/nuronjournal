@@ -20,6 +20,7 @@ export type Database = {
           default_view: string | null
           id: string
           name: string
+          sort_order: number | null
           updated_at: string | null
           user_id: string
         }
@@ -28,6 +29,7 @@ export type Database = {
           default_view?: string | null
           id?: string
           name: string
+          sort_order?: number | null
           updated_at?: string | null
           user_id: string
         }
@@ -36,6 +38,7 @@ export type Database = {
           default_view?: string | null
           id?: string
           name?: string
+          sort_order?: number | null
           updated_at?: string | null
           user_id?: string
         }
