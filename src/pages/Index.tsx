@@ -434,6 +434,7 @@ const Index = () => {
       if (event === 'SIGNED_IN') {
         setTimeout(() => {
           loadUserProfile(session!.user.id);
+          setShowFolders(false);
           
           // Check for local notes to merge
           const localNotes = localStorage.getItem('nuron-notes');
