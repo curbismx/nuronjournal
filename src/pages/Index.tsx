@@ -1405,13 +1405,11 @@ const Index = () => {
       {/* Scrollable content area */}
       <div 
         ref={scrollContainerRef}
-        className={`flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 transition-transform duration-300 ${showSettings ? 'translate-y-[100%]' : '-mt-[25px]'}`}
+        className={`flex-1 overflow-y-scroll overflow-x-hidden bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 transition-transform duration-300 ${showSettings ? 'translate-y-[100%]' : '-mt-[25px]'}`}
         style={{ 
           WebkitOverflowScrolling: 'touch',
           overscrollBehaviorY: 'auto',
-          minHeight: 0,
-          marginLeft: 0,
-          marginRight: 0
+          minHeight: 0
         }}
       >
         <div style={{ minHeight: 'calc(100% + 1px)' }}>
