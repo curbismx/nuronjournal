@@ -875,8 +875,8 @@ const Index = () => {
   };
 
 
-  // Show original start page when user has no notes
-  if (savedNotes.length === 0) {
+  // Show original start page only for logged-out users with no notes
+  if (savedNotes.length === 0 && !user) {
     return (
       <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: themeColors[theme] }}>
         {/* Header with settings button */}
