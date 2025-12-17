@@ -1233,7 +1233,7 @@ const Index = () => {
           </div>
           {/* Bottom section with text2Image */}
           {!showSettings && (
-            <div className="w-full flex justify-center px-8 pb-[120px]">
+            <div className="w-full flex justify-center px-8 pb-[220px]">
               <img src={text2Image} alt="Instructions" className="w-full max-w-[300px]" />
             </div>
           )}
