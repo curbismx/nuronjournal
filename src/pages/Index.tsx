@@ -236,38 +236,37 @@ const Index = () => {
         .order('created_at', { ascending: true });
       
       if (data && !error) {
-        const typedFolders = data.map(f => ({
-          ...f,
-          default_view: (f.default_view || 'collapsed') as 'collapsed' | 'compact'
-        }));
-        setFolders(typedFolders);
-        
-        // Set default folder if none selected
-        if (!currentFolder && typedFolders.length > 0) {
-          const notesFolder = typedFolders.find(f => f.name === 'Notes') || typedFolders[0];
-          setCurrentFolder(notesFolder);
-          setViewMode(notesFolder.default_view);
-          // Store current folder id for Note.tsx
-          localStorage.setItem('nuron-current-folder-id', notesFolder.id);
-        }
-      }
-      
-      // Create default "Notes" folder if user has no folders
-      if (data && data.length === 0) {
-        const { data: newFolder, error: createError } = await supabase
-          .from('folders')
-          .insert({ user_id: user.id, name: 'Notes', default_view: 'collapsed' })
-          .select()
-          .single();
-        
-        if (newFolder && !createError) {
-          const typedFolder: Folder = {
-            ...newFolder,
-            default_view: (newFolder.default_view || 'collapsed') as 'collapsed' | 'compact'
-          };
-          setFolders([typedFolder]);
-          setCurrentFolder(typedFolder);
-          localStorage.setItem('nuron-current-folder-id', typedFolder.id);
+        if (data.length === 0) {
+          // Only create default folder if user has NO folders at all
+          const { data: newFolder, error: createError } = await supabase
+            .from('folders')
+            .insert({ user_id: user.id, name: 'Notes', default_view: 'collapsed' })
+            .select()
+            .single();
+          
+          if (newFolder && !createError) {
+            const typedFolder: Folder = {
+              ...newFolder,
+              default_view: (newFolder.default_view || 'collapsed') as 'collapsed' | 'compact'
+            };
+            setFolders([typedFolder]);
+            setCurrentFolder(typedFolder);
+            setViewMode(typedFolder.default_view);
+            localStorage.setItem('nuron-current-folder-id', typedFolder.id);
+          }
+        } else {
+          const typedFolders = data.map(f => ({
+            ...f,
+            default_view: (f.default_view || 'collapsed') as 'collapsed' | 'compact'
+          }));
+          setFolders(typedFolders);
+          
+          if (!currentFolder) {
+            const notesFolder = typedFolders.find(f => f.name === 'Notes') || typedFolders[0];
+            setCurrentFolder(notesFolder);
+            setViewMode(notesFolder.default_view);
+            localStorage.setItem('nuron-current-folder-id', notesFolder.id);
+          }
         }
       }
     };
@@ -876,8 +875,8 @@ const Index = () => {
   };
 
 
-  // Show original start page if no notes
-  if (savedNotes.length === 0) {
+  // Show original start page only for truly new users (no notes AND no folder selected yet)
+  if (savedNotes.length === 0 && !currentFolder) {
     return (
       <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: themeColors[theme] }}>
         {/* Header with settings button */}
@@ -1456,10 +1455,10 @@ const Index = () => {
                 <img 
                   src={backIcon} 
                   alt="Back" 
-                  className="h-[24px] w-[24px]" 
+                  className="h-[12px] w-[12px]" 
                 />
               ) : (
-                <img src={hamburgerIcon} alt="Menu" className="h-[24px] w-[24px] object-contain" />
+                <img src={hamburgerIcon} alt="Menu" className="h-[12px] w-[12px] object-contain" />
               )}
             </button>
           </div>
@@ -1479,7 +1478,7 @@ const Index = () => {
                     onClick={openCreateFolder}
                     className="p-0 m-0 border-0 bg-transparent"
                   >
-                    <img src={folderPlusIcon} alt="Add Folder" className="w-[24px] h-[24px]" />
+                    <img src={folderPlusIcon} alt="Add Folder" className="w-[12px] h-[12px]" />
                   </button>
                 )
               ) : (
@@ -1518,13 +1517,13 @@ const Index = () => {
         }}
       >
         {/* Folders list */}
-        <div className="space-y-4 pt-[120px]">
+        <div className="space-y-4 pt-[70px]">
           {folders.map((folder) => (
             <div 
               key={folder.id}
               className="flex items-center gap-3 py-2"
             >
-              <img src={folderIcon} alt="Folder" className="w-[24px] h-[24px] opacity-60" />
+              <img src={folderIcon} alt="Folder" className="w-[10px] h-[10px] mr-4 opacity-70" />
               <button
                 onClick={() => selectFolder(folder)}
                 className="flex-1 text-left text-white text-[24px] font-outfit font-light"
@@ -1536,14 +1535,14 @@ const Index = () => {
                   onClick={() => openEditFolder(folder)}
                   className="p-2 m-0 border-0 bg-transparent"
                 >
-                  <img src={folderSettingsIcon} alt="Options" className="w-[20px] h-[20px] object-contain opacity-60" />
+                  <img src={folderSettingsIcon} alt="Options" className="w-[12px] h-[12px] opacity-70" />
                 </button>
               )}
               <button 
                 onClick={() => selectFolder(folder)}
                 className="p-2 m-0 border-0 bg-transparent"
               >
-                <img src={folderArrow} alt="Select" className="w-[12px] h-[12px] object-contain opacity-60" />
+                <img src={folderArrow} alt="Select" className="w-[8px] h-[8px] object-contain opacity-70" />
               </button>
             </div>
           ))}
@@ -1558,7 +1557,7 @@ const Index = () => {
             }}
             className="flex items-center gap-3 p-0 m-0 border-0 bg-transparent"
           >
-            <img src={settingsIcon} alt="Settings" className="w-[24px] h-[24px]" />
+            <img src={settingsIcon} alt="Settings" className="w-[10px] h-[10px] opacity-70" />
             <span className="text-white text-[18px] font-outfit font-light">Settings</span>
           </button>
         </div>
@@ -2163,7 +2162,7 @@ const Index = () => {
                   value={newFolderName}
                   onChange={(e) => setNewFolderName(e.target.value)}
                   placeholder="Enter folder name"
-                  className="w-full px-4 py-3 rounded-xl border border-[hsl(0,0%,85%)] text-[16px] font-outfit outline-none focus:border-[hsl(0,0%,70%)]"
+                  className="w-full px-4 py-3 rounded-xl border border-[hsl(0,0%,85%)] text-[16px] font-outfit text-black outline-none focus:border-[hsl(0,0%,70%)]"
                 />
               </div>
               
