@@ -2197,7 +2197,7 @@ const Note = () => {
         }}
       >
         {/* Folders list */}
-        <div className="space-y-4 pt-[70px]">
+        <div className="space-y-4 pt-[0px]">
           {folders.map((folder) => {
             const currentFolderId = localStorage.getItem('nuron-current-folder-id');
             const isSelected = selectedMoveFolder === folder.id;
