@@ -1521,7 +1521,7 @@ const Index = () => {
           {folders.map((folder) => (
             <div 
               key={folder.id}
-              className="flex items-center gap-3 py-2"
+              className={`flex items-center gap-3 py-2 px-4 ${currentFolder?.id === folder.id ? 'bg-[#353434] rounded-[20px]' : ''}`}
             >
               <img src={folderIcon} alt="Folder" className="w-[20px] h-[20px] mr-4 opacity-70" />
               <button
