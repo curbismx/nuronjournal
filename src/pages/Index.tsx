@@ -15,6 +15,7 @@ import text3Image from "@/assets/text3.png";
 import plusIcon from "@/assets/plusbig.png";
 import expandIcon from "@/assets/00expand-3.png";
 import condenseIcon from "@/assets/00condense-3.png";
+import listViewIcon from "@/assets/00listview.png";
 import floatingAddButton from "@/assets/bigredbuttonnoshadow.png";
 
 import backIcon from "@/assets/back.png";
@@ -79,7 +80,7 @@ const Index = () => {
     }
     return [];
   });
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'collapsed' | 'expanded' | 'compact'>('collapsed');
   const [showSettings, setShowSettings] = useState(false);
   const [showAccountDetails, setShowAccountDetails] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -561,7 +562,7 @@ const Index = () => {
     if (savedNotes.length > 0) {
       setVisibleMonthYear(new Date(savedNotes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase());
     }
-  }, [savedNotes, menuOpen]);
+  }, [savedNotes, viewMode]);
 
   // Intersection Observer for dynamic month/year header
   useEffect(() => {
@@ -1083,10 +1084,10 @@ const Index = () => {
                 <img src={searchIcon} alt="Search" className="h-[24px] w-auto" />
               </button>
               <button 
-                onClick={() => setMenuOpen(!menuOpen)}
+                onClick={() => setViewMode(prev => prev === 'collapsed' ? 'expanded' : prev === 'expanded' ? 'compact' : 'collapsed')}
                 className="p-0 m-0 border-0 bg-transparent"
               >
-                <img src={menuOpen ? condenseIcon : expandIcon} alt="Menu" className="h-[24px] w-auto" />
+                <img src={viewMode === 'collapsed' ? expandIcon : viewMode === 'expanded' ? condenseIcon : listViewIcon} alt="Menu" className="h-[24px] w-auto" />
               </button>
             </div>
           )}
@@ -1458,8 +1459,8 @@ const Index = () => {
                         onClick={() => navigate(`/note/${note.id}`)}
                       >
                         <div className={index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-4 pb-4"}>
-                          {/* Only show date for first note of each day */}
-                          {index === 0 && (
+                          {/* Only show date for first note of each day - HIDDEN in compact view */}
+                          {index === 0 && viewMode !== 'compact' && (
                             <div className="flex items-start gap-4 mb-4">
                               <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
                                 {dayNumber}
@@ -1472,7 +1473,7 @@ const Index = () => {
                           
                 {/* Title and Body Container */}
                 <div className="min-w-0">
-                  {menuOpen ? (
+                  {viewMode === 'expanded' ? (
                     /* EXPANDED VIEW */
                     <div>
                       <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 break-words overflow-wrap-anywhere ${index === 0 ? '-mt-[10px]' : ''}`}>
@@ -1493,8 +1494,27 @@ const Index = () => {
                         <div style={{ clear: 'both' }} />
                       </div>
                     </div>
+                  ) : viewMode === 'compact' ? (
+                    /* COMPACT VIEW - no date, smaller layout */
+                    <div className="flex items-center gap-[10px]">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-1 break-words overflow-wrap-anywhere truncate">
+                          {note.title || 'Untitled'}
+                        </h3>
+                        <p className="text-[12px] font-outfit text-[hsl(0,0%,50%)] line-clamp-1 break-words overflow-wrap-anywhere">
+                          {preview || 'No content'}
+                        </p>
+                      </div>
+                      {firstImage && (
+                        <img 
+                          src={firstImage.url} 
+                          alt=""
+                          className="w-[50px] h-[50px] rounded-[8px] object-cover flex-shrink-0"
+                        />
+                      )}
+                    </div>
                   ) : (
-                    /* COLLAPSED VIEW */
+                    /* COLLAPSED VIEW (default) */
                     <div className="flex items-center gap-[15px]">
                       <div className="flex-1 min-w-0">
                         <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 break-words overflow-wrap-anywhere ${index === 0 ? '-mt-[10px]' : ''}`}>
