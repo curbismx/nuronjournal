@@ -2193,7 +2193,7 @@ const Note = () => {
           top: `calc(150px + env(safe-area-inset-top))`,
           paddingLeft: `calc(30px + env(safe-area-inset-left))`,
           paddingRight: `calc(32px + env(safe-area-inset-right))`,
-          paddingTop: '30px'
+          paddingTop: '0px'
         }}
       >
         {/* Folders list */}
