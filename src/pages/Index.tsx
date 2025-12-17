@@ -906,13 +906,13 @@ const Index = () => {
               <img 
                 src={backIcon} 
                 alt="Back" 
-                className="w-[30px] h-[30px]" 
+                className="h-[24px] w-[24px]" 
               />
             ) : (
               <img 
                 src={settingsIcon} 
                 alt="Settings" 
-                className="w-[30px] h-[30px]" 
+                className="h-[24px] w-[24px]" 
               />
             )}
           </button>
@@ -1455,10 +1455,10 @@ const Index = () => {
                 <img 
                   src={backIcon} 
                   alt="Back" 
-                  className="h-[12px] w-[12px]" 
+                  className="h-[24px] w-[24px]" 
                 />
               ) : (
-                <img src={hamburgerIcon} alt="Menu" className="h-[12px] w-[12px] object-contain" />
+                <img src={hamburgerIcon} alt="Menu" className="h-[24px] w-[24px] object-contain" />
               )}
             </button>
           </div>
@@ -1478,7 +1478,7 @@ const Index = () => {
                     onClick={openCreateFolder}
                     className="p-0 m-0 border-0 bg-transparent"
                   >
-                    <img src={folderPlusIcon} alt="Add Folder" className="w-[12px] h-[12px]" />
+                    <img src={folderPlusIcon} alt="Add Folder" className="w-[24px] h-[24px]" />
                   </button>
                 )
               ) : (
@@ -1523,7 +1523,7 @@ const Index = () => {
               key={folder.id}
               className="flex items-center gap-3 py-2"
             >
-              <img src={folderIcon} alt="Folder" className="w-[10px] h-[10px] mr-4 opacity-70" />
+              <img src={folderIcon} alt="Folder" className="w-[20px] h-[20px] mr-4 opacity-70" />
               <button
                 onClick={() => selectFolder(folder)}
                 className="flex-1 text-left text-white text-[24px] font-outfit font-light"
@@ -1535,14 +1535,14 @@ const Index = () => {
                   onClick={() => openEditFolder(folder)}
                   className="p-2 m-0 border-0 bg-transparent"
                 >
-                  <img src={folderSettingsIcon} alt="Options" className="w-[12px] h-[12px] opacity-70" />
+                  <img src={folderSettingsIcon} alt="Options" className="w-[24px] h-[24px] opacity-70" />
                 </button>
               )}
               <button 
                 onClick={() => selectFolder(folder)}
                 className="p-2 m-0 border-0 bg-transparent"
               >
-                <img src={folderArrow} alt="Select" className="w-[8px] h-[8px] object-contain opacity-70" />
+                <img src={folderArrow} alt="Select" className="w-[16px] h-[16px] opacity-70" />
               </button>
             </div>
           ))}
@@ -1557,7 +1557,7 @@ const Index = () => {
             }}
             className="flex items-center gap-3 p-0 m-0 border-0 bg-transparent"
           >
-            <img src={settingsIcon} alt="Settings" className="w-[10px] h-[10px] opacity-70" />
+            <img src={settingsIcon} alt="Settings" className="w-[20px] h-[20px] opacity-70" />
             <span className="text-white text-[18px] font-outfit font-light">Settings</span>
           </button>
         </div>
