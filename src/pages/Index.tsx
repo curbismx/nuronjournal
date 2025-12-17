@@ -122,12 +122,7 @@ const Index = () => {
     pink: plusIconPink
   };
 
-  const themeSettingsIcons = {
-    default: themeIconRed,
-    green: themeIconGreen,
-    blue: themeIconBlue,
-    pink: themeIconPink
-  };
+  // Theme colors are used directly for the selector circles
 
   const [showMergeDialog, setShowMergeDialog] = useState(false);
   const [localNotesToMerge, setLocalNotesToMerge] = useState<SavedNote[]>([]);
@@ -808,10 +803,9 @@ const Index = () => {
                         className="flex flex-col items-center relative"
                         style={{ height: '54px' }}
                       >
-                        <img 
-                          src={themeSettingsIcons[t]} 
-                          alt={t} 
-                          className="w-[40px] h-[40px]"
+                        <div 
+                          className="w-[40px] h-[40px] rounded-full border-2 border-white/30"
+                          style={{ backgroundColor: themeColors[t] }}
                         />
                         {theme === t && (
                           <div 
@@ -920,10 +914,9 @@ const Index = () => {
                         className="flex flex-col items-center relative"
                         style={{ height: '54px' }}
                       >
-                        <img 
-                          src={themeSettingsIcons[t]} 
-                          alt={t} 
-                          className="w-[40px] h-[40px]"
+                        <div 
+                          className="w-[40px] h-[40px] rounded-full border-2 border-white/30"
+                          style={{ backgroundColor: themeColors[t] }}
                         />
                         {theme === t && (
                           <div 
@@ -1239,10 +1232,9 @@ const Index = () => {
                       className="flex flex-col items-center relative"
                       style={{ height: '54px' }}
                     >
-                      <img 
-                        src={themeSettingsIcons[t]} 
-                        alt={t} 
-                        className="w-[40px] h-[40px]"
+                      <div 
+                        className="w-[40px] h-[40px] rounded-full border-2 border-white/30"
+                        style={{ backgroundColor: themeColors[t] }}
                       />
                       {theme === t && (
                         <div 
@@ -1381,10 +1373,9 @@ const Index = () => {
                       className="flex flex-col items-center relative"
                       style={{ height: '54px' }}
                     >
-                      <img 
-                        src={themeSettingsIcons[t]} 
-                        alt={t} 
-                        className="w-[40px] h-[40px]"
+                      <div 
+                        className="w-[40px] h-[40px] rounded-full border-2 border-white/30"
+                        style={{ backgroundColor: themeColors[t] }}
                       />
                       {theme === t && (
                         <div 
