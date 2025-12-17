@@ -2202,6 +2202,11 @@ const Note = () => {
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
             {showMoveNote ? 'FOLDERS' : monthYear}
           </h1>
+          {showMoveNote && (
+            <p className="text-white/60 text-[16px] font-outfit font-light mt-2">
+              Please choose the folder to move the note to
+            </p>
+          )}
           {!showMoveNote && (
             <button 
               onClick={() => setMenuOpen(!menuOpen)}
@@ -2244,6 +2249,9 @@ const Note = () => {
                 <img src={folderIcon} alt="Folder" className="w-[20px] h-[20px] mr-4 opacity-70" />
                 <span className="flex-1 text-left text-white text-[24px] font-outfit font-light">
                   {folder.name}
+                  {folder.id === currentFolderId && (
+                    <span className="text-red-500 text-[16px] ml-2">current</span>
+                  )}
                 </span>
                 <div className="p-2 m-0 mr-[20px] border-0 bg-transparent">
                   <img src={folderArrow} alt="Select" className="h-[16px] w-auto opacity-70" />
