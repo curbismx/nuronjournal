@@ -1584,7 +1584,7 @@ const themeSettingsIcons = {
                 </div>
               ) : (
                 /* Icons - right aligned */
-                <div className="flex-1 flex items-center justify-end gap-[25px] pr-[8px]">
+                <div className="flex-1 flex items-center justify-end gap-[25px] pl-8 pr-0">
                   <button 
                     onClick={() => setIsSearching(true)}
                     className="p-0 m-0 border-0 bg-transparent"
