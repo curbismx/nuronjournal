@@ -1626,6 +1626,10 @@ const themeSettingsIcons = {
               }}
             >
               <div style={{ minHeight: 'calc(100% + 1px)' }}>
+                {/* Top divider line - only in list view (compact) */}
+                {viewMode === 'compact' && (
+                  <div className="border-b border-[hsl(0,0%,85%)]" />
+                )}
                 {(isSearching ? filteredGroupedNotes : groupedNotes).map((group, groupIndex, allGroups) => {
                   const groupMonthYear = new Date(group.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
                   const prevGroup = groupIndex > 0 ? allGroups[groupIndex - 1] : null;
