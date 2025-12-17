@@ -29,6 +29,9 @@ import folderIcon from "@/assets/folder_icon.png";
 import folderArrow from "@/assets/folder_arrow.png";
 import folderSettingsIcon from "@/assets/folder_settings.png";
 import folderPlusIcon from "@/assets/folder_plus.png";
+import greySearchIcon from "@/assets/grey_search.png";
+import greyListViewIcon from "@/assets/grey_listview.png";
+import greyExpandViewIcon from "@/assets/grey_expandview.png";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
@@ -1495,8 +1498,27 @@ const themeSettingsIcons = {
           <div 
             className={`absolute inset-0 bg-journal-content flex flex-col transition-transform duration-300 ${desktopShowSettings ? 'translate-x-full' : 'translate-x-0'}`}
           >
-            {/* Invisible 50px header */}
-            <div className="h-[50px] flex-shrink-0 bg-journal-content" />
+            {/* 50px header with icons */}
+            <div className="h-[50px] flex-shrink-0 bg-journal-content flex items-center justify-end gap-[20px] pr-8">
+              <img 
+                src={plusIconRed} 
+                alt="New note" 
+                className="w-[30px] h-[30px] cursor-pointer" 
+                onClick={() => setDesktopSelectedNoteId('new')}
+              />
+              <img 
+                src={viewMode === 'collapsed' ? greyExpandViewIcon : greyListViewIcon} 
+                alt="Toggle view" 
+                className="w-[24px] h-[24px] cursor-pointer" 
+                onClick={() => setViewMode(prev => prev === 'collapsed' ? 'compact' : 'collapsed')}
+              />
+              <img 
+                src={greySearchIcon} 
+                alt="Search" 
+                className="w-[24px] h-[24px] cursor-pointer" 
+                onClick={() => setIsSearching(!isSearching)}
+              />
+            </div>
             
             {/* Scrollable notes list */}
             <div 
