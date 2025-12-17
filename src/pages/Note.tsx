@@ -1813,8 +1813,8 @@ const Note = () => {
     const hasImages = currentContentBlocks.filter(b => b.type === 'image').length > 0;
     const hasAudio = currentAudioUrls.length > 0 || audioUrls.length > 0;
     
-    // Save if there's content, images, or audio
-    if (!noteContent.trim() && !hasImages && !hasAudio) {
+    // Save if there's title, content, images, or audio
+    if (!noteTitle.trim() && !noteContent.trim() && !hasImages && !hasAudio) {
       console.log('No content to save, returning early');
       return;
     }
