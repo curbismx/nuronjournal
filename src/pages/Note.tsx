@@ -35,6 +35,7 @@ import recorderIcon from '@/assets/00recorder.png';
 import recorderIconGreen from '@/assets/00recorder_green.png';
 import recorderIconBlue from '@/assets/00recorder_blue.png';
 import recorderIconPink from '@/assets/00recorder_pink.png';
+import moveIcon from '@/assets/move.png';
 import { Sun, Cloud, CloudRain, CloudSnow, CloudDrizzle, CloudFog, CloudLightning } from 'lucide-react';
 
 type ContentBlock = 
@@ -112,6 +113,8 @@ const Note = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const touchStartX = useRef<number>(0);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [showMoveNote, setShowMoveNote] = useState(false);
+  const [folders, setFolders] = useState<{id: string; name: string}[]>([]);
   const [showWeatherSetting, setShowWeatherSetting] = useState(() => {
     const stored = localStorage.getItem('nuron-show-weather');
     return stored !== null ? JSON.parse(stored) : true;
@@ -230,6 +233,38 @@ const Note = () => {
     });
   }, []);
 
+  useEffect(() => {
+    const loadFolders = async () => {
+      if (!showMoveNote) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data } = await supabase
+          .from('folders')
+          .select('id, name')
+          .eq('user_id', session.user.id)
+          .order('sort_order', { ascending: true });
+        if (data) setFolders(data);
+      }
+    };
+    loadFolders();
+  }, [showMoveNote]);
+
+  const handleMoveNote = async (folderId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user || !noteIdRef.current) return;
+    
+    await supabase
+      .from('notes')
+      .update({ folder_id: folderId })
+      .eq('id', noteIdRef.current);
+    
+    localStorage.setItem('nuron-current-folder-id', folderId);
+    
+    setTimeout(() => {
+      setShowMoveNote(false);
+      setMenuOpen(false);
+    }, 300);
+  };
 
   const generateTitle = async (text: string) => {
     try {
@@ -2077,13 +2112,15 @@ const Note = () => {
         }}
       >
         <div className="flex items-center justify-between mb-auto -mt-[15px]">
-          <Button
-            variant="ghost"
-            onClick={handleBack}
-            className="text-journal-header-foreground hover:bg-journal-header-foreground/10 p-0 h-auto w-auto"
-          >
-            <img src={backIcon} alt="Back" className="w-[30px] h-[30px]" />
-          </Button>
+          {!showMoveNote && (
+            <Button
+              variant="ghost"
+              onClick={handleBack}
+              className="text-journal-header-foreground hover:bg-journal-header-foreground/10 p-0 h-auto w-auto"
+            >
+              <img src={backIcon} alt="Back" className="w-[30px] h-[30px]" />
+            </Button>
+          )}
           <div className="flex-1" />
         </div>
         <div className="relative mt-[41px]">
@@ -2102,10 +2139,47 @@ const Note = () => {
         </div>
       </header>
 
+      {/* Move Note Folders Panel */}
+      {showMoveNote && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center" style={{ backgroundColor: themeColors[theme] }}>
+          <div className="w-full max-w-sm px-8">
+            <h2 className="text-white/90 text-[20px] font-outfit font-semibold tracking-wider text-center mb-8">
+              MOVE TO FOLDER
+            </h2>
+            <div className="flex flex-col gap-3">
+              {folders.map((folder) => {
+                const currentFolderId = localStorage.getItem('nuron-current-folder-id');
+                const isCurrentFolder = folder.id === currentFolderId;
+                return (
+                  <button
+                    key={folder.id}
+                    onClick={() => handleMoveNote(folder.id)}
+                    className={`w-full text-left py-3 px-4 rounded-lg transition-all duration-300 ${
+                      isCurrentFolder ? 'bg-white/20' : 'bg-white/5 hover:bg-white/10'
+                    } active:bg-white/40`}
+                  >
+                    <span className="text-white font-outfit text-[18px] flex items-center justify-between">
+                      {folder.name}
+                      {isCurrentFolder && <span className="text-white/60 text-[14px]">(current)</span>}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setShowMoveNote(false)}
+              className="mt-8 text-white/60 text-[16px] font-outfit w-full text-center"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Scrollable content area */}
       <div 
         ref={scrollContainerRef}
-        className={`flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 -mt-[25px] transition-shadow duration-300 ${isRewriting ? 'ai-rewriting' : ''}`}
+        className={`flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 -mt-[25px] transition-all duration-300 ${isRewriting ? 'ai-rewriting' : ''} ${showMoveNote ? 'translate-y-[100%]' : ''}`}
         style={{ 
           WebkitOverflowScrolling: 'touch',
           overscrollBehaviorY: 'auto',
@@ -2528,6 +2602,15 @@ const Note = () => {
             >
               <img src={addImageIcon} alt="" className="w-6 h-6" />
               <span className="text-gray-600 font-outfit">Add Image</span>
+            </button>
+            <button 
+              onClick={() => {
+                setShowMoveNote(true);
+              }}
+              className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
+            >
+              <img src={moveIcon} alt="" className="w-6 h-6" />
+              <span className="text-gray-600 font-outfit">Move Note</span>
             </button>
             <button 
               onClick={() => handleMenuAction('share')} 
