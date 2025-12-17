@@ -1441,8 +1441,7 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
 
         >
 
-          <div className="flex items-center justify-between mb-8">
-            <span className="text-white text-[20px] font-outfit font-light tracking-wider">FOLDERS</span>
+          <div className="flex items-center justify-end mb-8">
             {user && (
               <button onClick={openCreateFolder}>
                 <img src={folderPlusIcon} alt="Add" className="w-[20px] h-[20px] opacity-70" />
@@ -1468,7 +1467,7 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
                   <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
                   <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
                 </button>
-                <button onClick={() => openEditFolder(folder)}>
+                <button onClick={() => openEditFolder(folder)} className="mr-[5px]">
                   <img src={threeDotsIcon} alt="Options" className="h-[18px] w-auto opacity-70" />
                 </button>
               </div>
@@ -1493,50 +1492,59 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
         >
           {/* Notes list - slides right when settings shown */}
           <div 
-            className={`absolute inset-0 bg-journal-content overflow-y-auto transition-transform duration-300 ${desktopShowSettings ? 'translate-x-full' : 'translate-x-0'}`}
+            className={`absolute inset-0 bg-journal-content flex flex-col transition-transform duration-300 ${desktopShowSettings ? 'translate-x-full' : 'translate-x-0'}`}
           >
-            {savedNotes.filter(n => !currentFolder || n.folder_id === currentFolder.id || !n.folder_id).map((note) => {
-              const noteDate = new Date(note.createdAt);
-              const dayNumber = noteDate.getDate().toString().padStart(2, '0');
-              const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
-              const preview = getNotePreview(note);
-              const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; url: string } | undefined;
-              
-              return (
-                <div
-                  key={note.id}
-                  onClick={() => setDesktopSelectedNoteId(note.id)}
-                  className={`px-8 py-4 border-b border-[hsl(0,0%,85%)] cursor-pointer ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'}`}
-                >
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
-                      {dayNumber}
+            {/* Invisible 50px header */}
+            <div className="h-[50px] flex-shrink-0 bg-journal-content" />
+            
+            {/* Scrollable notes list - scrolls under the header */}
+            <div className="flex-1 overflow-y-auto">
+              {savedNotes.filter(n => !currentFolder || n.folder_id === currentFolder.id || !n.folder_id).map((note) => {
+                const noteDate = new Date(note.createdAt);
+                const dayNumber = noteDate.getDate().toString().padStart(2, '0');
+                const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+                const preview = getNotePreview(note);
+                const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; url: string } | undefined;
+                
+                return (
+                  <div
+                    key={note.id}
+                    onClick={() => setDesktopSelectedNoteId(note.id)}
+                    className={`px-8 py-4 border-b border-[hsl(0,0%,85%)] cursor-pointer ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'}`}
+                  >
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
+                        {dayNumber}
+                      </div>
+                      <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
+                        {dayName}
+                      </div>
                     </div>
-                    <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
-                      {dayName}
+                    <div className="flex items-center gap-[15px]">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-2">{note.title || 'Untitled'}</h3>
+                        <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2">{preview || '-'}</p>
+                      </div>
+                      {firstImage && (
+                        <img src={firstImage.url} alt="" className="w-[70px] h-[70px] rounded-[10px] object-cover" />
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-[15px]">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-2">{note.title || 'Untitled'}</h3>
-                      <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2">{preview || '-'}</p>
-                    </div>
-                    {firstImage && (
-                      <img src={firstImage.url} alt="" className="w-[70px] h-[70px] rounded-[10px] object-cover" />
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
 
           {/* Settings panel - slides in from left */}
           <div 
-            className={`absolute inset-0 overflow-y-auto transition-transform duration-300 ${desktopShowSettings ? 'translate-x-0' : '-translate-x-full'}`}
+            className={`absolute inset-0 flex flex-col overflow-hidden transition-transform duration-300 ${desktopShowSettings ? 'translate-x-0' : '-translate-x-full'}`}
             style={{ backgroundColor: themeColors[theme] }}
           >
-            {/* Back button */}
-            <div className="p-6">
+            {/* Invisible 50px header for settings too */}
+            <div className="h-[50px] flex-shrink-0" style={{ backgroundColor: themeColors[theme] }} />
+            
+            {/* Scrollable settings content */}
+            <div className="flex-1 overflow-y-auto px-8">
               <button 
                 onClick={() => {
                   if (desktopShowChangePassword) {
@@ -1854,12 +1862,17 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
 
         <div 
 
-          className="bg-journal-content overflow-y-auto"
+          className="bg-journal-content flex flex-col"
 
           style={{ width: '50%' }}
 
         >
 
+          {/* Invisible 50px header */}
+          <div className="h-[50px] flex-shrink-0 bg-journal-content" />
+          
+          {/* Scrollable note content */}
+          <div className="flex-1 overflow-y-auto">
           {desktopSelectedNoteId && desktopSelectedNoteId !== 'new' ? (
 
             (() => {
@@ -1933,6 +1946,7 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
             </div>
 
           )}
+          </div>
 
         </div>
 
