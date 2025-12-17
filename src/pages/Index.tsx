@@ -2031,7 +2031,7 @@ const Index = () => {
                           {note.title || 'Untitled'}
                         </h3>
                         <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-1 break-words overflow-wrap-anywhere">
-                          {preview || 'No content'}
+                          {preview || '-'}
                         </p>
                       </div>
                       {firstImage && (
@@ -2050,7 +2050,7 @@ const Index = () => {
                           {note.title || 'Untitled'}
                         </h3>
                         <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px] break-words overflow-wrap-anywhere">
-                          {preview || 'No content'}
+                          {preview || '-'}
                         </p>
                       </div>
                       {firstImage && (
