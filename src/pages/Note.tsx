@@ -1816,7 +1816,10 @@ const Note = () => {
         localStorage.setItem('nuron-notes-cache', JSON.stringify(cached));
       }
       
-      if (error) console.error('Error saving to Supabase:', error);
+      if (error) {
+        console.error('Error saving to Supabase:', error);
+        toast.error('Failed to save note: ' + error.message);
+      }
     } else {
       // Not logged in - save to localStorage
       const notes = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
@@ -1831,6 +1834,17 @@ const Note = () => {
         notes.unshift(noteDataWithAudio);
       }
       localStorage.setItem('nuron-notes', JSON.stringify(notes));
+    }
+
+    // Safety: Always update local cache as backup
+    const allCached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
+    const noteExistsInCache = allCached.some((n: any) => n.id === noteData.id);
+    if (!noteExistsInCache) {
+      allCached.unshift({
+        ...noteData,
+        folder_id: localStorage.getItem('nuron-current-folder-id') || null
+      });
+      localStorage.setItem('nuron-notes-cache', JSON.stringify(allCached));
     }
   };
 
