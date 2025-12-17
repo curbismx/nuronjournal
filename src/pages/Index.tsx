@@ -1477,27 +1477,40 @@ const Index = () => {
         </div>
         <div className="relative mt-[41px]">
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
-            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : showFolders ? '' : currentFolder?.name?.toUpperCase() || ''}
+            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : showFolders ? 'FOLDERS' : currentFolder?.name?.toUpperCase() || ''}
           </h1>
-          {!showSettings && !showAccountDetails && !showChangePassword && !showFolders && (
+          {!showSettings && !showAccountDetails && !showChangePassword && (
               <div 
                 className="absolute top-[-5px] right-0 flex items-center gap-[30px]"
               >
-              <button 
-                onClick={() => {
-                  setIsSearching(!isSearching);
-                  if (isSearching) setSearchQuery("");
-                }}
-                className="p-0 m-0 mr-[20px] border-0 bg-transparent"
-              >
-                <img src={searchIcon} alt="Search" className="h-[24px] w-auto" />
-              </button>
-              <button 
-                onClick={() => setViewMode(prev => prev === 'collapsed' ? 'compact' : 'collapsed')}
-                className="p-0 m-0 border-0 bg-transparent"
-              >
-                <img src={viewMode === 'collapsed' ? condenseIcon : listViewIcon} alt="Menu" className="h-[24px] w-[24px] object-contain" />
-              </button>
+              {showFolders ? (
+                user && (
+                  <button 
+                    onClick={openCreateFolder}
+                    className="p-0 m-0 border-0 bg-transparent"
+                  >
+                    <img src={folderPlusIcon} alt="Add Folder" className="w-[24px] h-[24px]" />
+                  </button>
+                )
+              ) : (
+                <>
+                  <button 
+                    onClick={() => {
+                      setIsSearching(!isSearching);
+                      if (isSearching) setSearchQuery("");
+                    }}
+                    className="p-0 m-0 mr-[20px] border-0 bg-transparent"
+                  >
+                    <img src={searchIcon} alt="Search" className="h-[24px] w-auto" />
+                  </button>
+                  <button 
+                    onClick={() => setViewMode(prev => prev === 'collapsed' ? 'compact' : 'collapsed')}
+                    className="p-0 m-0 border-0 bg-transparent"
+                  >
+                    <img src={viewMode === 'collapsed' ? condenseIcon : listViewIcon} alt="Menu" className="h-[24px] w-[24px] object-contain" />
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -1514,21 +1527,8 @@ const Index = () => {
           paddingTop: '30px'
         }}
       >
-        {/* Header row with FOLDERS title and plus icon */}
-        <div className="flex items-center justify-between mb-6">
-          <span className="text-white text-[24px] font-outfit font-light tracking-wider">FOLDERS</span>
-          {user && (
-            <button 
-              onClick={openCreateFolder}
-              className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
-            >
-              <img src={folderPlusIcon} alt="Add folder" className="w-[24px] h-[24px]" />
-            </button>
-          )}
-        </div>
-        
         {/* Folders list */}
-        <div className="space-y-4">
+        <div className="space-y-4 pt-[120px]">
           {folders.map((folder) => (
             <div 
               key={folder.id}
@@ -1537,7 +1537,7 @@ const Index = () => {
               <img src={folderIcon} alt="Folder" className="w-[24px] h-[24px] opacity-60" />
               <button
                 onClick={() => selectFolder(folder)}
-                className="flex-1 text-left text-white text-[20px] font-outfit font-light"
+                className="flex-1 text-left text-white text-[24px] font-outfit font-light"
               >
                 {folder.name}
               </button>
@@ -1560,7 +1560,7 @@ const Index = () => {
         </div>
         
         {/* Settings link at bottom */}
-        <div className="absolute bottom-8 left-8">
+        <div className="absolute left-8" style={{ bottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
           <button
             onClick={() => {
               setShowFolders(false);
