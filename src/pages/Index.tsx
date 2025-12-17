@@ -906,7 +906,7 @@ const Index = () => {
               className="w-[30px] h-[30px]"
             />
           </button>
-          {!showSettings && !showAccountDetails && !showChangePassword && !showFolders && !user && (
+          {!showSettings && !showAccountDetails && !showChangePassword && !user && (
              <div className="absolute top-[30px] left-[40px]">
              <img 
                src={text3Image} 
