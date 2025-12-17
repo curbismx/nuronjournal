@@ -1553,7 +1553,7 @@ const Index = () => {
                 onClick={() => selectFolder(folder)}
                 className="p-2 m-0 border-0 bg-transparent"
               >
-                <img src={folderArrow} alt="Select" className="w-[20px] h-[20px] object-contain opacity-60" />
+                <img src={folderArrow} alt="Select" className="w-[12px] h-[12px] object-contain opacity-60" />
               </button>
             </div>
           ))}
