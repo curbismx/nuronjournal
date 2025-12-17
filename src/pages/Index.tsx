@@ -1533,7 +1533,7 @@ const Index = () => {
               {user && folder.id !== 'local-notes' && (
                 <button 
                   onClick={() => openEditFolder(folder)}
-                  className="p-2 m-0 border-0 bg-transparent"
+                  className="p-2 m-0 mr-[20px] border-0 bg-transparent"
                 >
                   <img src={folderSettingsIcon} alt="Options" className="w-[20px] h-auto opacity-70" />
                 </button>
