@@ -1087,7 +1087,7 @@ const Index = () => {
                 onClick={() => setViewMode(prev => prev === 'collapsed' ? 'expanded' : prev === 'expanded' ? 'compact' : 'collapsed')}
                 className="p-0 m-0 border-0 bg-transparent"
               >
-                <img src={viewMode === 'collapsed' ? expandIcon : viewMode === 'expanded' ? condenseIcon : listViewIcon} alt="Menu" className="h-[24px] w-auto" />
+                <img src={viewMode === 'collapsed' ? expandIcon : viewMode === 'expanded' ? condenseIcon : listViewIcon} alt="Menu" className="h-[24px] w-[24px] object-contain" />
               </button>
             </div>
           )}
