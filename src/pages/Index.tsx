@@ -63,6 +63,7 @@ interface Folder {
   default_view: 'collapsed' | 'compact';
   created_at: string;
   updated_at: string;
+  sort_order?: number;
 }
 
 const Index = () => {
@@ -139,6 +140,8 @@ const Index = () => {
   const [newFolderDefaultView, setNewFolderDefaultView] = useState<'collapsed' | 'compact'>('collapsed');
   const [showDeleteFolderConfirm, setShowDeleteFolderConfirm] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [draggedFolder, setDraggedFolder] = useState<string | null>(null);
+  const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
 
   const themeColors = {
     default: '#2E2E2E',
@@ -240,7 +243,7 @@ const Index = () => {
         .from('folders')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
+        .order('sort_order', { ascending: true });
       
       if (data && !error) {
         if (data.length === 0) {
@@ -431,6 +434,28 @@ const Index = () => {
     setViewMode(folder.default_view);
     setShowFolders(false);
     localStorage.setItem('nuron-current-folder-id', folder.id);
+  };
+
+  const updateFolderOrder = async (folderId: string, newIndex: number) => {
+    if (!user) return;
+    
+    const newFolders = [...folders];
+    const oldIndex = newFolders.findIndex(f => f.id === folderId);
+    if (oldIndex === -1) return;
+    
+    const [movedFolder] = newFolders.splice(oldIndex, 1);
+    newFolders.splice(newIndex, 0, movedFolder);
+    
+    // Update local state immediately
+    setFolders(newFolders);
+    
+    // Update sort_order in database for all folders
+    for (let i = 0; i < newFolders.length; i++) {
+      await supabase
+        .from('folders')
+        .update({ sort_order: i })
+        .eq('id', newFolders[i].id);
+    }
   };
 
   // Check authentication status and set up auth listener
@@ -1520,7 +1545,44 @@ const Index = () => {
           {folders.map((folder) => (
             <div 
               key={folder.id}
-              className={`flex items-center gap-3 py-2 ${currentFolder?.id === folder.id ? 'bg-white/10 mx-[-32px] px-[32px]' : 'px-0'}`}
+              draggable
+              onDragStart={(e) => {
+                setDraggedFolder(folder.id);
+                e.dataTransfer.effectAllowed = 'move';
+              }}
+              onDragEnd={() => {
+                setDraggedFolder(null);
+                setDragOverFolder(null);
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (draggedFolder && draggedFolder !== folder.id) {
+                  setDragOverFolder(folder.id);
+                }
+              }}
+              onDragLeave={() => {
+                setDragOverFolder(null);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (draggedFolder && draggedFolder !== folder.id) {
+                  const newIndex = folders.findIndex(f => f.id === folder.id);
+                  updateFolderOrder(draggedFolder, newIndex);
+                }
+                setDraggedFolder(null);
+                setDragOverFolder(null);
+              }}
+              className={`flex items-center gap-3 py-2 transition-all duration-500 ease-out ${
+                currentFolder?.id === folder.id ? 'bg-white/10 mx-[-32px] px-[32px]' : 'px-0'
+              } ${
+                draggedFolder === folder.id ? 'opacity-50 scale-[0.98]' : ''
+              } ${
+                dragOverFolder === folder.id ? 'border-t-2 border-white/50' : ''
+              }`}
+              style={{
+                cursor: 'grab',
+                transition: 'transform 0.5s ease-out, opacity 0.3s ease-out'
+              }}
             >
               <img src={folderIcon} alt="Folder" className="w-[20px] h-[20px] mr-4 opacity-70" />
               <button
