@@ -1597,8 +1597,13 @@ query = query.eq('folder_id', currentFolder.id);
                   <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
                   <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
                 </button>
-                <button onClick={() => openEditFolder(folder)} className="mr-[5px]">
-                  <img src={threeDotsIcon} alt="Options" className="w-[20px] h-[20px] opacity-70" />
+                <button onClick={() => openEditFolder(folder)} className="mr-[5px] p-0 m-0 border-0 bg-transparent">
+                  <img 
+                    src={threeDotsIcon} 
+                    alt="Options" 
+                    style={{ width: '4px', height: '18px' }} 
+                    className="opacity-70" 
+                  />
                 </button>
               </div>
             ))}
