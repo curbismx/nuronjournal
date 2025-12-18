@@ -1536,7 +1536,7 @@ query = query.eq('folder_id', currentFolder.id);
           style={{ width: '20%', backgroundColor: themeColors[theme] }}
         >
           {/* Header area - 50px to match Column 2 */}
-          <div className="h-[50px] flex items-center justify-end px-[20px]">
+          <div className="h-[50px] flex items-center justify-end pl-[20px] pr-[16px]">
                   {user && (
                     <button onClick={openCreateFolder} className="p-0 m-0 border-0 bg-transparent">
                       <img src={folderPlusIcon} alt="Add" style={{ width: '18px', height: '18px' }} className="opacity-70" />
@@ -1665,7 +1665,7 @@ query = query.eq('folder_id', currentFolder.id);
                   </button>
                 </div>
               ) : (
-                <div className="flex-1 flex items-center justify-end gap-[25px] pr-[5px]">
+                <div className="flex-1 flex items-center justify-end gap-[25px] pr-[17px]">
                   <button 
                     onClick={() => setIsSearching(true)}
                     className="p-0 m-0 border-0 bg-transparent"
