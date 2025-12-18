@@ -140,6 +140,7 @@ const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
     return () => window.removeEventListener('message', handleMessage);
   }, [desktopSelectedNoteId]);
   const [viewMode, setViewMode] = useState<'collapsed' | 'compact'>('collapsed');
+  const [userChangedView, setUserChangedView] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAccountDetails, setShowAccountDetails] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -337,12 +338,16 @@ const themeSettingsIcons = {
           
           if (savedFolder) {
             setCurrentFolder(savedFolder);
-            setViewMode(savedFolder.default_view);
+            if (!userChangedView) {
+              setViewMode(savedFolder.default_view);
+            }
           } else {
             // No saved folder or it was deleted - default to Notes or first folder
             const defaultFolder = typedFolders.find(f => f.name === 'Notes') || typedFolders[0];
             setCurrentFolder(defaultFolder);
-            setViewMode(defaultFolder.default_view);
+            if (!userChangedView) {
+              setViewMode(defaultFolder.default_view);
+            }
             localStorage.setItem('nuron-current-folder-id', defaultFolder.id);
           }
         }
@@ -504,6 +509,7 @@ useEffect(() => {
         setCurrentFolder(folder);
         localStorage.setItem('nuron-current-folder-id', folder.id);
         setViewMode(folder.default_view || 'collapsed');
+        setUserChangedView(false);
         setShowFolders(false);
         setTimeout(() => {
           contentEl.classList.remove('opacity-0');
@@ -513,6 +519,7 @@ useEffect(() => {
       setCurrentFolder(folder);
       localStorage.setItem('nuron-current-folder-id', folder.id);
       setViewMode(folder.default_view || 'collapsed');
+      setUserChangedView(false);
       setShowFolders(false);
     }
   };
@@ -1663,7 +1670,10 @@ query = query.eq('folder_id', currentFolder.id);
                     />
                   </button>
                   <button 
-                    onClick={() => setViewMode(prev => prev === 'collapsed' ? 'compact' : 'collapsed')}
+                    onClick={() => {
+                      setViewMode(prev => prev === 'collapsed' ? 'compact' : 'collapsed');
+                      setUserChangedView(true);
+                    }}
                     className="p-0 m-0 border-0 bg-transparent"
                   >
                     {viewMode === 'collapsed' ? (
@@ -2359,7 +2369,10 @@ onDragStart={(e) => {
                     <img src={searchIcon} alt="Search" className="h-[24px] w-auto" />
                   </button>
                   <button 
-                    onClick={() => setViewMode(prev => prev === 'collapsed' ? 'compact' : 'collapsed')}
+                    onClick={() => {
+                      setViewMode(prev => prev === 'collapsed' ? 'compact' : 'collapsed');
+                      setUserChangedView(true);
+                    }}
                     className="p-0 m-0 border-0 bg-transparent"
                   >
                     <img src={viewMode === 'collapsed' ? condenseIcon : listViewIcon} alt="Menu" className="h-[24px] w-[24px] object-contain" />
