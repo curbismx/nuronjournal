@@ -1634,37 +1634,35 @@ query = query.eq('folder_id', currentFolder.id);
             {/* 50px header with icons */}
             <div className="h-[50px] flex-shrink-0 bg-journal-content flex items-center px-8">
               {isSearching ? (
-                /* Search box - fills the header */
-                <div className="flex-1 flex items-center bg-[#F6F6F6] rounded-full px-4 py-2 border border-[hsl(60,5%,80%)] mx-2">
+                <div 
+                  className="flex-1 flex items-center bg-white border border-[hsl(0,0%,80%)]"
+                  style={{ 
+                    margin: '5px',
+                    borderRadius: '8px',
+                    height: 'calc(100% - 10px)',
+                    padding: '0 12px'
+                  }}
+                >
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search here"
+                    placeholder="Search"
                     autoFocus
-                    className="flex-1 bg-transparent outline-none text-[16px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[#A4A4A4]"
+                    className="flex-1 bg-transparent outline-none text-[16px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[hsl(0,0%,60%)]"
                   />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      className="w-[18px] h-[18px] bg-white rounded-full flex items-center justify-center ml-2 shadow-sm"
-                    >
-                      <span className="text-[12px] text-[hsl(0,0%,50%)] font-medium leading-none">×</span>
-                    </button>
-                  )}
                   <button
                     onClick={() => {
                       setIsSearching(false);
                       setSearchQuery("");
                     }}
-                    className="ml-3 text-[14px] font-outfit text-[hsl(0,0%,50%)]"
+                    className="w-[18px] h-[18px] bg-[hsl(0,0%,85%)] rounded-full flex items-center justify-center ml-2"
                   >
-                    Cancel
+                    <span className="text-[12px] text-white font-medium leading-none">×</span>
                   </button>
                 </div>
               ) : (
-                /* Icons - right aligned */
-                <div className="flex-1 flex items-center justify-end gap-[25px] pl-8 pr-0">
+                <div className="flex-1 flex items-center justify-end gap-[25px] pl-8">
                   <button 
                     onClick={() => setDesktopSelectedNoteId('new-' + Date.now())}
                     className="p-0 m-0 border-0 bg-transparent"
@@ -1672,7 +1670,7 @@ query = query.eq('folder_id', currentFolder.id);
                     <img 
                       src={desktopPlusIcon} 
                       alt="New Note" 
-                      style={{ width: '18px', height: '18px' }}
+                      style={{ width: '18px', height: '18px' }} 
                     />
                   </button>
                   <button 
@@ -1682,7 +1680,7 @@ query = query.eq('folder_id', currentFolder.id);
                     <img 
                       src={greySearchIcon} 
                       alt="Search" 
-                      style={{ width: '18px', height: '18px' }}
+                      style={{ width: '18px', height: '18px' }} 
                     />
                   </button>
                   <button 
