@@ -2142,19 +2142,22 @@ const themeSettingsIcons = {
           style={{ width: '50%' }}
         >
           {/* Cream header - 50px with 3dots menu */}
-          <div 
-            className={`h-[50px] flex-shrink-0 flex items-center justify-end px-8 transition-all duration-300 ${desktopRewriteGlow ? '' : 'bg-journal-content'}`}
-            style={{ 
-              backgroundColor: desktopRewriteGlow ? themeColors[theme] : undefined,
-              boxShadow: desktopRewriteGlow ? `0 0 20px ${themeColors[theme]}` : 'none'
-            }}
-          >
+          <div className="h-[50px] flex-shrink-0 bg-journal-content flex items-center justify-end pr-[20px]">
             {desktopSelectedNoteId && (
               <button
                 onClick={() => setDesktopMenuOpen(!desktopMenuOpen)}
                 className="p-0 m-0 border-0 bg-transparent"
               >
-                <img src={threeDotsDesktopIcon} alt="Menu" style={{ height: '24px', width: 'auto' }} />
+                <img 
+                  src={threeDotsDesktopIcon} 
+                  alt="Menu" 
+                  style={{ 
+                    height: '24px', 
+                    width: 'auto',
+                    filter: desktopRewriteGlow ? `drop-shadow(0 0 8px ${themeColors[theme]})` : 'none',
+                    transition: 'filter 0.3s ease'
+                  }} 
+                />
               </button>
             )}
           </div>
