@@ -25,6 +25,11 @@ import accountArrow from "@/assets/00settingsarrow-2.png";
 import searchIcon from "@/assets/00search-3.png";
 import searchArrow from "@/assets/00searcharrow.png";
 import threeDotsIcon from "@/assets/00threedots-3.png";
+import starIcon from '@/assets/star.png';
+import addImageIcon from '@/assets/addimage.png';
+import moveIcon from '@/assets/move.png';
+import sharedIcon from '@/assets/shared.png';
+import trashIcon from '@/assets/trash.png';
 import hamburgerIcon from "@/assets/hamburger.png";
 import folderIcon from "@/assets/folder_icon.png";
 import folderArrow from "@/assets/folder_arrow.png";
@@ -80,6 +85,7 @@ const [desktopShowSettings, setDesktopShowSettings] = useState(false);
 const [desktopShowAccountDetails, setDesktopShowAccountDetails] = useState(false);
 const [desktopShowChangePassword, setDesktopShowChangePassword] = useState(false);
 const [desktopShowSignUp, setDesktopShowSignUp] = useState(false);
+const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
   useEffect(() => {
     const onboardingComplete = localStorage.getItem('nuron-onboarding-complete');
     if (!onboardingComplete) {
@@ -2122,13 +2128,95 @@ const themeSettingsIcons = {
 
         {/* Column 3: Note view - 50% width */}
         <div 
-          className="flex flex-col bg-journal-content"
+          className="relative flex flex-col bg-journal-content"
           style={{ width: '50%' }}
         >
-          {/* Cream header - 50px, same as Column 2 */}
+          {/* Cream header - 50px with 3dots menu */}
           <div className="h-[50px] flex-shrink-0 bg-journal-content flex items-center justify-end px-8">
-            {/* Icons will go here later */}
+            {desktopSelectedNoteId && (
+              <button
+                onClick={() => setDesktopMenuOpen(!desktopMenuOpen)}
+                className="p-0 m-0 border-0 bg-transparent"
+              >
+                <img src={threeDotsIcon} alt="Menu" className="h-[24px] w-auto" />
+              </button>
+            )}
           </div>
+          
+          {/* Desktop 3-dots menu dropdown */}
+          {desktopMenuOpen && desktopSelectedNoteId && (
+            <div 
+              className="absolute right-4 top-[50px] z-50 bg-white rounded-2xl shadow-lg py-4 w-[220px] animate-in fade-in-0 zoom-in-95 duration-200"
+            >
+              <div className="flex flex-col">
+                <button 
+                  onClick={() => {
+                    const iframe = document.querySelector('iframe');
+                    if (iframe?.contentWindow) {
+                      iframe.contentWindow.postMessage({ type: 'menu-action', action: 'rewrite' }, '*');
+                    }
+                    setDesktopMenuOpen(false);
+                  }} 
+                  className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
+                >
+                  <img src={starIcon} alt="" className="w-6 h-6" />
+                  <span className="text-gray-600 font-outfit">AI Rewrite</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    const iframe = document.querySelector('iframe');
+                    if (iframe?.contentWindow) {
+                      iframe.contentWindow.postMessage({ type: 'menu-action', action: 'image' }, '*');
+                    }
+                    setDesktopMenuOpen(false);
+                  }} 
+                  className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
+                >
+                  <img src={addImageIcon} alt="" className="w-6 h-6" />
+                  <span className="text-gray-600 font-outfit">Add Image</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    const iframe = document.querySelector('iframe');
+                    if (iframe?.contentWindow) {
+                      iframe.contentWindow.postMessage({ type: 'menu-action', action: 'move' }, '*');
+                    }
+                    setDesktopMenuOpen(false);
+                  }} 
+                  className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
+                >
+                  <img src={moveIcon} alt="" className="w-6 h-6" />
+                  <span className="text-gray-600 font-outfit">Move Note</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    const iframe = document.querySelector('iframe');
+                    if (iframe?.contentWindow) {
+                      iframe.contentWindow.postMessage({ type: 'menu-action', action: 'share' }, '*');
+                    }
+                    setDesktopMenuOpen(false);
+                  }} 
+                  className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
+                >
+                  <img src={sharedIcon} alt="" className="w-6 h-6" />
+                  <span className="text-gray-600 font-outfit">Share Note</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    const iframe = document.querySelector('iframe');
+                    if (iframe?.contentWindow) {
+                      iframe.contentWindow.postMessage({ type: 'menu-action', action: 'delete' }, '*');
+                    }
+                    setDesktopMenuOpen(false);
+                  }} 
+                  className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
+                >
+                  <img src={trashIcon} alt="" className="w-6 h-6" />
+                  <span className="text-red-500 font-outfit">Delete Note</span>
+                </button>
+              </div>
+            </div>
+          )}
           
           {/* Note content area */}
           <div className="flex-1 overflow-hidden">
