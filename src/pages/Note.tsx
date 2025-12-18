@@ -240,6 +240,16 @@ const Note = () => {
   const isDeletedRef = useRef(false);
   const existingCreatedAt = useRef<string | null>(null);
 
+  // Set body background color for desktop embed
+  useEffect(() => {
+    if (isEmbedded) {
+      document.body.style.backgroundColor = '#F9F9F6';
+    }
+    return () => {
+      document.body.style.backgroundColor = '';
+    };
+  }, [isEmbedded]);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -2345,11 +2355,12 @@ const Note = () => {
       {/* Scrollable content area */}
       <div 
         ref={scrollContainerRef}
-        className={`flex-1 overflow-y-scroll bg-journal-content ${isEmbedded ? '' : 'rounded-t-[30px] -mt-[25px]'} overscroll-y-auto z-40 transition-all duration-300 ${isRewriting ? 'ai-rewriting' : ''} ${showMoveNote ? 'translate-y-[100%]' : ''}`}
+        className={`flex-1 overflow-y-scroll ${isEmbedded ? '' : 'bg-journal-content rounded-t-[30px] -mt-[25px]'} overscroll-y-auto z-40 transition-all duration-300 ${isRewriting ? 'ai-rewriting' : ''} ${showMoveNote ? 'translate-y-[100%]' : ''}`}
         style={{ 
           WebkitOverflowScrolling: 'touch',
           overscrollBehaviorY: 'auto',
-          minHeight: 0
+          minHeight: 0,
+          backgroundColor: isEmbedded ? '#F9F9F6' : undefined
         }}
         onClick={(e) => {
           // Only close menu and blur if clicking directly on the scroll container itself
