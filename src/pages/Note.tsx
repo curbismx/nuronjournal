@@ -1948,9 +1948,22 @@ const Note = () => {
     navigate('/');
   };
 
-  const handleDateSelect = (newDate: Date) => {
+  const handleDateSelect = async (newDate: Date) => {
     setNoteDate(newDate);
     existingCreatedAt.current = newDate.toISOString();
+    
+    // Save the note with the new date and notify parent
+    setTimeout(async () => {
+      await saveNote();
+      
+      // Notify parent window that note was updated
+      if (window.parent !== window) {
+        window.parent.postMessage({ 
+          type: 'note-updated', 
+          noteId: noteIdRef.current 
+        }, '*');
+      }
+    }, 100);
   };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {

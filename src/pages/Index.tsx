@@ -109,7 +109,7 @@ const [desktopShowSignUp, setDesktopShowSignUp] = useState(false);
   // Listen for postMessage from iframe when note is saved
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
-      if (e.data?.type === 'note-saved') {
+      if (e.data?.type === 'note-saved' || e.data?.type === 'note-updated') {
         // Refresh notes list from cache
         const cached = localStorage.getItem('nuron-notes-cache');
         if (cached) {
@@ -130,8 +130,8 @@ const [desktopShowSignUp, setDesktopShowSignUp] = useState(false);
             console.error('Failed to parse notes:', err);
           }
         }
-        // Select the newly saved note
-        if (e.data.noteId) {
+        // Select the saved note (only for note-saved, not for updates)
+        if (e.data?.type === 'note-saved' && e.data.noteId) {
           setDesktopSelectedNoteId(e.data.noteId);
         }
       }
