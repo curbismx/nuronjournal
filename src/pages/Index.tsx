@@ -1494,7 +1494,32 @@ query = query.eq('folder_id', currentFolder.id);
 
       <div className="fixed inset-0 flex">
 
-        
+        {/* Hidden drag image for note dragging */}
+        <div
+          id="note-drag-image"
+          style={{
+            position: 'fixed',
+            top: '-100px',
+            left: '-100px',
+            width: '44px',
+            height: '44px',
+            backgroundColor: themeColors[theme],
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+            pointerEvents: 'none',
+            zIndex: 9999
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
+        </div>
 
         {/* Column 1: Folders - 20% width, dark background */}
 
@@ -1710,6 +1735,11 @@ query = query.eq('folder_id', currentFolder.id);
 onDragStart={(e) => {
                           setDraggedNote(note);
                           e.dataTransfer.effectAllowed = 'move';
+                          
+                          const dragImage = document.getElementById('note-drag-image');
+                          if (dragImage) {
+                            e.dataTransfer.setDragImage(dragImage, 22, 22);
+                          }
                         }}
                         onDragEnd={() => {
                           setDraggedNote(null);
