@@ -25,6 +25,7 @@ import accountArrow from "@/assets/00settingsarrow-2.png";
 import searchIcon from "@/assets/00search-3.png";
 import searchArrow from "@/assets/00searcharrow.png";
 import threeDotsIcon from "@/assets/00threedots-3.png";
+import threeDotsDesktopIcon from "@/assets/3_dots_desktop.png";
 import starIcon from '@/assets/star.png';
 import addImageIcon from '@/assets/addimage.png';
 import moveIcon from '@/assets/move.png';
@@ -2138,7 +2139,7 @@ const themeSettingsIcons = {
                 onClick={() => setDesktopMenuOpen(!desktopMenuOpen)}
                 className="p-0 m-0 border-0 bg-transparent"
               >
-                <img src={threeDotsIcon} alt="Menu" style={{ height: '24px', width: 'auto' }} />
+                <img src={threeDotsDesktopIcon} alt="Menu" style={{ height: '24px', width: 'auto' }} />
               </button>
             )}
           </div>
