@@ -39,6 +39,7 @@ import folderPlusIcon from "@/assets/folder_plus.png";
 import greySearchIcon from "@/assets/grey_search.png";
 import greyListViewIcon from "@/assets/grey_listview.png";
 import greyExpandViewIcon from "@/assets/grey_expandview.png";
+import desktopPlusIcon from "@/assets/desktop_plus.png";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
@@ -1664,6 +1665,16 @@ query = query.eq('folder_id', currentFolder.id);
               ) : (
                 /* Icons - right aligned */
                 <div className="flex-1 flex items-center justify-end gap-[25px] pl-8 pr-0">
+                  <button 
+                    onClick={() => setDesktopSelectedNoteId('new-' + Date.now())}
+                    className="p-0 m-0 border-0 bg-transparent"
+                  >
+                    <img 
+                      src={desktopPlusIcon} 
+                      alt="New Note" 
+                      style={{ width: '18px', height: '18px' }}
+                    />
+                  </button>
                   <button 
                     onClick={() => setIsSearching(true)}
                     className="p-0 m-0 border-0 bg-transparent"
