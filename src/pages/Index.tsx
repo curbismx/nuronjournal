@@ -190,6 +190,7 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState<{ id: string; name: string } | null>(null);
   const [draggedFolder, setDraggedFolder] = useState<string | null>(null);
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
+  const [dropLineIndex, setDropLineIndex] = useState<number | null>(null);
 
   const themeColors = {
     default: '#2E2E2E',
@@ -1591,102 +1592,127 @@ query = query.eq('folder_id', currentFolder.id);
           <div className="flex-1 space-y-2 px-[20px] pt-[30px] overflow-y-auto">
 
             {folders.map((folder, folderIndex) => (
-              <div
-                key={folder.id}
-                draggable
-                onDragStart={(e) => {
-                  setDraggedFolder(folder.id);
-                  e.dataTransfer.effectAllowed = 'move';
-                }}
-                onDragEnd={() => {
-                  setDraggedFolder(null);
-                  setDragOverFolder(null);
-                }}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  if (draggedNote && draggedNote.folder_id !== folder.id) {
-                    setDragOverFolder(folder.id);
-                  }
-                  if (draggedFolder && draggedFolder !== folder.id) {
-                    setDragOverFolder(folder.id);
-                  }
-                }}
-                onDragLeave={() => {
-                  setDragOverFolder(null);
-                }}
-                onDrop={async (e) => {
-                  e.preventDefault();
-                  if (draggedNote && draggedNote.folder_id !== folder.id) {
-                    const { error } = await supabase
-                      .from('notes')
-                      .update({ folder_id: folder.id })
-                      .eq('id', draggedNote.id);
-                    
-                    if (!error) {
-                      setFolderDropFlash(folder.id);
-                      setTimeout(() => setFolderDropFlash(null), 500);
-                      setSavedNotes(prev => prev.filter(n => n.id !== draggedNote.id));
-                      if (desktopSelectedNoteId === draggedNote.id) {
-                        setDesktopSelectedNoteId(null);
+              <React.Fragment key={folder.id}>
+                {/* Drop line ABOVE this folder */}
+                {dropLineIndex === folderIndex && draggedFolder && draggedFolder !== folder.id && (
+                  <div className="h-[2px] bg-white/70 mx-2 rounded-full" />
+                )}
+                <div
+                  draggable
+                  onDragStart={(e) => {
+                    setDraggedFolder(folder.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                  }}
+                  onDragEnd={() => {
+                    setDraggedFolder(null);
+                    setDropLineIndex(null);
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    // Handle note drops (keep existing behavior)
+                    if (draggedNote && draggedNote.folder_id !== folder.id) {
+                      setDragOverFolder(folder.id);
+                    }
+                    // Handle folder reordering with line position
+                    if (draggedFolder && draggedFolder !== folder.id) {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const midpoint = rect.top + rect.height / 2;
+                      if (e.clientY < midpoint) {
+                        setDropLineIndex(folderIndex);
+                      } else {
+                        setDropLineIndex(folderIndex + 1);
                       }
                     }
-                    setDraggedNote(null);
-                  }
-                  if (draggedFolder && draggedFolder !== folder.id) {
-                    updateFolderOrder(draggedFolder, folderIndex);
-                  }
-                  setDraggedFolder(null);
-                  setDragOverFolder(null);
-                }}
-                className={`flex items-center justify-between w-full py-2 px-2 rounded-lg transition-all duration-200 ${
-                  currentFolder?.id === folder.id ? 'opacity-100' : 'opacity-50 hover:opacity-70'
-                } ${
-                  dragOverFolder === folder.id ? 'bg-white/20 ring-2 ring-white/50' : ''
-                } ${
-                  folderDropFlash === folder.id ? 'bg-white/40' : ''
-                } ${
-                  draggedFolder === folder.id ? 'opacity-30' : ''
-                } ${
-                  dragOverFolder === folder.id && draggedFolder ? 'border-t-2 border-white/50' : ''
-                }`}
-                style={{ cursor: 'grab' }}
-              >
-                <button
-                  onClick={() => {
-                    setCurrentFolder(folder);
-                    localStorage.setItem('nuron-current-folder-id', folder.id);
-                    setDesktopSelectedNoteId(null);
-                    setViewMode(folder.default_view || 'collapsed');
-                    setUserChangedView(false);
                   }}
-                  className="flex items-center gap-3 flex-1 text-left"
-                >
-                  <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
-                  <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
-                </button>
-                <button 
-                  onClick={() => {
-                    if (desktopShowFolderOptions && desktopEditingFolder?.id === folder.id) {
-                      setDesktopShowFolderOptions(false);
-                      setDesktopEditingFolder(null);
-                    } else {
-                      setDesktopEditingFolder(folder);
-                      setNewFolderName(folder.name);
-                      setNewFolderDefaultView(folder.default_view || 'collapsed');
-                      setDesktopShowFolderOptions(true);
+                  onDragLeave={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    if (e.clientY < rect.top || e.clientY > rect.bottom || e.clientX < rect.left || e.clientX > rect.right) {
+                      setDropLineIndex(null);
                     }
-                  }} 
-                  className="mr-[10px] p-0 m-0 border-0 bg-transparent"
+                  }}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    // Handle note drops (existing logic)
+                    if (draggedNote && draggedNote.folder_id !== folder.id) {
+                      const { error } = await supabase
+                        .from('notes')
+                        .update({ folder_id: folder.id })
+                        .eq('id', draggedNote.id);
+                      
+                      if (!error) {
+                        setFolderDropFlash(folder.id);
+                        setTimeout(() => setFolderDropFlash(null), 500);
+                        setSavedNotes(prev => prev.filter(n => n.id !== draggedNote.id));
+                        if (desktopSelectedNoteId === draggedNote.id) {
+                          setDesktopSelectedNoteId(null);
+                        }
+                      }
+                      setDraggedNote(null);
+                    }
+                    // Handle folder reordering with correct index calculation
+                    if (draggedFolder && draggedFolder !== folder.id && dropLineIndex !== null) {
+                      const oldIndex = folders.findIndex(f => f.id === draggedFolder);
+                      let newIndex = dropLineIndex;
+                      if (oldIndex < newIndex) {
+                        newIndex--;
+                      }
+                      await updateFolderOrder(draggedFolder, newIndex);
+                    }
+                    setDraggedFolder(null);
+                    setDropLineIndex(null);
+                  }}
+                  className={`flex items-center justify-between w-full py-2 px-2 transition-all duration-200 ${
+                    currentFolder?.id === folder.id ? 'opacity-100' : 'opacity-50 hover:opacity-70'
+                  } ${
+                    dragOverFolder === folder.id ? 'bg-white/20 ring-2 ring-white/50' : ''
+                  } ${
+                    folderDropFlash === folder.id ? 'bg-white/40' : ''
+                  } ${
+                    draggedFolder === folder.id ? 'opacity-30' : ''
+                  }`}
+                  style={{ cursor: 'grab' }}
                 >
-                  <img 
-                    src={threeDotsIcon} 
-                    alt="Options" 
-                    style={{ width: '4px', height: '18px' }} 
-                    className="opacity-70" 
-                  />
-                </button>
-              </div>
+                  <button
+                    onClick={() => {
+                      setCurrentFolder(folder);
+                      localStorage.setItem('nuron-current-folder-id', folder.id);
+                      setDesktopSelectedNoteId(null);
+                      setViewMode(folder.default_view || 'collapsed');
+                      setUserChangedView(false);
+                    }}
+                    className="flex items-center gap-3 flex-1 text-left"
+                  >
+                    <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
+                    <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (desktopShowFolderOptions && desktopEditingFolder?.id === folder.id) {
+                        setDesktopShowFolderOptions(false);
+                        setDesktopEditingFolder(null);
+                      } else {
+                        setDesktopEditingFolder(folder);
+                        setNewFolderName(folder.name);
+                        setNewFolderDefaultView(folder.default_view || 'collapsed');
+                        setDesktopShowFolderOptions(true);
+                      }
+                    }} 
+                    className="mr-[10px] p-0 m-0 border-0 bg-transparent"
+                  >
+                    <img 
+                      src={threeDotsIcon} 
+                      alt="Options" 
+                      style={{ width: '4px', height: '18px' }} 
+                      className="opacity-70" 
+                    />
+                  </button>
+                </div>
+              </React.Fragment>
             ))}
+            {/* Drop line at the very bottom */}
+            {dropLineIndex === folders.length && draggedFolder && (
+              <div className="h-[2px] bg-white/70 mx-2 rounded-full" />
+            )}
 
           </div>
 
