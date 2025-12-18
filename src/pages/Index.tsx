@@ -1190,26 +1190,34 @@ query = query.eq('folder_id', currentFolder.id);
                 <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
                   <span className="text-[20px] font-light">Theme colour</span>
                   <div className="flex items-center gap-3">
-                    {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
-                      <button
-                        key={t}
-                        onClick={() => setTheme(t)}
-                        className="flex flex-col items-center relative"
-                        style={{ height: '54px' }}
-                      >
-                        <img 
-                          src={themeSettingsIcons[t]} 
-                          alt={t} 
-                          className="w-[40px] h-[40px]"
-                        />
-                        {theme === t && (
+                    {(['default', 'green', 'blue', 'pink'] as const).map((t) => {
+                      const themeDisplayColors: Record<string, string> = {
+                        default: '#2D2D2D',
+                        green: '#4A7C59',
+                        blue: '#4A6FA5',
+                        pink: '#C76B8F'
+                      };
+                      
+                      return (
+                        <button
+                          key={t}
+                          onClick={() => setTheme(t)}
+                          className="flex flex-col items-center relative"
+                          style={{ height: '54px' }}
+                        >
                           <div 
-                            className="w-[6px] h-[6px] bg-white rounded-full absolute"
-                            style={{ bottom: '0px' }}
+                            className="w-[40px] h-[40px] rounded-[10px]"
+                            style={{ backgroundColor: themeDisplayColors[t] }}
                           />
-                        )}
-                      </button>
-                    ))}
+                          {theme === t && (
+                            <div 
+                              className="w-[6px] h-[6px] bg-white rounded-full absolute"
+                              style={{ bottom: '0px' }}
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -1301,26 +1309,34 @@ query = query.eq('folder_id', currentFolder.id);
                 <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
                   <span className="text-[20px] font-light">Theme colour</span>
                   <div className="flex items-center gap-3">
-                    {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
-                      <button
-                        key={t}
-                        onClick={() => setTheme(t)}
-                        className="flex flex-col items-center relative"
-                        style={{ height: '54px' }}
-                      >
-                        <img 
-                          src={themeSettingsIcons[t]} 
-                          alt={t} 
-                          className="w-[40px] h-[40px]"
-                        />
-                        {theme === t && (
+                    {(['default', 'green', 'blue', 'pink'] as const).map((t) => {
+                      const themeDisplayColors: Record<string, string> = {
+                        default: '#2D2D2D',
+                        green: '#4A7C59',
+                        blue: '#4A6FA5',
+                        pink: '#C76B8F'
+                      };
+                      
+                      return (
+                        <button
+                          key={t}
+                          onClick={() => setTheme(t)}
+                          className="flex flex-col items-center relative"
+                          style={{ height: '54px' }}
+                        >
                           <div 
-                            className="w-[6px] h-[6px] bg-white rounded-full absolute"
-                            style={{ bottom: '0px' }}
+                            className="w-[40px] h-[40px] rounded-[10px]"
+                            style={{ backgroundColor: themeDisplayColors[t] }}
                           />
-                        )}
-                      </button>
-                    ))}
+                          {theme === t && (
+                            <div 
+                              className="w-[6px] h-[6px] bg-white rounded-full absolute"
+                              style={{ bottom: '0px' }}
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -2205,19 +2221,31 @@ onDragStart={(e) => {
                     <div className="space-y-4">
                       <span className="text-white text-[18px] font-outfit font-light">Theme colour</span>
                       <div className="flex gap-4">
-                        {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
-                          <button
-                            key={t}
-                            onClick={() => setTheme(t)}
-                            className="flex flex-col items-center relative"
-                            style={{ height: '54px' }}
-                          >
-                            <img src={themeSettingsIcons[t]} alt={t} className="w-[50px] h-[50px]" />
-                            {theme === t && (
-                              <div className="w-[6px] h-[6px] rounded-full bg-white mt-1" />
-                            )}
-                          </button>
-                        ))}
+                        {(['default', 'green', 'blue', 'pink'] as const).map((t) => {
+                          const themeDisplayColors: Record<string, string> = {
+                            default: '#2D2D2D',
+                            green: '#4A7C59',
+                            blue: '#4A6FA5',
+                            pink: '#C76B8F'
+                          };
+                          
+                          return (
+                            <button
+                              key={t}
+                              onClick={() => setTheme(t)}
+                              className="flex flex-col items-center relative"
+                              style={{ height: '64px' }}
+                            >
+                              <div 
+                                className="w-[50px] h-[50px] rounded-[10px]"
+                                style={{ backgroundColor: themeDisplayColors[t] }}
+                              />
+                              {theme === t && (
+                                <div className="w-[6px] h-[6px] rounded-full bg-white mt-1" />
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -2332,19 +2360,31 @@ onDragStart={(e) => {
                     <div className="space-y-4">
                       <span className="text-white text-[18px] font-outfit font-light">Theme colour</span>
                       <div className="flex gap-4">
-                        {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
-                          <button
-                            key={t}
-                            onClick={() => setTheme(t)}
-                            className="flex flex-col items-center relative"
-                            style={{ height: '54px' }}
-                          >
-                            <img src={themeSettingsIcons[t]} alt={t} className="w-[50px] h-[50px]" />
-                            {theme === t && (
-                              <div className="w-[6px] h-[6px] rounded-full bg-white mt-1" />
-                            )}
-                          </button>
-                        ))}
+                        {(['default', 'green', 'blue', 'pink'] as const).map((t) => {
+                          const themeDisplayColors: Record<string, string> = {
+                            default: '#2D2D2D',
+                            green: '#4A7C59',
+                            blue: '#4A6FA5',
+                            pink: '#C76B8F'
+                          };
+                          
+                          return (
+                            <button
+                              key={t}
+                              onClick={() => setTheme(t)}
+                              className="flex flex-col items-center relative"
+                              style={{ height: '64px' }}
+                            >
+                              <div 
+                                className="w-[50px] h-[50px] rounded-[10px]"
+                                style={{ backgroundColor: themeDisplayColors[t] }}
+                              />
+                              {theme === t && (
+                                <div className="w-[6px] h-[6px] rounded-full bg-white mt-1" />
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -2915,26 +2955,34 @@ onDragStart={(e) => {
               <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
                 <span className="text-[20px] font-light">Theme colour</span>
                 <div className="flex items-center gap-3">
-                  {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setTheme(t)}
-                      className="flex flex-col items-center relative"
-                      style={{ height: '54px' }}
-                    >
-                      <img 
-                        src={themeSettingsIcons[t]} 
-                        alt={t} 
-                        className="w-[40px] h-[40px]"
-                      />
-                      {theme === t && (
+                  {(['default', 'green', 'blue', 'pink'] as const).map((t) => {
+                    const themeDisplayColors: Record<string, string> = {
+                      default: '#2D2D2D',
+                      green: '#4A7C59',
+                      blue: '#4A6FA5',
+                      pink: '#C76B8F'
+                    };
+                    
+                    return (
+                      <button
+                        key={t}
+                        onClick={() => setTheme(t)}
+                        className="flex flex-col items-center relative"
+                        style={{ height: '54px' }}
+                      >
                         <div 
-                          className="w-[6px] h-[6px] bg-white rounded-full absolute"
-                          style={{ bottom: '0px' }}
+                          className="w-[40px] h-[40px] rounded-[10px]"
+                          style={{ backgroundColor: themeDisplayColors[t] }}
                         />
-                      )}
-                    </button>
-                  ))}
+                        {theme === t && (
+                          <div 
+                            className="w-[6px] h-[6px] bg-white rounded-full absolute"
+                            style={{ bottom: '0px' }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -3056,26 +3104,34 @@ onDragStart={(e) => {
               <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
                 <span className="text-[20px] font-light">Theme colour</span>
                 <div className="flex items-center gap-3">
-                  {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setTheme(t)}
-                      className="flex flex-col items-center relative"
-                      style={{ height: '54px' }}
-                    >
-                      <img 
-                        src={themeSettingsIcons[t]} 
-                        alt={t} 
-                        className="w-[40px] h-[40px]"
-                      />
-                      {theme === t && (
+                  {(['default', 'green', 'blue', 'pink'] as const).map((t) => {
+                    const themeDisplayColors: Record<string, string> = {
+                      default: '#2D2D2D',
+                      green: '#4A7C59',
+                      blue: '#4A6FA5',
+                      pink: '#C76B8F'
+                    };
+                    
+                    return (
+                      <button
+                        key={t}
+                        onClick={() => setTheme(t)}
+                        className="flex flex-col items-center relative"
+                        style={{ height: '54px' }}
+                      >
                         <div 
-                          className="w-[6px] h-[6px] bg-white rounded-full absolute"
-                          style={{ bottom: '0px' }}
+                          className="w-[40px] h-[40px] rounded-[10px]"
+                          style={{ backgroundColor: themeDisplayColors[t] }}
                         />
-                      )}
-                    </button>
-                  ))}
+                        {theme === t && (
+                          <div 
+                            className="w-[6px] h-[6px] bg-white rounded-full absolute"
+                            style={{ bottom: '0px' }}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
