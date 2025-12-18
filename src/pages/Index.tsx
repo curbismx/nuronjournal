@@ -40,6 +40,17 @@ import greySearchIcon from "@/assets/grey_search.png";
 import greyListViewIcon from "@/assets/grey_listview.png";
 import greyExpandViewIcon from "@/assets/grey_expandview.png";
 import desktopPlusIcon from "@/assets/desktop_plus.png";
+import desktopDarkTheme from "@/assets/desktop_dark_theme.png";
+import desktopGreenTheme from "@/assets/desktop_green_theme.png";
+import desktopBlueTheme from "@/assets/desktop_blue_theme.png";
+import desktopPinkTheme from "@/assets/desktop_pink_theme.png";
+
+const desktopThemeIcons = {
+  default: desktopDarkTheme,
+  green: desktopGreenTheme,
+  blue: desktopBlueTheme,
+  pink: desktopPinkTheme
+};
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
@@ -2221,31 +2232,22 @@ onDragStart={(e) => {
                     <div className="space-y-4">
                       <span className="text-white text-[18px] font-outfit font-light">Theme colour</span>
                       <div className="flex gap-4">
-                        {(['default', 'green', 'blue', 'pink'] as const).map((t) => {
-                          const themeDisplayColors: Record<string, string> = {
-                            default: '#2D2D2D',
-                            green: '#4A7C59',
-                            blue: '#4A6FA5',
-                            pink: '#C76B8F'
-                          };
-                          
-                          return (
-                            <button
-                              key={t}
-                              onClick={() => setTheme(t)}
-                              className="flex flex-col items-center relative"
-                              style={{ height: '64px' }}
-                            >
+                        {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setTheme(t)}
+                            className="flex flex-col items-center relative"
+                            style={{ height: '54px' }}
+                          >
+                            <img src={desktopThemeIcons[t]} alt={t} className="w-[50px] h-[50px]" />
+                            {theme === t && (
                               <div 
-                                className="w-[50px] h-[50px] rounded-[10px]"
-                                style={{ backgroundColor: themeDisplayColors[t] }}
+                                className="w-[6px] h-[6px] bg-white rounded-full absolute"
+                                style={{ bottom: '0px' }}
                               />
-                              {theme === t && (
-                                <div className="w-[6px] h-[6px] rounded-full bg-white mt-1" />
-                              )}
-                            </button>
-                          );
-                        })}
+                            )}
+                          </button>
+                        ))}
                       </div>
                     </div>
 
@@ -2360,31 +2362,22 @@ onDragStart={(e) => {
                     <div className="space-y-4">
                       <span className="text-white text-[18px] font-outfit font-light">Theme colour</span>
                       <div className="flex gap-4">
-                        {(['default', 'green', 'blue', 'pink'] as const).map((t) => {
-                          const themeDisplayColors: Record<string, string> = {
-                            default: '#2D2D2D',
-                            green: '#4A7C59',
-                            blue: '#4A6FA5',
-                            pink: '#C76B8F'
-                          };
-                          
-                          return (
-                            <button
-                              key={t}
-                              onClick={() => setTheme(t)}
-                              className="flex flex-col items-center relative"
-                              style={{ height: '64px' }}
-                            >
+                        {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setTheme(t)}
+                            className="flex flex-col items-center relative"
+                            style={{ height: '54px' }}
+                          >
+                            <img src={desktopThemeIcons[t]} alt={t} className="w-[50px] h-[50px]" />
+                            {theme === t && (
                               <div 
-                                className="w-[50px] h-[50px] rounded-[10px]"
-                                style={{ backgroundColor: themeDisplayColors[t] }}
+                                className="w-[6px] h-[6px] bg-white rounded-full absolute"
+                                style={{ bottom: '0px' }}
                               />
-                              {theme === t && (
-                                <div className="w-[6px] h-[6px] rounded-full bg-white mt-1" />
-                              )}
-                            </button>
-                          );
-                        })}
+                            )}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
