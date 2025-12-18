@@ -1632,14 +1632,17 @@ query = query.eq('folder_id', currentFolder.id);
             className={`absolute inset-0 bg-journal-content flex flex-col transition-transform duration-300 ${desktopShowSettings ? 'translate-x-full' : 'translate-x-0'}`}
           >
             {/* 50px header with icons */}
-            <div className="h-[50px] flex-shrink-0 bg-journal-content flex items-center px-8">
+            <div className="h-[50px] flex-shrink-0 bg-journal-content flex items-center relative">
               {isSearching ? (
                 <div 
-                  className="flex-1 flex items-center bg-white border border-[hsl(0,0%,80%)]"
+                  className="flex items-center bg-white border border-[hsl(0,0%,80%)]"
                   style={{ 
-                    margin: '5px',
+                    position: 'absolute',
+                    top: '5px',
+                    left: '5px',
+                    right: '5px',
+                    bottom: '5px',
                     borderRadius: '8px',
-                    height: 'calc(100% - 10px)',
                     padding: '0 12px'
                   }}
                 >
@@ -1662,17 +1665,7 @@ query = query.eq('folder_id', currentFolder.id);
                   </button>
                 </div>
               ) : (
-                <div className="flex-1 flex items-center justify-end gap-[25px] pl-8">
-                  <button 
-                    onClick={() => setDesktopSelectedNoteId('new-' + Date.now())}
-                    className="p-0 m-0 border-0 bg-transparent"
-                  >
-                    <img 
-                      src={desktopPlusIcon} 
-                      alt="New Note" 
-                      style={{ width: '18px', height: '18px' }} 
-                    />
-                  </button>
+                <div className="flex-1 flex items-center justify-end gap-[25px] pr-[5px]">
                   <button 
                     onClick={() => setIsSearching(true)}
                     className="p-0 m-0 border-0 bg-transparent"
@@ -1703,6 +1696,16 @@ query = query.eq('folder_id', currentFolder.id);
                         style={{ width: '12px', height: '8px' }}
                       />
                     )}
+                  </button>
+                  <button 
+                    onClick={() => setDesktopSelectedNoteId('new-' + Date.now())}
+                    className="p-0 m-0 border-0 bg-transparent"
+                  >
+                    <img 
+                      src={desktopPlusIcon} 
+                      alt="New Note" 
+                      style={{ width: '18px', height: '18px' }} 
+                    />
                   </button>
                 </div>
               )}
