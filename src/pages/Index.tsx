@@ -1738,7 +1738,7 @@ query = query.eq('folder_id', currentFolder.id);
                     elements.push(
                       <div 
                         key={`month-${groupMonthYear}-${groupIndex}`}
-                        className="sticky top-0 z-10 bg-[#CACAC2] px-8 py-[3px]"
+                        className="sticky top-0 z-10 bg-[#CACAC2] px-[22px] py-[3px]"
                       >
                         <span className="text-white text-[20px] font-outfit font-light tracking-wider leading-tight">
                           {groupMonthYear}
@@ -1775,7 +1775,7 @@ onDragStart={(e) => {
                         className={`border-b border-[hsl(0,0%,85%)] cursor-pointer transition-all duration-300 ease-out ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'} ${draggedNote?.id === note.id ? 'opacity-30' : ''}`}
                         onClick={() => setDesktopSelectedNoteId(note.id)}
                       >
-<div className={viewMode === 'compact' ? "px-8 pt-[17px] pb-4" : index === 0 ? "px-8 pt-[8px] pb-[10px]" : "px-8 pt-[10px] pb-[10px]"}>
+<div className={viewMode === 'compact' ? "px-[22px] pt-[17px] pb-4" : index === 0 ? "px-[22px] pt-[8px] pb-[10px]" : "px-[22px] pt-[10px] pb-[10px]"}>
                           {/* Only show date for first note of each day - HIDDEN in compact view */}
                           {index === 0 && viewMode !== 'compact' && (
                               <div className="flex items-start gap-3 mb-[8px]">
