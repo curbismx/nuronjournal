@@ -2047,28 +2047,6 @@ onDragStart={(e) => {
               </div>
             </div>
 
-            {/* Floating plus button - bottom right, same as mobile */}
-            {!desktopShowSettings && (
-              <button
-                onClick={() => {
-                  const tempId = 'new-' + Date.now();
-                  setDesktopSelectedNoteId(tempId);
-                }}
-                className="absolute z-50"
-                style={{
-                  bottom: '30px',
-                  right: '30px',
-                  width: '51px',
-                  height: '51px'
-                }}
-              >
-                <img 
-                  src={themePlusIcons[theme]} 
-                  alt="Add Note"
-                  style={{ width: '51px', height: '51px', filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))' }}
-                />
-              </button>
-            )}
           </div>
 
           {/* Settings panel - slides in from left */}
