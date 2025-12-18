@@ -83,6 +83,8 @@ const Index = () => {
 const isDesktop = useDesktop();
 const [desktopSelectedNoteId, setDesktopSelectedNoteId] = useState<string | null>(null);
 const [desktopShowSettings, setDesktopShowSettings] = useState(false);
+const [draggedNote, setDraggedNote] = useState<SavedNote | null>(null);
+const [folderDropFlash, setFolderDropFlash] = useState<string | null>(null);
 const [desktopShowAccountDetails, setDesktopShowAccountDetails] = useState(false);
 const [desktopShowChangePassword, setDesktopShowChangePassword] = useState(false);
 const [desktopShowSignUp, setDesktopShowSignUp] = useState(false);
@@ -1579,7 +1581,42 @@ query = query.eq('folder_id', currentFolder.id);
             {folders.map((folder) => (
               <div
                 key={folder.id}
-                className={`flex items-center gap-3 w-full py-2 ${currentFolder?.id === folder.id ? 'opacity-100' : 'opacity-50 hover:opacity-70'}`}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if (draggedNote && draggedNote.folder_id !== folder.id) {
+                    setDragOverFolder(folder.id);
+                  }
+                }}
+                onDragLeave={() => {
+                  setDragOverFolder(null);
+                }}
+                onDrop={async (e) => {
+                  e.preventDefault();
+                  if (draggedNote && draggedNote.folder_id !== folder.id) {
+                    const { error } = await supabase
+                      .from('notes')
+                      .update({ folder_id: folder.id })
+                      .eq('id', draggedNote.id);
+                    
+                    if (!error) {
+                      setFolderDropFlash(folder.id);
+                      setTimeout(() => setFolderDropFlash(null), 500);
+                      setSavedNotes(prev => prev.filter(n => n.id !== draggedNote.id));
+                      if (desktopSelectedNoteId === draggedNote.id) {
+                        setDesktopSelectedNoteId(null);
+                      }
+                    }
+                  }
+                  setDraggedNote(null);
+                  setDragOverFolder(null);
+                }}
+                className={`flex items-center justify-between w-full py-2 px-2 rounded-lg transition-all duration-200 ${
+                  currentFolder?.id === folder.id ? 'opacity-100' : 'opacity-50 hover:opacity-70'
+                } ${
+                  dragOverFolder === folder.id ? 'bg-white/20 ring-2 ring-white/50' : ''
+                } ${
+                  folderDropFlash === folder.id ? 'bg-white/40' : ''
+                }`}
               >
                 <button
                   onClick={() => {
@@ -1593,7 +1630,7 @@ query = query.eq('folder_id', currentFolder.id);
                   <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
                 </button>
                 <button onClick={() => openEditFolder(folder)} className="mr-[5px]">
-                  <img src={threeDotsIcon} alt="Options" className="h-[18px] w-auto opacity-70" />
+                  <img src={threeDotsIcon} alt="Options" className="w-[20px] h-[20px] opacity-70" />
                 </button>
               </div>
             ))}
@@ -1614,7 +1651,7 @@ query = query.eq('folder_id', currentFolder.id);
         {/* Column 2: Notes list OR Settings */}
         <div 
           className="relative overflow-hidden"
-          style={{ width: '30%' }}
+          style={{ width: '30%', cursor: draggedNote ? 'grabbing' : 'default' }}
         >
           {/* Notes list - slides right when settings shown */}
           <div 
@@ -1733,7 +1770,16 @@ query = query.eq('folder_id', currentFolder.id);
                     elements.push(
                       <div 
                         key={note.id}
-                        className={`border-b border-[hsl(0,0%,85%)] cursor-pointer transition-all duration-300 ease-out ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'}`}
+                        draggable
+                        onDragStart={(e) => {
+                          setDraggedNote(note);
+                          e.dataTransfer.effectAllowed = 'move';
+                        }}
+                        onDragEnd={() => {
+                          setDraggedNote(null);
+                          setDragOverFolder(null);
+                        }}
+                        className={`border-b border-[hsl(0,0%,85%)] cursor-pointer transition-all duration-300 ease-out ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'} ${draggedNote?.id === note.id ? 'opacity-50' : ''}`}
                         onClick={() => setDesktopSelectedNoteId(note.id)}
                       >
                         <div className={viewMode === 'compact' ? "px-8 pt-[17px] pb-4" : index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-4 pb-4"}>
