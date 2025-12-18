@@ -91,6 +91,8 @@ const [desktopShowAccountDetails, setDesktopShowAccountDetails] = useState(false
 const [desktopShowChangePassword, setDesktopShowChangePassword] = useState(false);
 const [desktopShowSignUp, setDesktopShowSignUp] = useState(false);
 const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
+const [desktopShowFolderOptions, setDesktopShowFolderOptions] = useState(false);
+const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(null);
   useEffect(() => {
     const onboardingComplete = localStorage.getItem('nuron-onboarding-complete');
     if (!onboardingComplete) {
@@ -1545,7 +1547,7 @@ query = query.eq('folder_id', currentFolder.id);
                 </div>
 
           {/* Folders list - below the header */}
-          <div className="flex-1 space-y-2 px-[20px] overflow-y-auto">
+          <div className="flex-1 space-y-2 px-[20px] pt-[30px] overflow-y-auto">
 
             {folders.map((folder) => (
               <div
@@ -1598,7 +1600,20 @@ query = query.eq('folder_id', currentFolder.id);
                   <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
                   <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
                 </button>
-                <button onClick={() => openEditFolder(folder)} className="mr-[5px] p-0 m-0 border-0 bg-transparent">
+                <button 
+                  onClick={() => {
+                    if (desktopShowFolderOptions && desktopEditingFolder?.id === folder.id) {
+                      setDesktopShowFolderOptions(false);
+                      setDesktopEditingFolder(null);
+                    } else {
+                      setDesktopEditingFolder(folder);
+                      setNewFolderName(folder.name);
+                      setNewFolderDefaultView(folder.default_view || 'collapsed');
+                      setDesktopShowFolderOptions(true);
+                    }
+                  }} 
+                  className="mr-[10px] p-0 m-0 border-0 bg-transparent"
+                >
                   <img 
                     src={threeDotsIcon} 
                     alt="Options" 
@@ -1627,9 +1642,9 @@ query = query.eq('folder_id', currentFolder.id);
           className="relative overflow-hidden"
           style={{ width: '30%', cursor: draggedNote ? 'grabbing' : 'default' }}
         >
-          {/* Notes list - slides right when settings shown */}
+          {/* Notes list - slides right when settings or folder options shown */}
           <div 
-            className={`absolute inset-0 bg-journal-content flex flex-col transition-transform duration-300 ${desktopShowSettings ? 'translate-x-full' : 'translate-x-0'}`}
+            className={`absolute inset-0 bg-journal-content flex flex-col transition-transform duration-300 ${desktopShowSettings || desktopShowFolderOptions ? 'translate-x-full' : 'translate-x-0'}`}
           >
             {/* 50px header with icons */}
             <div className="h-[50px] flex-shrink-0 bg-journal-content flex items-center relative">
@@ -2180,6 +2195,86 @@ onDragStart={(e) => {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Folder Options panel - slides in from left */}
+          <div 
+            className={`absolute inset-0 flex flex-col overflow-hidden transition-transform duration-300 ${desktopShowFolderOptions ? 'translate-x-0' : '-translate-x-full'}`}
+            style={{ backgroundColor: themeColors[theme] }}
+          >
+            <div className="h-[50px] flex-shrink-0" style={{ backgroundColor: themeColors[theme] }} />
+            <div className="flex-1 overflow-y-auto px-8">
+              <button 
+                onClick={() => {
+                  setDesktopShowFolderOptions(false);
+                  setDesktopEditingFolder(null);
+                }} 
+                className="mb-6"
+              >
+                <img src={backIcon} alt="Back" className="w-[24px] h-[24px]" />
+              </button>
+
+              <h1 className="text-white text-[24px] font-outfit font-light tracking-wider mb-8">
+                FOLDER OPTIONS
+              </h1>
+
+              {desktopEditingFolder && (
+                <div className="space-y-6">
+                  {/* Folder Name */}
+                  <div className="space-y-2">
+                    <label className="text-white/60 text-[12px] uppercase tracking-wider font-outfit">Folder Name</label>
+                    <input
+                      type="text"
+                      value={newFolderName}
+                      onChange={(e) => setNewFolderName(e.target.value)}
+                      className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-3 text-[16px] font-outfit"
+                    />
+                  </div>
+                  
+                  {/* Default View */}
+                  <div className="space-y-2">
+                    <label className="text-white/60 text-[12px] uppercase tracking-wider font-outfit">Default View</label>
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => setNewFolderDefaultView('collapsed')}
+                        className={`flex-1 py-3 rounded-[10px] font-outfit text-[14px] transition-colors ${newFolderDefaultView === 'collapsed' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
+                      >
+                        Date View
+                      </button>
+                      <button
+                        onClick={() => setNewFolderDefaultView('compact')}
+                        className={`flex-1 py-3 rounded-[10px] font-outfit text-[14px] transition-colors ${newFolderDefaultView === 'compact' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
+                      >
+                        List View
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Save Button */}
+                  <button
+                    onClick={async () => {
+                      await updateFolder();
+                      setDesktopShowFolderOptions(false);
+                      setDesktopEditingFolder(null);
+                    }}
+                    className="w-full py-3 bg-white text-journal-header font-medium rounded-[10px] font-outfit"
+                  >
+                    Save Changes
+                  </button>
+                  
+                  {/* Delete Button */}
+                  <button
+                    onClick={() => {
+                      setFolderToDelete(desktopEditingFolder);
+                      setShowDeleteFolderConfirm(true);
+                    }}
+                    className="w-full py-3 bg-red-500/20 text-red-400 rounded-[10px] font-outfit"
+                  >
+                    Delete Folder
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
