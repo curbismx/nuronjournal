@@ -2243,7 +2243,7 @@ onDragStart={(e) => {
                             {theme === t && (
                               <div 
                                 className="w-[6px] h-[6px] bg-white rounded-full absolute"
-                                style={{ bottom: '0px' }}
+                                style={{ bottom: '-10px' }}
                               />
                             )}
                           </button>
@@ -2373,7 +2373,7 @@ onDragStart={(e) => {
                             {theme === t && (
                               <div 
                                 className="w-[6px] h-[6px] bg-white rounded-full absolute"
-                                style={{ bottom: '0px' }}
+                                style={{ bottom: '-10px' }}
                               />
                             )}
                           </button>
