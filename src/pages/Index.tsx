@@ -1,3 +1,4 @@
+import React from 'react';
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import settingsIcon from "@/assets/00settings-4.png";
@@ -2644,8 +2645,8 @@ const themeSettingsIcons = {
               <p className="text-[16px] font-outfit text-[hsl(0,0%,50%)]">No notes found</p>
             </div>
           )}
-          {/* Notes list */}
-          <div>
+          {/* Notes list - FLATTENED for sticky to work */}
+          <>
             {(isSearching ? filteredGroupedNotes : groupedNotes).map((group, groupIndex, allGroups) => {
               const groupMonthYear = new Date(group.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
               const prevGroup = groupIndex > 0 ? allGroups[groupIndex - 1] : null;
@@ -2653,14 +2654,7 @@ const themeSettingsIcons = {
               const showMonthHeader = viewMode !== 'compact' && (groupIndex === 0 || groupMonthYear !== prevMonthYear);
               
               return (
-                <div 
-                  key={group.date}
-                  data-month-year={groupMonthYear}
-                  ref={(el) => {
-                    if (el) dateGroupRefs.current.set(group.date, el);
-                    else dateGroupRefs.current.delete(group.date);
-                  }}
-                >
+                <React.Fragment key={group.date}>
                   {showMonthHeader && (
                     <div className="sticky top-0 z-10 bg-[#CACAC2] px-8 py-[3px]">
                       <span className="text-white text-[20px] font-outfit font-light tracking-wider leading-tight">
@@ -2682,7 +2676,6 @@ const themeSettingsIcons = {
                         onClick={() => navigate(`/note/${note.id}`)}
                       >
                         <div className={viewMode === 'compact' ? "px-8 pt-[17px] pb-4" : index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-4 pb-4"}>
-                          {/* Only show date for first note of each day - HIDDEN in compact view */}
                           {index === 0 && viewMode !== 'compact' && (
                             <div className="flex items-start gap-4 mb-4">
                               <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
@@ -2693,57 +2686,45 @@ const themeSettingsIcons = {
                               </div>
                             </div>
                           )}
-                          
-                {/* Title and Body Container */}
-                <div className="min-w-0">
-                  {viewMode === 'compact' ? (
-                    /* COMPACT VIEW - no date, smaller layout */
-                    <div className="flex items-center gap-[12px]">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] break-words overflow-wrap-anywhere">
-                          {note.title || 'Untitled'}
-                        </h3>
-                        <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-1 break-words overflow-wrap-anywhere">
-                          {preview || '-'}
-                        </p>
-                      </div>
-                      {firstImage && (
-                        <img 
-                          src={firstImage.url} 
-                          alt=""
-                          className="w-[50px] h-[50px] rounded-[8px] object-cover flex-shrink-0"
-                        />
-                      )}
-                    </div>
-                  ) : (
-                    /* COLLAPSED VIEW (default) */
-                    <div className="flex items-center gap-[15px]">
-                      <div className="flex-1 min-w-0">
-                        <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 break-words overflow-wrap-anywhere ${index === 0 ? '-mt-[10px]' : ''}`}>
-                          {note.title || 'Untitled'}
-                        </h3>
-                        <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px] break-words overflow-wrap-anywhere">
-                          {preview || '-'}
-                        </p>
-                      </div>
-                      {firstImage && (
-                        <img 
-                          src={firstImage.url} 
-                          alt=""
-                          className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0"
-                        />
-                      )}
-                    </div>
-                  )}
-                </div>
+                          <div className="min-w-0">
+                            {viewMode === 'compact' ? (
+                              <div className="flex items-center gap-[12px]">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] break-words overflow-wrap-anywhere">
+                                    {note.title || 'Untitled'}
+                                  </h3>
+                                  <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-1 break-words overflow-wrap-anywhere">
+                                    {preview || '-'}
+                                  </p>
+                                </div>
+                                {firstImage && (
+                                  <img src={firstImage.url} alt="" className="w-[50px] h-[50px] rounded-[8px] object-cover flex-shrink-0" />
+                                )}
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-[15px]">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 break-words overflow-wrap-anywhere ${index === 0 ? '-mt-[10px]' : ''}`}>
+                                    {note.title || 'Untitled'}
+                                  </h3>
+                                  <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px] break-words overflow-wrap-anywhere">
+                                    {preview || '-'}
+                                  </p>
+                                </div>
+                                {firstImage && (
+                                  <img src={firstImage.url} alt="" className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0" />
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
                   })}
-                </div>
+                </React.Fragment>
               );
             })}
-          </div>
+          </>
         </div>
       </div>
 
