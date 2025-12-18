@@ -1539,7 +1539,7 @@ query = query.eq('folder_id', currentFolder.id);
           style={{ width: '20%', backgroundColor: themeColors[theme] }}
         >
           {/* Header area - 50px to match Column 2 */}
-          <div className="h-[50px] flex items-center justify-end pl-[20px] pr-[30px]">
+          <div className="h-[50px] flex items-center justify-end pl-[20px] pr-[23px]">
                   {user && (
                     <button 
                       onClick={async () => {
