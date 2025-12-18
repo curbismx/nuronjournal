@@ -1910,7 +1910,10 @@ const Note = () => {
       } else {
         notes.unshift(noteDataWithAudio);
       }
-      localStorage.setItem('nuron-notes', JSON.stringify(notes));
+      const isDesktopEmbed = new URLSearchParams(window.location.search).get('desktop') === 'true';
+      if (!isDesktopEmbed) {
+        localStorage.setItem('nuron-notes', JSON.stringify(notes));
+      }
     }
 
     // Safety: Always update local cache as backup
@@ -2194,7 +2197,10 @@ const Note = () => {
       // NOT LOGGED IN: Delete from localStorage only
       const notes = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
       const filtered = notes.filter((n: any) => n.id !== noteIdRef.current);
-      localStorage.setItem('nuron-notes', JSON.stringify(filtered));
+      const isDesktopEmbed = new URLSearchParams(window.location.search).get('desktop') === 'true';
+      if (!isDesktopEmbed) {
+        localStorage.setItem('nuron-notes', JSON.stringify(filtered));
+      }
     }
     
     // Notify parent window that note was deleted
