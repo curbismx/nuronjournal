@@ -97,37 +97,17 @@ const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
     }
   }, [navigate]);
 
-  // Listen for storage changes from iframe (for desktop view)
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'nuron-notes') {
-        const stored = localStorage.getItem('nuron-notes');
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            setSavedNotes(parsed);
-          } catch (err) {
-            console.error('Failed to parse notes:', err);
-          }
-        }
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
 
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
 
   // Listen for postMessage from iframe when note is saved
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
-      // Handle note-saved - only reload if this is a NEW note
+      // Handle note-saved - always reload from Supabase
       if (e.data?.type === 'note-saved') {
         const noteId = e.data.noteId;
-        // Only reload if this is a NEW note (not already in the list)
-        if (noteId && !savedNotes.find(n => n.id === noteId)) {
-          loadNotesForCurrentFolder();
-        }
+        // Always reload from Supabase to get properly filtered notes
+        loadNotesForCurrentFolder();
         // Update selection if it was a new note being saved
         if (desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-') && noteId) {
           setDesktopSelectedNoteId(noteId);
@@ -158,7 +138,7 @@ const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [savedNotes, desktopSelectedNoteId]);
+  }, [desktopSelectedNoteId]);
   const [viewMode, setViewMode] = useState<'collapsed' | 'compact'>('collapsed');
   const [showSettings, setShowSettings] = useState(false);
   const [showAccountDetails, setShowAccountDetails] = useState(false);
