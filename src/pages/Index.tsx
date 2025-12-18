@@ -1538,7 +1538,7 @@ query = query.eq('folder_id', currentFolder.id);
           style={{ width: '20%', backgroundColor: themeColors[theme] }}
         >
           {/* Header area - 50px to match Column 2 */}
-          <div className="h-[50px] flex items-center justify-end pl-[20px] pr-[16px]">
+          <div className="h-[50px] flex items-center justify-end pl-[20px] pr-[10px]">
                   {user && (
                     <button onClick={openCreateFolder} className="p-0 m-0 border-0 bg-transparent">
                       <img src={folderPlusIcon} alt="Add" style={{ width: '18px', height: '18px' }} className="opacity-70" />
@@ -1549,12 +1549,24 @@ query = query.eq('folder_id', currentFolder.id);
           {/* Folders list - below the header */}
           <div className="flex-1 space-y-2 px-[20px] pt-[30px] overflow-y-auto">
 
-            {folders.map((folder) => (
+            {folders.map((folder, folderIndex) => (
               <div
                 key={folder.id}
+                draggable
+                onDragStart={(e) => {
+                  setDraggedFolder(folder.id);
+                  e.dataTransfer.effectAllowed = 'move';
+                }}
+                onDragEnd={() => {
+                  setDraggedFolder(null);
+                  setDragOverFolder(null);
+                }}
                 onDragOver={(e) => {
                   e.preventDefault();
                   if (draggedNote && draggedNote.folder_id !== folder.id) {
+                    setDragOverFolder(folder.id);
+                  }
+                  if (draggedFolder && draggedFolder !== folder.id) {
                     setDragOverFolder(folder.id);
                   }
                 }}
@@ -1577,8 +1589,12 @@ query = query.eq('folder_id', currentFolder.id);
                         setDesktopSelectedNoteId(null);
                       }
                     }
+                    setDraggedNote(null);
                   }
-                  setDraggedNote(null);
+                  if (draggedFolder && draggedFolder !== folder.id) {
+                    updateFolderOrder(draggedFolder, folderIndex);
+                  }
+                  setDraggedFolder(null);
                   setDragOverFolder(null);
                 }}
                 className={`flex items-center justify-between w-full py-2 px-2 rounded-lg transition-all duration-200 ${
@@ -1587,13 +1603,20 @@ query = query.eq('folder_id', currentFolder.id);
                   dragOverFolder === folder.id ? 'bg-white/20 ring-2 ring-white/50' : ''
                 } ${
                   folderDropFlash === folder.id ? 'bg-white/40' : ''
+                } ${
+                  draggedFolder === folder.id ? 'opacity-30' : ''
+                } ${
+                  dragOverFolder === folder.id && draggedFolder ? 'border-t-2 border-white/50' : ''
                 }`}
+                style={{ cursor: 'grab' }}
               >
                 <button
                   onClick={() => {
                     setCurrentFolder(folder);
                     localStorage.setItem('nuron-current-folder-id', folder.id);
                     setDesktopSelectedNoteId(null);
+                    setViewMode(folder.default_view || 'collapsed');
+                    setUserChangedView(false);
                   }}
                   className="flex items-center gap-3 flex-1 text-left"
                 >
