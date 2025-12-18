@@ -1708,41 +1708,14 @@ query = query.eq('folder_id', currentFolder.id);
                         key={note.id}
                         draggable
 onDragStart={(e) => {
-                              setDraggedNote(note);
-                              e.dataTransfer.effectAllowed = 'move';
-                              
-                              // Create a small custom drag image
-                              const dragIcon = document.createElement('div');
-                              dragIcon.style.cssText = `
-                                width: 40px;
-                                height: 40px;
-                                background-color: ${themeColors[theme]};
-                                border-radius: 8px;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                color: white;
-                                font-size: 20px;
-                                font-family: Outfit, sans-serif;
-                                position: absolute;
-                                top: -1000px;
-                                left: -1000px;
-                                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                              `;
-                              dragIcon.innerHTML = '📝';
-                              document.body.appendChild(dragIcon);
-                              e.dataTransfer.setDragImage(dragIcon, 20, 20);
-                              
-                              // Clean up the element after drag starts
-                              setTimeout(() => {
-                                document.body.removeChild(dragIcon);
-                              }, 0);
-                            }}
+                          setDraggedNote(note);
+                          e.dataTransfer.effectAllowed = 'move';
+                        }}
                         onDragEnd={() => {
                           setDraggedNote(null);
                           setDragOverFolder(null);
                         }}
-                        className={`border-b border-[hsl(0,0%,85%)] cursor-pointer transition-all duration-300 ease-out ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'} ${draggedNote?.id === note.id ? 'opacity-50' : ''}`}
+                        className={`border-b border-[hsl(0,0%,85%)] cursor-pointer transition-all duration-300 ease-out ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'} ${draggedNote?.id === note.id ? 'opacity-30' : ''}`}
                         onClick={() => setDesktopSelectedNoteId(note.id)}
                       >
                         <div className={viewMode === 'compact' ? "px-8 pt-[17px] pb-4" : index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-4 pb-4"}>
