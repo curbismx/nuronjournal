@@ -402,10 +402,12 @@ const themeSettingsIcons = {
 
   // Store current folder id for Note.tsx
   useEffect(() => {
+    // Don't save folder during initialization - wait for proper folder to load
+    if (isInitializing) return;
     if (currentFolder && currentFolder.id !== 'local-notes') {
       localStorage.setItem('nuron-current-folder-id', currentFolder.id);
     }
-  }, [currentFolder]);
+  }, [currentFolder, isInitializing]);
 
   // Folder CRUD functions
   const createFolder = async () => {
@@ -1630,87 +1632,103 @@ const themeSettingsIcons = {
                 {viewMode === 'compact' && (
                   <div className="border-b border-[hsl(0,0%,85%)]" />
                 )}
-                {(isSearching ? filteredGroupedNotes : groupedNotes).map((group, groupIndex, allGroups) => {
+                {(isSearching ? filteredGroupedNotes : groupedNotes).flatMap((group, groupIndex, allGroups) => {
                   const groupMonthYear = new Date(group.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
                   const prevGroup = groupIndex > 0 ? allGroups[groupIndex - 1] : null;
                   const prevMonthYear = prevGroup ? new Date(prevGroup.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase() : null;
                   const showMonthHeader = viewMode !== 'compact' && (groupIndex === 0 || groupMonthYear !== prevMonthYear);
                   
-                  return (
-                    <div key={group.date}>
-                      {showMonthHeader && (
-                        <div className="sticky top-0 z-10 bg-[#CACAC2] px-8 py-[3px]">
-                          <span className="text-white text-[20px] font-outfit font-light tracking-wider leading-tight">
-                            {groupMonthYear}
-                          </span>
-                        </div>
-                      )}
-                      {group.notes.map((note, index) => {
-                        const noteDate = new Date(note.createdAt);
-                        const dayNumber = noteDate.getDate().toString().padStart(2, '0');
-                        const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
-                        const preview = getNotePreview(note);
-                        const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; url: string } | undefined;
-                        
-                        return (
-                          <div
-                            key={note.id}
-                            onClick={() => setDesktopSelectedNoteId(note.id)}
-                            className={`border-b border-[hsl(0,0%,85%)] cursor-pointer ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'}`}
-                          >
-                            <div className={viewMode === 'compact' ? "px-8 pt-[17px] pb-4" : index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-4 pb-4"}>
-                              {/* Date - ONLY shows in collapsed view, ONLY for first note of day */}
-                              {index === 0 && viewMode !== 'compact' && (
-                                <div className="flex items-start gap-4 mb-4">
-                                  <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
-                                    {dayNumber}
-                                  </div>
-                                  <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
-                                    {dayName}
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {/* Title and preview - different layout for each view */}
-                              <div className="min-w-0">
-                                {viewMode === 'compact' ? (
-                                  /* COMPACT VIEW - no date, smaller layout */
-                                  <div className="flex items-center gap-[12px]">
-                                    <div className="flex-1 min-w-0">
-                                      <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] break-words">
-                                        {note.title || 'Untitled'}
-                                      </h3>
-                                      <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-1 break-words">
-                                        {preview || '-'}
-                                      </p>
-                                    </div>
-                                    {firstImage && (
-                                      <img src={firstImage.url} alt="" className="w-[50px] h-[50px] rounded-[8px] object-cover flex-shrink-0" />
-                                    )}
-                                  </div>
-                                ) : (
-                                  /* COLLAPSED VIEW - with date, larger layout */
-                                  <div className="flex items-center gap-[15px]">
-                                    <div className="flex-1 min-w-0">
-                                      <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 break-words ${index === 0 ? '-mt-[10px]' : ''}`}>
-                                        {note.title || 'Untitled'}
-                                      </h3>
-                                      <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px] break-words">
-                                        {preview || '-'}
-                                      </p>
-                                    </div>
-                                    {firstImage && (
-                                      <img src={firstImage.url} alt="" className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0" />
-                                    )}
-                                  </div>
-                                )}
+                  const elements: React.ReactNode[] = [];
+                  
+                  // Add month header as separate element (direct child of scroll container)
+                  if (showMonthHeader) {
+                    elements.push(
+                      <div 
+                        key={`month-${groupMonthYear}-${groupIndex}`}
+                        className="sticky top-0 z-10 bg-[#CACAC2] px-8 py-[3px]"
+                      >
+                        <span className="text-white text-[20px] font-outfit font-light tracking-wider leading-tight">
+                          {groupMonthYear}
+                        </span>
+                      </div>
+                    );
+                  }
+                  
+                  // Add notes
+                  group.notes.forEach((note, index) => {
+                    const noteDate = new Date(note.createdAt);
+                    const dayNumber = noteDate.getDate().toString().padStart(2, '0');
+                    const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+                    const preview = getNotePreview(note);
+                    const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; id: string; url: string; width: number } | undefined;
+                    
+                    elements.push(
+                      <div 
+                        key={note.id}
+                        className={`border-b border-[hsl(0,0%,85%)] cursor-pointer ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'}`}
+                        onClick={() => setDesktopSelectedNoteId(note.id)}
+                      >
+                        <div className={viewMode === 'compact' ? "px-8 pt-[17px] pb-4" : index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-4 pb-4"}>
+                          {/* Only show date for first note of each day - HIDDEN in compact view */}
+                          {index === 0 && viewMode !== 'compact' && (
+                            <div className="flex items-start gap-4 mb-4">
+                              <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
+                                {dayNumber}
+                              </div>
+                              <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
+                                {dayName}
                               </div>
                             </div>
+                          )}
+                          
+                          {/* Title and Body Container */}
+                          <div className="min-w-0">
+                            {viewMode === 'compact' ? (
+                              /* COMPACT VIEW */
+                              <div className="flex items-center gap-[12px]">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] break-words overflow-wrap-anywhere">
+                                    {note.title || 'Untitled'}
+                                  </h3>
+                                  <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-1 break-words overflow-wrap-anywhere">
+                                    {preview || '-'}
+                                  </p>
+                                </div>
+                                {firstImage && (
+                                  <img 
+                                    src={firstImage.url} 
+                                    alt=""
+                                    className="w-[50px] h-[50px] rounded-[8px] object-cover flex-shrink-0"
+                                  />
+                                )}
+                              </div>
+                            ) : (
+                              /* COLLAPSED VIEW */
+                              <div className="flex items-center gap-[15px]">
+                                <div className="flex-1 min-w-0">
+                                  <h3 className={`text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 break-words overflow-wrap-anywhere ${index === 0 ? '-mt-[10px]' : ''}`}>
+                                    {note.title || 'Untitled'}
+                                  </h3>
+                                  <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 -mt-[10px] break-words overflow-wrap-anywhere">
+                                    {preview || '-'}
+                                  </p>
+                                </div>
+                                {firstImage && (
+                                  <img 
+                                    src={firstImage.url} 
+                                    alt=""
+                                    className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0"
+                                  />
+                                )}
+                              </div>
+                            )}
                           </div>
-                        );
-                      })}
-                    </div>
-                  );
+                        </div>
+                      </div>
+                    );
+                  });
+                  
+                  return elements;
                 })}
               </div>
             </div>
