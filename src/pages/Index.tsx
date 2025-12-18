@@ -1686,14 +1686,14 @@ const themeSettingsIcons = {
                         <div className={viewMode === 'compact' ? "px-8 pt-[17px] pb-4" : index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-4 pb-4"}>
                           {/* Only show date for first note of each day - HIDDEN in compact view */}
                           {index === 0 && viewMode !== 'compact' && (
-                            <div className="flex items-start gap-4 mb-4">
-                              <div className="text-[72px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
-                                {dayNumber}
+                              <div className="flex items-start gap-3 mb-4">
+                                <div className="text-[48px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
+                                  {dayNumber}
+                                </div>
+                                <div className="text-[14px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
+                                  {dayName}
+                                </div>
                               </div>
-                              <div className="text-[20px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
-                                {dayName}
-                              </div>
-                            </div>
                           )}
                           
                           {/* Title and Body Container */}
