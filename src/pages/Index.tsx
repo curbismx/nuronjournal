@@ -1809,7 +1809,7 @@ query = query.eq('folder_id', currentFolder.id);
           </div>
 
           {/* Settings at bottom */}
-          <button onClick={() => setDesktopShowSettings(true)} className="px-[20px] pb-[40px] flex items-center gap-2 opacity-60 hover:opacity-80">
+          <button onClick={() => setDesktopShowSettings(!desktopShowSettings)} className="px-[20px] pb-[40px] flex items-center gap-2 opacity-60 hover:opacity-80">
 
             <img src={settingsIcon} alt="" className="w-[20px] h-[20px]" />
 
