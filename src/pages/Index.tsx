@@ -464,13 +464,15 @@ const themeSettingsIcons = {
   }, [user, currentFolder]);
 
   // Store current folder id for Note.tsx
-  useEffect(() => {
-    // Don't save folder during initialization - wait for proper folder to load
-    if (isInitializing) return;
-    if (currentFolder && currentFolder.id !== 'local-notes') {
-      localStorage.setItem('nuron-current-folder-id', currentFolder.id);
-    }
-  }, [currentFolder, isInitializing]);
+useEffect(() => {
+  // Don't save folder during initialization - wait for proper folder to load
+  if (isInitializing) return;
+  if (currentFolder && currentFolder.id !== 'local-notes') {
+    localStorage.setItem('nuron-current-folder-id', currentFolder.id);
+    // Clear the notes cache so old folder's notes don't show
+    localStorage.removeItem('nuron-notes-cache');
+  }
+}, [currentFolder, isInitializing]);
 
   // Folder CRUD functions
   const createFolder = async () => {
@@ -659,7 +661,7 @@ const themeSettingsIcons = {
         .from('notes')
         .select('*')
         .eq('user_id', uid)
-        .or(`folder_id.eq.${currentFolder.id},folder_id.is.null`)
+.eq('folder_id', currentFolder.id)
         .order('created_at', { ascending: false });
       
       if (data) {
@@ -680,11 +682,13 @@ const themeSettingsIcons = {
   };
 
   // Reload notes when current folder changes
-  useEffect(() => {
-    if (currentFolder) {
-      loadNotesForCurrentFolder();
-    }
-  }, [currentFolder?.id, user?.id]);
+useEffect(() => {
+  if (currentFolder) {
+    // Clear notes immediately when folder changes to prevent showing wrong notes
+    setSavedNotes([]);
+    loadNotesForCurrentFolder();
+  }
+}, [currentFolder?.id, user?.id]);
 
   const loadUserProfile = async (userId: string) => {
     const { data } = await supabase
@@ -861,7 +865,7 @@ const themeSettingsIcons = {
       .order('created_at', { ascending: false });
     
     if (currentFolder && currentFolder.id !== 'local-notes') {
-      query = query.or(`folder_id.eq.${currentFolder.id},folder_id.is.null`);
+query = query.eq('folder_id', currentFolder.id);
     }
     
     const { data } = await query;
@@ -909,7 +913,7 @@ const themeSettingsIcons = {
         .order('created_at', { ascending: false });
       
       if (currentFolder && currentFolder.id !== 'local-notes') {
-        query = query.or(`folder_id.eq.${currentFolder.id},folder_id.is.null`);
+        query = query.eq('folder_id', currentFolder.id);
       }
       
       const { data } = await query;
