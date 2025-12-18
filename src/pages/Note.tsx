@@ -272,6 +272,18 @@ const Note = () => {
     loadFolders();
   }, [showMoveNote]);
 
+  // Listen for menu actions from parent window (desktop view)
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'menu-action') {
+        handleMenuAction(event.data.action);
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   const handleMoveNote = async (folderId: string) => {
     setSelectedMoveFolder(folderId);
     
@@ -2126,6 +2138,8 @@ const Note = () => {
       rewriteText();
     } else if (action === 'image') {
       fileInputRef.current?.click();
+    } else if (action === 'move') {
+      setShowMoveNote(true);
     } else if (action === 'share') {
       shareNote();
     } else if (action === 'delete') {
