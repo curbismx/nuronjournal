@@ -2290,10 +2290,15 @@ const Note = () => {
         </div>
       </div>
 
+      {/* Spacer for desktop embed mode - matches Column 3's 50px header */}
+      {isEmbedded && (
+        <div className="h-[50px] flex-shrink-0 bg-journal-content" />
+      )}
+
       {/* Scrollable content area */}
       <div 
         ref={scrollContainerRef}
-        className={`flex-1 overflow-y-scroll bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 -mt-[25px] transition-all duration-300 ${isRewriting ? 'ai-rewriting' : ''} ${showMoveNote ? 'translate-y-[100%]' : ''}`}
+        className={`flex-1 overflow-y-scroll bg-journal-content ${isEmbedded ? '' : 'rounded-t-[30px] -mt-[25px]'} overscroll-y-auto z-40 transition-all duration-300 ${isRewriting ? 'ai-rewriting' : ''} ${showMoveNote ? 'translate-y-[100%]' : ''}`}
         style={{ 
           WebkitOverflowScrolling: 'touch',
           overscrollBehaviorY: 'auto',
