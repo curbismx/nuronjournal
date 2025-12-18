@@ -2138,7 +2138,7 @@ const themeSettingsIcons = {
                 onClick={() => setDesktopMenuOpen(!desktopMenuOpen)}
                 className="p-0 m-0 border-0 bg-transparent"
               >
-                <img src={threeDotsIcon} alt="Menu" className="h-[24px] w-auto" />
+                <img src={threeDotsIcon} alt="Menu" style={{ height: '24px', width: 'auto' }} />
               </button>
             )}
           </div>
