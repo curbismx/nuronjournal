@@ -310,7 +310,7 @@ const themeSettingsIcons = {
         .from('folders')
         .select('*')
         .eq('user_id', session.user.id)
-        .order('sort_order', { ascending: true });
+        .order('sort_order', { ascending: true, nullsFirst: false });
       
       if (data && !error) {
         if (data.length === 0) {
@@ -337,6 +337,19 @@ const themeSettingsIcons = {
             default_view: (f.default_view || 'collapsed') as 'collapsed' | 'compact'
           }));
           setFolders(typedFolders);
+          
+          // Fix any folders with null sort_order
+          const foldersNeedingOrder = typedFolders.filter(f => f.sort_order === null || f.sort_order === undefined);
+          if (foldersNeedingOrder.length > 0) {
+            let maxOrder = Math.max(...typedFolders.filter(f => f.sort_order !== null && f.sort_order !== undefined).map(f => f.sort_order || 0), -1);
+            for (const folder of foldersNeedingOrder) {
+              maxOrder++;
+              await supabase
+                .from('folders')
+                .update({ sort_order: maxOrder })
+                .eq('id', folder.id);
+            }
+          }
           
           // ALWAYS check localStorage first to restore the previously selected folder
           const savedFolderId = localStorage.getItem('nuron-current-folder-id');
@@ -419,7 +432,8 @@ const themeSettingsIcons = {
       .insert({ 
         user_id: user.id, 
         name: newFolderName.trim(), 
-        default_view: newFolderDefaultView 
+        default_view: newFolderDefaultView,
+        sort_order: folders.length  // Put new folder at the end
       })
       .select()
       .single();
