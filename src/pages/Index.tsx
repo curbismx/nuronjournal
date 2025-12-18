@@ -135,6 +135,32 @@ const [desktopShowSignUp, setDesktopShowSignUp] = useState(false);
           setDesktopSelectedNoteId(e.data.noteId);
         }
       }
+      
+      // Handle note deletion
+      if (e.data?.type === 'note-deleted') {
+        // Refresh notes list from cache
+        const cached = localStorage.getItem('nuron-notes-cache');
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            setSavedNotes(parsed);
+          } catch (err) {
+            console.error('Failed to parse cache:', err);
+          }
+        }
+        // Also check local notes
+        const stored = localStorage.getItem('nuron-notes');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            setSavedNotes(parsed);
+          } catch (err) {
+            console.error('Failed to parse notes:', err);
+          }
+        }
+        // Clear the selected note since it was deleted
+        setDesktopSelectedNoteId(null);
+      }
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
