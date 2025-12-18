@@ -2325,18 +2325,6 @@ const Note = () => {
         </div>
       </div>
 
-      {/* Spacer for desktop embed mode - matches Column 3's 50px header */}
-      {isEmbedded && (
-        <div className="h-[50px] flex-shrink-0 bg-journal-content flex items-center justify-end px-8">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="p-0 m-0 border-0 bg-transparent"
-          >
-            <img src={threeDotsIcon} alt="Menu" className="h-[24px] w-auto" />
-          </button>
-        </div>
-      )}
-
       {/* Scrollable content area */}
       <div 
         ref={scrollContainerRef}
