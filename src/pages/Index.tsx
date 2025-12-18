@@ -1707,10 +1707,37 @@ query = query.eq('folder_id', currentFolder.id);
                       <div 
                         key={note.id}
                         draggable
-                        onDragStart={(e) => {
-                          setDraggedNote(note);
-                          e.dataTransfer.effectAllowed = 'move';
-                        }}
+onDragStart={(e) => {
+                              setDraggedNote(note);
+                              e.dataTransfer.effectAllowed = 'move';
+                              
+                              // Create a small custom drag image
+                              const dragIcon = document.createElement('div');
+                              dragIcon.style.cssText = `
+                                width: 40px;
+                                height: 40px;
+                                background-color: ${themeColors[theme]};
+                                border-radius: 8px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                color: white;
+                                font-size: 20px;
+                                font-family: Outfit, sans-serif;
+                                position: absolute;
+                                top: -1000px;
+                                left: -1000px;
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                              `;
+                              dragIcon.innerHTML = '📝';
+                              document.body.appendChild(dragIcon);
+                              e.dataTransfer.setDragImage(dragIcon, 20, 20);
+                              
+                              // Clean up the element after drag starts
+                              setTimeout(() => {
+                                document.body.removeChild(dragIcon);
+                              }, 0);
+                            }}
                         onDragEnd={() => {
                           setDraggedNote(null);
                           setDragOverFolder(null);
