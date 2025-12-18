@@ -1515,13 +1515,13 @@ const themeSettingsIcons = {
 
         >
 
-          <div className="flex items-center justify-end mb-8">
-            {user && (
-              <button onClick={openCreateFolder}>
-                <img src={folderPlusIcon} alt="Add" className="w-[20px] h-[20px] opacity-70" />
-              </button>
-            )}
-          </div>
+                <div className="h-[50px] flex items-center justify-end pr-0">
+                  {user && (
+                    <button onClick={openCreateFolder} className="p-0 m-0 border-0 bg-transparent">
+                      <img src={folderPlusIcon} alt="Add" style={{ width: '18px', height: '18px' }} className="opacity-70" />
+                    </button>
+                  )}
+                </div>
 
           <div className="space-y-2 flex-1">
 
