@@ -213,6 +213,7 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
   const [newFolderDefaultView, setNewFolderDefaultView] = useState<'collapsed' | 'compact'>('collapsed');
   const [showDeleteFolderConfirm, setShowDeleteFolderConfirm] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [desktopShowDeleteFolderConfirm, setDesktopShowDeleteFolderConfirm] = useState(false);
   const [draggedFolder, setDraggedFolder] = useState<Folder | null>(null);
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const [dropLineIndex, setDropLineIndex] = useState<number | null>(null);
@@ -2483,13 +2484,71 @@ onDragStart={(e) => {
                   {/* Delete Button */}
                   <button
                     onClick={() => {
-                      setFolderToDelete(desktopEditingFolder);
-                      setShowDeleteFolderConfirm(true);
+                      setDesktopShowDeleteFolderConfirm(true);
                     }}
                     className="w-full py-3 bg-red-500/20 text-red-400 rounded-[10px] font-outfit"
                   >
                     Delete Folder
                   </button>
+                  
+                  {/* Delete Folder Confirmation */}
+                  {desktopShowDeleteFolderConfirm && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setDesktopShowDeleteFolderConfirm(false)}>
+                      <div 
+                        className="bg-white rounded-[20px] p-6 w-[280px] shadow-xl"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <h3 className="text-[18px] font-outfit font-semibold text-center text-[hsl(0,0%,25%)] mb-2">
+                          Delete Folder?
+                        </h3>
+                        <p className="text-[14px] font-outfit text-center text-[hsl(0,0%,50%)] mb-6">
+                          Are you sure you want to delete "{desktopEditingFolder?.name}"? Notes in this folder will not be deleted.
+                        </p>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => setDesktopShowDeleteFolderConfirm(false)}
+                            className="flex-1 py-3 bg-[hsl(0,0%,90%)] text-[hsl(0,0%,30%)] rounded-[10px] font-outfit text-[14px]"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!desktopEditingFolder) return;
+                              
+                              const { error } = await supabase
+                                .from('folders')
+                                .delete()
+                                .eq('id', desktopEditingFolder.id);
+                              
+                              if (!error) {
+                                // Remove folder from list
+                                setFolders(prev => prev.filter(f => f.id !== desktopEditingFolder.id));
+                                
+                                // If deleted folder was current, switch to first remaining folder
+                                if (currentFolder?.id === desktopEditingFolder.id) {
+                                  const remaining = folders.filter(f => f.id !== desktopEditingFolder.id);
+                                  if (remaining.length > 0) {
+                                    setCurrentFolder(remaining[0]);
+                                    localStorage.setItem('nuron-current-folder-id', remaining[0].id);
+                                  } else {
+                                    setCurrentFolder(null);
+                                  }
+                                }
+                                
+                                // Close everything
+                                setDesktopShowDeleteFolderConfirm(false);
+                                setDesktopShowFolderOptions(false);
+                                setDesktopEditingFolder(null);
+                              }
+                            }}
+                            className="flex-1 py-3 bg-red-500 text-white rounded-[10px] font-outfit text-[14px]"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
