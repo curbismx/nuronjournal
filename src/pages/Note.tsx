@@ -352,6 +352,12 @@ const Note = () => {
     }
 
     setIsRewriting(true);
+    
+    // Notify parent window that rewrite is starting (for desktop glow effect)
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'rewrite-start' }, '*');
+    }
+    
     try {
       const { data, error } = await supabase.functions.invoke('rewrite-text', {
         body: { text: noteContent },
@@ -384,6 +390,11 @@ const Note = () => {
       console.error('Rewrite error:', error);
     } finally {
       setIsRewriting(false);
+      
+      // Notify parent window that rewrite has ended
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: 'rewrite-end' }, '*');
+      }
     }
   };
 

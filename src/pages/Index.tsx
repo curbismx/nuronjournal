@@ -168,6 +168,14 @@ const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
         // Clear the selected note since it was deleted
         setDesktopSelectedNoteId(null);
       }
+      
+      // Handle AI rewrite glow effect
+      if (e.data?.type === 'rewrite-start') {
+        setDesktopRewriteGlow(true);
+      }
+      if (e.data?.type === 'rewrite-end') {
+        setDesktopRewriteGlow(false);
+      }
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
@@ -222,6 +230,7 @@ const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 const [showRateAppDialog, setShowRateAppDialog] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [desktopRewriteGlow, setDesktopRewriteGlow] = useState(false);
 
   // Folder state
   const [showFolders, setShowFolders] = useState(false);
@@ -2133,7 +2142,13 @@ const themeSettingsIcons = {
           style={{ width: '50%' }}
         >
           {/* Cream header - 50px with 3dots menu */}
-          <div className="h-[50px] flex-shrink-0 bg-journal-content flex items-center justify-end px-8">
+          <div 
+            className={`h-[50px] flex-shrink-0 flex items-center justify-end px-8 transition-all duration-300 ${desktopRewriteGlow ? '' : 'bg-journal-content'}`}
+            style={{ 
+              backgroundColor: desktopRewriteGlow ? themeColors[theme] : undefined,
+              boxShadow: desktopRewriteGlow ? `0 0 20px ${themeColors[theme]}` : 'none'
+            }}
+          >
             {desktopSelectedNoteId && (
               <button
                 onClick={() => setDesktopMenuOpen(!desktopMenuOpen)}
