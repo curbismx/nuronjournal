@@ -2190,11 +2190,11 @@ onDragStart={(e) => {
 
         {/* Column 3: Note view - 50% width */}
         <div 
-          className="relative flex flex-col bg-journal-content"
-          style={{ width: '50%' }}
+          className="relative flex flex-col"
+          style={{ width: '50%', backgroundColor: '#F9F9F6' }}
         >
           {/* Cream header - 50px with 3dots menu */}
-          <div className="h-[50px] flex-shrink-0 bg-journal-content flex items-center justify-end pr-[20px]">
+          <div className="h-[50px] flex-shrink-0 flex items-center justify-end pr-[20px]" style={{ backgroundColor: '#F9F9F6' }}>
             {desktopSelectedNoteId && (
               <button
                 onClick={() => setDesktopMenuOpen(!desktopMenuOpen)}
