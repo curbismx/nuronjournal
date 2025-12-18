@@ -1743,9 +1743,9 @@ query = query.eq('folder_id', currentFolder.id);
                     className={`relative flex items-center justify-between w-full py-2 ${
                       currentFolder?.id === folder.id ? 'opacity-100' : 'opacity-50 hover:opacity-70'
                     } ${
-                      dragOverFolder === folder.id ? 'bg-white/20 ring-2 ring-white/50' : ''
+                      dragOverFolder === folder.id ? 'bg-white/20 -mx-[20px] px-[20px]' : ''
                     } ${
-                      folderDropFlash === folder.id ? 'bg-white/40' : ''
+                      folderDropFlash === folder.id ? 'bg-white/40 -mx-[20px] px-[20px]' : ''
                     }`}
                     style={{ cursor: 'grab' }}
                   >
