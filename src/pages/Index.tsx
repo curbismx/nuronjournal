@@ -1508,14 +1508,11 @@ const themeSettingsIcons = {
         {/* Column 1: Folders - 20% width, dark background */}
 
         <div 
-
-          className="flex flex-col pt-[30px] pl-[20px] pr-[20px]"
-
+          className="flex flex-col"
           style={{ width: '20%', backgroundColor: themeColors[theme] }}
-
         >
-
-                <div className="h-[50px] flex items-center justify-end pr-0">
+          {/* Header area - 50px to match Column 2 */}
+          <div className="h-[50px] flex items-center justify-end px-[20px]">
                   {user && (
                     <button onClick={openCreateFolder} className="p-0 m-0 border-0 bg-transparent">
                       <img src={folderPlusIcon} alt="Add" style={{ width: '18px', height: '18px' }} className="opacity-70" />
@@ -1523,7 +1520,8 @@ const themeSettingsIcons = {
                   )}
                 </div>
 
-          <div className="space-y-2 flex-1">
+          {/* Folders list - below the header */}
+          <div className="flex-1 space-y-2 px-[20px] overflow-y-auto">
 
             {folders.map((folder) => (
               <div
@@ -1549,7 +1547,8 @@ const themeSettingsIcons = {
 
           </div>
 
-          <button onClick={() => setDesktopShowSettings(true)} className="pb-[40px] flex items-center gap-2 opacity-60 hover:opacity-80">
+          {/* Settings at bottom */}
+          <button onClick={() => setDesktopShowSettings(true)} className="px-[20px] pb-[40px] flex items-center gap-2 opacity-60 hover:opacity-80">
 
             <img src={settingsIcon} alt="" className="w-[20px] h-[20px]" />
 
