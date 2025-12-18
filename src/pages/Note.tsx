@@ -266,6 +266,43 @@ const Note = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Load note from Supabase if not found in cache
+  useEffect(() => {
+    const loadNoteFromSupabase = async () => {
+      if (!id) return;
+      
+      // Check if already loaded from cache
+      if (contentBlocks.length > 0 && contentBlocks[0].type !== 'text') return;
+      if (contentBlocks.length === 1 && contentBlocks[0].type === 'text' && (contentBlocks[0] as any).content !== '') return;
+      if (noteTitle) return;
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+      
+      const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (data && !error) {
+        setNoteTitle(data.title || '');
+        setNoteDate(new Date(data.created_at));
+        existingCreatedAt.current = data.created_at;
+        
+        if (data.content_blocks && Array.isArray(data.content_blocks)) {
+          setContentBlocks(data.content_blocks as ContentBlock[]);
+        }
+        
+        if (data.weather) {
+          // Weather will be set separately
+        }
+      }
+    };
+    
+    loadNoteFromSupabase();
+  }, [id]);
+
   useEffect(() => {
     const loadFolders = async () => {
       if (!showMoveNote) return;
