@@ -2094,23 +2094,18 @@ const themeSettingsIcons = {
 
         <div className="w-[1px] bg-[hsl(0,0%,80%)]" />
 
-        {/* Column 3: Note view - 50% width, full height, square edges */}
-
         {/* Column 3: Note view - 50% width */}
         <div 
-          className="flex flex-col"
+          className="flex flex-col bg-journal-content"
           style={{ width: '50%' }}
         >
-          {/* Dark header - matches theme */}
-          <div 
-            className="h-[50px] flex-shrink-0 flex items-center justify-end px-8"
-            style={{ backgroundColor: themeColors[theme] }}
-          >
+          {/* Cream header - 50px, same as Column 2 */}
+          <div className="h-[50px] flex-shrink-0 bg-journal-content flex items-center justify-end px-8">
             {/* Icons will go here later */}
           </div>
           
-          {/* Note content area - cream background */}
-          <div className="flex-1 bg-journal-content overflow-hidden">
+          {/* Note content area */}
+          <div className="flex-1 overflow-hidden">
             {desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-') ? (
               <iframe
                 key={desktopSelectedNoteId}
