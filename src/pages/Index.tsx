@@ -82,6 +82,17 @@ interface Folder {
 const Index = () => {
   const navigate = useNavigate();
 const isDesktop = useDesktop();
+
+useEffect(() => {
+  if (isDesktop) {
+    const desktopVisited = localStorage.getItem('nuron-desktop-visited');
+    if (!desktopVisited) {
+      setDesktopShowSettings(true);
+      localStorage.setItem('nuron-desktop-visited', 'true');
+    }
+  }
+}, [isDesktop]);
+
 const [desktopSelectedNoteId, setDesktopSelectedNoteId] = useState<string | null>(null);
 const [desktopShowSettings, setDesktopShowSettings] = useState(false);
 const [draggedNote, setDraggedNote] = useState<SavedNote | null>(null);
@@ -94,11 +105,14 @@ const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
 const [desktopShowFolderOptions, setDesktopShowFolderOptions] = useState(false);
 const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(null);
   useEffect(() => {
+    // Skip onboarding on desktop
+    if (isDesktop) return;
+    
     const onboardingComplete = localStorage.getItem('nuron-onboarding-complete');
     if (!onboardingComplete) {
       navigate('/onboarding');
     }
-  }, [navigate]);
+  }, [navigate, isDesktop]);
 
 
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
