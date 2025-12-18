@@ -2151,12 +2151,7 @@ const themeSettingsIcons = {
                 <img 
                   src={threeDotsDesktopIcon} 
                   alt="Menu" 
-                  style={{ 
-                    height: '24px', 
-                    width: 'auto',
-                    filter: desktopRewriteGlow ? `drop-shadow(0 0 8px ${themeColors[theme]})` : 'none',
-                    transition: 'filter 0.3s ease'
-                  }} 
+                  style={{ height: '24px', width: 'auto' }} 
                 />
               </button>
             )}
