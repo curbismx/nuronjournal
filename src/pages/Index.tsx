@@ -117,9 +117,13 @@ const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
       if (e.data?.type === 'note-saved' || e.data?.type === 'note-updated') {
+        // Don't change anything if we're already viewing this note
+        const currentId = desktopSelectedNoteId;
+        const newId = e.data.noteId;
+        
         // Small delay to prevent jarring jump when new notes appear
         setTimeout(() => {
-          // Refresh notes list from cache
+          // Just quietly update the notes list without changing selection
           const cached = localStorage.getItem('nuron-notes-cache');
           if (cached) {
             try {
@@ -129,7 +133,6 @@ const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
               console.error('Failed to parse cache:', err);
             }
           }
-          // Also check local notes
           const stored = localStorage.getItem('nuron-notes');
           if (stored) {
             try {
@@ -139,9 +142,10 @@ const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
               console.error('Failed to parse notes:', err);
             }
           }
-          // Select the saved note (only for note-saved, not for updates)
-          if (e.data?.type === 'note-saved' && e.data.noteId) {
-            setDesktopSelectedNoteId(e.data.noteId);
+          
+          // Only update selection if it's a brand new note (was 'new-xxx')
+          if (currentId && currentId.startsWith('new-') && newId) {
+            setDesktopSelectedNoteId(newId);
           }
         }, 100);
       }
@@ -1683,7 +1687,8 @@ const themeSettingsIcons = {
               className="flex-1 overflow-y-auto overscroll-y-auto"
               style={{ 
                 WebkitOverflowScrolling: 'touch',
-                overscrollBehaviorY: 'auto'
+                overscrollBehaviorY: 'auto',
+                overflowAnchor: 'none'
               }}
             >
               <div style={{ minHeight: 'calc(100% + 1px)' }}>
@@ -2236,18 +2241,18 @@ const themeSettingsIcons = {
           )}
           
           {/* Note content area */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden" style={{ position: 'relative' }}>
             {desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-') ? (
               <iframe
-                key={desktopSelectedNoteId}
                 src={`/note?desktop=true&folder_id=${currentFolder?.id || ''}`}
-                className="w-full h-full border-0"
+                className="absolute inset-0 w-full h-full border-0"
+                title="Note Editor"
               />
             ) : desktopSelectedNoteId ? (
               <iframe
-                key={desktopSelectedNoteId}
                 src={`/note/${desktopSelectedNoteId}?desktop=true`}
-                className="w-full h-full border-0"
+                className="absolute inset-0 w-full h-full border-0"
+                title="Note Editor"
               />
             ) : (
               <div className="h-full flex items-center justify-center text-[hsl(0,0%,60%)] font-outfit text-[18px]">
