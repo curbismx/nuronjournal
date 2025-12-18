@@ -1738,9 +1738,10 @@ query = query.eq('folder_id', currentFolder.id);
                     elements.push(
                       <div 
                         key={`month-${groupMonthYear}-${groupIndex}`}
-                        className="sticky top-0 z-10 bg-[#CACAC2] px-[22px] py-[3px]"
+                        className="sticky top-0 z-10 bg-[#CACAC2] px-[22px]"
+                        style={{ height: '22px', display: 'flex', alignItems: 'center' }}
                       >
-                        <span className="text-white text-[20px] font-outfit font-light tracking-wider leading-tight">
+                        <span className="text-white text-[18px] font-outfit font-light tracking-wider leading-none">
                           {groupMonthYear}
                         </span>
                       </div>
@@ -2852,8 +2853,8 @@ onDragStart={(e) => {
               return (
                 <React.Fragment key={group.date}>
                   {showMonthHeader && (
-                    <div className="sticky top-0 z-10 bg-[#CACAC2] px-8 py-[3px]">
-                      <span className="text-white text-[20px] font-outfit font-light tracking-wider leading-tight">
+                    <div className="sticky top-0 z-10 bg-[#CACAC2] px-[22px]" style={{ height: '22px', display: 'flex', alignItems: 'center' }}>
+                      <span className="text-white text-[18px] font-outfit font-light tracking-wider leading-none">
                         {groupMonthYear}
                       </span>
                     </div>
