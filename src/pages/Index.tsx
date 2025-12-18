@@ -117,30 +117,33 @@ const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
       if (e.data?.type === 'note-saved' || e.data?.type === 'note-updated') {
-        // Refresh notes list from cache
-        const cached = localStorage.getItem('nuron-notes-cache');
-        if (cached) {
-          try {
-            const parsed = JSON.parse(cached);
-            setSavedNotes(parsed);
-          } catch (err) {
-            console.error('Failed to parse cache:', err);
+        // Small delay to prevent jarring jump when new notes appear
+        setTimeout(() => {
+          // Refresh notes list from cache
+          const cached = localStorage.getItem('nuron-notes-cache');
+          if (cached) {
+            try {
+              const parsed = JSON.parse(cached);
+              setSavedNotes(parsed);
+            } catch (err) {
+              console.error('Failed to parse cache:', err);
+            }
           }
-        }
-        // Also check local notes
-        const stored = localStorage.getItem('nuron-notes');
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            setSavedNotes(parsed);
-          } catch (err) {
-            console.error('Failed to parse notes:', err);
+          // Also check local notes
+          const stored = localStorage.getItem('nuron-notes');
+          if (stored) {
+            try {
+              const parsed = JSON.parse(stored);
+              setSavedNotes(parsed);
+            } catch (err) {
+              console.error('Failed to parse notes:', err);
+            }
           }
-        }
-        // Select the saved note (only for note-saved, not for updates)
-        if (e.data?.type === 'note-saved' && e.data.noteId) {
-          setDesktopSelectedNoteId(e.data.noteId);
-        }
+          // Select the saved note (only for note-saved, not for updates)
+          if (e.data?.type === 'note-saved' && e.data.noteId) {
+            setDesktopSelectedNoteId(e.data.noteId);
+          }
+        }, 100);
       }
       
       // Handle note deletion
@@ -1721,7 +1724,7 @@ const themeSettingsIcons = {
                     elements.push(
                       <div 
                         key={note.id}
-                        className={`border-b border-[hsl(0,0%,85%)] cursor-pointer ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'}`}
+                        className={`border-b border-[hsl(0,0%,85%)] cursor-pointer transition-all duration-300 ease-out ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'}`}
                         onClick={() => setDesktopSelectedNoteId(note.id)}
                       >
                         <div className={viewMode === 'compact' ? "px-8 pt-[17px] pb-4" : index === 0 ? "px-8 pt-[12px] pb-4" : "px-8 pt-4 pb-4"}>
