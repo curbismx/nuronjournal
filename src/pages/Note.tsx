@@ -2172,6 +2172,14 @@ const Note = () => {
       localStorage.setItem('nuron-notes', JSON.stringify(filtered));
     }
     
+    // Notify parent window that note was deleted
+    if (window.parent !== window) {
+      window.parent.postMessage({ 
+        type: 'note-deleted', 
+        noteId: noteIdRef.current 
+      }, '*');
+    }
+    
     navigate('/');
   };
 
@@ -2305,7 +2313,14 @@ const Note = () => {
 
       {/* Spacer for desktop embed mode - matches Column 3's 50px header */}
       {isEmbedded && (
-        <div className="h-[50px] flex-shrink-0 bg-journal-content" />
+        <div className="h-[50px] flex-shrink-0 bg-journal-content flex items-center justify-end px-8">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-0 m-0 border-0 bg-transparent"
+          >
+            <img src={threeDotsIcon} alt="Menu" className="h-[24px] w-auto" />
+          </button>
+        </div>
       )}
 
       {/* Scrollable content area */}
@@ -2715,8 +2730,8 @@ const Note = () => {
           ref={menuRef}
           className="fixed z-50 bg-white rounded-2xl shadow-lg py-4 w-[220px] animate-in fade-in-0 zoom-in-95 duration-200"
           style={{
-            right: `calc(20px + env(safe-area-inset-right))`,
-            top: `calc(140px + env(safe-area-inset-top))`
+            right: isEmbedded ? '20px' : `calc(20px + env(safe-area-inset-right))`,
+            top: isEmbedded ? '50px' : `calc(140px + env(safe-area-inset-top))`
           }}
         >
           {/* Section 1 - Actions */}
