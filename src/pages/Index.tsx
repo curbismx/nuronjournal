@@ -85,6 +85,7 @@ const [desktopSelectedNoteId, setDesktopSelectedNoteId] = useState<string | null
 const [desktopShowSettings, setDesktopShowSettings] = useState(false);
 const [draggedNote, setDraggedNote] = useState<SavedNote | null>(null);
 const [folderDropFlash, setFolderDropFlash] = useState<string | null>(null);
+const [isLoadingNotes, setIsLoadingNotes] = useState(false);
 const [desktopShowAccountDetails, setDesktopShowAccountDetails] = useState(false);
 const [desktopShowChangePassword, setDesktopShowChangePassword] = useState(false);
 const [desktopShowSignUp, setDesktopShowSignUp] = useState(false);
@@ -115,67 +116,36 @@ const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
+
   // Listen for postMessage from iframe when note is saved
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
-      if (e.data?.type === 'note-saved' || e.data?.type === 'note-updated') {
-        // Don't change anything if we're already viewing this note
-        const currentId = desktopSelectedNoteId;
-        const newId = e.data.noteId;
-        
-        // Small delay to prevent jarring jump when new notes appear
-        setTimeout(() => {
-          // Just quietly update the notes list without changing selection
-          const cached = localStorage.getItem('nuron-notes-cache');
-          if (cached) {
-            try {
-              const parsed = JSON.parse(cached);
-              setSavedNotes(parsed);
-            } catch (err) {
-              console.error('Failed to parse cache:', err);
-            }
-          }
-          const stored = localStorage.getItem('nuron-notes');
-          if (stored) {
-            try {
-              const parsed = JSON.parse(stored);
-              setSavedNotes(parsed);
-            } catch (err) {
-              console.error('Failed to parse notes:', err);
-            }
-          }
-          
-          // Only update selection if it's a brand new note (was 'new-xxx')
-          if (currentId && currentId.startsWith('new-') && newId) {
-            setDesktopSelectedNoteId(newId);
-          }
-        }, 100);
+      // Handle note-saved - only reload if this is a NEW note
+      if (e.data?.type === 'note-saved') {
+        const noteId = e.data.noteId;
+        // Only reload if this is a NEW note (not already in the list)
+        if (noteId && !savedNotes.find(n => n.id === noteId)) {
+          loadNotesForCurrentFolder();
+        }
+        // Update selection if it was a new note being saved
+        if (desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-') && noteId) {
+          setDesktopSelectedNoteId(noteId);
+        }
       }
       
-      // Handle note deletion
+      // Handle note-updated - just reload the list
+      if (e.data?.type === 'note-updated') {
+        loadNotesForCurrentFolder();
+      }
+      
+      // Handle note deletion - remove from state directly
       if (e.data?.type === 'note-deleted') {
-        // Refresh notes list from cache
-        const cached = localStorage.getItem('nuron-notes-cache');
-        if (cached) {
-          try {
-            const parsed = JSON.parse(cached);
-            setSavedNotes(parsed);
-          } catch (err) {
-            console.error('Failed to parse cache:', err);
-          }
+        const noteId = e.data.noteId;
+        setSavedNotes(prev => prev.filter(n => n.id !== noteId));
+        if (desktopSelectedNoteId === noteId) {
+          setDesktopSelectedNoteId(null);
         }
-        // Also check local notes
-        const stored = localStorage.getItem('nuron-notes');
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            setSavedNotes(parsed);
-          } catch (err) {
-            console.error('Failed to parse notes:', err);
-          }
-        }
-        // Clear the selected note since it was deleted
-        setDesktopSelectedNoteId(null);
       }
       
       // Handle AI rewrite glow effect
@@ -188,28 +158,7 @@ const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
-  const [savedNotes, setSavedNotes] = useState<SavedNote[]>(() => {
-    // Try cache first (for logged-in users)
-    const cached = localStorage.getItem('nuron-notes-cache');
-    if (cached) {
-      try {
-        return JSON.parse(cached);
-      } catch {
-        // Fall through
-      }
-    }
-    // Then try local notes (for non-logged-in users)
-    const stored = localStorage.getItem('nuron-notes');
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch {
-        return [];
-      }
-    }
-    return [];
-  });
+  }, [savedNotes, desktopSelectedNoteId]);
   const [viewMode, setViewMode] = useState<'collapsed' | 'compact'>('collapsed');
   const [showSettings, setShowSettings] = useState(false);
   const [showAccountDetails, setShowAccountDetails] = useState(false);
@@ -655,18 +604,25 @@ useEffect(() => {
 
   // Load notes for current folder
   const loadNotesForCurrentFolder = async (userId?: string) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const uid = userId || session?.user?.id;
+    if (isLoadingNotes) return;
+    setIsLoadingNotes(true);
     
-    if (uid && currentFolder && currentFolder.id !== 'local-notes') {
-      const { data } = await supabase
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = userId || session?.user?.id;
+      
+      if (!uid || !currentFolder || currentFolder.id === 'local-notes') {
+        return;
+      }
+      
+      const { data, error } = await supabase
         .from('notes')
         .select('*')
         .eq('user_id', uid)
-.eq('folder_id', currentFolder.id)
+        .eq('folder_id', currentFolder.id)
         .order('created_at', { ascending: false });
       
-      if (data) {
+      if (data && !error) {
         const notes = data.map(note => ({
           id: note.id,
           title: note.title || 'Untitled',
@@ -677,9 +633,9 @@ useEffect(() => {
           folder_id: note.folder_id
         }));
         setSavedNotes(notes);
-        // CACHE TO LOCALSTORAGE
-        localStorage.setItem('nuron-notes-cache', JSON.stringify(notes));
       }
+    } finally {
+      setIsLoadingNotes(false);
     }
   };
 
