@@ -1540,7 +1540,48 @@ query = query.eq('folder_id', currentFolder.id);
           {/* Header area - 50px to match Column 2 */}
           <div className="h-[50px] flex items-center justify-end pl-[20px] pr-[10px]">
                   {user && (
-                    <button onClick={openCreateFolder} className="p-0 m-0 border-0 bg-transparent">
+                    <button 
+                      onClick={async () => {
+                        if (!user) return;
+                        
+                        // Create new folder with sort_order 0 (top of list)
+                        const { data, error } = await supabase
+                          .from('folders')
+                          .insert({ 
+                            user_id: user.id, 
+                            name: 'Untitled', 
+                            default_view: 'collapsed',
+                            sort_order: 0
+                          })
+                          .select()
+                          .single();
+                        
+                        if (data && !error) {
+                          // Update sort_order for all other folders (push them down)
+                          for (let i = 0; i < folders.length; i++) {
+                            await supabase
+                              .from('folders')
+                              .update({ sort_order: i + 1 })
+                              .eq('id', folders[i].id);
+                          }
+                          
+                          const newFolder: Folder = {
+                            ...data,
+                            default_view: (data.default_view || 'collapsed') as 'collapsed' | 'compact'
+                          };
+                          
+                          // Add new folder to top of list
+                          setFolders([newFolder, ...folders]);
+                          
+                          // Open folder options panel to edit the name
+                          setDesktopEditingFolder(newFolder);
+                          setNewFolderName('Untitled');
+                          setNewFolderDefaultView('collapsed');
+                          setDesktopShowFolderOptions(true);
+                        }
+                      }} 
+                      className="p-0 m-0 border-0 bg-transparent"
+                    >
                       <img src={folderPlusIcon} alt="Add" style={{ width: '18px', height: '18px' }} className="opacity-70" />
                     </button>
                   )}
@@ -2251,6 +2292,8 @@ onDragStart={(e) => {
                       type="text"
                       value={newFolderName}
                       onChange={(e) => setNewFolderName(e.target.value)}
+                      autoFocus
+                      onFocus={(e) => e.target.select()}
                       className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-3 text-[16px] font-outfit"
                     />
                   </div>
@@ -2277,9 +2320,36 @@ onDragStart={(e) => {
                   {/* Save Button */}
                   <button
                     onClick={async () => {
-                      await updateFolder();
-                      setDesktopShowFolderOptions(false);
-                      setDesktopEditingFolder(null);
+                      if (desktopEditingFolder) {
+                        const { error } = await supabase
+                          .from('folders')
+                          .update({ 
+                            name: newFolderName.trim() || 'Untitled', 
+                            default_view: newFolderDefaultView,
+                            updated_at: new Date().toISOString()
+                          })
+                          .eq('id', desktopEditingFolder.id);
+                        
+                        if (!error) {
+                          // Update local state
+                          const updatedFolder = { 
+                            ...desktopEditingFolder, 
+                            name: newFolderName.trim() || 'Untitled', 
+                            default_view: newFolderDefaultView 
+                          };
+                          setFolders(prev => prev.map(f => 
+                            f.id === desktopEditingFolder.id ? updatedFolder : f
+                          ));
+                          
+                          // Select the folder
+                          setCurrentFolder(updatedFolder);
+                          localStorage.setItem('nuron-current-folder-id', updatedFolder.id);
+                          setViewMode(updatedFolder.default_view);
+                          
+                          setDesktopShowFolderOptions(false);
+                          setDesktopEditingFolder(null);
+                        }
+                      }
                     }}
                     className="w-full py-3 bg-white text-journal-header font-medium rounded-[10px] font-outfit"
                   >
