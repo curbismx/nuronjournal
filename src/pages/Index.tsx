@@ -1750,7 +1750,10 @@ const themeSettingsIcons = {
             {/* Floating plus button - bottom right, same as mobile */}
             {!desktopShowSettings && (
               <button
-                onClick={() => setDesktopSelectedNoteId('new')}
+                onClick={() => {
+                  const tempId = 'new-' + Date.now();
+                  setDesktopSelectedNoteId(tempId);
+                }}
                 className="absolute z-50"
                 style={{
                   bottom: '30px',
@@ -2093,26 +2096,30 @@ const themeSettingsIcons = {
 
         {/* Column 3: Note view - 50% width, full height, square edges */}
 
+        {/* Column 3: Note view - 50% width */}
         <div 
-
-          className="bg-journal-content flex flex-col"
-
+          className="flex flex-col"
           style={{ width: '50%' }}
-
         >
-
-          {/* Invisible 50px header */}
-          <div className="h-[50px] flex-shrink-0 bg-journal-content" />
+          {/* Dark header - matches theme */}
+          <div 
+            className="h-[50px] flex-shrink-0 flex items-center justify-end px-8"
+            style={{ backgroundColor: themeColors[theme] }}
+          >
+            {/* Icons will go here later */}
+          </div>
           
-          {/* Scrollable note content */}
-          <div className="flex-1 overflow-y-auto">
-            {desktopSelectedNoteId === 'new' ? (
+          {/* Note content area - cream background */}
+          <div className="flex-1 bg-journal-content overflow-hidden">
+            {desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-') ? (
               <iframe
+                key={desktopSelectedNoteId}
                 src={`/note?desktop=true&folder_id=${currentFolder?.id || ''}`}
                 className="w-full h-full border-0"
               />
             ) : desktopSelectedNoteId ? (
               <iframe
+                key={desktopSelectedNoteId}
                 src={`/note/${desktopSelectedNoteId}?desktop=true`}
                 className="w-full h-full border-0"
               />
@@ -2122,7 +2129,6 @@ const themeSettingsIcons = {
               </div>
             )}
           </div>
-
         </div>
 
       </div>

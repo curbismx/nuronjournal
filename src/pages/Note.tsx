@@ -2203,52 +2203,54 @@ const Note = () => {
 
   return (
     <div className={isEmbedded ? "h-full flex flex-col overflow-hidden" : "fixed inset-0 flex flex-col overflow-hidden"} style={{ backgroundColor: themeColors[theme] }}>
-      {/* Fixed dark header */}
-      <header 
-        className="flex-shrink-0 z-30" 
-        style={{ 
-          backgroundColor: themeColors[theme],
-          paddingTop: `calc(30px + env(safe-area-inset-top))`,
-          paddingLeft: `calc(30px + env(safe-area-inset-left))`,
-          paddingRight: `calc(16px + env(safe-area-inset-right))`,
-          paddingBottom: '30px',
-          minHeight: `calc(150px + env(safe-area-inset-top))`
-        }}
-      >
-        <div className="flex items-center justify-between mb-auto -mt-[15px]">
-          {!isEmbedded && !showMoveNote && (
-            <Button
-              variant="ghost"
-              onClick={handleBack}
-              className="text-journal-header-foreground hover:bg-journal-header-foreground/10 p-0 h-auto w-auto"
-            >
-              <img src={backIcon} alt="Back" className="w-[30px] h-[30px]" />
-            </Button>
-          )}
-          <div className="flex-1" />
-        </div>
-        <div className="relative mt-[41px]">
-          <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
-            {showMoveNote ? 'FOLDERS' : monthYear}
-          </h1>
-          {showMoveNote && (
-            <p className="text-red-500 text-[16px] font-outfit font-light mt-[10px]">
-              Please choose which folder to move the note to
-            </p>
-          )}
-          {!showMoveNote && (
-            <button 
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="absolute top-0"
-              style={{
-                right: `calc(30px + env(safe-area-inset-right))`
-              }}
-            >
-              <img src={threeDotsIcon} alt="Menu" className="h-[24px] w-auto" />
-            </button>
-          )}
-        </div>
-      </header>
+      {/* Fixed dark header - hidden when embedded in desktop */}
+      {!isEmbedded && (
+        <header 
+          className="flex-shrink-0 z-30" 
+          style={{ 
+            backgroundColor: themeColors[theme],
+            paddingTop: `calc(30px + env(safe-area-inset-top))`,
+            paddingLeft: `calc(30px + env(safe-area-inset-left))`,
+            paddingRight: `calc(16px + env(safe-area-inset-right))`,
+            paddingBottom: '30px',
+            minHeight: `calc(150px + env(safe-area-inset-top))`
+          }}
+        >
+          <div className="flex items-center justify-between mb-auto -mt-[15px]">
+            {!showMoveNote && (
+              <Button
+                variant="ghost"
+                onClick={handleBack}
+                className="text-journal-header-foreground hover:bg-journal-header-foreground/10 p-0 h-auto w-auto"
+              >
+                <img src={backIcon} alt="Back" className="w-[30px] h-[30px]" />
+              </Button>
+            )}
+            <div className="flex-1" />
+          </div>
+          <div className="relative mt-[41px]">
+            <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
+              {showMoveNote ? 'FOLDERS' : monthYear}
+            </h1>
+            {showMoveNote && (
+              <p className="text-red-500 text-[16px] font-outfit font-light mt-[10px]">
+                Please choose which folder to move the note to
+              </p>
+            )}
+            {!showMoveNote && (
+              <button 
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="absolute top-0"
+                style={{
+                  right: `calc(30px + env(safe-area-inset-right))`
+                }}
+              >
+                <img src={threeDotsIcon} alt="Menu" className="h-[24px] w-auto" />
+              </button>
+            )}
+          </div>
+        </header>
+      )}
 
       {/* Move Note Folders Panel - EXACT same as Index.tsx */}
       <div 
