@@ -1631,7 +1631,7 @@ query = query.eq('folder_id', currentFolder.id);
                 </div>
 
           {/* Folders list - below the header */}
-          <div className="flex-1 px-[20px] pt-[30px] overflow-y-auto">
+          <div className="flex-1 px-[20px] pt-[30px] overflow-y-auto relative">
             <div className="relative">
               {folders.map((folder, folderIndex) => {
                 const isDragging = draggedFolder?.id === folder.id;
@@ -1740,26 +1740,34 @@ query = query.eq('folder_id', currentFolder.id);
                       setDraggedFolder(null);
                       setDropLineIndex(null);
                     }}
-                    className={`relative flex items-center justify-between w-full py-2 ${
+                    className={`relative flex items-center justify-between w-full py-2 transition-all duration-200 ${
                       currentFolder?.id === folder.id ? 'opacity-100' : 'opacity-50 hover:opacity-70'
                     } ${
-                      dragOverFolder === folder.id ? 'bg-white/20 -mx-[20px] px-[20px]' : ''
-                    } ${
-                      folderDropFlash === folder.id ? 'bg-white/40 -mx-[20px] px-[20px]' : ''
+                      draggedFolder?.id === folder.id ? 'opacity-30' : ''
                     }`}
                     style={{ cursor: 'grab' }}
                   >
-                    {/* Drop line indicator - positioned absolutely */}
-                    {showLineBefore && (
+                    {/* Full-width highlight overlay for note drop */}
+                    {dragOverFolder === folder.id && (
                       <div 
-                        className="absolute left-0 right-0 h-[2px] bg-white rounded-full"
-                        style={{ top: '-4px' }}
+                        className="absolute inset-y-0 bg-white/20 rounded-[8px] pointer-events-none"
+                        style={{ left: '-20px', right: '-20px' }}
                       />
                     )}
-                    {showLineAfter && (
+                    
+                    {/* Flash overlay */}
+                    {folderDropFlash === folder.id && (
                       <div 
-                        className="absolute left-0 right-0 h-[2px] bg-white rounded-full"
-                        style={{ bottom: '-4px' }}
+                        className="absolute inset-y-0 bg-white/40 rounded-[8px] pointer-events-none"
+                        style={{ left: '-20px', right: '-20px' }}
+                      />
+                    )}
+                    
+                    {/* Drop line for folder reordering */}
+                    {dropLineIndex === folderIndex && draggedFolder && draggedFolder.id !== folder.id && (
+                      <div 
+                        className="absolute left-[-20px] right-[-20px] h-[2px] bg-white rounded-full"
+                        style={{ top: '-4px' }}
                       />
                     )}
                     
@@ -1771,7 +1779,7 @@ query = query.eq('folder_id', currentFolder.id);
                         setViewMode(folder.default_view || 'collapsed');
                         setUserChangedView(false);
                       }}
-                      className="flex items-center gap-3 flex-1 text-left"
+                      className="flex items-center gap-3 flex-1 text-left relative z-10"
                     >
                       <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
                       <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
@@ -1789,7 +1797,7 @@ query = query.eq('folder_id', currentFolder.id);
                           setDesktopShowFolderOptions(true);
                         }
                       }} 
-                      className="mr-[10px] p-0 m-0 border-0 bg-transparent"
+                      className="mr-[10px] p-0 m-0 border-0 bg-transparent relative z-10"
                     >
                       <img 
                         src={threeDotsIcon} 
