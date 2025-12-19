@@ -173,61 +173,41 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
         const noteId = e.data.noteId;
         const noteData = e.data.noteData;
         
-        // Clear creating flag
         setIsCreatingNewNote(false);
         
-        // Find and replace the placeholder in-place (preserving position)
         setSavedNotes(prev => {
-          const placeholderIndex = prev.findIndex(n => n.id.startsWith('new-'));
+          // Remove placeholder
+          const withoutPlaceholder = prev.filter(n => !n.id.startsWith('new-'));
           
-          if (placeholderIndex !== -1) {
-            const newNotes = [...prev];
-            newNotes[placeholderIndex] = {
-              id: noteId,
-              title: noteData?.title || '',
-              contentBlocks: noteData?.contentBlocks || [],
-              createdAt: noteData?.createdAt || new Date().toISOString(),
-              updatedAt: noteData?.updatedAt || new Date().toISOString(),
-              weather: noteData?.weather || undefined,
-              folder_id: noteData?.folder_id
-            };
-            return newNotes;
-          }
+          // Check if note already exists
+          const existingIndex = withoutPlaceholder.findIndex(n => n.id === noteId);
           
-          // If no placeholder, check if note exists and update it
-          const existingIndex = prev.findIndex(n => n.id === noteId);
-          if (existingIndex !== -1) {
-            const newNotes = [...prev];
-            newNotes[existingIndex] = {
-              ...newNotes[existingIndex],
-              title: noteData?.title || '',
-              contentBlocks: noteData?.contentBlocks || []
-            };
-            return newNotes;
-          }
-          
-          // Note doesn't exist, add it in correct date position
           const newNote = {
             id: noteId,
             title: noteData?.title || '',
             contentBlocks: noteData?.contentBlocks || [],
             createdAt: noteData?.createdAt || new Date().toISOString(),
             updatedAt: noteData?.updatedAt || new Date().toISOString(),
-            weather: noteData?.weather || undefined,
-            folder_id: noteData?.folder_id
+            weather: noteData?.weather || null,
+            folder_id: noteData?.folder_id || currentFolder?.id
           };
-          const newNotes = [...prev];
-          const noteDate = new Date(newNote.createdAt);
-          const insertIndex = newNotes.findIndex(n => new Date(n.createdAt) < noteDate);
-          if (insertIndex === -1) {
-            newNotes.push(newNote);
+          
+          let newNotes;
+          if (existingIndex !== -1) {
+            // Update existing
+            newNotes = [...withoutPlaceholder];
+            newNotes[existingIndex] = newNote;
           } else {
-            newNotes.splice(insertIndex, 0, newNote);
+            // Add new
+            newNotes = [...withoutPlaceholder, newNote];
           }
+          
+          // Sort by date descending (newest first)
+          newNotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          
           return newNotes;
         });
         
-        // Update selection if was new note
         if (desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-')) {
           setDesktopSelectedNoteId(noteId);
         }
@@ -2000,19 +1980,14 @@ query = query.eq('folder_id', currentFolder.id);
                         contentBlocks: [{ type: 'text', id: 'initial', content: '' }],
                         createdAt: now.toISOString(),
                         updatedAt: now.toISOString(),
-                        weather: undefined,
-                        folder_id: currentFolder?.id || undefined
+                        weather: null,
+                        folder_id: currentFolder?.id || null
                       };
                       
-                      // Insert note in correct date position
+                      // Insert note in correct date position (notes are sorted newest first)
                       setSavedNotes(prev => {
-                        const newNotes = [...prev];
-                        const insertIndex = newNotes.findIndex(n => new Date(n.createdAt) < now);
-                        if (insertIndex === -1) {
-                          newNotes.push(placeholderNote);
-                        } else {
-                          newNotes.splice(insertIndex, 0, placeholderNote);
-                        }
+                        const newNotes = [...prev, placeholderNote];
+                        newNotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
                         return newNotes;
                       });
                       
