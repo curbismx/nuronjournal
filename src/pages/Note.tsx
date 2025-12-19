@@ -3060,7 +3060,7 @@ const Note = () => {
       {/* Delete confirmation dialog */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-2xl p-6 mx-6 w-[80%] shadow-xl relative">
+          <div className="bg-white rounded-2xl p-6 shadow-xl relative" style={{ width: '300px', maxWidth: '90%' }}>
             {/* X close button */}
             <button
               onClick={() => setShowDeleteConfirm(false)}
