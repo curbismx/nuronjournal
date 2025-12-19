@@ -7,10 +7,10 @@ import plusIconRed from "@/assets/00plus_red.png";
 import plusIconGreen from "@/assets/00plus_green.png";
 import plusIconBlue from "@/assets/00plus_blue.png";
 import plusIconPink from "@/assets/00plus_pink.png";
-import themeIconRed from "@/assets/00red.png";
-import themeIconGreen from "@/assets/00green.png";
-import themeIconBlue from "@/assets/00blue.png";
-import themeIconPink from "@/assets/00pink.png";
+import themeIconDark from "@/assets/dark_theme.png";
+import themeIconGreen from "@/assets/green_theme.png";
+import themeIconBlue from "@/assets/blue_theme.png";
+import themeIconPink from "@/assets/pink_theme.png";
 import textImage from "@/assets/text.png";
 import text2Image from "@/assets/text2.png";
 import text3Image from "@/assets/text3.png";
@@ -244,7 +244,7 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
   };
 
 const themeSettingsIcons = {
-  default: themeIconRed,
+  default: themeIconDark,
   green: themeIconGreen,
   blue: themeIconBlue,
   pink: themeIconPink
