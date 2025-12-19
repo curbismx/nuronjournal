@@ -174,40 +174,19 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
         
         setIsCreatingNewNote(false);
         
-        setSavedNotes(prev => {
-          const placeholderIndex = prev.findIndex(n => n.id.startsWith('new-'));
-          
-          if (placeholderIndex !== -1) {
-            // Replace placeholder IN PLACE - keep same array position
-            const newNotes = [...prev];
-            const placeholder = newNotes[placeholderIndex];
-            newNotes[placeholderIndex] = {
+        // Just replace the placeholder ID with real ID - keep position!
+        setSavedNotes(prev => prev.map(n => {
+          if (n.id.startsWith('new-')) {
+            return {
+              ...n,
               id: noteId,
-              title: noteData?.title || placeholder.title || '',
-              contentBlocks: noteData?.contentBlocks || placeholder.contentBlocks || [],
-              createdAt: placeholder.createdAt, // KEEP ORIGINAL DATE - THIS IS KEY
-              updatedAt: noteData?.updatedAt || new Date().toISOString(),
-              weather: noteData?.weather || null,
-              folder_id: noteData?.folder_id || currentFolder?.id
+              title: noteData?.title || n.title,
+              contentBlocks: noteData?.contentBlocks || n.contentBlocks,
+              folder_id: noteData?.folder_id || n.folder_id
             };
-            return newNotes;
           }
-          
-          // No placeholder - check if note already exists
-          const existingIndex = prev.findIndex(n => n.id === noteId);
-          if (existingIndex !== -1) {
-            const newNotes = [...prev];
-            newNotes[existingIndex] = {
-              ...newNotes[existingIndex],
-              title: noteData?.title || '',
-              contentBlocks: noteData?.contentBlocks || []
-            };
-            return newNotes;
-          }
-          
-          // Note doesn't exist at all - shouldn't happen but handle it
-          return prev;
-        });
+          return n;
+        }));
         
         if (desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-')) {
           setDesktopSelectedNoteId(noteId);
