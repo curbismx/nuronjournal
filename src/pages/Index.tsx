@@ -48,6 +48,8 @@ import darkThemeIcon from "@/assets/dark_theme.png";
 import greenThemeIcon from "@/assets/green_theme.png";
 import blueThemeIcon from "@/assets/blue_theme.png";
 import pinkThemeIcon from "@/assets/pink_theme.png";
+import sortUpIcon from "@/assets/up.png";
+import sortDownIcon from "@/assets/down.png";
 
 const desktopThemeIcons = {
   default: desktopDarkTheme,
@@ -203,6 +205,7 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
     return () => window.removeEventListener('message', handleMessage);
   }, [desktopSelectedNoteId]);
   const [viewMode, setViewMode] = useState<'collapsed' | 'compact'>('collapsed');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc'); // desc = newest first, asc = oldest first
   const [userChangedView, setUserChangedView] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAccountDetails, setShowAccountDetails] = useState(false);
@@ -960,8 +963,19 @@ query = query.eq('folder_id', currentFolder.id);
   };
 
 
+  // Sort notes based on sortOrder
+  const sortedNotes = React.useMemo(() => {
+    const sorted = [...savedNotes];
+    if (sortOrder === 'asc') {
+      sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    } else {
+      sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+    return sorted;
+  }, [savedNotes, sortOrder]);
+
   // Group notes by date
-  const groupedNotes: GroupedNotes[] = savedNotes.reduce((groups: GroupedNotes[], note) => {
+  const groupedNotes: GroupedNotes[] = sortedNotes.reduce((groups: GroupedNotes[], note) => {
     const dateKey = new Date(note.createdAt).toLocaleDateString('en-US');
     const existingGroup = groups.find(g => g.date === dateKey);
     
@@ -979,8 +993,8 @@ query = query.eq('folder_id', currentFolder.id);
 
   // Filter notes based on search
   const filteredNotes = searchQuery.trim() === '' 
-    ? savedNotes 
-    : savedNotes.filter(note => {
+    ? sortedNotes 
+    : sortedNotes.filter(note => {
         const query = searchQuery.toLowerCase();
         const titleMatch = note.title.toLowerCase().includes(query);
         const contentMatch = note.contentBlocks
@@ -1924,6 +1938,18 @@ query = query.eq('folder_id', currentFolder.id);
                       />
                     )}
                   </button>
+                  {/* Sort toggle */}
+                  <button 
+                    onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                    className="p-0 m-0 border-0 bg-transparent"
+                  >
+                    <img 
+                      src={sortOrder === 'desc' ? sortDownIcon : sortUpIcon} 
+                      alt={sortOrder === 'desc' ? 'Newest first' : 'Oldest first'} 
+                      style={{ width: '18px', height: '18px' }}
+                    />
+                  </button>
+                  {/* New note */}
                   <button 
                     onClick={() => {
                       const newId = 'new-' + Date.now();
