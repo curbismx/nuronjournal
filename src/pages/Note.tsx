@@ -2027,9 +2027,11 @@ const Note = () => {
     }
   }, [noteTitle, contentBlocks, audioUrls, isEmbedded]);
 
-  // Real-time updates to parent (desktop view)
+  // Real-time updates to parent (desktop view) - debounced to 1.5 seconds
   useEffect(() => {
-    if (isEmbedded && window.parent !== window) {
+    if (!isEmbedded) return;
+    
+    const sendUpdate = () => {
       window.parent.postMessage({
         type: 'note-content-update',
         noteId: noteIdRef.current,
@@ -2037,7 +2039,12 @@ const Note = () => {
         title: noteTitle,
         contentBlocks: contentBlocks
       }, '*');
-    }
+    };
+    
+    // Send update every 1.5 seconds while typing
+    const timer = setTimeout(sendUpdate, 1500);
+    
+    return () => clearTimeout(timer);
   }, [noteTitle, contentBlocks, isEmbedded, placeholderId]);
 
   const handleBack = async () => {
