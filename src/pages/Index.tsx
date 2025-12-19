@@ -2050,7 +2050,10 @@ onDragStart={(e) => {
                                       <span className="text-[14px] font-outfit font-light text-[hsl(60,1%,66%)] leading-none mr-[6px]">
                                         {dayName.charAt(0)}
                                       </span>
-                                      <span className="text-[48px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)] -mt-[10px]">
+                                      <span 
+                                        className="text-[48px] font-bold leading-none text-[hsl(60,1%,66%)] -mt-[10px]"
+                                        style={{ fontFamily: 'Roboto Mono, monospace', letterSpacing: '-0.05em' }}
+                                      >
                                         {dayNumber}
                                       </span>
                                     </>
