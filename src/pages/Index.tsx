@@ -2656,18 +2656,16 @@ onDragStart={(e) => {
         >
           {/* Cream header - 50px with 3dots menu */}
           <div className="h-[50px] flex-shrink-0 flex items-center justify-end pr-[20px]" style={{ backgroundColor: '#F9F9F6' }}>
-            {desktopSelectedNoteId && (
-              <button
-                onClick={() => setDesktopMenuOpen(!desktopMenuOpen)}
-                className="p-0 m-0 border-0 bg-transparent"
-              >
-                <img 
-                  src={threeDotsDesktopIcon} 
-                  alt="Menu" 
-                  style={{ height: '24px', width: 'auto' }} 
-                />
-              </button>
-            )}
+                  <button
+                    onClick={() => desktopSelectedNoteId && setDesktopMenuOpen(!desktopMenuOpen)}
+                    className={`p-0 m-0 border-0 bg-transparent ${!desktopSelectedNoteId ? 'opacity-30' : ''}`}
+                  >
+                    <img 
+                      src={threeDotsDesktopIcon} 
+                      alt="Menu" 
+                      style={{ height: '24px', width: 'auto' }} 
+                    />
+                  </button>
           </div>
           
           {/* Desktop 3-dots menu dropdown */}
