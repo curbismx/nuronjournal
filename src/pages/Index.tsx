@@ -2045,50 +2045,18 @@ onDragStart={(e) => {
                               </div>
                             ) : (
                               /* COLLAPSED VIEW (Date View) */
-                              <div className="flex items-center min-h-[70px] relative">
-                                {/* Date area - only for first note of day */}
-                                {index === 0 ? (
-                                  <>
-                                    {/* Small box with day letter - positioned 6px from top, 6px from left */}
-                                    <div 
-                                      className="absolute flex items-center justify-center"
-                                      style={{ 
-                                        width: '15px', 
-                                        height: '15px', 
-                                        backgroundColor: '#A9A9A7',
-                                        top: '6px',
-                                        left: '6px',
-                                        borderRadius: '2px'
-                                      }}
+                              <div className="flex items-center min-h-[70px]">
+                                {/* Date area - big number only, vertically centered */}
+                                <div className="w-[70px] flex-shrink-0 flex items-center justify-center">
+                                  {index === 0 ? (
+                                    <span 
+                                      className="text-[48px] font-bold leading-none text-[hsl(60,1%,66%)]"
+                                      style={{ fontFamily: 'Roboto Mono, monospace', letterSpacing: '-0.05em' }}
                                     >
-                                      <span 
-                                        className="text-white font-medium text-[12px] leading-none"
-                                        style={{ fontFamily: 'Roboto Mono, monospace' }}
-                                      >
-                                        {dayName.charAt(0).toUpperCase()}
-                                      </span>
-                                    </div>
-                                    
-                                    {/* Big number - left aligns with right of box, vertically centered */}
-                                    <div 
-                                      className="flex items-center justify-start"
-                                      style={{ width: '70px', paddingLeft: '21px' }}
-                                    >
-                                      <span 
-                                        className="text-[48px] font-bold leading-none text-[hsl(60,1%,66%)]"
-                                        style={{ fontFamily: 'Roboto Mono, monospace', letterSpacing: '-0.05em' }}
-                                      >
-                                        {dayNumber}
-                                      </span>
-                                    </div>
-                                  </>
-                                ) : (
-                                  /* Empty space same width for non-first notes */
-                                  <div style={{ width: '70px' }} />
-                                )}
-                                
-                                {/* Spacer - same as left padding (21px) */}
-                                <div className="w-[21px] flex-shrink-0" />
+                                      {dayNumber}
+                                    </span>
+                                  ) : null}
+                                </div>
                                 
                                 {/* Content + Image area */}
                                 <div className="flex-1 min-w-0 flex items-start gap-[15px]">
