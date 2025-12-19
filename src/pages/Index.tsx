@@ -2093,16 +2093,10 @@ onDragStart={(e) => {
                                 {/* Content + Image area */}
                                 <div className="flex-1 min-w-0 flex items-start gap-[15px]">
                                   <div className="flex-1 min-w-0">
-                                    <h3 
-                                      className="text-[20px] font-semibold text-[hsl(0,0%,25%)] mb-[6px] break-words overflow-wrap-anywhere leading-tight"
-                                      style={{ fontFamily: 'Roboto Mono, monospace' }}
-                                    >
+                                    <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-[6px] break-words overflow-wrap-anywhere leading-tight">
                                       {note.title || 'Untitled'}
                                     </h3>
-                                    <div 
-                                      className="text-[14px] text-[hsl(0,0%,50%)] leading-snug min-h-[40px]"
-                                      style={{ fontFamily: 'Roboto Mono, monospace' }}
-                                    >
+                                    <div className="text-[14px] font-outfit text-[hsl(0,0%,50%)] leading-snug min-h-[40px]">
                                       <div className="truncate">
                                         {(Array.isArray(preview) ? preview[0] : preview) || '\u00A0'}
                                       </div>
