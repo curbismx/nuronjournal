@@ -2045,46 +2045,71 @@ onDragStart={(e) => {
                               </div>
                             ) : (
                               /* COLLAPSED VIEW (Date View) */
-                              <div className="flex items-start min-h-[70px]">
-                                {/* Date area - fixed width */}
-                              <div className="w-[80px] flex-shrink-0 mt-[5px] ml-[-5px]">
+                              <div className="flex items-center min-h-[70px] relative">
+                                {/* Date area - only for first note of day */}
                                 {index === 0 ? (
-                                  <div className="flex flex-col items-start">
-                                    <span 
-                                      className="text-[48px] font-bold leading-none text-[hsl(60,1%,66%)]"
-                                      style={{ fontFamily: 'Roboto Mono, monospace', letterSpacing: '-0.05em' }}
+                                  <>
+                                    {/* Small box with day letter - positioned 6px from top, 6px from left */}
+                                    <div 
+                                      className="absolute flex items-center justify-center"
+                                      style={{ 
+                                        width: '15px', 
+                                        height: '15px', 
+                                        backgroundColor: '#A9A9A7',
+                                        top: '6px',
+                                        left: '6px',
+                                        borderRadius: '2px'
+                                      }}
                                     >
-                                      {dayNumber}
-                                    </span>
-                                    <span 
-                                      className="text-[14px] font-normal leading-none text-[hsl(60,1%,66%)] mt-[2px]"
-                                      style={{ fontFamily: 'Roboto Mono, monospace' }}
+                                      <span 
+                                        className="text-white font-medium text-[12px] leading-none"
+                                        style={{ fontFamily: 'Roboto Mono, monospace' }}
+                                      >
+                                        {dayName.charAt(0).toUpperCase()}
+                                      </span>
+                                    </div>
+                                    
+                                    {/* Big number - left aligns with right of box, vertically centered */}
+                                    <div 
+                                      className="flex items-center justify-start"
+                                      style={{ width: '70px', paddingLeft: '21px' }}
                                     >
-                                      {dayName.substring(0, 3).toUpperCase()}
-                                    </span>
-                                  </div>
+                                      <span 
+                                        className="text-[48px] font-bold leading-none text-[hsl(60,1%,66%)]"
+                                        style={{ fontFamily: 'Roboto Mono, monospace', letterSpacing: '-0.05em' }}
+                                      >
+                                        {dayNumber}
+                                      </span>
+                                    </div>
+                                  </>
                                 ) : (
-                                  <div className="w-[80px]" />
+                                  /* Empty space same width for non-first notes */
+                                  <div style={{ width: '70px' }} />
                                 )}
-                              </div>
                                 
-                              {/* Spacer/padding between date and text */}
-                              <div className="w-[20px] flex-shrink-0" />
+                                {/* Spacer - same as left padding (21px) */}
+                                <div className="w-[21px] flex-shrink-0" />
                                 
                                 {/* Content + Image area */}
                                 <div className="flex-1 min-w-0 flex items-start gap-[15px]">
                                   <div className="flex-1 min-w-0">
-                                    <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-[6px] break-words overflow-wrap-anywhere leading-tight">
+                                    <h3 
+                                      className="text-[20px] font-semibold text-[hsl(0,0%,25%)] mb-[6px] break-words overflow-wrap-anywhere leading-tight"
+                                      style={{ fontFamily: 'Roboto Mono, monospace' }}
+                                    >
                                       {note.title || 'Untitled'}
                                     </h3>
-                                <div className="text-[14px] font-outfit text-[hsl(0,0%,50%)] leading-snug min-h-[40px]">
-                                  <div className="truncate">
-                                    {(Array.isArray(preview) ? preview[0] : preview) || '\u00A0'}
-                                  </div>
-                                  <div className="truncate">
-                                    {(Array.isArray(preview) && preview[1]) || '\u00A0'}
-                                  </div>
-                                </div>
+                                    <div 
+                                      className="text-[14px] text-[hsl(0,0%,50%)] leading-snug min-h-[40px]"
+                                      style={{ fontFamily: 'Roboto Mono, monospace' }}
+                                    >
+                                      <div className="truncate">
+                                        {(Array.isArray(preview) ? preview[0] : preview) || '\u00A0'}
+                                      </div>
+                                      <div className="truncate">
+                                        {(Array.isArray(preview) && preview[1]) || '\u00A0'}
+                                      </div>
+                                    </div>
                                   </div>
                                   {firstImage && (
                                     <img 
