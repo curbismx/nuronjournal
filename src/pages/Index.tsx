@@ -2042,16 +2042,16 @@ onDragStart={(e) => {
                               </div>
                             ) : (
                               /* COLLAPSED VIEW (Date View) */
-                              <div className="flex items-start">
-                                {/* Date area - fixed width, shifted left */}
-                                <div className="w-[70px] flex-shrink-0 flex items-start pt-[2px] ml-[-15px]">
+                              <div className="flex items-start min-h-[70px]">
+                                {/* Date area - fixed width */}
+                                <div className="w-[70px] flex-shrink-0 flex items-start mt-[5px] ml-[-15px]">
                                   {index === 0 ? (
                                     <>
-                                      <span className="text-[14px] font-outfit font-light text-[hsl(60,1%,66%)] leading-none mr-[6px]">
+                                      <span className="text-[16px] font-outfit font-light text-[hsl(60,1%,66%)] leading-none mr-[6px] mt-[2px]">
                                         {dayName.charAt(0)}
                                       </span>
                                       <span 
-                                        className="text-[48px] font-bold leading-none text-[hsl(60,1%,66%)] -mt-[10px]"
+                                        className="text-[48px] font-bold leading-none text-[hsl(60,1%,66%)]"
                                         style={{ fontFamily: 'Roboto Mono, monospace', letterSpacing: '-0.05em' }}
                                       >
                                         {dayNumber}
@@ -2062,13 +2062,16 @@ onDragStart={(e) => {
                                   )}
                                 </div>
                                 
+                                {/* Spacer/padding between date and text */}
+                                <div className="w-[15px] flex-shrink-0" />
+                                
                                 {/* Content + Image area */}
                                 <div className="flex-1 min-w-0 flex items-start gap-[15px]">
                                   <div className="flex-1 min-w-0">
                                     <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-[6px] break-words overflow-wrap-anywhere leading-tight">
                                       {note.title || 'Untitled'}
                                     </h3>
-                                    <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 leading-snug break-words overflow-wrap-anywhere">
+                                    <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 leading-snug break-words overflow-wrap-anywhere min-h-[40px]">
                                       {preview || '-'}
                                     </p>
                                   </div>
