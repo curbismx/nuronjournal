@@ -126,6 +126,7 @@ const [desktopShowSignUp, setDesktopShowSignUp] = useState(false);
 const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
 const [desktopShowFolderOptions, setDesktopShowFolderOptions] = useState(false);
 const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(null);
+  const [isCreatingNewNote, setIsCreatingNewNote] = useState(false);
   useEffect(() => {
     // Skip onboarding on desktop
     if (isDesktop) return;
@@ -140,69 +141,48 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
 
   // Listen for postMessage from iframe when note is saved
+  // Cleanup if user clicks away from new note without saving
+  useEffect(() => {
+    if (isCreatingNewNote && (!desktopSelectedNoteId || !desktopSelectedNoteId.startsWith('new-'))) {
+      setIsCreatingNewNote(false);
+      setSavedNotes(prev => prev.filter(n => !n.id.startsWith('new-')));
+    }
+  }, [desktopSelectedNoteId, isCreatingNewNote]);
+
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
-      // Handle note-saved - replace placeholder with real note
+      // Handle note-saved
       if (e.data?.type === 'note-saved') {
         const noteId = e.data.noteId;
         const noteData = e.data.noteData;
         
-        // If this was a new note, replace the placeholder
+        // Clear creating flag
+        setIsCreatingNewNote(false);
+        
+        // Replace placeholder with real note
+        setSavedNotes(prev => {
+          const withoutPlaceholder = prev.filter(n => !n.id.startsWith('new-'));
+          const newNote = {
+            id: noteId,
+            title: noteData?.title || '',
+            contentBlocks: noteData?.contentBlocks || [],
+            createdAt: noteData?.createdAt || new Date().toISOString(),
+            updatedAt: noteData?.updatedAt || new Date().toISOString(),
+            weather: noteData?.weather || undefined,
+            folder_id: noteData?.folder_id || undefined
+          };
+          // Don't add duplicate
+          const exists = withoutPlaceholder.find(n => n.id === noteId);
+          if (exists) {
+            return withoutPlaceholder.map(n => n.id === noteId ? newNote : n);
+          }
+          return [newNote, ...withoutPlaceholder];
+        });
+        
+        // Update selection if was new note
         if (desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-')) {
-          setSavedNotes(prev => {
-            // Remove the placeholder (new-xxx) and add the real note
-            const withoutPlaceholder = prev.filter(n => !n.id.startsWith('new-'));
-            
-            // Check if note already exists (avoid duplicates)
-            const exists = withoutPlaceholder.find(n => n.id === noteId);
-            if (exists) {
-              return withoutPlaceholder.map(n => n.id === noteId ? {
-                id: noteId,
-                title: noteData?.title || '',
-                contentBlocks: noteData?.contentBlocks || [],
-                createdAt: noteData?.createdAt || new Date().toISOString(),
-                updatedAt: noteData?.updatedAt || new Date().toISOString(),
-                weather: noteData?.weather || undefined,
-                folder_id: noteData?.folder_id || currentFolder?.id
-              } : n);
-            }
-            
-            // Add new note at the top
-            return [{
-              id: noteId,
-              title: noteData?.title || '',
-              contentBlocks: noteData?.contentBlocks || [],
-              createdAt: noteData?.createdAt || new Date().toISOString(),
-              updatedAt: noteData?.updatedAt || new Date().toISOString(),
-              weather: noteData?.weather || undefined,
-              folder_id: noteData?.folder_id || currentFolder?.id
-            }, ...withoutPlaceholder];
-          });
-          
-          // Update selection to real note ID
           setDesktopSelectedNoteId(noteId);
         }
-      }
-      
-      // Handle real-time content updates
-      if (e.data?.type === 'note-content-update') {
-        const noteId = e.data.noteId;
-        const title = e.data.title;
-        const contentBlocks = e.data.contentBlocks;
-        const placeholderId = e.data.placeholderId;
-        
-        setSavedNotes(prev => prev.map(n => {
-          // Match by real ID or placeholder ID
-          if (n.id === noteId || n.id === placeholderId) {
-            return {
-              ...n,
-              id: noteId || n.id,
-              title: title || n.title,
-              contentBlocks: contentBlocks || n.contentBlocks
-            };
-          }
-          return n;
-        }));
       }
       
       // Handle note-updated
@@ -212,9 +192,7 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
           setSavedNotes(prev => prev.map(n => n.id === noteData.id ? {
             ...n,
             title: noteData.title || '',
-            contentBlocks: noteData.contentBlocks || [],
-            createdAt: noteData.createdAt,
-            updatedAt: noteData.updatedAt
+            contentBlocks: noteData.contentBlocks || []
           } : n));
         }
       }
@@ -228,7 +206,7 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
         }
       }
       
-      // Handle AI rewrite glow effect
+      // Handle AI rewrite
       if (e.data?.type === 'rewrite-start') {
         setDesktopRewriteGlow(true);
       }
@@ -694,7 +672,8 @@ useEffect(() => {
 
   // Load notes for current folder
   const loadNotesForCurrentFolder = async (userId?: string) => {
-    if (isLoadingNotes) return;
+    // Don't reload while creating a new note
+    if (isLoadingNotes || isCreatingNewNote) return;
     setIsLoadingNotes(true);
     
     try {
@@ -722,7 +701,15 @@ useEffect(() => {
           weather: note.weather as SavedNote['weather'],
           folder_id: note.folder_id
         }));
-        setSavedNotes(notes);
+        
+        // Preserve any placeholder notes (new-xxx) when reloading
+        setSavedNotes(prev => {
+          const placeholders = prev.filter(n => n.id.startsWith('new-'));
+          if (placeholders.length > 0) {
+            return [...placeholders, ...notes.filter(n => !placeholders.some(p => p.id === n.id))];
+          }
+          return notes;
+        });
       }
     } finally {
       setIsLoadingNotes(false);
@@ -1954,6 +1941,9 @@ query = query.eq('folder_id', currentFolder.id);
                     onClick={() => {
                       const newId = 'new-' + Date.now();
                       const now = new Date();
+                      
+                      // Set flag to prevent reloads
+                      setIsCreatingNewNote(true);
                       
                       // Create placeholder note immediately in the list
                       const placeholderNote: SavedNote = {
