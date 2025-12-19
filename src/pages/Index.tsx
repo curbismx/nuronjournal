@@ -1032,12 +1032,12 @@ query = query.eq('folder_id', currentFolder.id);
     : new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
 
   // Get combined text content from contentBlocks
-const getNotePreview = (note: SavedNote): string => {
+const getNotePreview = (note: SavedNote): string[] => {
   const textBlocks = note.contentBlocks.filter(b => b.type === 'text');
   const allText = textBlocks.map(b => (b as { type: 'text'; id: string; content: string }).content).join('\n');
-  const lines = allText.split('\n').filter(line => line.trim() !== '');
-  // Return first 2 lines only, preserve line breaks
-  return lines.slice(0, 2).join('\n');
+  const lines = allText.split('\n');
+  // Return first 2 lines only
+  return lines.slice(0, 2);
 };
 
 
@@ -2072,9 +2072,13 @@ onDragStart={(e) => {
                                     <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-[6px] break-words overflow-wrap-anywhere leading-tight">
                                       {note.title || 'Untitled'}
                                     </h3>
-                                    <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] leading-snug break-words overflow-wrap-anywhere min-h-[40px] whitespace-pre-line">
-                                      {preview || '-'}
-                                    </p>
+                                    <div className="text-[14px] font-outfit text-[hsl(0,0%,50%)] leading-snug min-h-[40px]">
+                                      {preview.length > 0 ? preview.map((line, i) => (
+                                        <div key={i} className="truncate">
+                                          {line || '\u00A0'}
+                                        </div>
+                                      )) : '-'}
+                                    </div>
                                   </div>
                                   {firstImage && (
                                     <img 
