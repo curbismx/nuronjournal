@@ -142,20 +142,81 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
   // Listen for postMessage from iframe when note is saved
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
-      // Handle note-saved - always reload from Supabase
+      // Handle note-saved
       if (e.data?.type === 'note-saved') {
         const noteId = e.data.noteId;
-        // Always reload from Supabase to get properly filtered notes
-        loadNotesForCurrentFolder();
+        const noteData = e.data.noteData;
+        
         // Update selection if it was a new note being saved
         if (desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-') && noteId) {
           setDesktopSelectedNoteId(noteId);
+          
+          // Add the new note to the list without full reload
+          if (noteData) {
+            setSavedNotes(prev => {
+              // Check if note already exists
+              const exists = prev.find(n => n.id === noteId);
+              if (exists) {
+                // Update existing note
+                return prev.map(n => n.id === noteId ? {
+                  id: noteData.id,
+                  title: noteData.title || 'Untitled',
+                  contentBlocks: noteData.contentBlocks || [],
+                  createdAt: noteData.createdAt,
+                  updatedAt: noteData.updatedAt,
+                  weather: noteData.weather,
+                  folder_id: noteData.folder_id
+                } : n);
+              } else {
+                // Add new note at the top
+                return [{
+                  id: noteData.id,
+                  title: noteData.title || 'Untitled',
+                  contentBlocks: noteData.contentBlocks || [],
+                  createdAt: noteData.createdAt,
+                  updatedAt: noteData.updatedAt,
+                  weather: noteData.weather,
+                  folder_id: noteData.folder_id
+                }, ...prev];
+              }
+            });
+          } else {
+            // Fallback to reload if no noteData provided
+            loadNotesForCurrentFolder();
+          }
+        } else {
+          // For existing note updates, just update the specific note
+          if (noteData) {
+            setSavedNotes(prev => prev.map(n => n.id === noteId ? {
+              id: noteData.id,
+              title: noteData.title || 'Untitled',
+              contentBlocks: noteData.contentBlocks || [],
+              createdAt: noteData.createdAt,
+              updatedAt: noteData.updatedAt,
+              weather: noteData.weather,
+              folder_id: noteData.folder_id
+            } : n));
+          }
         }
       }
       
-      // Handle note-updated - just reload the list
+      // Handle note-updated - update just the changed note
       if (e.data?.type === 'note-updated') {
-        loadNotesForCurrentFolder();
+        const noteId = e.data.noteId;
+        const noteData = e.data.noteData;
+        if (noteData) {
+          setSavedNotes(prev => prev.map(n => n.id === noteId ? {
+            id: noteData.id,
+            title: noteData.title || 'Untitled',
+            contentBlocks: noteData.contentBlocks || [],
+            createdAt: noteData.createdAt,
+            updatedAt: noteData.updatedAt,
+            weather: noteData.weather,
+            folder_id: noteData.folder_id
+          } : n));
+        } else {
+          loadNotesForCurrentFolder();
+        }
       }
       
       // Handle note deletion - remove from state directly
@@ -668,13 +729,11 @@ useEffect(() => {
   };
 
   // Reload notes when current folder changes
-useEffect(() => {
-  if (currentFolder) {
-    // Clear notes immediately when folder changes to prevent showing wrong notes
-    setSavedNotes([]);
-    loadNotesForCurrentFolder();
-  }
-}, [currentFolder?.id, user?.id]);
+  useEffect(() => {
+    if (currentFolder) {
+      loadNotesForCurrentFolder();
+    }
+  }, [currentFolder?.id, user?.id]);
 
   const loadUserProfile = async (userId: string) => {
     const { data } = await supabase
@@ -2632,12 +2691,14 @@ onDragStart={(e) => {
           <div className="flex-1 overflow-hidden" style={{ position: 'relative' }}>
             {desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-') ? (
               <iframe
+                key={desktopSelectedNoteId}
                 src={`/note?desktop=true&folder_id=${currentFolder?.id || ''}`}
                 className="absolute inset-0 w-full h-full border-0"
                 title="Note Editor"
               />
             ) : desktopSelectedNoteId ? (
               <iframe
+                key={desktopSelectedNoteId}
                 src={`/note/${desktopSelectedNoteId}?desktop=true`}
                 className="absolute inset-0 w-full h-full border-0"
                 title="Note Editor"
