@@ -2017,10 +2017,19 @@ onDragStart={(e) => {
                           setDraggedNote(null);
                           setDragOverFolder(null);
                         }}
-                        className={`border-b border-[hsl(0,0%,85%)] cursor-pointer transition-all duration-300 ease-out ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'} ${draggedNote?.id === note.id ? 'opacity-30' : ''}`}
+                        className={`border-b border-[hsl(0,0%,85%)] cursor-pointer transition-all duration-300 ease-out ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'} ${draggedNote?.id === note.id ? 'opacity-30' : ''} relative`}
                         onClick={() => setDesktopSelectedNoteId(note.id)}
                       >
-                              <div className={viewMode === 'compact' ? "px-[22px] pt-[17px] pb-4" : "px-[22px] py-[12px]"}>
+                        {/* Day letter - absolute positioned from note box edge */}
+                        {index === 0 && viewMode !== 'compact' && (
+                          <span 
+                            className="absolute text-[12px] font-outfit font-bold text-[hsl(60,1%,66%)]"
+                            style={{ top: '12px', left: '12px' }}
+                          >
+                            {dayName.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                        <div className={viewMode === 'compact' ? "px-[22px] pt-[17px] pb-4" : "px-[22px] py-[12px]"}>
                           
                           {/* Title and Body Container */}
                           <div className="min-w-0">
@@ -2045,16 +2054,7 @@ onDragStart={(e) => {
                               </div>
                             ) : (
                               /* COLLAPSED VIEW (Date View) */
-                              <div className="flex items-center min-h-[70px] relative">
-                                {/* Day letter - absolute positioned, doesn't affect layout */}
-                                {index === 0 && (
-                                  <span 
-                                    className="absolute text-[12px] font-outfit font-bold text-[hsl(60,1%,66%)]"
-                                    style={{ top: '12px', left: '12px' }}
-                                  >
-                                    {dayName.charAt(0).toUpperCase()}
-                                  </span>
-                                )}
+                              <div className="flex items-center min-h-[70px]">
                                 {/* Date area - big number only, vertically centered */}
                                 <div className="w-[70px] flex-shrink-0 flex items-center justify-center ml-[-10px] mr-[10px]">
                                   {index === 0 ? (
