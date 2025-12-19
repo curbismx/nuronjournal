@@ -1032,13 +1032,13 @@ query = query.eq('folder_id', currentFolder.id);
     : new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
 
   // Get combined text content from contentBlocks
-const getNotePreview = (note: SavedNote): string[] => {
-  const textBlocks = note.contentBlocks.filter(b => b.type === 'text');
-  const allText = textBlocks.map(b => (b as { type: 'text'; id: string; content: string }).content).join('\n');
-  const lines = allText.split('\n');
-  // Return first 2 lines only
-  return lines.slice(0, 2);
-};
+  const getNotePreview = (note: SavedNote): string[] => {
+    const textBlocks = note.contentBlocks?.filter(b => b.type === 'text') || [];
+    const allText = textBlocks.map(b => (b as { type: 'text'; id: string; content: string }).content || '').join('\n');
+    const lines = allText.split('\n');
+    // Return first 2 lines, ensure at least empty array
+    return lines.slice(0, 2);
+  };
 
 
   // Show original start page only for logged-out users with no notes
@@ -1931,15 +1931,15 @@ const getNotePreview = (note: SavedNote): string[] => {
                       setDesktopSelectedNoteId(newId);
                       
                       // Add to TOP of list - simple, no sorting
-                      setSavedNotes(prev => [{
-                        id: newId,
-                        title: '',
-                        contentBlocks: [{ type: 'text', id: 'initial', content: '' }],
-                        createdAt: now.toISOString(),
-                        updatedAt: now.toISOString(),
-                        weather: null,
-                        folder_id: currentFolder?.id || null
-                      }, ...prev]);
+                    setSavedNotes(prev => [{
+                      id: newId,
+                      title: '',
+                      contentBlocks: [{ type: 'text' as const, id: 'initial', content: '' }],
+                      createdAt: now.toISOString(),
+                      updatedAt: now.toISOString(),
+                      weather: null,
+                      folder_id: currentFolder?.id || null
+                    }, ...prev]);
                     }}
                     className="p-0 m-0 border-0 bg-transparent"
                   >
@@ -2029,9 +2029,9 @@ onDragStart={(e) => {
                                   <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] break-words overflow-wrap-anywhere">
                                     {note.title || 'Untitled'}
                                   </h3>
-                                  <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-1 break-words overflow-wrap-anywhere">
-                                    {preview || '-'}
-                                  </p>
+                      <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] truncate break-words overflow-wrap-anywhere">
+                        {Array.isArray(preview) ? (preview[0] || '-') : (preview || '-')}
+                      </p>
                                 </div>
                                 {firstImage && (
                                   <img 
@@ -2075,13 +2075,14 @@ onDragStart={(e) => {
                                     <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-[6px] break-words overflow-wrap-anywhere leading-tight">
                                       {note.title || 'Untitled'}
                                     </h3>
-                                    <div className="text-[14px] font-outfit text-[hsl(0,0%,50%)] leading-snug min-h-[40px]">
-                                      {preview.length > 0 ? preview.map((line, i) => (
-                                        <div key={i} className="truncate">
-                                          {line || '\u00A0'}
-                                        </div>
-                                      )) : '-'}
-                                    </div>
+                                <div className="text-[14px] font-outfit text-[hsl(0,0%,50%)] leading-snug min-h-[40px]">
+                                  <div className="truncate">
+                                    {(Array.isArray(preview) ? preview[0] : preview) || '\u00A0'}
+                                  </div>
+                                  <div className="truncate">
+                                    {(Array.isArray(preview) && preview[1]) || '\u00A0'}
+                                  </div>
+                                </div>
                                   </div>
                                   {firstImage && (
                                     <img 
