@@ -142,84 +142,84 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
   // Listen for postMessage from iframe when note is saved
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
-      // Handle note-saved
+      // Handle note-saved - replace placeholder with real note
       if (e.data?.type === 'note-saved') {
         const noteId = e.data.noteId;
         const noteData = e.data.noteData;
         
-        // Update selection if it was a new note being saved
-        if (desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-') && noteId) {
-          setDesktopSelectedNoteId(noteId);
+        // If this was a new note, replace the placeholder
+        if (desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-')) {
+          setSavedNotes(prev => {
+            // Remove the placeholder (new-xxx) and add the real note
+            const withoutPlaceholder = prev.filter(n => !n.id.startsWith('new-'));
+            
+            // Check if note already exists (avoid duplicates)
+            const exists = withoutPlaceholder.find(n => n.id === noteId);
+            if (exists) {
+              return withoutPlaceholder.map(n => n.id === noteId ? {
+                id: noteId,
+                title: noteData?.title || '',
+                contentBlocks: noteData?.contentBlocks || [],
+                createdAt: noteData?.createdAt || new Date().toISOString(),
+                updatedAt: noteData?.updatedAt || new Date().toISOString(),
+                weather: noteData?.weather || undefined,
+                folder_id: noteData?.folder_id || currentFolder?.id
+              } : n);
+            }
+            
+            // Add new note at the top
+            return [{
+              id: noteId,
+              title: noteData?.title || '',
+              contentBlocks: noteData?.contentBlocks || [],
+              createdAt: noteData?.createdAt || new Date().toISOString(),
+              updatedAt: noteData?.updatedAt || new Date().toISOString(),
+              weather: noteData?.weather || undefined,
+              folder_id: noteData?.folder_id || currentFolder?.id
+            }, ...withoutPlaceholder];
+          });
           
-          // Add the new note to the list without full reload
-          if (noteData) {
-            setSavedNotes(prev => {
-              // Check if note already exists
-              const exists = prev.find(n => n.id === noteId);
-              if (exists) {
-                // Update existing note
-                return prev.map(n => n.id === noteId ? {
-                  id: noteData.id,
-                  title: noteData.title || 'Untitled',
-                  contentBlocks: noteData.contentBlocks || [],
-                  createdAt: noteData.createdAt,
-                  updatedAt: noteData.updatedAt,
-                  weather: noteData.weather,
-                  folder_id: noteData.folder_id
-                } : n);
-              } else {
-                // Add new note at the top
-                return [{
-                  id: noteData.id,
-                  title: noteData.title || 'Untitled',
-                  contentBlocks: noteData.contentBlocks || [],
-                  createdAt: noteData.createdAt,
-                  updatedAt: noteData.updatedAt,
-                  weather: noteData.weather,
-                  folder_id: noteData.folder_id
-                }, ...prev];
-              }
-            });
-          } else {
-            // Fallback to reload if no noteData provided
-            loadNotesForCurrentFolder();
-          }
-        } else {
-          // For existing note updates, just update the specific note
-          if (noteData) {
-            setSavedNotes(prev => prev.map(n => n.id === noteId ? {
-              id: noteData.id,
-              title: noteData.title || 'Untitled',
-              contentBlocks: noteData.contentBlocks || [],
-              createdAt: noteData.createdAt,
-              updatedAt: noteData.updatedAt,
-              weather: noteData.weather,
-              folder_id: noteData.folder_id
-            } : n));
-          }
+          // Update selection to real note ID
+          setDesktopSelectedNoteId(noteId);
         }
       }
       
-      // Handle note-updated - update just the changed note
-      if (e.data?.type === 'note-updated') {
+      // Handle real-time content updates
+      if (e.data?.type === 'note-content-update') {
         const noteId = e.data.noteId;
+        const title = e.data.title;
+        const contentBlocks = e.data.contentBlocks;
+        const placeholderId = e.data.placeholderId;
+        
+        setSavedNotes(prev => prev.map(n => {
+          // Match by real ID or placeholder ID
+          if (n.id === noteId || n.id === placeholderId) {
+            return {
+              ...n,
+              id: noteId || n.id,
+              title: title || n.title,
+              contentBlocks: contentBlocks || n.contentBlocks
+            };
+          }
+          return n;
+        }));
+      }
+      
+      // Handle note-updated
+      if (e.data?.type === 'note-updated') {
         const noteData = e.data.noteData;
         if (noteData) {
-          setSavedNotes(prev => prev.map(n => n.id === noteId ? {
-            id: noteData.id,
-            title: noteData.title || 'Untitled',
+          setSavedNotes(prev => prev.map(n => n.id === noteData.id ? {
+            ...n,
+            title: noteData.title || '',
             contentBlocks: noteData.contentBlocks || [],
             createdAt: noteData.createdAt,
-            updatedAt: noteData.updatedAt,
-            weather: noteData.weather,
-            folder_id: noteData.folder_id
+            updatedAt: noteData.updatedAt
           } : n));
-        } else {
-          loadNotesForCurrentFolder();
         }
       }
       
-      // Handle note deletion - remove from state directly
+      // Handle note deletion
       if (e.data?.type === 'note-deleted') {
         const noteId = e.data.noteId;
         setSavedNotes(prev => prev.filter(n => n.id !== noteId));
@@ -236,6 +236,7 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
         setDesktopRewriteGlow(false);
       }
     };
+    
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [desktopSelectedNoteId]);
@@ -1950,7 +1951,27 @@ query = query.eq('folder_id', currentFolder.id);
                     )}
                   </button>
                   <button 
-                    onClick={() => setDesktopSelectedNoteId('new-' + Date.now())}
+                    onClick={() => {
+                      const newId = 'new-' + Date.now();
+                      const now = new Date();
+                      
+                      // Create placeholder note immediately in the list
+                      const placeholderNote: SavedNote = {
+                        id: newId,
+                        title: '',
+                        contentBlocks: [{ type: 'text', id: 'initial', content: '' }],
+                        createdAt: now.toISOString(),
+                        updatedAt: now.toISOString(),
+                        weather: undefined,
+                        folder_id: currentFolder?.id || undefined
+                      };
+                      
+                      // Add to top of list
+                      setSavedNotes(prev => [placeholderNote, ...prev]);
+                      
+                      // Select this new note
+                      setDesktopSelectedNoteId(newId);
+                    }}
                     className="p-0 m-0 border-0 bg-transparent"
                   >
                     <img 
@@ -2692,7 +2713,7 @@ onDragStart={(e) => {
             {desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-') ? (
               <iframe
                 key={desktopSelectedNoteId}
-                src={`/note?desktop=true&folder_id=${currentFolder?.id || ''}`}
+                src={`/note?desktop=true&folder_id=${currentFolder?.id || ''}&placeholder=${desktopSelectedNoteId}`}
                 className="absolute inset-0 w-full h-full border-0"
                 title="Note Editor"
               />
