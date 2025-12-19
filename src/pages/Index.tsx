@@ -642,8 +642,6 @@ useEffect(() => {
             }
           }
           
-          // Reload notes from Supabase after sign in
-          loadNotesForCurrentFolder(session!.user.id, currentFolder?.id);
         }, 0);
       } else if (event === 'SIGNED_OUT') {
         setUserProfile(null);
@@ -657,27 +655,20 @@ useEffect(() => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load notes for current folder
-  const loadNotesForCurrentFolder = async (userId?: string, folderId?: string) => {
-    // Don't reload while creating a new note
-    if (isCreatingNewNote) return;
-    if (isLoadingNotes) return;
-    setIsLoadingNotes(true);
-    
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const uid = userId || session?.user?.id;
-      const folderToLoad = folderId || currentFolder?.id;
-      
-      if (!uid || !folderToLoad || folderToLoad === 'local-notes') {
+  useEffect(() => {
+    const loadNotes = async () => {
+      if (!currentFolder || currentFolder.id === 'local-notes' || isCreatingNewNote) {
         return;
       }
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
       
       const { data, error } = await supabase
         .from('notes')
         .select('*')
-        .eq('user_id', uid)
-        .eq('folder_id', folderToLoad)
+        .eq('user_id', session.user.id)
+        .eq('folder_id', currentFolder.id)
         .order('created_at', { ascending: false });
       
       if (data && !error) {
@@ -691,26 +682,18 @@ useEffect(() => {
           folder_id: note.folder_id
         }));
         
-        // Preserve any placeholder notes (new-xxx) when reloading
         setSavedNotes(prev => {
           const placeholders = prev.filter(n => n.id.startsWith('new-'));
           if (placeholders.length > 0) {
-            return [...placeholders, ...notes.filter(n => !placeholders.some(p => p.id === n.id))];
+            return [...placeholders, ...notes];
           }
           return notes;
         });
       }
-    } finally {
-      setIsLoadingNotes(false);
-    }
-  };
-
-  // Reload notes when current folder changes
-  useEffect(() => {
-    if (currentFolder && !isCreatingNewNote) {
-      loadNotesForCurrentFolder(undefined, currentFolder.id);
-    }
-  }, [currentFolder?.id, user?.id, isCreatingNewNote]);
+    };
+    
+    loadNotes();
+  }, [currentFolder?.id, isCreatingNewNote]);
 
   const loadUserProfile = async (userId: string) => {
     const { data } = await supabase
@@ -3424,9 +3407,9 @@ onDragStart={(e) => {
                 onClick={async () => {
                   setShowMergeDialog(false);
                   setLocalNotesToMerge([]);
-                  // Just load from Supabase, keep local notes in localStorage for now
-                  if (user) {
-                    loadNotesForCurrentFolder(user.id, currentFolder?.id);
+                  // Trigger re-render to reload notes via useEffect
+                  if (currentFolder) {
+                    setCurrentFolder({...currentFolder});
                   }
                 }}
                 className="flex-1 py-3 px-4 rounded-xl bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium"
