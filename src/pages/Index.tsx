@@ -2017,18 +2017,7 @@ onDragStart={(e) => {
                         className={`border-b border-[hsl(0,0%,85%)] cursor-pointer transition-all duration-300 ease-out ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'} ${draggedNote?.id === note.id ? 'opacity-30' : ''}`}
                         onClick={() => setDesktopSelectedNoteId(note.id)}
                       >
-<div className={viewMode === 'compact' ? "px-[22px] pt-[17px] pb-4" : index === 0 ? "px-[22px] pt-[8px] pb-[10px]" : "px-[22px] pt-[10px] pb-[10px]"}>
-                          {/* Only show date for first note of each day - HIDDEN in compact view */}
-                          {index === 0 && viewMode !== 'compact' && (
-                              <div className="flex items-start gap-3 mb-[8px]">
-                                <div className="text-[48px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)]">
-                                  {dayNumber}
-                                </div>
-                                <div className="text-[14px] font-outfit font-light tracking-wide text-[hsl(60,1%,66%)] mt-[2px]">
-                                  {dayName}
-                                </div>
-                              </div>
-                          )}
+                              <div className={viewMode === 'compact' ? "px-[22px] pt-[17px] pb-4" : "px-[22px] py-[12px]"}>
                           
                           {/* Title and Body Container */}
                           <div className="min-w-0">
@@ -2052,23 +2041,42 @@ onDragStart={(e) => {
                                 )}
                               </div>
                             ) : (
-                              /* COLLAPSED VIEW */
-                              <div className="flex items-center gap-[15px]">
-                                <div className="flex-1 min-w-0">
-<h3 className={`text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-[6px] break-words overflow-wrap-anywhere leading-tight ${index === 0 ? '-mt-[6px]' : ''}`}>
-                                    {note.title || 'Untitled'}
-                                  </h3>
-<p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 leading-snug break-words overflow-wrap-anywhere">
-                                    {preview || '-'}
-                                  </p>
+                              /* COLLAPSED VIEW (Date View) */
+                              <div className="flex items-start">
+                                {/* Date area - fixed width */}
+                                <div className="w-[70px] flex-shrink-0 flex items-start pt-[2px]">
+                                  {index === 0 ? (
+                                    <>
+                                      <span className="text-[14px] font-outfit font-light text-[hsl(60,1%,66%)] leading-none mr-[6px]">
+                                        {dayName.charAt(0)}
+                                      </span>
+                                      <span className="text-[48px] font-outfit font-bold leading-none text-[hsl(60,1%,66%)] -mt-[10px]">
+                                        {dayNumber}
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <div className="w-[70px]" />
+                                  )}
                                 </div>
-                                {firstImage && (
-                                  <img 
-                                    src={firstImage.url} 
-                                    alt=""
-                                    className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0"
-                                  />
-                                )}
+                                
+                                {/* Content + Image area */}
+                                <div className="flex-1 min-w-0 flex items-start gap-[15px]">
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-[6px] break-words overflow-wrap-anywhere leading-tight">
+                                      {note.title || 'Untitled'}
+                                    </h3>
+                                    <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] line-clamp-2 leading-snug break-words overflow-wrap-anywhere">
+                                      {preview || '-'}
+                                    </p>
+                                  </div>
+                                  {firstImage && (
+                                    <img 
+                                      src={firstImage.url} 
+                                      alt=""
+                                      className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0"
+                                    />
+                                  )}
+                                </div>
                               </div>
                             )}
                           </div>
