@@ -2045,14 +2045,17 @@ onDragStart={(e) => {
                               /* COLLAPSED VIEW (Date View) */
                               <div className="flex items-start min-h-[70px]">
                                 {/* Date area - fixed width */}
-                                <div className="w-[70px] flex-shrink-0 flex items-start mt-[5px] ml-[-15px]">
+                                <div className="w-[70px] flex-shrink-0 mt-[5px] ml-[-15px] relative">
                                   {index === 0 ? (
                                     <>
-                                      <span className="text-[16px] font-outfit font-light text-[hsl(60,1%,66%)] leading-none mr-[6px] mt-[2px]">
+                                      <span 
+                                        className="absolute text-[16px] font-bold leading-none text-[hsl(60,1%,66%)]"
+                                        style={{ fontFamily: 'Roboto Mono, monospace', left: '0px', top: '4px' }}
+                                      >
                                         {dayName.charAt(0)}
                                       </span>
                                       <span 
-                                        className="text-[48px] font-bold leading-none text-[hsl(60,1%,66%)]"
+                                        className="text-[48px] font-bold leading-none text-[hsl(60,1%,66%)] ml-[18px]"
                                         style={{ fontFamily: 'Roboto Mono, monospace', letterSpacing: '-0.05em' }}
                                       >
                                         {dayNumber}
