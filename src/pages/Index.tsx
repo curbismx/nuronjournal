@@ -2045,7 +2045,16 @@ onDragStart={(e) => {
                               </div>
                             ) : (
                               /* COLLAPSED VIEW (Date View) */
-                              <div className="flex items-center min-h-[70px]">
+                              <div className="flex items-center min-h-[70px] relative">
+                                {/* Day letter - absolute positioned, doesn't affect layout */}
+                                {index === 0 && (
+                                  <span 
+                                    className="absolute text-[12px] font-outfit font-bold text-[hsl(60,1%,66%)]"
+                                    style={{ top: '12px', left: '12px' }}
+                                  >
+                                    {dayName.charAt(0).toUpperCase()}
+                                  </span>
+                                )}
                                 {/* Date area - big number only, vertically centered */}
                                 <div className="w-[70px] flex-shrink-0 flex items-center justify-center ml-[-10px] mr-[10px]">
                                   {index === 0 ? (
