@@ -2043,8 +2043,8 @@ onDragStart={(e) => {
                             ) : (
                               /* COLLAPSED VIEW (Date View) */
                               <div className="flex items-start">
-                                {/* Date area - fixed width */}
-                                <div className="w-[70px] flex-shrink-0 flex items-start pt-[2px]">
+                                {/* Date area - fixed width, shifted left */}
+                                <div className="w-[70px] flex-shrink-0 flex items-start pt-[2px] ml-[-15px]">
                                   {index === 0 ? (
                                     <>
                                       <span className="text-[14px] font-outfit font-light text-[hsl(60,1%,66%)] leading-none mr-[6px]">
