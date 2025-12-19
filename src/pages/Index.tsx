@@ -643,7 +643,7 @@ useEffect(() => {
           }
           
           // Reload notes from Supabase after sign in
-          loadNotesForCurrentFolder(session!.user.id);
+          loadNotesForCurrentFolder(session!.user.id, currentFolder?.id);
         }, 0);
       } else if (event === 'SIGNED_OUT') {
         setUserProfile(null);
@@ -658,9 +658,8 @@ useEffect(() => {
   }, []);
 
   // Load notes for current folder
-  const loadNotesForCurrentFolder = async (userId?: string) => {
+  const loadNotesForCurrentFolder = async (userId?: string, folderId?: string) => {
     // Don't reload while creating a new note
-    // Block all reloads while creating note
     if (isCreatingNewNote) return;
     if (isLoadingNotes) return;
     setIsLoadingNotes(true);
@@ -668,8 +667,9 @@ useEffect(() => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const uid = userId || session?.user?.id;
+      const folderToLoad = folderId || currentFolder?.id;
       
-      if (!uid || !currentFolder || currentFolder.id === 'local-notes') {
+      if (!uid || !folderToLoad || folderToLoad === 'local-notes') {
         return;
       }
       
@@ -677,7 +677,7 @@ useEffect(() => {
         .from('notes')
         .select('*')
         .eq('user_id', uid)
-        .eq('folder_id', currentFolder.id)
+        .eq('folder_id', folderToLoad)
         .order('created_at', { ascending: false });
       
       if (data && !error) {
@@ -708,7 +708,7 @@ useEffect(() => {
   // Reload notes when current folder changes
   useEffect(() => {
     if (currentFolder && !isCreatingNewNote) {
-      loadNotesForCurrentFolder();
+      loadNotesForCurrentFolder(undefined, currentFolder.id);
     }
   }, [currentFolder?.id, user?.id, isCreatingNewNote]);
 
@@ -3426,7 +3426,7 @@ onDragStart={(e) => {
                   setLocalNotesToMerge([]);
                   // Just load from Supabase, keep local notes in localStorage for now
                   if (user) {
-                    loadNotesForCurrentFolder(user.id);
+                    loadNotesForCurrentFolder(user.id, currentFolder?.id);
                   }
                 }}
                 className="flex-1 py-3 px-4 rounded-xl bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium"
