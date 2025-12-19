@@ -150,60 +150,56 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
     }
   }, [desktopSelectedNoteId, isCreatingNewNote]);
 
+  // Listen for postMessage from iframe when note is saved
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
-      // Handle real-time content updates (while typing)
+      // Handle real-time content updates (live preview while typing)
       if (e.data?.type === 'note-content-update') {
         const { noteId, placeholderId, title, contentBlocks } = e.data;
         
         setSavedNotes(prev => prev.map(n => {
           if (n.id === placeholderId || n.id === noteId) {
-            return {
-              ...n,
-              title: title !== undefined ? title : n.title,
-              contentBlocks: contentBlocks || n.contentBlocks
-            };
+            return { ...n, title: title ?? n.title, contentBlocks: contentBlocks || n.contentBlocks };
           }
           return n;
         }));
       }
       
-      // Handle note-saved - replace placeholder IN PLACE (no sorting!)
+      // Handle note-saved - ONLY swap the placeholder ID, DO NOT RELOAD
       if (e.data?.type === 'note-saved') {
         const noteId = e.data.noteId;
         const noteData = e.data.noteData;
         
-        // Just replace the placeholder ID with real ID - keep position!
+        // Just update the ID and data - keep the note in its current position
         setSavedNotes(prev => prev.map(n => {
           if (n.id.startsWith('new-')) {
             return {
               ...n,
               id: noteId,
               title: noteData?.title ?? n.title,
-              contentBlocks: noteData?.contentBlocks || n.contentBlocks,
-              folder_id: noteData?.folder_id || n.folder_id
+              contentBlocks: noteData?.contentBlocks || n.contentBlocks
             };
           }
           return n;
         }));
         
+        // Update selection from placeholder to real ID
         if (desktopSelectedNoteId?.startsWith('new-')) {
           setDesktopSelectedNoteId(noteId);
         }
         
-        // Clear flag AFTER state updates
-        setTimeout(() => setIsCreatingNewNote(false), 100);
+        setIsCreatingNewNote(false);
       }
       
-      // Handle note-updated - update in place
+      // Handle note-updated - update in place, NO RELOAD
       if (e.data?.type === 'note-updated') {
         const noteData = e.data.noteData;
         if (noteData) {
-          setSavedNotes(prev => prev.map(n => n.id === noteData.id ? {
-            ...n,
-            title: noteData.title || '',
-            contentBlocks: noteData.contentBlocks || []
-          } : n));
+          setSavedNotes(prev => prev.map(n => 
+            n.id === noteData.id 
+              ? { ...n, title: noteData.title ?? n.title, contentBlocks: noteData.contentBlocks || n.contentBlocks }
+              : n
+          ));
         }
       }
       
@@ -216,13 +212,9 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
         }
       }
       
-      // Handle AI rewrite
-      if (e.data?.type === 'rewrite-start') {
-        setDesktopRewriteGlow(true);
-      }
-      if (e.data?.type === 'rewrite-end') {
-        setDesktopRewriteGlow(false);
-      }
+      // Handle AI rewrite glow
+      if (e.data?.type === 'rewrite-start') setDesktopRewriteGlow(true);
+      if (e.data?.type === 'rewrite-end') setDesktopRewriteGlow(false);
     };
     
     window.addEventListener('message', handleMessage);
