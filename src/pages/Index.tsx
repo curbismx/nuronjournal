@@ -182,7 +182,9 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
         const { noteData } = e.data;
         if (noteData) {
           setSavedNotes(prev => prev.map(n => 
-            n.id === noteData.id ? { ...n, title: noteData.title, contentBlocks: noteData.contentBlocks } : n
+            n.id === noteData.id 
+              ? { ...n, title: noteData.title ?? n.title, contentBlocks: noteData.contentBlocks || n.contentBlocks }
+              : n
           ));
         }
       }
