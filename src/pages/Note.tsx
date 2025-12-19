@@ -50,6 +50,7 @@ const Note = () => {
   const { id } = useParams();
   const isEmbedded = new URLSearchParams(window.location.search).get('desktop') === 'true';
   const initialFolderId = new URLSearchParams(window.location.search).get('folder_id');
+  const placeholderId = new URLSearchParams(window.location.search).get('placeholder');
   const noteIdRef = useRef<string>(id || crypto.randomUUID());
   const [user, setUser] = useState<User | null>(null);
   const [noteTitle, setNoteTitle] = useState(() => {
@@ -2025,6 +2026,19 @@ const Note = () => {
       }
     }
   }, [noteTitle, contentBlocks, audioUrls, isEmbedded]);
+
+  // Real-time updates to parent (desktop view)
+  useEffect(() => {
+    if (isEmbedded && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'note-content-update',
+        noteId: noteIdRef.current,
+        placeholderId: placeholderId,
+        title: noteTitle,
+        contentBlocks: contentBlocks
+      }, '*');
+    }
+  }, [noteTitle, contentBlocks, isEmbedded, placeholderId]);
 
   const handleBack = async () => {
     console.log('handleBack called');
