@@ -127,6 +127,7 @@ const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
 const [desktopShowFolderOptions, setDesktopShowFolderOptions] = useState(false);
 const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(null);
   const [isCreatingNewNote, setIsCreatingNewNote] = useState(false);
+  const placeholderPositionRef = useRef<number | null>(null);
   useEffect(() => {
     // Skip onboarding on desktop
     if (isDesktop) return;
@@ -172,15 +173,13 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
         const noteId = e.data.noteId;
         const noteData = e.data.noteData;
         
-        setIsCreatingNewNote(false);
-        
         // Just replace the placeholder ID with real ID - keep position!
         setSavedNotes(prev => prev.map(n => {
           if (n.id.startsWith('new-')) {
             return {
               ...n,
               id: noteId,
-              title: noteData?.title || n.title,
+              title: noteData?.title ?? n.title,
               contentBlocks: noteData?.contentBlocks || n.contentBlocks,
               folder_id: noteData?.folder_id || n.folder_id
             };
@@ -188,9 +187,12 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
           return n;
         }));
         
-        if (desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-')) {
+        if (desktopSelectedNoteId?.startsWith('new-')) {
           setDesktopSelectedNoteId(noteId);
         }
+        
+        // Clear flag AFTER state updates
+        setTimeout(() => setIsCreatingNewNote(false), 100);
       }
       
       // Handle note-updated - update in place
@@ -681,7 +683,10 @@ useEffect(() => {
   // Load notes for current folder
   const loadNotesForCurrentFolder = async (userId?: string) => {
     // Don't reload while creating a new note
-    if (isLoadingNotes || isCreatingNewNote) return;
+    if (isLoadingNotes || isCreatingNewNote) {
+      console.log('Skipping reload - creating new note');
+      return;
+    }
     setIsLoadingNotes(true);
     
     try {
@@ -726,10 +731,10 @@ useEffect(() => {
 
   // Reload notes when current folder changes
   useEffect(() => {
-    if (currentFolder) {
+    if (currentFolder && !isCreatingNewNote) {
       loadNotesForCurrentFolder();
     }
-  }, [currentFolder?.id, user?.id]);
+  }, [currentFolder?.id, user?.id, isCreatingNewNote]);
 
   const loadUserProfile = async (userId: string) => {
     const { data } = await supabase
@@ -1964,8 +1969,23 @@ query = query.eq('folder_id', currentFolder.id);
                       setIsCreatingNewNote(true);
                       setDesktopSelectedNoteId(newId);
                       setSavedNotes(prev => {
-                        const newNotes = [...prev, placeholderNote];
-                        newNotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                        // Find correct position based on date (notes sorted newest first)
+                        let insertIndex = 0;
+                        for (let i = 0; i < prev.length; i++) {
+                          const noteDate = new Date(prev[i].createdAt);
+                          if (now >= noteDate) {
+                            insertIndex = i;
+                            break;
+                          }
+                          insertIndex = i + 1;
+                        }
+                        
+                        // Remember position
+                        placeholderPositionRef.current = insertIndex;
+                        
+                        // Insert at correct position
+                        const newNotes = [...prev];
+                        newNotes.splice(insertIndex, 0, placeholderNote);
                         return newNotes;
                       });
                     }}
