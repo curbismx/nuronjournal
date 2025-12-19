@@ -1976,7 +1976,19 @@ const Note = () => {
 
     // Notify parent window (for desktop view)
     if (window.parent !== window) {
-      window.parent.postMessage({ type: 'note-saved', noteId: noteData.id }, '*');
+      window.parent.postMessage({ 
+        type: 'note-saved', 
+        noteId: noteData.id,
+        noteData: {
+          id: noteData.id,
+          title: noteTitle,
+          contentBlocks: contentBlocks,
+          createdAt: existingCreatedAt.current || noteDate.toISOString(),
+          updatedAt: new Date().toISOString(),
+          weather: weather,
+          folder_id: initialFolderId || localStorage.getItem('nuron-current-folder-id') || null
+        }
+      }, '*');
     }
   };
 
