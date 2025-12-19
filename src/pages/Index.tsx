@@ -156,11 +156,10 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
         const { noteId, placeholderId, title, contentBlocks } = e.data;
         
         setSavedNotes(prev => prev.map(n => {
-          // Match by placeholder ID or real note ID
           if (n.id === placeholderId || n.id === noteId) {
             return {
               ...n,
-              title: title || n.title,
+              title: title !== undefined ? title : n.title,
               contentBlocks: contentBlocks || n.contentBlocks
             };
           }
@@ -168,7 +167,7 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
         }));
       }
       
-      // Handle note-saved
+      // Handle note-saved - replace placeholder IN PLACE (no sorting!)
       if (e.data?.type === 'note-saved') {
         const noteId = e.data.noteId;
         const noteData = e.data.noteData;
@@ -176,36 +175,38 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
         setIsCreatingNewNote(false);
         
         setSavedNotes(prev => {
-          // Remove placeholder
-          const withoutPlaceholder = prev.filter(n => !n.id.startsWith('new-'));
+          const placeholderIndex = prev.findIndex(n => n.id.startsWith('new-'));
           
-          // Check if note already exists
-          const existingIndex = withoutPlaceholder.findIndex(n => n.id === noteId);
-          
-          const newNote = {
-            id: noteId,
-            title: noteData?.title || '',
-            contentBlocks: noteData?.contentBlocks || [],
-            createdAt: noteData?.createdAt || new Date().toISOString(),
-            updatedAt: noteData?.updatedAt || new Date().toISOString(),
-            weather: noteData?.weather || null,
-            folder_id: noteData?.folder_id || currentFolder?.id
-          };
-          
-          let newNotes;
-          if (existingIndex !== -1) {
-            // Update existing
-            newNotes = [...withoutPlaceholder];
-            newNotes[existingIndex] = newNote;
-          } else {
-            // Add new
-            newNotes = [...withoutPlaceholder, newNote];
+          if (placeholderIndex !== -1) {
+            // Replace placeholder IN PLACE - keep same array position
+            const newNotes = [...prev];
+            const placeholder = newNotes[placeholderIndex];
+            newNotes[placeholderIndex] = {
+              id: noteId,
+              title: noteData?.title || placeholder.title || '',
+              contentBlocks: noteData?.contentBlocks || placeholder.contentBlocks || [],
+              createdAt: placeholder.createdAt, // KEEP ORIGINAL DATE - THIS IS KEY
+              updatedAt: noteData?.updatedAt || new Date().toISOString(),
+              weather: noteData?.weather || null,
+              folder_id: noteData?.folder_id || currentFolder?.id
+            };
+            return newNotes;
           }
           
-          // Sort by date descending (newest first)
-          newNotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          // No placeholder - check if note already exists
+          const existingIndex = prev.findIndex(n => n.id === noteId);
+          if (existingIndex !== -1) {
+            const newNotes = [...prev];
+            newNotes[existingIndex] = {
+              ...newNotes[existingIndex],
+              title: noteData?.title || '',
+              contentBlocks: noteData?.contentBlocks || []
+            };
+            return newNotes;
+          }
           
-          return newNotes;
+          // Note doesn't exist at all - shouldn't happen but handle it
+          return prev;
         });
         
         if (desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-')) {
@@ -213,7 +214,7 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
         }
       }
       
-      // Handle note-updated
+      // Handle note-updated - update in place
       if (e.data?.type === 'note-updated') {
         const noteData = e.data.noteData;
         if (noteData) {
