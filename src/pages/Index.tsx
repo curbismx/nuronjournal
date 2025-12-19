@@ -2047,7 +2047,7 @@ onDragStart={(e) => {
                               /* COLLAPSED VIEW (Date View) */
                               <div className="flex items-center min-h-[70px]">
                                 {/* Date area - big number only, vertically centered */}
-                                <div className="w-[70px] flex-shrink-0 flex items-center justify-center ml-[-10px]">
+                                <div className="w-[70px] flex-shrink-0 flex items-center justify-center ml-[-10px] mr-[10px]">
                                   {index === 0 ? (
                                     <span 
                                       className="text-[48px] font-bold leading-none text-[hsl(60,1%,66%)]"
