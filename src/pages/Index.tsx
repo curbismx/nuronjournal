@@ -98,6 +98,7 @@ interface Folder {
   user_id: string;
   name: string;
   default_view: 'collapsed' | 'compact';
+  notes_sort_order?: 'asc' | 'desc';
   created_at: string;
   updated_at: string;
   sort_order?: number;
@@ -249,6 +250,7 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
   const [newFolderDefaultView, setNewFolderDefaultView] = useState<'collapsed' | 'compact'>('collapsed');
+  const [newFolderSortOrder, setNewFolderSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showDeleteFolderConfirm, setShowDeleteFolderConfirm] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState<{ id: string; name: string } | null>(null);
   const [desktopShowDeleteFolderConfirm, setDesktopShowDeleteFolderConfirm] = useState(false);
@@ -373,7 +375,8 @@ const themeSettingsIcons = {
           if (newFolder && !createError) {
             const typedFolder: Folder = {
               ...newFolder,
-              default_view: (newFolder.default_view || 'collapsed') as 'collapsed' | 'compact'
+              default_view: (newFolder.default_view || 'collapsed') as 'collapsed' | 'compact',
+              notes_sort_order: (newFolder.notes_sort_order || 'desc') as 'asc' | 'desc'
             };
             setFolders([typedFolder]);
             setCurrentFolder(typedFolder);
@@ -383,7 +386,8 @@ const themeSettingsIcons = {
         } else {
           const typedFolders = data.map(f => ({
             ...f,
-            default_view: (f.default_view || 'collapsed') as 'collapsed' | 'compact'
+            default_view: (f.default_view || 'collapsed') as 'collapsed' | 'compact',
+            notes_sort_order: (f.notes_sort_order || 'desc') as 'asc' | 'desc'
           }));
           setFolders(typedFolders);
           
@@ -496,7 +500,8 @@ useEffect(() => {
     if (data && !error) {
       const typedFolder: Folder = {
         ...data,
-        default_view: (data.default_view || 'collapsed') as 'collapsed' | 'compact'
+        default_view: (data.default_view || 'collapsed') as 'collapsed' | 'compact',
+        notes_sort_order: (data.notes_sort_order || 'desc') as 'asc' | 'desc'
       };
       setFolders(prev => [...prev, typedFolder]);
       setShowFolderPopup(false);
@@ -1628,7 +1633,8 @@ query = query.eq('folder_id', currentFolder.id);
                           
                           const newFolder: Folder = {
                             ...data,
-                            default_view: (data.default_view || 'collapsed') as 'collapsed' | 'compact'
+                            default_view: (data.default_view || 'collapsed') as 'collapsed' | 'compact',
+                            notes_sort_order: (data.notes_sort_order || 'desc') as 'asc' | 'desc'
                           };
                           
                           // Add new folder to top of list
@@ -1795,6 +1801,7 @@ query = query.eq('folder_id', currentFolder.id);
                         localStorage.setItem('nuron-current-folder-id', folder.id);
                         setDesktopSelectedNoteId(null);
                         setViewMode(folder.default_view || 'collapsed');
+                        setSortOrder(folder.notes_sort_order || 'desc');
                         setUserChangedView(false);
                       }}
                       className="flex items-center gap-3 flex-1 text-left relative z-10"
@@ -1812,6 +1819,7 @@ query = query.eq('folder_id', currentFolder.id);
                           setDesktopEditingFolder(folder);
                           setNewFolderName(folder.name);
                           setNewFolderDefaultView(folder.default_view || 'collapsed');
+                          setNewFolderSortOrder(folder.notes_sort_order || 'desc');
                           setDesktopShowFolderOptions(true);
                         }
                       }} 
@@ -2474,21 +2482,33 @@ onDragStart={(e) => {
                     />
                   </div>
                   
-                  {/* Default View */}
+                  {/* View & Sort */}
                   <div className="space-y-2">
-                    <label className="text-white/60 text-[12px] uppercase tracking-wider font-outfit">Default View</label>
-                    <div className="flex gap-4">
+                    <label className="text-white/60 text-[12px] uppercase tracking-wider font-outfit">View & Sort</label>
+                    <div className="flex gap-2">
                       <button
                         onClick={() => setNewFolderDefaultView('collapsed')}
-                        className={`flex-1 py-3 rounded-[10px] font-outfit text-[14px] transition-colors ${newFolderDefaultView === 'collapsed' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
+                        className={`px-4 py-2 rounded-[8px] font-outfit text-[12px] transition-colors ${newFolderDefaultView === 'collapsed' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
                       >
-                        Date View
+                        Date
                       </button>
                       <button
                         onClick={() => setNewFolderDefaultView('compact')}
-                        className={`flex-1 py-3 rounded-[10px] font-outfit text-[14px] transition-colors ${newFolderDefaultView === 'compact' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
+                        className={`px-4 py-2 rounded-[8px] font-outfit text-[12px] transition-colors ${newFolderDefaultView === 'compact' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
                       >
-                        List View
+                        List
+                      </button>
+                      <div className="w-[1px] bg-white/20 mx-1" />
+                      <span className="text-white/60 text-[12px] font-outfit self-center">Sort</span>
+                      <button
+                        onClick={() => setNewFolderSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                        className="px-3 py-2 rounded-[8px] font-outfit text-[12px] bg-white/10 text-white flex items-center gap-2"
+                      >
+                        <img 
+                          src={newFolderSortOrder === 'desc' ? sortDownIcon : sortUpIcon} 
+                          alt={newFolderSortOrder === 'desc' ? 'Newest First' : 'Oldest First'}
+                          style={{ height: '14px', width: 'auto' }}
+                        />
                       </button>
                     </div>
                   </div>
@@ -2502,6 +2522,7 @@ onDragStart={(e) => {
                           .update({ 
                             name: newFolderName.trim() || 'Untitled', 
                             default_view: newFolderDefaultView,
+                            notes_sort_order: newFolderSortOrder,
                             updated_at: new Date().toISOString()
                           })
                           .eq('id', desktopEditingFolder.id);
@@ -2511,7 +2532,8 @@ onDragStart={(e) => {
                           const updatedFolder = { 
                             ...desktopEditingFolder, 
                             name: newFolderName.trim() || 'Untitled', 
-                            default_view: newFolderDefaultView 
+                            default_view: newFolderDefaultView,
+                            notes_sort_order: newFolderSortOrder
                           };
                           setFolders(prev => prev.map(f => 
                             f.id === desktopEditingFolder.id ? updatedFolder : f
@@ -2521,6 +2543,7 @@ onDragStart={(e) => {
                           setCurrentFolder(updatedFolder);
                           localStorage.setItem('nuron-current-folder-id', updatedFolder.id);
                           setViewMode(updatedFolder.default_view);
+                          setSortOrder(updatedFolder.notes_sort_order || 'desc');
                           
                           setDesktopShowFolderOptions(false);
                           setDesktopEditingFolder(null);

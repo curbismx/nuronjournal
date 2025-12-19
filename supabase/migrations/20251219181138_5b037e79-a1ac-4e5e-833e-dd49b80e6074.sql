@@ -1,0 +1,1 @@
+ALTER TABLE folders ADD COLUMN notes_sort_order text DEFAULT 'desc';
