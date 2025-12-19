@@ -150,69 +150,49 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
     }
   }, [desktopSelectedNoteId, isCreatingNewNote]);
 
-  // Listen for postMessage from iframe when note is saved
+  // Listen for postMessage from iframe
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
-      // Handle real-time content updates (live preview while typing)
+      // Real-time content updates
       if (e.data?.type === 'note-content-update') {
         const { noteId, placeholderId, title, contentBlocks } = e.data;
-        
-        setSavedNotes(prev => prev.map(n => {
-          if (n.id === placeholderId || n.id === noteId) {
-            return { ...n, title: title ?? n.title, contentBlocks: contentBlocks || n.contentBlocks };
-          }
-          return n;
-        }));
+        setSavedNotes(prev => prev.map(n => 
+          (n.id === placeholderId || n.id === noteId) 
+            ? { ...n, title: title ?? n.title, contentBlocks: contentBlocks || n.contentBlocks }
+            : n
+        ));
       }
       
-      // Handle note-saved - ONLY swap the placeholder ID, DO NOT RELOAD
+      // Note saved - just swap ID, stay at same position
       if (e.data?.type === 'note-saved') {
-        const noteId = e.data.noteId;
-        const noteData = e.data.noteData;
-        
-        // Just update the ID and data - keep the note in its current position
-        setSavedNotes(prev => prev.map(n => {
-          if (n.id.startsWith('new-')) {
-            return {
-              ...n,
-              id: noteId,
-              title: noteData?.title ?? n.title,
-              contentBlocks: noteData?.contentBlocks || n.contentBlocks
-            };
-          }
-          return n;
-        }));
-        
-        // Update selection from placeholder to real ID
+        const { noteId, noteData } = e.data;
+        setSavedNotes(prev => prev.map(n => 
+          n.id.startsWith('new-') 
+            ? { ...n, id: noteId, title: noteData?.title ?? n.title, contentBlocks: noteData?.contentBlocks || n.contentBlocks }
+            : n
+        ));
         if (desktopSelectedNoteId?.startsWith('new-')) {
           setDesktopSelectedNoteId(noteId);
         }
-        
         setIsCreatingNewNote(false);
       }
       
-      // Handle note-updated - update in place, NO RELOAD
+      // Note updated - in place
       if (e.data?.type === 'note-updated') {
-        const noteData = e.data.noteData;
+        const { noteData } = e.data;
         if (noteData) {
           setSavedNotes(prev => prev.map(n => 
-            n.id === noteData.id 
-              ? { ...n, title: noteData.title ?? n.title, contentBlocks: noteData.contentBlocks || n.contentBlocks }
-              : n
+            n.id === noteData.id ? { ...n, title: noteData.title, contentBlocks: noteData.contentBlocks } : n
           ));
         }
       }
       
-      // Handle note deletion
+      // Note deleted
       if (e.data?.type === 'note-deleted') {
-        const noteId = e.data.noteId;
-        setSavedNotes(prev => prev.filter(n => n.id !== noteId));
-        if (desktopSelectedNoteId === noteId) {
-          setDesktopSelectedNoteId(null);
-        }
+        setSavedNotes(prev => prev.filter(n => n.id !== e.data.noteId));
+        if (desktopSelectedNoteId === e.data.noteId) setDesktopSelectedNoteId(null);
       }
       
-      // Handle AI rewrite glow
       if (e.data?.type === 'rewrite-start') setDesktopRewriteGlow(true);
       if (e.data?.type === 'rewrite-end') setDesktopRewriteGlow(false);
     };
@@ -444,7 +424,7 @@ const themeSettingsIcons = {
   // Migrate existing notes without folder_id to the default folder
   useEffect(() => {
     const migrateNotes = async () => {
-      if (!user || !currentFolder || currentFolder.id === 'local-notes') return;
+      if (!user || !currentFolder || currentFolder.id === 'local-notes' || isCreatingNewNote) return;
       
       // Update any notes without a folder_id to use the current folder
       const { data: updatedNotes } = await supabase
@@ -675,10 +655,9 @@ useEffect(() => {
   // Load notes for current folder
   const loadNotesForCurrentFolder = async (userId?: string) => {
     // Don't reload while creating a new note
-    if (isLoadingNotes || isCreatingNewNote) {
-      console.log('Skipping reload - creating new note');
-      return;
-    }
+    // Block all reloads while creating note
+    if (isCreatingNewNote) return;
+    if (isLoadingNotes) return;
     setIsLoadingNotes(true);
     
     try {
@@ -1947,7 +1926,11 @@ query = query.eq('folder_id', currentFolder.id);
                       const newId = 'new-' + Date.now();
                       const now = new Date();
                       
-                      const placeholderNote: SavedNote = {
+                      setIsCreatingNewNote(true);
+                      setDesktopSelectedNoteId(newId);
+                      
+                      // Add to TOP of list - simple, no sorting
+                      setSavedNotes(prev => [{
                         id: newId,
                         title: '',
                         contentBlocks: [{ type: 'text', id: 'initial', content: '' }],
@@ -1955,31 +1938,7 @@ query = query.eq('folder_id', currentFolder.id);
                         updatedAt: now.toISOString(),
                         weather: null,
                         folder_id: currentFolder?.id || null
-                      };
-                      
-                      // Set both states - React will batch these
-                      setIsCreatingNewNote(true);
-                      setDesktopSelectedNoteId(newId);
-                      setSavedNotes(prev => {
-                        // Find correct position based on date (notes sorted newest first)
-                        let insertIndex = 0;
-                        for (let i = 0; i < prev.length; i++) {
-                          const noteDate = new Date(prev[i].createdAt);
-                          if (now >= noteDate) {
-                            insertIndex = i;
-                            break;
-                          }
-                          insertIndex = i + 1;
-                        }
-                        
-                        // Remember position
-                        placeholderPositionRef.current = insertIndex;
-                        
-                        // Insert at correct position
-                        const newNotes = [...prev];
-                        newNotes.splice(insertIndex, 0, placeholderNote);
-                        return newNotes;
-                      });
+                      }, ...prev]);
                     }}
                     className="p-0 m-0 border-0 bg-transparent"
                   >
