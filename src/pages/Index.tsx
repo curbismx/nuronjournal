@@ -1970,10 +1970,6 @@ query = query.eq('folder_id', currentFolder.id);
                       const newId = 'new-' + Date.now();
                       const now = new Date();
                       
-                      // Set flag to prevent reloads
-                      setIsCreatingNewNote(true);
-                      
-                      // Create placeholder note immediately in the list
                       const placeholderNote: SavedNote = {
                         id: newId,
                         title: '',
@@ -1984,15 +1980,14 @@ query = query.eq('folder_id', currentFolder.id);
                         folder_id: currentFolder?.id || null
                       };
                       
-                      // Insert note in correct date position (notes are sorted newest first)
+                      // Set both states - React will batch these
+                      setIsCreatingNewNote(true);
+                      setDesktopSelectedNoteId(newId);
                       setSavedNotes(prev => {
                         const newNotes = [...prev, placeholderNote];
                         newNotes.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
                         return newNotes;
                       });
-                      
-                      // Select this new note
-                      setDesktopSelectedNoteId(newId);
                     }}
                     className="p-0 m-0 border-0 bg-transparent"
                   >
