@@ -1213,34 +1213,22 @@ query = query.eq('folder_id', currentFolder.id);
                 <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
                   <span className="text-[20px] font-light">Theme colour</span>
                   <div className="flex items-center gap-3">
-                    {(['default', 'green', 'blue', 'pink'] as const).map((t) => {
-                      const themeDisplayColors: Record<string, string> = {
-                        default: '#2D2D2D',
-                        green: '#4A7C59',
-                        blue: '#4A6FA5',
-                        pink: '#C76B8F'
-                      };
-                      
-                      return (
-                        <button
-                          key={t}
-                          onClick={() => setTheme(t)}
-                          className="flex flex-col items-center relative"
-                          style={{ height: '54px' }}
-                        >
+                    {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setTheme(t)}
+                        className="flex flex-col items-center relative"
+                        style={{ height: '54px' }}
+                      >
+                        <img src={mobileThemeIcons[t]} alt={t} className="w-[40px] h-[40px] rounded-[10px]" />
+                        {theme === t && (
                           <div 
-                            className="w-[40px] h-[40px] rounded-[10px]"
-                            style={{ backgroundColor: themeDisplayColors[t] }}
+                            className="w-[6px] h-[6px] bg-white rounded-full absolute"
+                            style={{ bottom: '0px' }}
                           />
-                          {theme === t && (
-                            <div 
-                              className="w-[6px] h-[6px] bg-white rounded-full absolute"
-                              style={{ bottom: '0px' }}
-                            />
-                          )}
-                        </button>
-                      );
-                    })}
+                        )}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1332,34 +1320,22 @@ query = query.eq('folder_id', currentFolder.id);
                 <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
                   <span className="text-[20px] font-light">Theme colour</span>
                   <div className="flex items-center gap-3">
-                    {(['default', 'green', 'blue', 'pink'] as const).map((t) => {
-                      const themeDisplayColors: Record<string, string> = {
-                        default: '#2D2D2D',
-                        green: '#4A7C59',
-                        blue: '#4A6FA5',
-                        pink: '#C76B8F'
-                      };
-                      
-                      return (
-                        <button
-                          key={t}
-                          onClick={() => setTheme(t)}
-                          className="flex flex-col items-center relative"
-                          style={{ height: '54px' }}
-                        >
+                    {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setTheme(t)}
+                        className="flex flex-col items-center relative"
+                        style={{ height: '54px' }}
+                      >
+                        <img src={mobileThemeIcons[t]} alt={t} className="w-[40px] h-[40px] rounded-[10px]" />
+                        {theme === t && (
                           <div 
-                            className="w-[40px] h-[40px] rounded-[10px]"
-                            style={{ backgroundColor: themeDisplayColors[t] }}
+                            className="w-[6px] h-[6px] bg-white rounded-full absolute"
+                            style={{ bottom: '0px' }}
                           />
-                          {theme === t && (
-                            <div 
-                              className="w-[6px] h-[6px] bg-white rounded-full absolute"
-                              style={{ bottom: '0px' }}
-                            />
-                          )}
-                        </button>
-                      );
-                    })}
+                        )}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
