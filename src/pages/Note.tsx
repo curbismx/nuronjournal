@@ -2041,8 +2041,8 @@ const Note = () => {
       }, '*');
     };
     
-    // Send update every 1.5 seconds while typing
-    const timer = setTimeout(sendUpdate, 1500);
+    // Send update every 500ms while typing
+    const timer = setTimeout(sendUpdate, 500);
     
     return () => clearTimeout(timer);
   }, [noteTitle, contentBlocks, isEmbedded, placeholderId]);
