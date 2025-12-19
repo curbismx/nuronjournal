@@ -952,26 +952,12 @@ query = query.eq('folder_id', currentFolder.id);
 
 
   // Sort notes based on sortOrder
-const sortedNotes = React.useMemo(() => {
+  const sortedNotes = React.useMemo(() => {
     const sorted = [...savedNotes];
     if (sortOrder === 'asc') {
-      sorted.sort((a, b) => {
-        // New notes (placeholder) always go to their date position but first in day
-        const aIsNew = a.id.startsWith('new-');
-        const bIsNew = b.id.startsWith('new-');
-        if (aIsNew && !bIsNew) return -1;
-        if (bIsNew && !aIsNew) return 1;
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      });
+      sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     } else {
-      sorted.sort((a, b) => {
-        // New notes (placeholder) always go to their date position but first in day
-        const aIsNew = a.id.startsWith('new-');
-        const bIsNew = b.id.startsWith('new-');
-        if (aIsNew && !bIsNew) return -1;
-        if (bIsNew && !aIsNew) return 1;
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
+      sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
     return sorted;
   }, [savedNotes, sortOrder]);
@@ -992,6 +978,22 @@ const sortedNotes = React.useMemo(() => {
     
     return groups;
   }, []);
+
+  // Sort notes within each group to ensure new notes are first in their day
+  groupedNotes.forEach(group => {
+    group.notes.sort((a, b) => {
+      const aIsNew = a.id.startsWith('new-');
+      const bIsNew = b.id.startsWith('new-');
+      if (aIsNew && !bIsNew) return -1;
+      if (bIsNew && !aIsNew) return 1;
+      // Otherwise maintain the sortOrder within the day
+      if (sortOrder === 'asc') {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      } else {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
+  });
 
   // Filter notes based on search
   const filteredNotes = searchQuery.trim() === '' 
