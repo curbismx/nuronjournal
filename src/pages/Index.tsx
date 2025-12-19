@@ -2045,29 +2045,29 @@ onDragStart={(e) => {
                               /* COLLAPSED VIEW (Date View) */
                               <div className="flex items-start min-h-[70px]">
                                 {/* Date area - fixed width */}
-                                <div className="w-[70px] flex-shrink-0 mt-[5px] ml-[-15px] relative">
-                                  {index === 0 ? (
-                                    <>
-                                      <span 
-                                        className="absolute text-[16px] font-bold leading-none text-[hsl(60,1%,66%)]"
-                                        style={{ fontFamily: 'Roboto Mono, monospace', left: '0px', top: '4px' }}
-                                      >
-                                        {dayName.charAt(0)}
-                                      </span>
-                                      <span 
-                                        className="text-[48px] font-bold leading-none text-[hsl(60,1%,66%)] ml-[18px]"
-                                        style={{ fontFamily: 'Roboto Mono, monospace', letterSpacing: '-0.05em' }}
-                                      >
-                                        {dayNumber}
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <div className="w-[70px]" />
-                                  )}
-                                </div>
+                              <div className="w-[80px] flex-shrink-0 mt-[5px] ml-[-10px] relative">
+                                {index === 0 ? (
+                                  <>
+                                    <span 
+                                      className="text-[48px] font-bold leading-none text-[hsl(60,1%,66%)]"
+                                      style={{ fontFamily: 'Roboto Mono, monospace', letterSpacing: '-0.05em' }}
+                                    >
+                                      {dayNumber}
+                                    </span>
+                                    <span 
+                                      className="absolute text-[16px] font-medium leading-none text-[hsl(60,1%,66%)]"
+                                      style={{ fontFamily: 'Roboto Mono, monospace', right: '5px', top: '4px' }}
+                                    >
+                                      {dayName.charAt(0)}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <div className="w-[80px]" />
+                                )}
+                              </div>
                                 
-                                {/* Spacer/padding between date and text */}
-                                <div className="w-[15px] flex-shrink-0" />
+                              {/* Spacer/padding between date and text */}
+                              <div className="w-[20px] flex-shrink-0" />
                                 
                                 {/* Content + Image area */}
                                 <div className="flex-1 min-w-0 flex items-start gap-[15px]">
