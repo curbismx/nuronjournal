@@ -45,6 +45,66 @@ type ContentBlock =
   | { type: 'text'; id: string; content: string }
   | { type: 'image'; id: string; url: string; width: number };
 
+// Helper function to render text with clickable links
+const renderTextWithLinks = (text: string, isEmbedded: boolean) => {
+  if (!text) return null;
+  
+  // Regex to match URLs and email addresses
+  const linkRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+  
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match;
+  
+  while ((match = linkRegex.exec(text)) !== null) {
+    // Add text before the link
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    
+    const linkText = match[0];
+    let href = linkText;
+    
+    // Handle different link types
+    if (match[3]) {
+      // Email
+      href = `mailto:${linkText}`;
+    } else if (linkText.startsWith('www.')) {
+      href = `https://${linkText}`;
+    }
+    
+    // Only render clickable links on desktop embed
+    if (isEmbedded) {
+      parts.push(
+        <a
+          key={match.index}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => {
+            e.stopPropagation();
+            window.open(href, '_blank');
+          }}
+          style={{ color: '#E56157', textDecoration: 'underline', cursor: 'pointer' }}
+        >
+          {linkText}
+        </a>
+      );
+    } else {
+      parts.push(linkText);
+    }
+    
+    lastIndex = match.index + linkText.length;
+  }
+  
+  // Add remaining text
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+  
+  return parts.length > 0 ? parts : text;
+};
+
 const Note = () => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -2570,80 +2630,89 @@ const Note = () => {
               });
               
               return (
-                <textarea
-                  key={block.id}
-                  rows={1}
-                  value={textBlock.content}
-                  onChange={(e) => {
-                    const newBlocks = [...contentBlocks];
-                    const originalIndex = contentBlocks.findIndex(b => b.id === block.id);
-                    if (originalIndex !== -1) {
-                      newBlocks[originalIndex] = { ...textBlock, content: e.target.value };
-                      setContentBlocks(newBlocks);
-                    }
-                    e.target.style.height = 'auto';
-                    e.target.style.height = Math.max(24, e.target.scrollHeight) + 'px';
-                  }}
-                  onFocus={(e) => {
-                    activeTextBlockRef.current = { id: block.id, cursorPosition: e.target.selectionStart };
-                  }}
-                  onSelect={(e) => {
-                    activeTextBlockRef.current = { id: block.id, cursorPosition: (e.target as HTMLTextAreaElement).selectionStart };
-                  }}
-                  onBlur={() => {
-                    // Keep the last position, don't clear it
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Backspace') {
-                      const textarea = e.target as HTMLTextAreaElement;
-                      // Check if cursor is at the very start with no selection
-                      if (textarea.selectionStart === 0 && textarea.selectionEnd === 0) {
-                        // Find the block before this one
-                        if (index > 0) {
-                          const prevBlock = contentBlocks[index - 1];
-                          if (prevBlock.type === 'image') {
-                            e.preventDefault();
-                            // Remove the image
-                            setContentBlocks(prev => prev.filter(b => b.id !== prevBlock.id));
-                          } else if (prevBlock.type === 'text') {
-                            e.preventDefault();
-                            // Merge with previous text block
-                            const prevTextBlock = prevBlock as { type: 'text'; id: string; content: string };
-                            const prevContent = prevTextBlock.content;
-                            const currentContent = textBlock.content;
-                            const mergedContent = prevContent + currentContent;
-                            const cursorPosition = prevContent.length;
-                            
-                            // Remove current block and update previous block with merged content
-                            setContentBlocks(prev => prev
-                              .filter(b => b.id !== block.id)
-                              .map(b => b.id === prevBlock.id ? { ...b, content: mergedContent } : b)
-                            );
-                            
-                            // Focus the previous textarea and set cursor position after React updates
-                            setTimeout(() => {
-                              const textareas = document.querySelectorAll('.note-textarea');
-                              const prevTextarea = textareas[index - 1] as HTMLTextAreaElement;
-                              if (prevTextarea) {
-                                prevTextarea.focus();
-                                prevTextarea.selectionStart = cursorPosition;
-                                prevTextarea.selectionEnd = cursorPosition;
-                                // Resize the merged textarea
-                                prevTextarea.style.height = 'auto';
-                                prevTextarea.style.height = Math.max(24, prevTextarea.scrollHeight) + 'px';
-                              }
-                            }, 10);
+                <div key={block.id} className="relative">
+                  <textarea
+                    rows={1}
+                    value={textBlock.content}
+                    onChange={(e) => {
+                      const newBlocks = [...contentBlocks];
+                      const originalIndex = contentBlocks.findIndex(b => b.id === block.id);
+                      if (originalIndex !== -1) {
+                        newBlocks[originalIndex] = { ...textBlock, content: e.target.value };
+                        setContentBlocks(newBlocks);
+                      }
+                      e.target.style.height = 'auto';
+                      e.target.style.height = Math.max(24, e.target.scrollHeight) + 'px';
+                    }}
+                    onFocus={(e) => {
+                      activeTextBlockRef.current = { id: block.id, cursorPosition: e.target.selectionStart };
+                    }}
+                    onSelect={(e) => {
+                      activeTextBlockRef.current = { id: block.id, cursorPosition: (e.target as HTMLTextAreaElement).selectionStart };
+                    }}
+                    onBlur={() => {
+                      // Keep the last position, don't clear it
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Backspace') {
+                        const textarea = e.target as HTMLTextAreaElement;
+                        if (textarea.selectionStart === 0 && textarea.selectionEnd === 0) {
+                          if (index > 0) {
+                            const prevBlock = contentBlocks[index - 1];
+                            if (prevBlock.type === 'image') {
+                              e.preventDefault();
+                              setContentBlocks(prev => prev.filter(b => b.id !== prevBlock.id));
+                            } else if (prevBlock.type === 'text') {
+                              e.preventDefault();
+                              const prevTextBlock = prevBlock as { type: 'text'; id: string; content: string };
+                              const prevContent = prevTextBlock.content;
+                              const currentContent = textBlock.content;
+                              const mergedContent = prevContent + currentContent;
+                              const cursorPosition = prevContent.length;
+                              
+                              setContentBlocks(prev => prev
+                                .filter(b => b.id !== block.id)
+                                .map(b => b.id === prevBlock.id ? { ...b, content: mergedContent } : b)
+                              );
+                              
+                              setTimeout(() => {
+                                const textareas = document.querySelectorAll('.note-textarea');
+                                const prevTextarea = textareas[index - 1] as HTMLTextAreaElement;
+                                if (prevTextarea) {
+                                  prevTextarea.focus();
+                                  prevTextarea.selectionStart = cursorPosition;
+                                  prevTextarea.selectionEnd = cursorPosition;
+                                  prevTextarea.style.height = 'auto';
+                                  prevTextarea.style.height = Math.max(24, prevTextarea.scrollHeight) + 'px';
+                                }
+                              }, 10);
+                            }
                           }
                         }
                       }
-                    }
-                  }}
-                  placeholder={hasPlaceholder ? "" : (index === 0 ? "Start writing..." : "")}
-                  className="note-textarea w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden"
-                  style={{
-                    minHeight: '24px',
-                  }}
-                />
+                    }}
+                    placeholder={hasPlaceholder ? "" : (index === 0 ? "Start writing..." : "")}
+                    className={`note-textarea w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden ${isEmbedded ? 'caret-[hsl(0,0%,25%)]' : ''}`}
+                    style={{
+                      minHeight: '24px',
+                      color: isEmbedded ? 'transparent' : undefined,
+                      caretColor: isEmbedded ? 'hsl(0,0%,25%)' : undefined,
+                    }}
+                  />
+                  {isEmbedded && (
+                    <div 
+                      className="absolute inset-0 pointer-events-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] whitespace-pre-wrap break-words"
+                      style={{ minHeight: '24px' }}
+                    >
+                      <span className="pointer-events-auto">
+                        {renderTextWithLinks(textBlock.content, isEmbedded)}
+                      </span>
+                      {!textBlock.content && !hasPlaceholder && index === 0 && (
+                        <span className="text-[hsl(0,0%,60%)]">Start writing...</span>
+                      )}
+                    </div>
+                  )}
+                </div>
               );
             } else {
               return (
