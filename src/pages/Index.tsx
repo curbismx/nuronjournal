@@ -121,6 +121,10 @@ const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
 const [desktopShowFolderOptions, setDesktopShowFolderOptions] = useState(false);
 const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(null);
 const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
+  const [useMobileColorScheme, setUseMobileColorScheme] = useState(() => {
+    const stored = localStorage.getItem('nuron-use-mobile-color-scheme');
+    return stored !== null ? JSON.parse(stored) : true; // Default to ON (use theme colors)
+  });
   const [isCreatingNewNote, setIsCreatingNewNote] = useState(false);
   const placeholderPositionRef = useRef<number | null>(null);
   useEffect(() => {
@@ -197,6 +201,10 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [desktopSelectedNoteId]);
+  
+  useEffect(() => {
+    localStorage.setItem('nuron-use-mobile-color-scheme', JSON.stringify(useMobileColorScheme));
+  }, [useMobileColorScheme]);
   const [viewMode, setViewMode] = useState<'collapsed' | 'compact'>('collapsed');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc'); // desc = newest first, asc = oldest first
   const [userChangedView, setUserChangedView] = useState(false);
@@ -1895,10 +1903,14 @@ query = query.eq('folder_id', currentFolder.id);
         >
           {/* Notes list - slides right when settings or folder options shown */}
           <div 
-            className={`absolute inset-0 bg-journal-content flex flex-col transition-transform duration-300 ${desktopShowSettings || desktopShowFolderOptions ? 'translate-x-full' : 'translate-x-0'}`}
+            className={`absolute inset-0 flex flex-col transition-transform duration-300 ${desktopShowSettings || desktopShowFolderOptions ? 'translate-x-full' : 'translate-x-0'} ${useMobileColorScheme ? 'bg-journal-content' : ''}`}
+            style={{ backgroundColor: useMobileColorScheme ? undefined : '#F9F9F6' }}
           >
             {/* 50px header with icons */}
-            <div className="h-[50px] flex-shrink-0 bg-journal-content flex items-center relative">
+            <div 
+              className={`h-[50px] flex-shrink-0 flex items-center relative ${useMobileColorScheme ? 'bg-journal-content' : ''}`}
+              style={{ backgroundColor: useMobileColorScheme ? undefined : '#F9F9F6' }}
+            >
               {isSearching ? (
                 <div 
                   className="flex items-center bg-white border border-[hsl(0,0%,80%)]"
@@ -2033,10 +2045,10 @@ query = query.eq('folder_id', currentFolder.id);
                     elements.push(
                       <div 
                         key={`month-${groupMonthYear}-${groupIndex}`}
-                        className="sticky top-0 z-10 bg-[#CACAC2] px-[22px]"
+                        className={`sticky top-0 z-10 px-[22px] ${useMobileColorScheme ? 'bg-[#CACAC2]' : 'bg-[#E8E8E5]'}`}
                         style={{ height: '22px', display: 'flex', alignItems: 'center' }}
                       >
-                        <span className="text-white text-[18px] font-outfit font-light tracking-wider leading-none">
+                        <span className={`text-[18px] font-outfit font-light tracking-wider leading-none ${useMobileColorScheme ? 'text-white' : 'text-[hsl(60,1%,50%)]'}`}>
                           {groupMonthYear}
                         </span>
                       </div>
@@ -2068,7 +2080,7 @@ onDragStart={(e) => {
                           setDraggedNote(null);
                           setDragOverFolder(null);
                         }}
-                        className={`border-b border-[hsl(0,0%,85%)] cursor-pointer transition-all duration-300 ease-out ${desktopSelectedNoteId === note.id ? 'bg-white/50' : 'hover:bg-white/30'} ${draggedNote?.id === note.id ? 'opacity-30' : ''} relative`}
+                        className={`border-b border-[hsl(0,0%,85%)] cursor-pointer transition-all duration-300 ease-out ${desktopSelectedNoteId === note.id ? (useMobileColorScheme ? 'bg-white/50' : 'bg-[#F9F9F6]') : (useMobileColorScheme ? 'hover:bg-white/30' : 'hover:bg-[#F0F0ED]')} ${draggedNote?.id === note.id ? 'opacity-30' : ''} relative`}
                         onClick={() => setDesktopSelectedNoteId(note.id)}
                       >
                         {/* Day letter - absolute positioned from note box edge */}
@@ -2327,6 +2339,17 @@ onDragStart={(e) => {
                         className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
                       >
                         <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-md transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`} />
+                      </button>
+                    </div>
+
+                    {/* Use mobile colour scheme toggle */}
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-white text-[18px] font-outfit font-light">Use mobile colour scheme</span>
+                      <button
+                        onClick={() => setUseMobileColorScheme(!useMobileColorScheme)}
+                        className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${useMobileColorScheme ? 'bg-green-500' : 'bg-white/20'}`}
+                      >
+                        <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-md transition-transform duration-200 ${useMobileColorScheme ? 'translate-x-[20px]' : 'translate-x-0'}`} />
                       </button>
                     </div>
 
