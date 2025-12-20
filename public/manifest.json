@@ -1,0 +1,36 @@
+{
+  "name": "Nuron Journal",
+  "short_name": "Nuron",
+  "description": "Voice-powered journaling with AI transcription",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2D2D2D",
+  "theme_color": "#2D2D2D",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/NuronIcon.png",
+      "sizes": "1080x1080",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/NuronIcon.png",
+      "sizes": "1080x1080",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/NuronIcon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/NuronIcon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["productivity", "lifestyle"],
+  "lang": "en"
+}
