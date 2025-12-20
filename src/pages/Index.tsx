@@ -2308,6 +2308,14 @@ onDragStart={(e) => {
                       <img src={accountArrow} alt="" className="w-[24px] h-[24px] opacity-60" />
                     </button>
                     
+                    {/* Restore Purchases */}
+                    <button onClick={handleRestorePurchases} disabled={isRestoring} className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[18px] font-light disabled:opacity-50">
+                      {isRestoring ? 'Restoring...' : 'Restore Purchases'}
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 opacity-60">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                      </svg>
+                    </button>
+                    
                     {/* Separator line */}
                     <div className="border-t border-white/20 my-6" />
                     
@@ -2344,14 +2352,6 @@ onDragStart={(e) => {
                         ))}
                       </div>
                     </div>
-
-                    {/* Restore Purchases */}
-                    <button onClick={handleRestorePurchases} disabled={isRestoring} className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[18px] font-light disabled:opacity-50">
-                      {isRestoring ? 'Restoring...' : 'Restore Purchases'}
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 opacity-60">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                      </svg>
-                    </button>
                   </div>
                 ) : desktopShowSignUp ? (
                   /* Sign Up / Sign In Form */
