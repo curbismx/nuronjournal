@@ -221,6 +221,7 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   const [welcomeIsSignUp, setWelcomeIsSignUp] = useState(true);
   const [welcomeLoading, setWelcomeLoading] = useState(false);
   const [welcomeError, setWelcomeError] = useState('');
+  const [welcomeShowPassword, setWelcomeShowPassword] = useState(false);
   
   // Auto-close welcome popup when user logs in
   useEffect(() => {
@@ -2786,7 +2787,7 @@ onDragStart={(e) => {
 
         {/* Desktop Welcome/Login Popup */}
         {desktopShowWelcomePopup && !user && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
             <div className="bg-white rounded-[20px] p-8 shadow-2xl" style={{ width: '400px', maxWidth: '90%' }}>
               <div className="text-center mb-6">
                 <h2 className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-2">
@@ -2810,7 +2811,7 @@ onDragStart={(e) => {
                     placeholder="Name"
                     value={welcomeName}
                     onChange={(e) => setWelcomeName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:border-[hsl(0,0%,60%)]"
+                    className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:border-[hsl(0,0%,60%)] text-[hsl(0,0%,25%)]"
                   />
                 )}
                 <input
@@ -2818,15 +2819,34 @@ onDragStart={(e) => {
                   placeholder="Email"
                   value={welcomeEmail}
                   onChange={(e) => setWelcomeEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:border-[hsl(0,0%,60%)]"
+                  className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:border-[hsl(0,0%,60%)] text-[hsl(0,0%,25%)]"
                 />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={welcomePassword}
-                  onChange={(e) => setWelcomePassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:border-[hsl(0,0%,60%)]"
-                />
+                <div className="relative">
+                  <input
+                    type={welcomeShowPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={welcomePassword}
+                    onChange={(e) => setWelcomePassword(e.target.value)}
+                    className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:border-[hsl(0,0%,60%)] text-[hsl(0,0%,25%)]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setWelcomeShowPassword(!welcomeShowPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1"
+                  >
+                    {welcomeShowPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="hsl(0,0%,60%)" strokeWidth="2">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="hsl(0,0%,60%)" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 
                 <button
                   onClick={async () => {
