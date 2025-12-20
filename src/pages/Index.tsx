@@ -2676,21 +2676,27 @@ onDragStart={(e) => {
           <div className="h-[50px] flex-shrink-0 flex items-center justify-end pr-[20px]" style={{ backgroundColor: '#F9F9F6' }}>
                   <button
                     onClick={() => desktopSelectedNoteId && setDesktopMenuOpen(!desktopMenuOpen)}
-                    className={`p-0 m-0 border-0 bg-transparent ${!desktopSelectedNoteId ? 'opacity-30' : ''}`}
+                    className={`p-3 m-0 border-0 bg-transparent hover:bg-black/5 rounded-lg transition-colors ${!desktopSelectedNoteId ? 'opacity-30' : ''}`}
                   >
                     <img 
                       src={threeDotsDesktopIcon} 
                       alt="Menu" 
-                      style={{ height: '24px', width: 'auto' }} 
+                      style={{ height: '18px', width: 'auto' }} 
                     />
                   </button>
           </div>
           
           {/* Desktop 3-dots menu dropdown */}
           {desktopMenuOpen && desktopSelectedNoteId && (
-            <div 
-              className="absolute right-4 top-[50px] z-50 bg-white rounded-2xl shadow-lg py-4 w-[220px] animate-in fade-in-0 zoom-in-95 duration-200"
-            >
+            <>
+              {/* Invisible overlay to catch clicks outside menu */}
+              <div 
+                className="fixed inset-0 z-40"
+                onClick={() => setDesktopMenuOpen(false)}
+              />
+              <div 
+                className="absolute right-4 top-[50px] z-50 bg-white rounded-2xl shadow-lg py-4 w-[220px] animate-in fade-in-0 zoom-in-95 duration-200"
+              >
               <div className="flex flex-col">
                 <button 
                   onClick={() => {
@@ -2722,19 +2728,6 @@ onDragStart={(e) => {
                   onClick={() => {
                     const iframe = document.querySelector('iframe');
                     if (iframe?.contentWindow) {
-                      iframe.contentWindow.postMessage({ type: 'menu-action', action: 'move' }, '*');
-                    }
-                    setDesktopMenuOpen(false);
-                  }} 
-                  className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
-                >
-                  <img src={moveIcon} alt="" className="w-6 h-6" />
-                  <span className="text-gray-600 font-outfit">Move Note</span>
-                </button>
-                <button 
-                  onClick={() => {
-                    const iframe = document.querySelector('iframe');
-                    if (iframe?.contentWindow) {
                       iframe.contentWindow.postMessage({ type: 'menu-action', action: 'share' }, '*');
                     }
                     setDesktopMenuOpen(false);
@@ -2759,6 +2752,7 @@ onDragStart={(e) => {
                 </button>
               </div>
             </div>
+          </>
           )}
           
           {/* Note content area */}
