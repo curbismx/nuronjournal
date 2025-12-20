@@ -108,15 +108,6 @@ const Index = () => {
   const navigate = useNavigate();
 const isDesktop = useDesktop();
 
-useEffect(() => {
-  if (isDesktop) {
-    const desktopVisited = localStorage.getItem('nuron-desktop-visited');
-    if (!desktopVisited) {
-      // Show welcome/login popup on first desktop visit
-      setDesktopShowWelcomePopup(true);
-    }
-  }
-}, [isDesktop]);
 
 const [desktopSelectedNoteId, setDesktopSelectedNoteId] = useState<string | null>(null);
 const [desktopShowSettings, setDesktopShowSettings] = useState(false);
@@ -255,6 +246,15 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
 const [showRateAppDialog, setShowRateAppDialog] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [desktopRewriteGlow, setDesktopRewriteGlow] = useState(false);
+
+  // Show welcome popup on desktop when no user and no notes
+  useEffect(() => {
+    if (isDesktop && !isInitializing) {
+      if (!user && savedNotes.length === 0) {
+        setDesktopShowWelcomePopup(true);
+      }
+    }
+  }, [isDesktop, isInitializing, user, savedNotes.length]);
 
   // Folder state
   const [showFolders, setShowFolders] = useState(false);
@@ -2780,9 +2780,17 @@ onDragStart={(e) => {
         </div>
 
         {/* Desktop Welcome/Login Popup */}
-        {desktopShowWelcomePopup && !user && (
-          <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="bg-white rounded-[20px] p-8 shadow-2xl" style={{ width: '400px', maxWidth: '90%' }}>
+        {desktopShowWelcomePopup && !user && savedNotes.length === 0 && !isInitializing && (
+          <div 
+            className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]" 
+            style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+            onClick={() => setDesktopShowWelcomePopup(false)}
+          >
+            <div 
+              className="bg-white rounded-[20px] p-8 shadow-2xl" 
+              style={{ width: '400px', maxWidth: '90%' }}
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="text-center mb-6">
                 <h2 className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-2">
                   Welcome to Nuron
