@@ -112,8 +112,8 @@ useEffect(() => {
   if (isDesktop) {
     const desktopVisited = localStorage.getItem('nuron-desktop-visited');
     if (!desktopVisited) {
-      setDesktopShowSettings(true);
-      localStorage.setItem('nuron-desktop-visited', 'true');
+      // Show welcome/login popup on first desktop visit
+      setDesktopShowWelcomePopup(true);
     }
   }
 }, [isDesktop]);
@@ -129,6 +129,7 @@ const [desktopShowSignUp, setDesktopShowSignUp] = useState(false);
 const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
 const [desktopShowFolderOptions, setDesktopShowFolderOptions] = useState(false);
 const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(null);
+const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   const [isCreatingNewNote, setIsCreatingNewNote] = useState(false);
   const placeholderPositionRef = useRef<number | null>(null);
   useEffect(() => {
@@ -212,6 +213,22 @@ const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(
   const [showAccountDetails, setShowAccountDetails] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; email: string } | null>(null);
+  
+  // Welcome popup form states
+  const [welcomeEmail, setWelcomeEmail] = useState('');
+  const [welcomePassword, setWelcomePassword] = useState('');
+  const [welcomeName, setWelcomeName] = useState('');
+  const [welcomeIsSignUp, setWelcomeIsSignUp] = useState(true);
+  const [welcomeLoading, setWelcomeLoading] = useState(false);
+  const [welcomeError, setWelcomeError] = useState('');
+  
+  // Auto-close welcome popup when user logs in
+  useEffect(() => {
+    if (user && desktopShowWelcomePopup) {
+      setDesktopShowWelcomePopup(false);
+      localStorage.setItem('nuron-desktop-visited', 'true');
+    }
+  }, [user, desktopShowWelcomePopup]);
   const [showSignUp, setShowSignUp] = useState(false);
   const [isSignInMode, setIsSignInMode] = useState(false);
   const [name, setName] = useState("");
@@ -2766,6 +2783,114 @@ onDragStart={(e) => {
             )}
           </div>
         </div>
+
+        {/* Desktop Welcome/Login Popup */}
+        {desktopShowWelcomePopup && !user && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="bg-white rounded-[20px] p-8 shadow-2xl" style={{ width: '400px', maxWidth: '90%' }}>
+              <div className="text-center mb-6">
+                <h2 className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-2">
+                  Welcome to Nuron
+                </h2>
+                <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] leading-relaxed">
+                  Sign up or log in to sync your journal across all your devices - phone, tablet, and desktop.
+                </p>
+              </div>
+              
+              {welcomeError && (
+                <div className="bg-red-50 text-red-600 text-[14px] font-outfit p-3 rounded-lg mb-4 text-center">
+                  {welcomeError}
+                </div>
+              )}
+              
+              <div className="space-y-4">
+                {welcomeIsSignUp && (
+                  <input
+                    type="text"
+                    placeholder="Name"
+                    value={welcomeName}
+                    onChange={(e) => setWelcomeName(e.target.value)}
+                    className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:border-[hsl(0,0%,60%)]"
+                  />
+                )}
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={welcomeEmail}
+                  onChange={(e) => setWelcomeEmail(e.target.value)}
+                  className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:border-[hsl(0,0%,60%)]"
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={welcomePassword}
+                  onChange={(e) => setWelcomePassword(e.target.value)}
+                  className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:border-[hsl(0,0%,60%)]"
+                />
+                
+                <button
+                  onClick={async () => {
+                    setWelcomeLoading(true);
+                    setWelcomeError('');
+                    try {
+                      if (welcomeIsSignUp) {
+                        const { data, error } = await supabase.auth.signUp({
+                          email: welcomeEmail,
+                          password: welcomePassword,
+                          options: { data: { name: welcomeName } }
+                        });
+                        if (error) throw error;
+                        if (data.user) {
+                          await supabase.from('profiles').upsert({
+                            id: data.user.id,
+                            name: welcomeName,
+                            email: welcomeEmail
+                          });
+                        }
+                      } else {
+                        const { error } = await supabase.auth.signInWithPassword({
+                          email: welcomeEmail,
+                          password: welcomePassword
+                        });
+                        if (error) throw error;
+                      }
+                      localStorage.setItem('nuron-desktop-visited', 'true');
+                      setDesktopShowWelcomePopup(false);
+                    } catch (err: any) {
+                      setWelcomeError(err.message || 'An error occurred');
+                    } finally {
+                      setWelcomeLoading(false);
+                    }
+                  }}
+                  disabled={welcomeLoading}
+                  className="w-full py-3 rounded-[10px] text-white font-outfit font-medium text-[16px] disabled:opacity-50"
+                  style={{ backgroundColor: themeColors[theme] }}
+                >
+                  {welcomeLoading ? 'Please wait...' : welcomeIsSignUp ? 'Sign Up' : 'Log In'}
+                </button>
+                
+                <button
+                  onClick={() => setWelcomeIsSignUp(!welcomeIsSignUp)}
+                  className="w-full text-center text-[14px] font-outfit text-[hsl(0,0%,50%)] hover:text-[hsl(0,0%,30%)]"
+                >
+                  {welcomeIsSignUp ? 'Already have an account? Log in' : "Don't have an account? Sign up"}
+                </button>
+              </div>
+              
+              <div className="mt-6 pt-6 border-t border-[hsl(0,0%,90%)]">
+                <button
+                  onClick={() => {
+                    localStorage.setItem('nuron-desktop-visited', 'true');
+                    setDesktopShowWelcomePopup(false);
+                  }}
+                  className="w-full text-center text-[14px] font-outfit text-[hsl(0,0%,60%)] hover:text-[hsl(0,0%,40%)]"
+                >
+                  Use on desktop — sign up later
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
 
