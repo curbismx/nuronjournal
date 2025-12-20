@@ -1078,8 +1078,8 @@ query = query.eq('folder_id', currentFolder.id);
   };
 
 
-  // Show original start page only for logged-out users with no notes
-  if (savedNotes.length === 0 && !user && !isInitializing) {
+  // Show original start page only for logged-out users with no notes (mobile only)
+  if (savedNotes.length === 0 && !user && !isInitializing && !isDesktop) {
     return (
       <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: themeColors[theme] }}>
         {/* Header with settings button */}
