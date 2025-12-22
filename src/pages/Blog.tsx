@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -20,47 +20,55 @@ interface BlogData {
   notes_sort_order: 'asc' | 'desc';
 }
 
-// Helper to render text with clickable links
-const renderTextWithLinks = (text: string) => {
+// Helper to render text with clickable links (supports URLs with/without http, www, and emails)
+const renderTextWithLinks = (text: string): React.ReactNode => {
   if (!text) return null;
   
-  const linkRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+  // Regex to match:
+  // 1. URLs with http/https
+  // 2. URLs starting with www.
+  // 3. Domain-like patterns (example.com, example.com/path)
+  // 4. Email addresses
+  const linkRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(?:\/[^\s]*)?)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
   
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
   let match;
+  let keyIndex = 0;
   
   while ((match = linkRegex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
+      parts.push(<React.Fragment key={`text-${keyIndex}`}>{text.slice(lastIndex, match.index)}</React.Fragment>);
+      keyIndex++;
     }
     
     const linkText = match[0];
     let href = linkText;
     
-    if (match[3]) {
+    if (match[4]) {
       href = `mailto:${linkText}`;
-    } else if (linkText.startsWith('www.')) {
+    } else if (!linkText.startsWith('http://') && !linkText.startsWith('https://')) {
       href = `https://${linkText}`;
     }
     
     parts.push(
       <a
-        key={match.index}
+        key={`link-${keyIndex}`}
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        style={{ color: '#E56157', textDecoration: 'underline' }}
+        className="text-[#E56157] underline hover:text-[#c94940]"
       >
         {linkText}
       </a>
     );
+    keyIndex++;
     
     lastIndex = match.index + linkText.length;
   }
   
   if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
+    parts.push(<React.Fragment key={`text-${keyIndex}`}>{text.slice(lastIndex)}</React.Fragment>);
   }
   
   return parts.length > 0 ? parts : text;
