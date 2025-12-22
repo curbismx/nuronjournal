@@ -1,0 +1,2 @@
+ALTER TABLE folders ADD COLUMN IF NOT EXISTS blog_subheading TEXT;
+ALTER TABLE folders ADD COLUMN IF NOT EXISTS blog_header_image TEXT;

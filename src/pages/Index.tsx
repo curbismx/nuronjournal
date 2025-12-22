@@ -108,6 +108,8 @@ interface Folder {
   is_blog?: boolean;
   blog_slug?: string;
   blog_name?: string;
+  blog_subheading?: string;
+  blog_header_image?: string;
   blog_password?: string;
 }
 
@@ -323,7 +325,10 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
   const [newFolderIsBlog, setNewFolderIsBlog] = useState(false);
   const [newFolderBlogSlug, setNewFolderBlogSlug] = useState('');
   const [newFolderBlogName, setNewFolderBlogName] = useState('');
-  const [newFolderBlogPassword, setNewFolderBlogPassword] = useState('');
+const [newFolderBlogPassword, setNewFolderBlogPassword] = useState('');
+  const [newFolderBlogSubheading, setNewFolderBlogSubheading] = useState('');
+  const [newFolderBlogHeaderImage, setNewFolderBlogHeaderImage] = useState('');
+  const [uploadingHeaderImage, setUploadingHeaderImage] = useState(false);
   const [blogSlugAvailable, setBlogSlugAvailable] = useState<boolean | null>(null);
   const [checkingBlogSlug, setCheckingBlogSlug] = useState(false);
 
@@ -1946,6 +1951,8 @@ query = query.eq('folder_id', currentFolder.id);
                         setNewFolderBlogSlug(folder.blog_slug || '');
                         setNewFolderBlogName(folder.blog_name || '');
                         setNewFolderBlogPassword(folder.blog_password || '');
+                        setNewFolderBlogSubheading(folder.blog_subheading || '');
+                        setNewFolderBlogHeaderImage(folder.blog_header_image || '');
                         setBlogSlugAvailable(null);
                         setDesktopShowFolderOptions(true);
                         }
@@ -2753,9 +2760,9 @@ onDragStart={(e) => {
                   
                   {newFolderIsBlog && (
                     <div className="space-y-4 animate-in fade-in-0 duration-200">
-                      {/* Blog Title */}
+                      {/* Blog Heading */}
                       <div className="space-y-2">
-                        <label className="text-white/60 text-[14px] font-outfit">Blog Title</label>
+                        <label className="text-white/60 text-[14px] font-outfit">Blog Heading</label>
                         <input
                           type="text"
                           value={newFolderBlogName}
@@ -2763,6 +2770,71 @@ onDragStart={(e) => {
                           placeholder="My Travel Adventures"
                           className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit placeholder:text-white/30"
                         />
+                      </div>
+
+                      {/* Blog Sub-heading */}
+                      <div className="space-y-2">
+                        <label className="text-white/60 text-[14px] font-outfit">Sub-heading (Optional)</label>
+                        <input
+                          type="text"
+                          value={newFolderBlogSubheading}
+                          onChange={(e) => setNewFolderBlogSubheading(e.target.value)}
+                          placeholder="A collection of my thoughts and experiences"
+                          className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit placeholder:text-white/30"
+                        />
+                      </div>
+
+                      {/* Header Image */}
+                      <div className="space-y-2">
+                        <label className="text-white/60 text-[14px] font-outfit">Header Image (Optional)</label>
+                        {newFolderBlogHeaderImage ? (
+                          <div className="relative">
+                            <img 
+                              src={newFolderBlogHeaderImage} 
+                              alt="Header preview" 
+                              className="w-full h-[100px] object-cover rounded-[10px]"
+                            />
+                            <button
+                              onClick={() => setNewFolderBlogHeaderImage('')}
+                              className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="flex items-center justify-center w-full h-[40px] bg-white/5 border border-white/20 text-white/60 rounded-[10px] cursor-pointer hover:bg-white/10 transition-colors">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file || !user) return;
+                                
+                                setUploadingHeaderImage(true);
+                                const fileExt = file.name.split('.').pop();
+                                const fileName = `${user.id}/blog-header-${Date.now()}.${fileExt}`;
+                                
+                                const { data, error } = await supabase.storage
+                                  .from('note-images')
+                                  .upload(fileName, file);
+                                
+                                if (!error && data) {
+                                  const { data: urlData } = supabase.storage
+                                    .from('note-images')
+                                    .getPublicUrl(data.path);
+                                  setNewFolderBlogHeaderImage(urlData.publicUrl);
+                                }
+                                setUploadingHeaderImage(false);
+                              }}
+                            />
+                            {uploadingHeaderImage ? (
+                              <span className="font-outfit text-[14px]">Uploading...</span>
+                            ) : (
+                              <span className="font-outfit text-[14px]">Choose Image</span>
+                            )}
+                          </label>
+                        )}
                       </div>
                       
                       {/* Web Address */}
@@ -2871,6 +2943,8 @@ onDragStart={(e) => {
                             is_blog: newFolderIsBlog,
                             blog_slug: newFolderIsBlog ? newFolderBlogSlug.toLowerCase() : null,
                             blog_name: newFolderIsBlog ? newFolderBlogName : null,
+                            blog_subheading: newFolderIsBlog ? newFolderBlogSubheading : null,
+                            blog_header_image: newFolderIsBlog ? newFolderBlogHeaderImage : null,
                             blog_password: newFolderIsBlog && newFolderBlogPassword ? newFolderBlogPassword : null,
                             updated_at: new Date().toISOString()
                           })
@@ -2886,6 +2960,8 @@ onDragStart={(e) => {
                             is_blog: newFolderIsBlog,
                             blog_slug: newFolderIsBlog ? newFolderBlogSlug.toLowerCase() : null,
                             blog_name: newFolderIsBlog ? newFolderBlogName : null,
+                            blog_subheading: newFolderIsBlog ? newFolderBlogSubheading : null,
+                            blog_header_image: newFolderIsBlog ? newFolderBlogHeaderImage : null,
                             blog_password: newFolderIsBlog && newFolderBlogPassword ? newFolderBlogPassword : null
                           };
                           setFolders(prev => prev.map(f => 

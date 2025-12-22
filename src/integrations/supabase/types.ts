@@ -16,9 +16,11 @@ export type Database = {
     Tables: {
       folders: {
         Row: {
+          blog_header_image: string | null
           blog_name: string | null
           blog_password: string | null
           blog_slug: string | null
+          blog_subheading: string | null
           created_at: string | null
           default_view: string | null
           id: string
@@ -30,9 +32,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          blog_header_image?: string | null
           blog_name?: string | null
           blog_password?: string | null
           blog_slug?: string | null
+          blog_subheading?: string | null
           created_at?: string | null
           default_view?: string | null
           id?: string
@@ -44,9 +48,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          blog_header_image?: string | null
           blog_name?: string | null
           blog_password?: string | null
           blog_slug?: string | null
+          blog_subheading?: string | null
           created_at?: string | null
           default_view?: string | null
           id?: string
