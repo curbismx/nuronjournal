@@ -15,6 +15,7 @@ interface BlogData {
   blog_password: string | null;
   folder_id: string;
   username: string;
+  notes_sort_order: 'asc' | 'desc';
 }
 
 const Blog = () => {
@@ -84,7 +85,7 @@ const Blog = () => {
         // Then find the folder/blog
         const { data: folderData, error: folderError } = await supabase
           .from('folders')
-          .select('id, blog_name, blog_password, is_blog, blog_slug')
+          .select('id, blog_name, blog_password, is_blog, blog_slug, notes_sort_order')
           .eq('user_id', profileData.id)
           .eq('blog_slug', blogSlug.toLowerCase())
           .eq('is_blog', true)
@@ -96,11 +97,13 @@ const Blog = () => {
           return;
         }
 
+        const sortOrder = (folderData.notes_sort_order || 'desc') as 'asc' | 'desc';
         setBlogData({
           blog_name: folderData.blog_name || 'Untitled Blog',
           blog_password: folderData.blog_password,
           folder_id: folderData.id,
-          username: profileData.username || username
+          username: profileData.username || username,
+          notes_sort_order: sortOrder
         });
 
         // Check if password protected
@@ -109,7 +112,7 @@ const Blog = () => {
           setLoading(false);
         } else {
           // No password, fetch notes directly
-          await fetchNotes(folderData.id);
+          await fetchNotes(folderData.id, sortOrder);
         }
       } catch (err) {
         setError('Something went wrong');
@@ -120,13 +123,13 @@ const Blog = () => {
     fetchBlog();
   }, [username, blogSlug, navigate]);
 
-  const fetchNotes = async (folderId: string) => {
+  const fetchNotes = async (folderId: string, sortOrder: 'asc' | 'desc' = 'desc') => {
     const { data: notesData, error: notesError } = await supabase
       .from('notes')
       .select('id, title, content_blocks, created_at, is_published')
       .eq('folder_id', folderId)
       .eq('is_published', true)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: sortOrder === 'asc' });
 
     if (notesError) {
       setError('Could not load blog posts');
@@ -143,7 +146,7 @@ const Blog = () => {
       setAuthenticated(true);
       setPasswordRequired(false);
       setLoading(true);
-      await fetchNotes(blogData.folder_id);
+      await fetchNotes(blogData.folder_id, blogData.notes_sort_order);
     } else {
       setPasswordError(true);
       setTimeout(() => setPasswordError(false), 2000);
