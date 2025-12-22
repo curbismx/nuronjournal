@@ -159,23 +159,37 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
     const handleMessage = (e: MessageEvent) => {
       // Real-time content updates
       if (e.data?.type === 'note-content-update') {
-        const { noteId, placeholderId, title, contentBlocks } = e.data;
+        const { noteId, placeholderId, title, contentBlocks, createdAt } = e.data;
         setSavedNotes(prev => prev.map(n => 
           (n.id === placeholderId || n.id === noteId) 
-            ? { ...n, title: title ?? n.title, contentBlocks: contentBlocks || n.contentBlocks }
+            ? { 
+                ...n, 
+                title: title ?? n.title, 
+                contentBlocks: contentBlocks || n.contentBlocks,
+                createdAt: createdAt || n.createdAt
+              }
             : n
         ));
       }
       
       // Note saved - just swap ID, stay at same position
       if (e.data?.type === 'note-saved') {
-        const { noteId, noteData } = e.data;
+        const { noteId, noteData, placeholderId } = e.data;
         setSavedNotes(prev => prev.map(n => 
-          n.id.startsWith('new-') 
-            ? { ...n, id: noteId, title: noteData?.title ?? n.title, contentBlocks: noteData?.contentBlocks || n.contentBlocks }
+          (n.id === placeholderId || (n.id.startsWith('new-') && n.id === desktopSelectedNoteId))
+            ? { 
+                ...n, 
+                id: noteId, 
+                title: noteData?.title ?? n.title, 
+                contentBlocks: noteData?.contentBlocks || n.contentBlocks,
+                createdAt: noteData?.createdAt || n.createdAt,
+                updatedAt: noteData?.updatedAt || n.updatedAt,
+                weather: noteData?.weather ?? n.weather,
+                folder_id: noteData?.folder_id || n.folder_id
+              }
             : n
         ));
-        if (desktopSelectedNoteId?.startsWith('new-')) {
+        if (desktopSelectedNoteId === placeholderId || desktopSelectedNoteId?.startsWith('new-')) {
           setDesktopSelectedNoteId(noteId);
         }
         setIsCreatingNewNote(false);
