@@ -20,6 +20,52 @@ interface BlogData {
   notes_sort_order: 'asc' | 'desc';
 }
 
+// Helper to render text with clickable links
+const renderTextWithLinks = (text: string) => {
+  if (!text) return null;
+  
+  const linkRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+  
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match;
+  
+  while ((match = linkRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    
+    const linkText = match[0];
+    let href = linkText;
+    
+    if (match[3]) {
+      href = `mailto:${linkText}`;
+    } else if (linkText.startsWith('www.')) {
+      href = `https://${linkText}`;
+    }
+    
+    parts.push(
+      <a
+        key={match.index}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ color: '#E56157', textDecoration: 'underline' }}
+      >
+        {linkText}
+      </a>
+    );
+    
+    lastIndex = match.index + linkText.length;
+  }
+  
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+  
+  return parts.length > 0 ? parts : text;
+};
+
 const Blog = () => {
   const { username, blogSlug } = useParams<{ username: string; blogSlug: string }>();
   const navigate = useNavigate();
@@ -331,7 +377,7 @@ const Blog = () => {
 
                   {/* Content */}
                   <div className="text-[16px] font-outfit text-[hsl(0,0%,30%)] leading-relaxed whitespace-pre-wrap">
-                    {textContent}
+                    {renderTextWithLinks(textContent)}
                   </div>
                 </article>
               );
