@@ -2999,7 +2999,7 @@ onDragStart={(e) => {
                 onClick={() => setDesktopMenuOpen(false)}
               />
               <div 
-                className="absolute right-4 top-[50px] z-50 bg-white rounded-2xl shadow-lg py-4 w-[220px] animate-in fade-in-0 zoom-in-95 duration-200"
+                className="absolute right-4 top-[50px] z-50 bg-white rounded-2xl shadow-lg py-4 w-[250px] animate-in fade-in-0 zoom-in-95 duration-200"
               >
               <div className="flex flex-col">
                 <button 
@@ -3083,17 +3083,17 @@ onDragStart={(e) => {
                         
                         setDesktopMenuOpen(false);
                       }} 
-                      className="flex items-center gap-4 px-6 py-3 hover:bg-gray-50 transition-colors w-full"
+                      className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors w-full"
                     >
                       {savedNotes.find(n => n.id === desktopSelectedNoteId)?.is_published ? (
                         <>
                           <img src={unpublishIcon} alt="Unpublish" className="w-6 h-6" />
-                          <span className="text-gray-600 font-outfit">Unpublish from blog</span>
+                          <span className="text-gray-600 font-outfit">Unpublish From Blog</span>
                         </>
                       ) : (
                         <>
                           <img src={publishIcon} alt="Publish" className="w-6 h-6" />
-                          <span className="text-gray-600 font-outfit">Publish to blog</span>
+                          <span className="text-gray-600 font-outfit">Publish To Blog</span>
                         </>
                       )}
                     </button>
