@@ -16,9 +16,13 @@ export type Database = {
     Tables: {
       folders: {
         Row: {
+          blog_name: string | null
+          blog_password: string | null
+          blog_slug: string | null
           created_at: string | null
           default_view: string | null
           id: string
+          is_blog: boolean | null
           name: string
           notes_sort_order: string | null
           sort_order: number | null
@@ -26,9 +30,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          blog_name?: string | null
+          blog_password?: string | null
+          blog_slug?: string | null
           created_at?: string | null
           default_view?: string | null
           id?: string
+          is_blog?: boolean | null
           name: string
           notes_sort_order?: string | null
           sort_order?: number | null
@@ -36,9 +44,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          blog_name?: string | null
+          blog_password?: string | null
+          blog_slug?: string | null
           created_at?: string | null
           default_view?: string | null
           id?: string
+          is_blog?: boolean | null
           name?: string
           notes_sort_order?: string | null
           sort_order?: number | null
@@ -54,6 +66,7 @@ export type Database = {
           created_at: string
           folder_id: string | null
           id: string
+          is_published: boolean | null
           title: string | null
           updated_at: string
           user_id: string
@@ -65,6 +78,7 @@ export type Database = {
           created_at?: string
           folder_id?: string | null
           id?: string
+          is_published?: boolean | null
           title?: string | null
           updated_at?: string
           user_id: string
@@ -76,6 +90,7 @@ export type Database = {
           created_at?: string
           folder_id?: string | null
           id?: string
+          is_published?: boolean | null
           title?: string | null
           updated_at?: string
           user_id?: string
@@ -98,6 +113,7 @@ export type Database = {
           id: string
           name: string | null
           updated_at: string
+          username: string | null
         }
         Insert: {
           created_at?: string
@@ -105,6 +121,7 @@ export type Database = {
           id: string
           name?: string | null
           updated_at?: string
+          username?: string | null
         }
         Update: {
           created_at?: string
@@ -112,6 +129,7 @@ export type Database = {
           id?: string
           name?: string | null
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
