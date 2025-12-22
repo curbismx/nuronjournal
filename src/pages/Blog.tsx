@@ -12,6 +12,8 @@ interface BlogNote {
 
 interface BlogData {
   blog_name: string;
+  blog_subheading: string | null;
+  blog_header_image: string | null;
   blog_password: string | null;
   folder_id: string;
   username: string;
@@ -85,7 +87,7 @@ const Blog = () => {
         // Then find the folder/blog
         const { data: folderData, error: folderError } = await supabase
           .from('folders')
-          .select('id, blog_name, blog_password, is_blog, blog_slug, notes_sort_order')
+          .select('id, blog_name, blog_subheading, blog_header_image, blog_password, is_blog, blog_slug, notes_sort_order')
           .eq('user_id', profileData.id)
           .eq('blog_slug', blogSlug.toLowerCase())
           .eq('is_blog', true)
@@ -100,6 +102,8 @@ const Blog = () => {
         const sortOrder = (folderData.notes_sort_order || 'desc') as 'asc' | 'desc';
         setBlogData({
           blog_name: folderData.blog_name || 'Untitled Blog',
+          blog_subheading: folderData.blog_subheading || null,
+          blog_header_image: folderData.blog_header_image || null,
           blog_password: folderData.blog_password,
           folder_id: folderData.id,
           username: profileData.username || username,
@@ -243,15 +247,36 @@ const Blog = () => {
   // Blog content
   return (
     <div className="min-h-screen bg-white overflow-y-auto">
-      {/* Header - 300px dark area */}
+      {/* Header - 300px dark area with optional image */}
       <header 
-        className="bg-[hsl(0,0%,18%)] px-6 flex items-end"
-        style={{ height: '300px' }}
+        className="relative px-6 flex items-end"
+        style={{ 
+          height: '300px',
+          backgroundColor: blogData?.blog_header_image ? 'transparent' : 'hsl(0,0%,18%)'
+        }}
       >
-        <div className="max-w-[800px] w-full mx-auto pb-12">
+        {/* Background image if set */}
+        {blogData?.blog_header_image && (
+          <>
+            <img 
+              src={blogData.blog_header_image} 
+              alt="" 
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            {/* Dark overlay for text readability */}
+            <div className="absolute inset-0 bg-black/40" />
+          </>
+        )}
+        
+        <div className="relative max-w-[800px] w-full mx-auto pb-12">
           <h1 className="text-white font-outfit text-[48px] font-light leading-tight text-left">
             {blogData?.blog_name}
           </h1>
+          {blogData?.blog_subheading && (
+            <p className="text-white/70 font-outfit text-[18px] font-light mt-2 text-left">
+              {blogData.blog_subheading}
+            </p>
+          )}
         </div>
       </header>
 
