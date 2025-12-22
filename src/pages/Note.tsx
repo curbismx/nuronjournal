@@ -2006,7 +2006,11 @@ const Note = () => {
     if (session?.user) {
       // Logged in - save to Supabase
       const currentFolderId = initialFolderId || localStorage.getItem('nuron-current-folder-id');
-      const { error } = await supabase.from('notes').upsert({
+      // Check if this is a new note (placeholder) or existing note
+      const isNewNote = placeholderId && placeholderId.startsWith('new-');
+      
+      // Build the upsert object - only include is_published for new notes
+      const upsertData: any = {
         id: noteData.id,
         user_id: session.user.id,
         title: noteData.title,
@@ -2015,9 +2019,15 @@ const Note = () => {
         updated_at: noteData.updatedAt,
         weather: noteData.weather,
         audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : null,
-        folder_id: currentFolderId && currentFolderId !== 'local-notes' ? currentFolderId : null,
-        is_published: false
-      });
+        folder_id: currentFolderId && currentFolderId !== 'local-notes' ? currentFolderId : null
+      };
+      
+      // Only set is_published for NEW notes (don't overwrite existing published status)
+      if (isNewNote) {
+        upsertData.is_published = false;
+      }
+      
+      const { error } = await supabase.from('notes').upsert(upsertData);
       console.log('Supabase upsert result:', error ? 'ERROR: ' + error.message : 'SUCCESS');
       
       if (!error) {

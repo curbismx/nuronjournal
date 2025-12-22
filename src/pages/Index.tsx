@@ -649,6 +649,10 @@ useEffect(() => {
   };
 
   const selectFolder = (folder: Folder) => {
+    // CRITICAL: Reset creating state FIRST
+    setIsCreatingNewNote(false);
+    setSavedNotes(prev => prev.filter(n => !n.id.startsWith('new-')));
+    
     // Brief fade out before switching
     const contentEl = document.querySelector('.notes-list-container');
     if (contentEl) {
@@ -741,11 +745,6 @@ useEffect(() => {
         return;
       }
       
-      // Don't reload while creating a new note
-      if (isCreatingNewNote) {
-        return;
-      }
-      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) return;
       
@@ -768,9 +767,9 @@ useEffect(() => {
           is_published: note.is_published || false
         }));
         
-        // Only update if we're not in the middle of creating/editing
+        // Preserve only placeholders for the CURRENT folder
         setSavedNotes(prev => {
-          const placeholders = prev.filter(n => n.id.startsWith('new-'));
+          const placeholders = prev.filter(n => n.id.startsWith('new-') && n.folder_id === currentFolder.id);
           if (placeholders.length > 0) {
             return [...placeholders, ...notes];
           }
@@ -1924,6 +1923,10 @@ query = query.eq('folder_id', currentFolder.id);
                     
                     <button
                       onClick={() => {
+                        // CRITICAL: Reset creating state FIRST to allow loadNotes to run
+                        setIsCreatingNewNote(false);
+                        setSavedNotes(prev => prev.filter(n => !n.id.startsWith('new-')));
+                        
                         setCurrentFolder(folder);
                         localStorage.setItem('nuron-current-folder-id', folder.id);
                         setDesktopSelectedNoteId(null);
