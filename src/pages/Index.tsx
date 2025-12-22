@@ -2693,46 +2693,46 @@ onDragStart={(e) => {
                       onChange={(e) => setNewFolderName(e.target.value)}
                       autoFocus
                       onFocus={(e) => e.target.select()}
-                      className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-3 text-[16px] font-outfit"
+                      className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit"
                     />
                   </div>
                   
-                  {/* View By */}
-                  <div className="space-y-2">
+                  {/* View By - inline with buttons on right */}
+                  <div className="flex items-center justify-between">
                     <label className="text-white/60 text-[14px] font-outfit">View By</label>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setNewFolderDefaultView('collapsed')}
-                        className={`px-4 py-2 rounded-[8px] font-outfit text-[14px] transition-colors ${newFolderDefaultView === 'collapsed' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
+                        className={`px-4 h-[40px] rounded-[10px] font-outfit text-[14px] transition-colors ${newFolderDefaultView === 'collapsed' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
                       >
                         Date
                       </button>
                       <button
                         onClick={() => setNewFolderDefaultView('compact')}
-                        className={`px-4 py-2 rounded-[8px] font-outfit text-[14px] transition-colors ${newFolderDefaultView === 'compact' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
+                        className={`px-4 h-[40px] rounded-[10px] font-outfit text-[14px] transition-colors ${newFolderDefaultView === 'compact' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
                       >
                         List
                       </button>
                     </div>
                   </div>
                   
-                  {/* Sort By */}
-                  <div className="space-y-2">
+                  {/* Sort By - inline with buttons on right */}
+                  <div className="flex items-center justify-between">
                     <label className="text-white/60 text-[14px] font-outfit">Sort By</label>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setNewFolderSortOrder('desc')}
-                        className={`px-4 py-2 rounded-[8px] font-outfit text-[14px] transition-colors flex items-center gap-2 ${newFolderSortOrder === 'desc' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
+                        className={`px-4 h-[40px] rounded-[10px] font-outfit text-[14px] transition-colors flex items-center gap-2 ${newFolderSortOrder === 'desc' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
                       >
                         <img src={sortDownIcon} alt="" style={{ height: '14px', width: 'auto' }} />
-                        Newest First
+                        Newest
                       </button>
                       <button
                         onClick={() => setNewFolderSortOrder('asc')}
-                        className={`px-4 py-2 rounded-[8px] font-outfit text-[14px] transition-colors flex items-center gap-2 ${newFolderSortOrder === 'asc' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
+                        className={`px-4 h-[40px] rounded-[10px] font-outfit text-[14px] transition-colors flex items-center gap-2 ${newFolderSortOrder === 'asc' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
                       >
                         <img src={sortUpIcon} alt="" style={{ height: '14px', width: 'auto' }} />
-                        Oldest First
+                        Oldest
                       </button>
                     </div>
                   </div>
@@ -2761,7 +2761,7 @@ onDragStart={(e) => {
                           value={newFolderBlogName}
                           onChange={(e) => setNewFolderBlogName(e.target.value)}
                           placeholder="My Travel Adventures"
-                          className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-3 text-[16px] font-outfit placeholder:text-white/30"
+                          className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit placeholder:text-white/30"
                         />
                       </div>
                       
@@ -2799,7 +2799,7 @@ onDragStart={(e) => {
                               setBlogSlugAvailable(!data);
                             }}
                             placeholder="my-travels"
-                            className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-3 text-[16px] font-outfit pr-10 placeholder:text-white/30"
+                            className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit pr-10 placeholder:text-white/30"
                           />
                           {checkingBlogSlug && (
                             <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -2849,7 +2849,7 @@ onDragStart={(e) => {
                           value={newFolderBlogPassword}
                           onChange={(e) => setNewFolderBlogPassword(e.target.value)}
                           placeholder="Leave blank for public access"
-                          className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-3 text-[16px] font-outfit placeholder:text-white/30"
+                          className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit placeholder:text-white/30"
                         />
                         <p className="text-white/40 text-[12px] font-outfit">
                           Visitors will need this password to view your blog
