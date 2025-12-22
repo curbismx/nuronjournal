@@ -172,11 +172,11 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
         ));
       }
       
-      // Note saved - just swap ID, stay at same position
+      // Note saved - swap ID using placeholderId from message
       if (e.data?.type === 'note-saved') {
-        const { noteId, noteData } = e.data;
-        // Only update the note that matches the current selection
-        const targetId = desktopSelectedNoteId;
+        const { noteId, noteData, placeholderId } = e.data;
+        // Use placeholderId from message (more reliable than current selection)
+        const targetId = placeholderId || desktopSelectedNoteId;
         setSavedNotes(prev => prev.map(n => 
           n.id === targetId
             ? { 
@@ -192,19 +192,27 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
               }
             : n
         ));
-        if (desktopSelectedNoteId?.startsWith('new-')) {
+        if (targetId === desktopSelectedNoteId && desktopSelectedNoteId?.startsWith('new-')) {
           setDesktopSelectedNoteId(noteId);
         }
         setIsCreatingNewNote(false);
       }
       
-      // Note updated - in place
+      // Note updated - in place (including date changes)
       if (e.data?.type === 'note-updated') {
         const { noteData } = e.data;
         if (noteData) {
           setSavedNotes(prev => prev.map(n => 
             n.id === noteData.id 
-              ? { ...n, title: noteData.title ?? n.title, contentBlocks: noteData.contentBlocks || n.contentBlocks, is_published: n.is_published }
+              ? { 
+                  ...n, 
+                  title: noteData.title ?? n.title, 
+                  contentBlocks: noteData.contentBlocks || n.contentBlocks,
+                  createdAt: noteData.createdAt || n.createdAt,
+                  updatedAt: noteData.updatedAt || n.updatedAt,
+                  weather: noteData.weather ?? n.weather,
+                  is_published: n.is_published 
+                }
               : n
           ));
         }
