@@ -2814,9 +2814,14 @@ onDragStart={(e) => {
                             )}
                           </div>
                           {username && newFolderBlogSlug && (
-                            <p className="text-white/40 text-[12px] font-outfit">
+                            <a 
+                              href={`https://nuron.life/${username}/${newFolderBlogSlug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[#E56157] text-[16px] font-outfit hover:underline cursor-pointer block"
+                            >
                               nuron.life/{username}/{newFolderBlogSlug}
-                            </p>
+                            </a>
                           )}
                           {!username && (
                             <p className="text-yellow-400/80 text-[12px] font-outfit">
