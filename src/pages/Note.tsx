@@ -85,6 +85,7 @@ const renderTextWithLinks = (text: string, isEmbedded: boolean) => {
             e.stopPropagation();
             window.open(href, '_blank');
           }}
+          className="pointer-events-auto"
           style={{ color: '#E56157', textDecoration: 'underline', cursor: 'pointer' }}
         >
           {linkText}
@@ -2750,9 +2751,7 @@ const Note = () => {
                       className="absolute inset-0 pointer-events-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] whitespace-pre-wrap break-words"
                       style={{ minHeight: '24px' }}
                     >
-                      <span className="pointer-events-auto">
-                        {renderTextWithLinks(textBlock.content, isEmbedded)}
-                      </span>
+                      {renderTextWithLinks(textBlock.content, isEmbedded)}
                       {!textBlock.content && !hasPlaceholder && index === 0 && (
                         <span className="text-[hsl(0,0%,60%)]">Start writing...</span>
                       )}
