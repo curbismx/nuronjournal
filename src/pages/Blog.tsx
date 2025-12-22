@@ -399,12 +399,12 @@ const Blog = () => {
           <div className="max-w-[800px] mx-auto text-center">
             <span className="text-[hsl(0,0%,60%)] font-outfit text-[14px]">powered by </span>
             <a 
-              href="https://www.nuron.life"
+              href="https://nuron.life"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[hsl(0,0%,60%)] font-outfit text-[14px] hover:text-[hsl(0,0%,40%)] transition-colors underline"
             >
-              www.nuron.life
+              nuron.life
             </a>
           </div>
         </footer>
