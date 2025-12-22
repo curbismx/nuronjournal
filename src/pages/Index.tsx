@@ -3100,7 +3100,7 @@ onDragStart={(e) => {
             {desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-') ? (
               <iframe
                 key={desktopSelectedNoteId}
-                src={`/note?desktop=true&folder_id=${currentFolder?.id || ''}&placeholder=${desktopSelectedNoteId}`}
+                src={`/note?desktop=true&folder_id=${currentFolder?.id || ''}&placeholder=${desktopSelectedNoteId}&created=${encodeURIComponent(savedNotes.find(n => n.id === desktopSelectedNoteId)?.createdAt || '')}`}
                 className="absolute inset-0 w-full h-full border-0"
                 title="Note Editor"
               />
