@@ -111,6 +111,7 @@ const Note = () => {
   const isEmbedded = new URLSearchParams(window.location.search).get('desktop') === 'true';
   const initialFolderId = new URLSearchParams(window.location.search).get('folder_id');
   const placeholderId = new URLSearchParams(window.location.search).get('placeholder');
+  const initialCreatedAt = new URLSearchParams(window.location.search).get('created');
   const noteIdRef = useRef<string>(id || crypto.randomUUID());
   const [user, setUser] = useState<User | null>(null);
   const [noteTitle, setNoteTitle] = useState(() => {
@@ -138,7 +139,16 @@ const Note = () => {
     }
     return '';
   });
-  const [noteDate, setNoteDate] = useState<Date>(new Date());
+  const [noteDate, setNoteDate] = useState<Date>(() => {
+    const urlCreated = new URLSearchParams(window.location.search).get('created');
+    if (urlCreated) {
+      const parsed = new Date(decodeURIComponent(urlCreated));
+      if (!isNaN(parsed.getTime())) {
+        return parsed;
+      }
+    }
+    return new Date();
+  });
   const [weather, setWeather] = useState<{ temp: number; weatherCode: number; WeatherIcon: React.ComponentType<any> } | null>(null);
   const [isRewriting, setIsRewriting] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -299,7 +309,15 @@ const Note = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activeTextBlockRef = useRef<{ id: string; cursorPosition: number } | null>(null);
   const isDeletedRef = useRef(false);
-  const existingCreatedAt = useRef<string | null>(null);
+  const existingCreatedAt = useRef<string | null>(
+    (() => {
+      const urlCreated = new URLSearchParams(window.location.search).get('created');
+      if (urlCreated) {
+        return decodeURIComponent(urlCreated);
+      }
+      return null;
+    })()
+  );
 
   // Set body background color for desktop embed
   useEffect(() => {
