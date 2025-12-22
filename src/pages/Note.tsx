@@ -158,6 +158,7 @@ const Note = () => {
   const [showCopyConfirm, setShowCopyConfirm] = useState(false);
   const [titleGenerated, setTitleGenerated] = useState(false);
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>(() => {
     if (id) {
       // Try to load from cache immediately
@@ -327,6 +328,21 @@ const Note = () => {
     return () => {
       document.body.style.backgroundColor = '';
     };
+  }, [isEmbedded]);
+
+  // Smooth fade-in for embedded view
+  useEffect(() => {
+    if (isEmbedded) {
+      // Small delay to ensure all initial state is set before revealing
+      const timer = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setIsReady(true);
+        });
+      });
+      return () => cancelAnimationFrame(timer);
+    } else {
+      setIsReady(true);
+    }
   }, [isEmbedded]);
 
   useEffect(() => {
@@ -2418,7 +2434,13 @@ const Note = () => {
   const monthYear = noteDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
 
   return (
-    <div className={isEmbedded ? "h-full flex flex-col overflow-hidden" : "fixed inset-0 flex flex-col overflow-hidden"} style={{ backgroundColor: themeColors[theme] }}>
+    <div 
+      className={`${isEmbedded ? "h-full flex flex-col overflow-hidden" : "fixed inset-0 flex flex-col overflow-hidden"} ${isEmbedded ? 'transition-opacity duration-200 ease-out' : ''}`} 
+      style={{ 
+        backgroundColor: isEmbedded ? '#F9F9F6' : themeColors[theme],
+        opacity: isEmbedded ? (isReady ? 1 : 0) : 1
+      }}
+    >
       {/* Fixed dark header - hidden when embedded in desktop */}
       {!isEmbedded && (
         <header 
