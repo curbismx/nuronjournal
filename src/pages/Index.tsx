@@ -174,9 +174,11 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
       
       // Note saved - just swap ID, stay at same position
       if (e.data?.type === 'note-saved') {
-        const { noteId, noteData, placeholderId } = e.data;
+        const { noteId, noteData } = e.data;
+        // Only update the note that matches the current selection
+        const targetId = desktopSelectedNoteId;
         setSavedNotes(prev => prev.map(n => 
-          (n.id === placeholderId || (n.id.startsWith('new-') && n.id === desktopSelectedNoteId))
+          n.id === targetId
             ? { 
                 ...n, 
                 id: noteId, 
@@ -185,11 +187,12 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
                 createdAt: noteData?.createdAt || n.createdAt,
                 updatedAt: noteData?.updatedAt || n.updatedAt,
                 weather: noteData?.weather ?? n.weather,
-                folder_id: noteData?.folder_id || n.folder_id
+                folder_id: noteData?.folder_id || n.folder_id,
+                is_published: n.is_published || false
               }
             : n
         ));
-        if (desktopSelectedNoteId === placeholderId || desktopSelectedNoteId?.startsWith('new-')) {
+        if (desktopSelectedNoteId?.startsWith('new-')) {
           setDesktopSelectedNoteId(noteId);
         }
         setIsCreatingNewNote(false);
@@ -2072,7 +2075,8 @@ query = query.eq('folder_id', currentFolder.id);
                       createdAt: now.toISOString(),
                       updatedAt: now.toISOString(),
                       weather: null,
-                      folder_id: currentFolder?.id || null
+                      folder_id: currentFolder?.id || null,
+                      is_published: false
                     }, ...prev]);
                     }}
                     className="p-0 m-0 border-0 bg-transparent"
@@ -3103,7 +3107,7 @@ onDragStart={(e) => {
             ) : desktopSelectedNoteId ? (
               <iframe
                 key={desktopSelectedNoteId}
-                src={`/note/${desktopSelectedNoteId}?desktop=true`}
+                src={`/note/${desktopSelectedNoteId}?desktop=true&folder_id=${currentFolder?.id || ''}&placeholder=${desktopSelectedNoteId?.startsWith('new-') ? desktopSelectedNoteId : ''}&created=${encodeURIComponent(savedNotes.find(n => n.id === desktopSelectedNoteId)?.createdAt || new Date().toISOString())}`}
                 className="absolute inset-0 w-full h-full border-0"
                 title="Note Editor"
               />
