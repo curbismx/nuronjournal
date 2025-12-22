@@ -2125,7 +2125,7 @@ const Note = () => {
     const timer = setTimeout(sendUpdate, 500);
     
     return () => clearTimeout(timer);
-  }, [noteTitle, contentBlocks, isEmbedded, placeholderId]);
+  }, [noteTitle, contentBlocks, isEmbedded, placeholderId, noteDate]);
 
   const handleBack = async () => {
     console.log('handleBack called');
@@ -2138,25 +2138,21 @@ const Note = () => {
     setNoteDate(newDate);
     existingCreatedAt.current = newDate.toISOString();
     
-    // Save the note with the new date and notify parent
+    // Immediately notify parent of the date change (don't wait for save)
+    if (window.parent !== window) {
+      window.parent.postMessage({
+        type: 'note-content-update',
+        noteId: noteIdRef.current,
+        placeholderId: placeholderId,
+        title: noteTitle,
+        contentBlocks: contentBlocksRef.current,
+        createdAt: newDate.toISOString()
+      }, '*');
+    }
+    
+    // Also save to Supabase after a short delay
     setTimeout(async () => {
       await saveNote();
-      
-      // Notify parent window that note was updated with full data
-      if (window.parent !== window) {
-        window.parent.postMessage({ 
-          type: 'note-updated', 
-          noteData: {
-            id: noteIdRef.current,
-            title: noteTitle,
-            contentBlocks: contentBlocksRef.current,
-            createdAt: newDate.toISOString(),
-            updatedAt: new Date().toISOString(),
-            weather: weather,
-            folder_id: initialFolderId || localStorage.getItem('nuron-current-folder-id') || null
-          }
-        }, '*');
-      }
     }, 100);
   };
 

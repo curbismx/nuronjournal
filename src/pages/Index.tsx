@@ -3115,7 +3115,7 @@ onDragStart={(e) => {
             ) : desktopSelectedNoteId ? (
               <iframe
                 key={desktopSelectedNoteId}
-                src={`/note/${desktopSelectedNoteId}?desktop=true&folder_id=${currentFolder?.id || ''}&placeholder=${desktopSelectedNoteId?.startsWith('new-') ? desktopSelectedNoteId : ''}&created=${encodeURIComponent(savedNotes.find(n => n.id === desktopSelectedNoteId)?.createdAt || new Date().toISOString())}`}
+                src={`/note/${desktopSelectedNoteId}?desktop=true&folder_id=${currentFolder?.id || ''}&placeholder=${desktopSelectedNoteId?.startsWith('new-') ? desktopSelectedNoteId : ''}&created=${encodeURIComponent(savedNotes.find(n => n.id === desktopSelectedNoteId)?.createdAt || '')}`}
                 className="absolute inset-0 w-full h-full border-0"
                 title="Note Editor"
               />
