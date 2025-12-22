@@ -176,33 +176,33 @@ const Blog = () => {
   // Password required state
   if (passwordRequired && !authenticated) {
     return (
-      <div className="min-h-screen bg-[#1a1a2e] flex items-center justify-center px-6">
+      <div className="min-h-screen bg-white flex items-center justify-center px-6">
         <div className="w-full max-w-[400px]">
-          <div className="text-center mb-8">
+          <div className="bg-[hsl(0,0%,18%)] rounded-[20px] p-8 text-center">
             <h1 className="text-white font-outfit text-[32px] font-medium mb-2">
               {blogData?.blog_name}
             </h1>
-            <p className="text-white/40 font-outfit text-[16px]">
+            <p className="text-white/40 font-outfit text-[16px] mb-8">
               This blog is password protected
             </p>
+            
+            <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
+              <input
+                type="password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="Enter password"
+                className={`w-full px-4 py-3 rounded-[10px] bg-white/10 border ${passwordError ? 'border-red-500' : 'border-white/20'} text-white text-[16px] font-outfit placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-colors`}
+                autoFocus
+              />
+              <button 
+                type="submit"
+                className="w-full px-4 py-3 rounded-[10px] bg-white text-[hsl(0,0%,18%)] font-outfit font-medium text-[16px] hover:bg-white/90 transition-colors"
+              >
+                Enter
+              </button>
+            </form>
           </div>
-          
-          <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
-            <input
-              type="password"
-              value={passwordInput}
-              onChange={(e) => setPasswordInput(e.target.value)}
-              placeholder="Enter password"
-              className={`w-full px-4 py-3 rounded-[10px] bg-white/10 border ${passwordError ? 'border-red-500' : 'border-white/20'} text-white text-[16px] font-outfit placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-colors`}
-              autoFocus
-            />
-            <button 
-              type="submit"
-              className="w-full px-4 py-3 rounded-[10px] bg-white text-[#1a1a2e] font-outfit font-medium text-[16px] hover:bg-white/90 transition-colors"
-            >
-              Enter
-            </button>
-          </form>
         </div>
       </div>
     );
@@ -210,63 +210,70 @@ const Blog = () => {
 
   // Blog content
   return (
-    <div className="min-h-screen bg-[#1a1a2e]">
-      {/* Header */}
-      <header className="py-12 px-6">
-        <div className="max-w-[800px] mx-auto">
-          <h1 className="text-white font-outfit text-[48px] font-medium text-center">
+    <div className="min-h-screen bg-white overflow-y-auto">
+      {/* Header - 300px dark area */}
+      <header 
+        className="bg-[hsl(0,0%,18%)] px-6 flex items-end"
+        style={{ height: '300px' }}
+      >
+        <div className="max-w-[800px] w-full mx-auto pb-12">
+          <h1 className="text-white font-outfit text-[48px] font-bold leading-tight text-left">
             {blogData?.blog_name}
           </h1>
         </div>
       </header>
 
       {/* Posts */}
-      <main className="px-6 pb-24">
+      <main className="max-w-[800px] mx-auto px-6 py-12">
         {notes.length === 0 ? (
-          <div className="max-w-[800px] mx-auto">
-            <div className="text-center py-24">
-              <p className="text-white/40 font-outfit text-[18px]">
-                No posts yet
-              </p>
-            </div>
+          <div className="text-center py-20">
+            <p className="text-[hsl(0,0%,50%)] font-outfit text-[18px]">
+              No posts yet
+            </p>
           </div>
         ) : (
-          <div className="max-w-[800px] mx-auto space-y-16">
+          <div className="space-y-16">
             {notes.map((note) => {
               const { day, month, year } = formatDate(note.created_at);
               const firstImage = getFirstImage(note.content_blocks);
               const textContent = getTextContent(note.content_blocks);
 
               return (
-                <article key={note.id} className="border-b border-white/10 pb-16 last:border-b-0">
-                  {/* Featured Image */}
+                <article key={note.id} className="border-b border-[hsl(0,0%,85%)] pb-16 last:border-b-0">
+                  {/* Featured Image - 2:3 ratio (height:width), landscape */}
                   {firstImage && (
-                    <div className="mb-8 rounded-[12px] overflow-hidden">
-                      <img 
-                        src={firstImage} 
-                        alt="" 
-                        className="w-full h-auto object-cover"
+                    <div 
+                      className="mb-8 w-full overflow-hidden rounded-[12px]"
+                      style={{ aspectRatio: '3/2' }}
+                    >
+                      <img
+                        src={firstImage}
+                        alt=""
+                        className="w-full h-full object-cover"
                       />
                     </div>
                   )}
 
                   {/* Date */}
                   <div className="flex items-baseline gap-3 mb-4">
-                    <span className="text-white font-['Roboto_Mono'] text-[48px] font-bold leading-none">
+                    <span 
+                      className="text-[48px] font-bold leading-none text-[hsl(60,1%,66%)]"
+                      style={{ fontFamily: 'Roboto Mono, monospace', letterSpacing: '-0.05em' }}
+                    >
                       {day}
                     </span>
-                    <span className="text-white/40 font-outfit text-[16px]">
+                    <span className="text-[16px] font-outfit text-[hsl(0,0%,50%)]">
                       {month} {year}
                     </span>
                   </div>
 
                   {/* Title */}
-                  <h2 className="text-white font-outfit text-[28px] font-medium mb-4">
+                  <h2 className="text-[28px] font-outfit font-semibold text-[hsl(0,0%,20%)] mb-6 leading-tight">
                     {note.title || 'Untitled'}
                   </h2>
 
                   {/* Content */}
-                  <div className="text-white/70 font-outfit text-[16px] leading-[1.8] whitespace-pre-wrap">
+                  <div className="text-[16px] font-outfit text-[hsl(0,0%,30%)] leading-relaxed whitespace-pre-wrap">
                     {textContent}
                   </div>
                 </article>
@@ -277,13 +284,11 @@ const Blog = () => {
       </main>
 
       {/* Footer */}
-      <footer className="py-8 px-6 border-t border-white/10">
+      <footer className="py-8 px-6 border-t border-[hsl(0,0%,90%)] bg-white">
         <div className="max-w-[800px] mx-auto text-center">
           <a 
-            href="https://nuron.life" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-white/30 font-outfit text-[14px] hover:text-white/50 transition-colors"
+            href="/"
+            className="text-[hsl(0,0%,60%)] font-outfit text-[14px] hover:text-[hsl(0,0%,40%)] transition-colors"
           >
             Powered by Nuron
           </a>
