@@ -173,12 +173,12 @@ const Blog = () => {
       .join('\n\n');
   };
 
-  // Loading state
+  // Loading state - white background so it blends with blog
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#1a1a2e] flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <p className="text-white/60 font-outfit text-[18px]">
+          <p className="text-[hsl(0,0%,50%)] font-outfit text-[18px]">
             Loading...
           </p>
         </div>
@@ -189,15 +189,15 @@ const Blog = () => {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-[#1a1a2e] flex flex-col items-center justify-center gap-6">
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-6">
         <div className="text-center">
-          <p className="text-white/60 font-outfit text-[18px]">
+          <p className="text-[hsl(0,0%,50%)] font-outfit text-[18px]">
             {error}
           </p>
         </div>
         <button 
           onClick={() => navigate('/')}
-          className="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-[10px] text-white font-outfit text-[16px] transition-colors"
+          className="px-6 py-3 bg-[hsl(0,0%,18%)] hover:bg-[hsl(0,0%,25%)] rounded-[10px] text-white font-outfit text-[16px] transition-colors"
         >
           Go to Nuron
         </button>
@@ -249,7 +249,7 @@ const Blog = () => {
         style={{ height: '300px' }}
       >
         <div className="max-w-[800px] w-full mx-auto pb-12">
-          <h1 className="text-white font-outfit text-[48px] font-bold leading-tight text-left">
+          <h1 className="text-white font-outfit text-[48px] font-light leading-tight text-left">
             {blogData?.blog_name}
           </h1>
         </div>
