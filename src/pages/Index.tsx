@@ -2699,7 +2699,7 @@ onDragStart={(e) => {
                   
                   {/* View By - inline with buttons on right */}
                   <div className="flex items-center justify-between">
-                    <label className="text-white/60 text-[14px] font-outfit">View By</label>
+                    <label className="text-white/60 text-[14px] font-outfit">View As</label>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setNewFolderDefaultView('collapsed')}
