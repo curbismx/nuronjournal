@@ -394,17 +394,20 @@ const Blog = () => {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="py-8 px-6 border-t border-[hsl(0,0%,90%)] bg-white">
-        <div className="max-w-[800px] mx-auto text-center">
-          <a 
-            href="/"
-            className="text-[hsl(0,0%,60%)] font-outfit text-[14px] hover:text-[hsl(0,0%,40%)] transition-colors"
-          >
-            Powered by Nuron
-          </a>
-        </div>
-      </footer>
+        {/* Footer */}
+        <footer className="py-8 px-6 border-t border-[hsl(0,0%,90%)] bg-white">
+          <div className="max-w-[800px] mx-auto text-center">
+            <span className="text-[hsl(0,0%,60%)] font-outfit text-[14px]">powered by </span>
+            <a 
+              href="https://www.nuron.life"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[hsl(0,0%,60%)] font-outfit text-[14px] hover:text-[hsl(0,0%,40%)] transition-colors underline"
+            >
+              www.nuron.life
+            </a>
+          </div>
+        </footer>
     </div>
   );
 };
