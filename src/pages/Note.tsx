@@ -2040,6 +2040,7 @@ const Note = () => {
       window.parent.postMessage({ 
         type: 'note-saved', 
         noteId: noteData.id,
+        placeholderId: placeholderId,
         noteData: {
           id: noteData.id,
           title: noteTitle,
@@ -2097,7 +2098,8 @@ const Note = () => {
         noteId: noteIdRef.current,
         placeholderId: placeholderId,
         title: noteTitle,
-        contentBlocks: contentBlocks
+        contentBlocks: contentBlocks,
+        createdAt: existingCreatedAt.current || noteDate.toISOString()
       }, '*');
     };
     
