@@ -30,6 +30,35 @@ const Blog = () => {
   const [passwordError, setPasswordError] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
 
+  // Override global body styles to allow scrolling on blog page
+  useEffect(() => {
+    // Save original styles
+    const originalOverflow = document.body.style.overflow;
+    const originalPosition = document.body.style.position;
+    const originalHeight = document.body.style.height;
+    const originalWidth = document.body.style.width;
+    const htmlOriginalOverflow = document.documentElement.style.overflow;
+    const htmlOriginalPosition = document.documentElement.style.position;
+    
+    // Enable scrolling
+    document.body.style.overflow = 'auto';
+    document.body.style.position = 'static';
+    document.body.style.height = 'auto';
+    document.body.style.width = 'auto';
+    document.documentElement.style.overflow = 'auto';
+    document.documentElement.style.position = 'static';
+    
+    // Restore on unmount
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.position = originalPosition;
+      document.body.style.height = originalHeight;
+      document.body.style.width = originalWidth;
+      document.documentElement.style.overflow = htmlOriginalOverflow;
+      document.documentElement.style.position = htmlOriginalPosition;
+    };
+  }, []);
+
   // Fetch blog data
   useEffect(() => {
     const fetchBlog = async () => {
