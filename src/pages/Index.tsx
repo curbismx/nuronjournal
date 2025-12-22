@@ -527,7 +527,8 @@ const themeSettingsIcons = {
             createdAt: note.created_at,
             updatedAt: note.updated_at,
             weather: note.weather as SavedNote['weather'],
-            folder_id: note.folder_id
+            folder_id: note.folder_id,
+            is_published: note.is_published || false
           }));
           setSavedNotes(notes);
           localStorage.setItem('nuron-notes-cache', JSON.stringify(notes));
@@ -989,7 +990,8 @@ query = query.eq('folder_id', currentFolder.id);
         createdAt: note.created_at,
         updatedAt: note.updated_at,
         weather: note.weather as SavedNote['weather'],
-        folder_id: note.folder_id
+        folder_id: note.folder_id,
+        is_published: note.is_published || false
       })));
     }
   };
@@ -1037,7 +1039,8 @@ query = query.eq('folder_id', currentFolder.id);
           createdAt: note.created_at,
           updatedAt: note.updated_at,
           weather: note.weather as SavedNote['weather'],
-          folder_id: note.folder_id
+          folder_id: note.folder_id,
+          is_published: note.is_published || false
         })));
       }
       
