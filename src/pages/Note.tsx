@@ -2015,7 +2015,8 @@ const Note = () => {
         updated_at: noteData.updatedAt,
         weather: noteData.weather,
         audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : null,
-        folder_id: currentFolderId && currentFolderId !== 'local-notes' ? currentFolderId : null
+        folder_id: currentFolderId && currentFolderId !== 'local-notes' ? currentFolderId : null,
+        is_published: false
       });
       console.log('Supabase upsert result:', error ? 'ERROR: ' + error.message : 'SUCCESS');
       
