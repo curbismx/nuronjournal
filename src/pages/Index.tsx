@@ -704,7 +704,12 @@ useEffect(() => {
 
   useEffect(() => {
     const loadNotes = async () => {
-      if (!currentFolder || currentFolder.id === 'local-notes' || isCreatingNewNote) {
+      if (!currentFolder || currentFolder.id === 'local-notes') {
+        return;
+      }
+      
+      // Don't reload while creating a new note
+      if (isCreatingNewNote) {
         return;
       }
       
@@ -730,6 +735,7 @@ useEffect(() => {
           is_published: note.is_published || false
         }));
         
+        // Only update if we're not in the middle of creating/editing
         setSavedNotes(prev => {
           const placeholders = prev.filter(n => n.id.startsWith('new-'));
           if (placeholders.length > 0) {
@@ -741,7 +747,7 @@ useEffect(() => {
     };
     
     loadNotes();
-  }, [currentFolder?.id, isCreatingNewNote]);
+  }, [currentFolder?.id]);
 
   const loadUserProfile = async (userId: string) => {
     const { data } = await supabase
