@@ -2683,10 +2683,10 @@ onDragStart={(e) => {
               </h1>
 
               {desktopEditingFolder && (
-                <div className="space-y-6">
+                <div className="space-y-5">
                   {/* Folder Name */}
                   <div className="space-y-2">
-                    <label className="text-white/60 text-[12px] uppercase tracking-wider font-outfit">Folder Name</label>
+                    <label className="text-white/60 text-[14px] font-outfit">Folder Name</label>
                     <input
                       type="text"
                       value={newFolderName}
@@ -2697,156 +2697,166 @@ onDragStart={(e) => {
                     />
                   </div>
                   
-                  {/* View & Sort */}
+                  {/* View By */}
                   <div className="space-y-2">
-                    <label className="text-white/60 text-[12px] uppercase tracking-wider font-outfit">View & Sort</label>
+                    <label className="text-white/60 text-[14px] font-outfit">View By</label>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setNewFolderDefaultView('collapsed')}
-                        className={`px-4 py-2 rounded-[8px] font-outfit text-[12px] transition-colors ${newFolderDefaultView === 'collapsed' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
+                        className={`px-4 py-2 rounded-[8px] font-outfit text-[14px] transition-colors ${newFolderDefaultView === 'collapsed' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
                       >
                         Date
                       </button>
                       <button
                         onClick={() => setNewFolderDefaultView('compact')}
-                        className={`px-4 py-2 rounded-[8px] font-outfit text-[12px] transition-colors ${newFolderDefaultView === 'compact' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
+                        className={`px-4 py-2 rounded-[8px] font-outfit text-[14px] transition-colors ${newFolderDefaultView === 'compact' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
                       >
                         List
-                      </button>
-                      <div className="w-[1px] bg-white/20 mx-1" />
-                      <span className="text-white/60 text-[12px] font-outfit self-center">Sort</span>
-                      <button
-                        onClick={() => setNewFolderSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
-                        className="px-3 py-2 rounded-[8px] font-outfit text-[12px] bg-white/10 text-white flex items-center gap-2"
-                      >
-                        <img 
-                          src={newFolderSortOrder === 'desc' ? sortDownIcon : sortUpIcon} 
-                          alt={newFolderSortOrder === 'desc' ? 'Newest First' : 'Oldest First'}
-                          style={{ height: '14px', width: 'auto' }}
-                        />
                       </button>
                     </div>
                   </div>
                   
-                  {/* Blog Settings */}
-                  <div className="space-y-4 pt-4 border-t border-white/20">
-                    <div className="flex items-center justify-between">
-                      <span className="text-white text-[16px] font-outfit font-light">Publish folder as blog</span>
+                  {/* Sort By */}
+                  <div className="space-y-2">
+                    <label className="text-white/60 text-[14px] font-outfit">Sort By</label>
+                    <div className="flex gap-2">
                       <button
-                        onClick={() => setNewFolderIsBlog(!newFolderIsBlog)}
-                        className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${newFolderIsBlog ? 'bg-green-500' : 'bg-white/20'}`}
+                        onClick={() => setNewFolderSortOrder('desc')}
+                        className={`px-4 py-2 rounded-[8px] font-outfit text-[14px] transition-colors flex items-center gap-2 ${newFolderSortOrder === 'desc' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
                       >
-                        <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-md transition-transform duration-200 ${newFolderIsBlog ? 'translate-x-[20px]' : 'translate-x-0'}`} />
+                        <img src={sortDownIcon} alt="" style={{ height: '14px', width: 'auto' }} />
+                        Newest First
+                      </button>
+                      <button
+                        onClick={() => setNewFolderSortOrder('asc')}
+                        className={`px-4 py-2 rounded-[8px] font-outfit text-[14px] transition-colors flex items-center gap-2 ${newFolderSortOrder === 'asc' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
+                      >
+                        <img src={sortUpIcon} alt="" style={{ height: '14px', width: 'auto' }} />
+                        Oldest First
                       </button>
                     </div>
-                    
-                    {newFolderIsBlog && (
-                      <div className="space-y-4 animate-in fade-in-0 duration-200">
-                        {/* Blog Name */}
-                        <div className="space-y-2">
-                          <label className="text-white/60 text-[12px] uppercase tracking-wider font-outfit">Blog Title</label>
-                          <input
-                            type="text"
-                            value={newFolderBlogName}
-                            onChange={(e) => setNewFolderBlogName(e.target.value)}
-                            placeholder="My Travel Adventures"
-                            className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-3 text-[16px] font-outfit placeholder:text-white/30"
-                          />
-                        </div>
-                        
-                        {/* Blog Slug */}
-                        <div className="space-y-2">
-                          <label className="text-white/60 text-[12px] uppercase tracking-wider font-outfit">Blog URL</label>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              value={newFolderBlogSlug}
-                              onChange={(e) => {
-                                const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-                                setNewFolderBlogSlug(value);
-                                setBlogSlugAvailable(null);
-                              }}
-                              onBlur={async () => {
-                                if (!newFolderBlogSlug || newFolderBlogSlug.length < 2 || !user) {
-                                  setBlogSlugAvailable(null);
-                                  return;
-                                }
-                                const reserved = ['index', 'home', 'contact', 'prices', 'features', 'blog', 'admin', 'settings', 'new', 'edit', 'delete'];
-                                if (reserved.includes(newFolderBlogSlug.toLowerCase())) {
-                                  setBlogSlugAvailable(false);
-                                  return;
-                                }
-                                setCheckingBlogSlug(true);
-                                const { data } = await supabase
-                                  .from('folders')
-                                  .select('id')
-                                  .eq('user_id', user.id)
-                                  .eq('blog_slug', newFolderBlogSlug.toLowerCase())
-                                  .neq('id', desktopEditingFolder?.id || '')
-                                  .maybeSingle();
-                                setCheckingBlogSlug(false);
-                                setBlogSlugAvailable(!data);
-                              }}
-                              placeholder="my-travels"
-                              className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-3 text-[16px] font-outfit pr-10 placeholder:text-white/30"
-                            />
-                            {checkingBlogSlug && (
-                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                <svg className="animate-spin h-5 w-5 text-white/60" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                              </div>
-                            )}
-                            {!checkingBlogSlug && blogSlugAvailable === true && (
-                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                              </div>
-                            )}
-                            {!checkingBlogSlug && blogSlugAvailable === false && (
-                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                <svg className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </div>
-                            )}
-                          </div>
-                          {username && newFolderBlogSlug && (
-                            <a 
-                              href={`https://nuron.life/${username}/${newFolderBlogSlug}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[#E56157] text-[16px] font-outfit hover:underline cursor-pointer block"
-                            >
-                              nuron.life/{username}/{newFolderBlogSlug}
-                            </a>
-                          )}
-                          {!username && (
-                            <p className="text-yellow-400/80 text-[12px] font-outfit">
-                              Set your username in Account Details first
-                            </p>
-                          )}
-                        </div>
-                        
-                        {/* Blog Password */}
-                        <div className="space-y-2">
-                          <label className="text-white/60 text-[12px] uppercase tracking-wider font-outfit">Password (optional)</label>
-                          <input
-                            type="text"
-                            value={newFolderBlogPassword}
-                            onChange={(e) => setNewFolderBlogPassword(e.target.value)}
-                            placeholder="Leave blank for public access"
-                            className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-3 text-[16px] font-outfit placeholder:text-white/30"
-                          />
-                          <p className="text-white/40 text-[12px] font-outfit">
-                            {newFolderBlogPassword ? 'Visitors will need this password to view your blog' : 'Anyone with the link can view your blog'}
-                          </p>
-                        </div>
-                      </div>
-                    )}
                   </div>
+                  
+                  {/* Separator */}
+                  <div className="border-t border-white/20 pt-4" />
+                  
+                  {/* Publish Folder As Blog */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-white/60 text-[14px] font-outfit">Publish Folder As Blog</span>
+                    <button
+                      onClick={() => setNewFolderIsBlog(!newFolderIsBlog)}
+                      className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${newFolderIsBlog ? 'bg-green-500' : 'bg-white/20'}`}
+                    >
+                      <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-md transition-transform duration-200 ${newFolderIsBlog ? 'translate-x-[20px]' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+                  
+                  {newFolderIsBlog && (
+                    <div className="space-y-4 animate-in fade-in-0 duration-200">
+                      {/* Blog Title */}
+                      <div className="space-y-2">
+                        <label className="text-white/60 text-[14px] font-outfit">Blog Title</label>
+                        <input
+                          type="text"
+                          value={newFolderBlogName}
+                          onChange={(e) => setNewFolderBlogName(e.target.value)}
+                          placeholder="My Travel Adventures"
+                          className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-3 text-[16px] font-outfit placeholder:text-white/30"
+                        />
+                      </div>
+                      
+                      {/* Web Address */}
+                      <div className="space-y-2">
+                        <label className="text-white/60 text-[14px] font-outfit">Web Address</label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={newFolderBlogSlug}
+                            onChange={(e) => {
+                              const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                              setNewFolderBlogSlug(value);
+                              setBlogSlugAvailable(null);
+                            }}
+                            onBlur={async () => {
+                              if (!newFolderBlogSlug || newFolderBlogSlug.length < 2 || !user) {
+                                setBlogSlugAvailable(null);
+                                return;
+                              }
+                              const reserved = ['index', 'home', 'contact', 'prices', 'features', 'blog', 'admin', 'settings', 'new', 'edit', 'delete'];
+                              if (reserved.includes(newFolderBlogSlug.toLowerCase())) {
+                                setBlogSlugAvailable(false);
+                                return;
+                              }
+                              setCheckingBlogSlug(true);
+                              const { data } = await supabase
+                                .from('folders')
+                                .select('id')
+                                .eq('user_id', user.id)
+                                .eq('blog_slug', newFolderBlogSlug.toLowerCase())
+                                .neq('id', desktopEditingFolder?.id || '')
+                                .maybeSingle();
+                              setCheckingBlogSlug(false);
+                              setBlogSlugAvailable(!data);
+                            }}
+                            placeholder="my-travels"
+                            className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-3 text-[16px] font-outfit pr-10 placeholder:text-white/30"
+                          />
+                          {checkingBlogSlug && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                              <svg className="animate-spin h-5 w-5 text-white/60" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            </div>
+                          )}
+                          {!checkingBlogSlug && blogSlugAvailable === true && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                              <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          )}
+                          {!checkingBlogSlug && blogSlugAvailable === false && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                              <svg className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        {username && newFolderBlogSlug && (
+                          <a 
+                            href={`https://nuron.life/${username}/${newFolderBlogSlug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#E56157] text-[16px] font-outfit hover:underline cursor-pointer block mt-2"
+                          >
+                            nuron.life/{username}/{newFolderBlogSlug}
+                          </a>
+                        )}
+                        {!username && (
+                          <p className="text-yellow-400/80 text-[12px] font-outfit">
+                            Set your username in Account Details first
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Password (Optional) */}
+                      <div className="space-y-2">
+                        <label className="text-white/60 text-[14px] font-outfit">Password (Optional)</label>
+                        <input
+                          type="text"
+                          value={newFolderBlogPassword}
+                          onChange={(e) => setNewFolderBlogPassword(e.target.value)}
+                          placeholder="Leave blank for public access"
+                          className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-3 text-[16px] font-outfit placeholder:text-white/30"
+                        />
+                        <p className="text-white/40 text-[12px] font-outfit">
+                          Visitors will need this password to view your blog
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   
                   {/* Save Button */}
                   <button
