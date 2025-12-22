@@ -2142,11 +2142,19 @@ const Note = () => {
     setTimeout(async () => {
       await saveNote();
       
-      // Notify parent window that note was updated
+      // Notify parent window that note was updated with full data
       if (window.parent !== window) {
         window.parent.postMessage({ 
           type: 'note-updated', 
-          noteId: noteIdRef.current 
+          noteData: {
+            id: noteIdRef.current,
+            title: noteTitle,
+            contentBlocks: contentBlocksRef.current,
+            createdAt: newDate.toISOString(),
+            updatedAt: new Date().toISOString(),
+            weather: weather,
+            folder_id: initialFolderId || localStorage.getItem('nuron-current-folder-id') || null
+          }
         }, '*');
       }
     }, 100);
