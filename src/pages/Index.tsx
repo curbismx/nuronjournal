@@ -130,6 +130,7 @@ const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
 const [desktopShowFolderOptions, setDesktopShowFolderOptions] = useState(false);
 const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(null);
 const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
+  const [desktopShowMoveNote, setDesktopShowMoveNote] = useState(false);
   const [useMobileColorScheme, setUseMobileColorScheme] = useState(() => {
     const stored = localStorage.getItem('nuron-use-mobile-color-scheme');
     return stored !== null ? JSON.parse(stored) : true; // Default to ON (use theme colors)
@@ -3033,6 +3034,70 @@ onDragStart={(e) => {
 
         <div className="w-[1px] bg-[hsl(0,0%,80%)]" />
 
+        {/* Desktop Move Note Popup */}
+        {desktopShowMoveNote && desktopSelectedNoteId && (
+          <>
+            <div 
+              className="fixed inset-0 z-50 bg-black/50"
+              onClick={() => setDesktopShowMoveNote(false)}
+            />
+            <div className="fixed z-50 bg-white rounded-2xl shadow-xl p-6 w-[300px]"
+              style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+            >
+              <button
+                onClick={() => setDesktopShowMoveNote(false)}
+                className="absolute top-4 right-4 text-[hsl(0,0%,60%)] text-xl font-light"
+              >
+                ×
+              </button>
+              
+              <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4">
+                Move Note
+              </h3>
+              
+              <div className="space-y-1 max-h-[300px] overflow-y-auto">
+                {folders.map((folder) => {
+                  const isCurrentFolder = folder.id === currentFolder?.id;
+                  return (
+                    <button
+                      key={folder.id}
+                      disabled={isCurrentFolder}
+                      onClick={async () => {
+                        if (isCurrentFolder || !desktopSelectedNoteId) return;
+                        
+                        const { error } = await supabase
+                          .from('notes')
+                          .update({ folder_id: folder.id })
+                          .eq('id', desktopSelectedNoteId);
+                        
+                        if (!error) {
+                          setSavedNotes(prev => prev.filter(n => n.id !== desktopSelectedNoteId));
+                          setDesktopSelectedNoteId(null);
+                          setDesktopShowMoveNote(false);
+                          toast.success(`Note moved to ${folder.name}`);
+                        }
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left ${
+                        isCurrentFolder 
+                          ? 'opacity-40 cursor-not-allowed' 
+                          : 'hover:bg-gray-100'
+                      }`}
+                    >
+                      <img src={folderIcon} alt="" className="w-5 h-5 opacity-60" />
+                      <span className="font-outfit text-[16px] text-[hsl(0,0%,30%)]">
+                        {folder.name}
+                      </span>
+                      {isCurrentFolder && (
+                        <span className="ml-auto text-[12px] text-gray-400">(current)</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
+
         {/* Column 3: Note view - 50% width */}
         <div 
           className="relative flex flex-col"
@@ -3092,12 +3157,9 @@ onDragStart={(e) => {
                 </button>
                 <button 
                   onClick={() => {
-                    const iframe = document.querySelector('iframe');
-                    if (iframe?.contentWindow) {
-                      iframe.contentWindow.postMessage({ type: 'menu-action', action: 'move' }, '*');
-                    }
+                    setDesktopShowMoveNote(true);
                     setDesktopMenuOpen(false);
-                  }} 
+                  }}
                   className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
                 >
                   <img src={moveIcon} alt="" className="w-6 h-6" />
