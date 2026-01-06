@@ -432,11 +432,31 @@ const Note = () => {
       if (event.data?.type === 'menu-action') {
         handleMenuAction(event.data.action);
       }
+      if (event.data?.type === 'force-save') {
+        saveNote();
+      }
     };
     
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, []);
+
+  // Save when iframe is about to be unloaded (user switching notes on desktop)
+  useEffect(() => {
+    if (!isEmbedded) return;
+    
+    const handleBeforeUnload = () => {
+      saveNote();
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handleBeforeUnload);
+    };
+  }, [isEmbedded]);
 
   const handleMoveNote = async (folderId: string) => {
     setSelectedMoveFolder(folderId);

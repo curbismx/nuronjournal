@@ -137,6 +137,7 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   });
   const [isCreatingNewNote, setIsCreatingNewNote] = useState(false);
   const placeholderPositionRef = useRef<number | null>(null);
+  const pendingSaveRef = useRef<string | null>(null);
   useEffect(() => {
     // Skip onboarding on desktop
     if (isDesktop) return;
@@ -152,10 +153,12 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
 
   // Listen for postMessage from iframe when note is saved
   // Cleanup if user clicks away from new note without saving
+  // Cleanup if user clicks away from new note - but wait for save first
   useEffect(() => {
-    if (isCreatingNewNote && (!desktopSelectedNoteId || !desktopSelectedNoteId.startsWith('new-'))) {
+    if (isCreatingNewNote && desktopSelectedNoteId && !desktopSelectedNoteId.startsWith('new-')) {
+      // User switched to a different note - the new note should already be saved
+      // Just clean up the creating state
       setIsCreatingNewNote(false);
-      setSavedNotes(prev => prev.filter(n => !n.id.startsWith('new-')));
     }
   }, [desktopSelectedNoteId, isCreatingNewNote]);
 
@@ -2053,6 +2056,14 @@ query = query.eq('folder_id', currentFolder.id);
                   {/* New note */}
                   <button 
                     onClick={() => {
+                      // If already creating a note, save it first
+                      if (desktopSelectedNoteId?.startsWith('new-')) {
+                        const iframe = document.querySelector('iframe');
+                        if (iframe?.contentWindow) {
+                          iframe.contentWindow.postMessage({ type: 'force-save' }, '*');
+                        }
+                      }
+                      
                       const newId = 'new-' + Date.now();
                       const now = new Date();
                       
@@ -2146,7 +2157,16 @@ onDragStart={(e) => {
                           setDragOverFolder(null);
                         }}
                         className={`border-b border-[hsl(0,0%,85%)] cursor-pointer transition-all duration-300 ease-out ${desktopSelectedNoteId === note.id ? (useMobileColorScheme ? 'bg-white/50' : 'bg-[#F2F3EC]') : (useMobileColorScheme ? 'hover:bg-white/30' : 'hover:bg-[#F0F0ED]')} ${draggedNote?.id === note.id ? 'opacity-30' : ''} relative`}
-                        onClick={() => setDesktopSelectedNoteId(note.id)}
+                              onClick={() => {
+                                // If switching away from a new note, tell iframe to save first
+                                if (desktopSelectedNoteId?.startsWith('new-') && desktopSelectedNoteId !== note.id) {
+                                  const iframe = document.querySelector('iframe');
+                                  if (iframe?.contentWindow) {
+                                    iframe.contentWindow.postMessage({ type: 'force-save' }, '*');
+                                  }
+                                }
+                                setDesktopSelectedNoteId(note.id);
+                              }}
                       >
                         {/* Day letter - absolute positioned from note box edge */}
                         {index === 0 && viewMode !== 'compact' && (
