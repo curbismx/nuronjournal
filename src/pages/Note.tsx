@@ -2156,9 +2156,9 @@ const Note = () => {
       
       if (hasContent) {
         // Debounce the save - wait 1 second after user stops typing
-        const timer = setTimeout(() => {
-          saveNote();
-        }, 1000);
+      const timer = setTimeout(() => {
+        saveNote();
+      }, 500);
         
         return () => clearTimeout(timer);
       }
