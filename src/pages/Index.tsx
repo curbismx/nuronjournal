@@ -3094,6 +3094,19 @@ onDragStart={(e) => {
                   onClick={() => {
                     const iframe = document.querySelector('iframe');
                     if (iframe?.contentWindow) {
+                      iframe.contentWindow.postMessage({ type: 'menu-action', action: 'move' }, '*');
+                    }
+                    setDesktopMenuOpen(false);
+                  }} 
+                  className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
+                >
+                  <img src={moveIcon} alt="" className="w-6 h-6" />
+                  <span className="text-gray-600 font-outfit">Move Note</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    const iframe = document.querySelector('iframe');
+                    if (iframe?.contentWindow) {
                       iframe.contentWindow.postMessage({ type: 'menu-action', action: 'share' }, '*');
                     }
                     setDesktopMenuOpen(false);
@@ -3180,17 +3193,17 @@ onDragStart={(e) => {
                   const paragraphCount = noteContent.trim() ? noteContent.split(/\n\n+/).filter(p => p.trim()).length : 0;
                   
                   return (
-                    <div className="px-6 py-3">
-                      <div className="flex justify-between text-sm text-gray-500 font-outfit">
-                        <span>{wordCount}</span>
+                    <div className="px-6 py-2">
+                      <div className="flex items-center gap-8 py-1 text-gray-400 font-outfit">
+                        <span className="w-6 text-center">{wordCount}</span>
                         <span>Words</span>
                       </div>
-                      <div className="flex justify-between text-sm text-gray-500 font-outfit">
-                        <span>{characterCount}</span>
+                      <div className="flex items-center gap-8 py-1 text-gray-400 font-outfit">
+                        <span className="w-6 text-center">{characterCount}</span>
                         <span>Characters</span>
                       </div>
-                      <div className="flex justify-between text-sm text-gray-500 font-outfit">
-                        <span>{paragraphCount}</span>
+                      <div className="flex items-center gap-8 py-1 text-gray-400 font-outfit">
+                        <span className="w-6 text-center">{paragraphCount}</span>
                         <span>Paragraphs</span>
                       </div>
                     </div>
