@@ -2049,38 +2049,6 @@ query = query.eq('folder_id', currentFolder.id);
                       style={{ width: '18px', height: '18px' }} 
                     />
                   </button>
-                  <button 
-                    onClick={() => {
-                      setViewMode(prev => prev === 'collapsed' ? 'compact' : 'collapsed');
-                      setUserChangedView(true);
-                    }}
-                    className="p-0 m-0 border-0 bg-transparent"
-                  >
-                    {viewMode === 'collapsed' ? (
-                      <img 
-                        src={greyExpandViewIcon} 
-                        alt="Date View" 
-                        style={{ width: '12px', height: '18px' }}
-                      />
-                    ) : (
-                      <img 
-                        src={greyListViewIcon} 
-                        alt="List View" 
-                        style={{ width: '12px', height: '8px' }}
-                      />
-                    )}
-                  </button>
-                  {/* Sort toggle */}
-                  <button 
-                    onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
-                    className="p-0 m-0 border-0 bg-transparent"
-                  >
-                    <img 
-                      src={sortOrder === 'desc' ? sortDownIcon : sortUpIcon} 
-                      alt={sortOrder === 'desc' ? 'Newest first' : 'Oldest first'} 
-                      style={{ width: '18px', height: '18px' }}
-                    />
-                  </button>
                   {/* New note */}
                   <button 
                     onClick={() => {
@@ -2091,16 +2059,16 @@ query = query.eq('folder_id', currentFolder.id);
                       setDesktopSelectedNoteId(newId);
                       
                       // Add to TOP of list - simple, no sorting
-                    setSavedNotes(prev => [{
-                      id: newId,
-                      title: '',
-                      contentBlocks: [{ type: 'text' as const, id: 'initial', content: '' }],
-                      createdAt: now.toISOString(),
-                      updatedAt: now.toISOString(),
-                      weather: null,
-                      folder_id: currentFolder?.id || null,
-                      is_published: false
-                    }, ...prev]);
+                      setSavedNotes(prev => [{
+                        id: newId,
+                        title: '',
+                        contentBlocks: [{ type: 'text' as const, id: 'initial', content: '' }],
+                        createdAt: now.toISOString(),
+                        updatedAt: now.toISOString(),
+                        weather: null,
+                        folder_id: currentFolder?.id || null,
+                        is_published: false
+                      }, ...prev]);
                     }}
                     className="p-0 m-0 border-0 bg-transparent"
                   >
