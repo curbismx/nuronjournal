@@ -3041,17 +3041,24 @@ onDragStart={(e) => {
               className="fixed inset-0 z-50 bg-black/50"
               onClick={() => setDesktopShowMoveNote(false)}
             />
-            <div className="fixed z-50 bg-white rounded-2xl shadow-xl p-6 w-[300px]"
-              style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
+            <div 
+              className="fixed z-50 rounded-2xl shadow-xl p-5 w-[280px]"
+              style={{ 
+                top: '50%', 
+                left: '50%', 
+                transform: 'translate(-50%, -50%)',
+                backgroundColor: themeColors[theme],
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}
             >
               <button
                 onClick={() => setDesktopShowMoveNote(false)}
-                className="absolute top-4 right-4 text-[hsl(0,0%,60%)] text-xl font-light"
+                className="absolute top-3 right-4 text-white/60 text-xl font-light hover:text-white/80"
               >
                 ×
               </button>
               
-              <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4">
+              <h3 className="text-[16px] font-outfit font-medium text-white/90 mb-4">
                 Move Note
               </h3>
               
@@ -3077,18 +3084,18 @@ onDragStart={(e) => {
                           toast.success(`Note moved to ${folder.name}`);
                         }
                       }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left ${
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${
                         isCurrentFolder 
-                          ? 'opacity-40 cursor-not-allowed' 
-                          : 'hover:bg-gray-100'
+                          ? 'opacity-30 cursor-not-allowed' 
+                          : 'hover:bg-white/10'
                       }`}
                     >
-                      <img src={folderIcon} alt="" className="w-5 h-5 opacity-60" />
-                      <span className="font-outfit text-[16px] text-[hsl(0,0%,30%)]">
+                      <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
+                      <span className="text-white text-[16px] font-outfit font-light">
                         {folder.name}
                       </span>
                       {isCurrentFolder && (
-                        <span className="ml-auto text-[12px] text-gray-400">(current)</span>
+                        <span className="ml-auto text-[11px] text-white/40">(current)</span>
                       )}
                     </button>
                   );
