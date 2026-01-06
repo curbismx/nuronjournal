@@ -14,6 +14,17 @@ interface SavedNote {
   updatedAt: string;
   weather?: { temp: number; weatherCode: number };
 }
+
+interface NoteData {
+  id: string;
+  title?: string;
+  contentBlocks?: ContentBlock[];
+  createdAt?: string;
+  updatedAt?: string;
+  weather?: { temp: number; weatherCode: number };
+  folder_id?: string;
+  is_published?: boolean;
+}
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -121,21 +132,21 @@ const Note = () => {
       if (cached) {
         try {
           const notes = JSON.parse(cached);
-          const existingNote = notes.find((n: any) => n.id === id);
+          const existingNote = notes.find((n: NoteData) => n.id === id);
           if (existingNote?.title) {
             return existingNote.title;
           }
-        } catch {}
+        } catch { /* JSON parse failed, using default */ }
       }
       const local = localStorage.getItem('nuron-notes');
       if (local) {
         try {
           const notes = JSON.parse(local);
-          const existingNote = notes.find((n: any) => n.id === id);
+          const existingNote = notes.find((n: NoteData) => n.id === id);
           if (existingNote?.title) {
             return existingNote.title;
           }
-        } catch {}
+        } catch { /* JSON parse failed, using default */ }
       }
     }
     return '';
@@ -167,22 +178,22 @@ const Note = () => {
       if (cached) {
         try {
           const notes = JSON.parse(cached);
-          const existingNote = notes.find((n: any) => n.id === id);
+          const existingNote = notes.find((n: NoteData) => n.id === id);
           if (existingNote?.contentBlocks) {
             return existingNote.contentBlocks;
           }
-        } catch {}
+        } catch { /* JSON parse failed, using default */ }
       }
       // Also try local storage for non-logged-in users
       const local = localStorage.getItem('nuron-notes');
       if (local) {
         try {
           const notes = JSON.parse(local);
-          const existingNote = notes.find((n: any) => n.id === id);
+          const existingNote = notes.find((n: NoteData) => n.id === id);
           if (existingNote?.contentBlocks) {
             return existingNote.contentBlocks;
           }
-        } catch {}
+        } catch { /* JSON parse failed, using default */ }
       }
     }
     return [{ type: 'text', id: 'initial', content: '' }];
