@@ -191,6 +191,25 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
               }
             : n
         ));
+        
+        // Also save to localStorage cache so content persists when iframe reloads
+        if (placeholderId) {
+          const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
+          const existingIndex = cached.findIndex((n: any) => n.id === placeholderId || n.id === noteId);
+          const noteData = {
+            id: placeholderId,
+            title: title || '',
+            contentBlocks: contentBlocks || [],
+            createdAt: createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          if (existingIndex >= 0) {
+            cached[existingIndex] = { ...cached[existingIndex], ...noteData };
+          } else {
+            cached.unshift(noteData);
+          }
+          localStorage.setItem('nuron-notes-cache', JSON.stringify(cached));
+        }
       }
       
       // Note saved - swap ID using placeholderId from message

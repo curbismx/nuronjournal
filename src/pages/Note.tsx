@@ -129,12 +129,13 @@ const Note = () => {
   );
   const [user, setUser] = useState<User | null>(null);
   const [noteTitle, setNoteTitle] = useState(() => {
-    if (id) {
+    const lookupId = id || placeholderId;  // Use placeholderId if id is undefined
+    if (lookupId) {
       const cached = localStorage.getItem('nuron-notes-cache');
       if (cached) {
         try {
           const notes = JSON.parse(cached);
-          const existingNote = notes.find((n: NoteData) => n.id === id);
+          const existingNote = notes.find((n: NoteData) => n.id === lookupId);
           if (existingNote?.title) {
             return existingNote.title;
           }
@@ -144,7 +145,7 @@ const Note = () => {
       if (local) {
         try {
           const notes = JSON.parse(local);
-          const existingNote = notes.find((n: NoteData) => n.id === id);
+          const existingNote = notes.find((n: NoteData) => n.id === lookupId);
           if (existingNote?.title) {
             return existingNote.title;
           }
@@ -174,13 +175,14 @@ const Note = () => {
   const [titleManuallyEdited, setTitleManuallyEdited] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [contentBlocks, setContentBlocks] = useState<ContentBlock[]>(() => {
-    if (id) {
+    const lookupId = id || placeholderId;  // Use placeholderId if id is undefined
+    if (lookupId) {
       // Try to load from cache immediately
       const cached = localStorage.getItem('nuron-notes-cache');
       if (cached) {
         try {
           const notes = JSON.parse(cached);
-          const existingNote = notes.find((n: NoteData) => n.id === id);
+          const existingNote = notes.find((n: NoteData) => n.id === lookupId);
           if (existingNote?.contentBlocks) {
             return existingNote.contentBlocks;
           }
@@ -191,7 +193,7 @@ const Note = () => {
       if (local) {
         try {
           const notes = JSON.parse(local);
-          const existingNote = notes.find((n: NoteData) => n.id === id);
+          const existingNote = notes.find((n: NoteData) => n.id === lookupId);
           if (existingNote?.contentBlocks) {
             return existingNote.contentBlocks;
           }
