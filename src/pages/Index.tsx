@@ -693,6 +693,44 @@ useEffect(() => {
     }
   };
 
+  // Helper function to save new notes directly (fixes iframe destruction race condition)
+  const saveNewNoteDirectly = async (note: SavedNote) => {
+    // Only save new notes with content
+    if (!note.id.startsWith('new-')) return null;
+    
+    const hasTitle = note.title && note.title.trim();
+    const hasContent = note.contentBlocks?.some(b => 
+      b.type === 'image' || 
+      (b.type === 'text' && (b as { type: 'text'; id: string; content: string }).content?.trim())
+    );
+    
+    if (!hasTitle && !hasContent) return null; // Nothing to save
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return null;
+    
+    const realId = crypto.randomUUID();
+    const currentFolderId = currentFolder?.id;
+    
+    const { error } = await supabase.from('notes').upsert({
+      id: realId,
+      user_id: session.user.id,
+      title: note.title || '',
+      content_blocks: note.contentBlocks,
+      created_at: note.createdAt,
+      updated_at: new Date().toISOString(),
+      folder_id: currentFolderId && currentFolderId !== 'local-notes' ? currentFolderId : null,
+      is_published: false
+    });
+    
+    if (error) {
+      console.error('Error saving note:', error);
+      return null;
+    }
+    
+    return realId; // Return the new UUID
+  };
+
   const updateFolderOrder = async (folderId: string, newIndex: number) => {
     if (!user) return;
     
@@ -1939,12 +1977,17 @@ query = query.eq('folder_id', currentFolder.id);
                     )}
                     
                     <button
-                      onClick={() => {
-                        // Force save if switching away from a new note
+                      onClick={async () => {
+                        // Save any new note before switching folders
                         if (desktopSelectedNoteId?.startsWith('new-')) {
-                          const iframe = document.querySelector('iframe');
-                          if (iframe?.contentWindow) {
-                            iframe.contentWindow.postMessage({ type: 'force-save' }, '*');
+                          const newNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
+                          if (newNote) {
+                            const realId = await saveNewNoteDirectly(newNote);
+                            if (realId) {
+                              setSavedNotes(prev => prev.map(n => 
+                                n.id === desktopSelectedNoteId ? { ...n, id: realId } : n
+                              ));
+                            }
                           }
                         }
                         
@@ -2076,13 +2119,21 @@ query = query.eq('folder_id', currentFolder.id);
                   </button>
                   {/* New note */}
                   <button 
-                    onClick={() => {
-                      // If already creating a note, save it first
+                    onClick={async () => {
+                      // If already on a new note, save it first
                       if (desktopSelectedNoteId?.startsWith('new-')) {
-                        const iframe = document.querySelector('iframe');
-                        if (iframe?.contentWindow) {
-                          iframe.contentWindow.postMessage({ type: 'force-save' }, '*');
+                        const newNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
+                        if (newNote) {
+                          const realId = await saveNewNoteDirectly(newNote);
+                          if (realId) {
+                            setSavedNotes(prev => prev.map(n => 
+                              n.id === desktopSelectedNoteId ? { ...n, id: realId } : n
+                            ));
+                          } else {
+                            setSavedNotes(prev => prev.filter(n => n.id !== desktopSelectedNoteId));
+                          }
                         }
+                        setIsCreatingNewNote(false);
                       }
                       
                       const newId = 'new-' + Date.now();
@@ -2178,13 +2229,23 @@ onDragStart={(e) => {
                           setDragOverFolder(null);
                         }}
                         className={`border-b border-[hsl(0,0%,85%)] cursor-pointer transition-all duration-300 ease-out ${desktopSelectedNoteId === note.id ? (useMobileColorScheme ? 'bg-white/50' : 'bg-[#F2F3EC]') : (useMobileColorScheme ? 'hover:bg-white/30' : 'hover:bg-[#F0F0ED]')} ${draggedNote?.id === note.id ? 'opacity-30' : ''} relative`}
-                              onClick={() => {
-                                // If switching away from a new note, tell iframe to save first
+                              onClick={async () => {
+                                // If switching away from a new note, save it directly before switching
                                 if (desktopSelectedNoteId?.startsWith('new-') && desktopSelectedNoteId !== note.id) {
-                                  const iframe = document.querySelector('iframe');
-                                  if (iframe?.contentWindow) {
-                                    iframe.contentWindow.postMessage({ type: 'force-save' }, '*');
+                                  const newNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
+                                  if (newNote) {
+                                    const realId = await saveNewNoteDirectly(newNote);
+                                    if (realId) {
+                                      // Swap the placeholder ID to real ID in savedNotes
+                                      setSavedNotes(prev => prev.map(n => 
+                                        n.id === desktopSelectedNoteId ? { ...n, id: realId } : n
+                                      ));
+                                    } else {
+                                      // No content to save, remove the placeholder
+                                      setSavedNotes(prev => prev.filter(n => n.id !== desktopSelectedNoteId));
+                                    }
                                   }
+                                  setIsCreatingNewNote(false);
                                 }
                                 setDesktopSelectedNoteId(note.id);
                               }}
