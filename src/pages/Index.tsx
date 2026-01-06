@@ -155,10 +155,23 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   // Cleanup if user clicks away from new note without saving
   // Cleanup if user clicks away from new note - but wait for save first
   useEffect(() => {
-    if (isCreatingNewNote && desktopSelectedNoteId && !desktopSelectedNoteId.startsWith('new-')) {
-      // User switched to a different note - the new note should already be saved
-      // Just clean up the creating state
+    if (isCreatingNewNote && (!desktopSelectedNoteId || !desktopSelectedNoteId.startsWith('new-'))) {
       setIsCreatingNewNote(false);
+      
+      // Only remove EMPTY placeholders - keep ones with content (save is pending)
+      setSavedNotes(prev => prev.filter(n => {
+        if (!n.id.startsWith('new-')) return true; // Keep real notes
+        
+        // Check if placeholder has any content
+        const hasTitle = n.title && n.title.trim();
+        const hasContent = n.contentBlocks?.some(b => 
+          b.type === 'image' || 
+          (b.type === 'text' && (b as { type: 'text'; id: string; content: string }).content?.trim())
+        );
+        
+        // Keep if has content (save is pending), remove if empty
+        return hasTitle || hasContent;
+      }));
     }
   }, [desktopSelectedNoteId, isCreatingNewNote]);
 
@@ -1927,6 +1940,14 @@ query = query.eq('folder_id', currentFolder.id);
                     
                     <button
                       onClick={() => {
+                        // Force save if switching away from a new note
+                        if (desktopSelectedNoteId?.startsWith('new-')) {
+                          const iframe = document.querySelector('iframe');
+                          if (iframe?.contentWindow) {
+                            iframe.contentWindow.postMessage({ type: 'force-save' }, '*');
+                          }
+                        }
+                        
                         // CRITICAL: Reset creating state FIRST to allow loadNotes to run
                         setIsCreatingNewNote(false);
                         setSavedNotes(prev => prev.filter(n => !n.id.startsWith('new-')));
