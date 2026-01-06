@@ -124,7 +124,9 @@ const Note = () => {
   const initialFolderId = new URLSearchParams(window.location.search).get('folder_id');
   const placeholderId = new URLSearchParams(window.location.search).get('placeholder');
   const initialCreatedAt = new URLSearchParams(window.location.search).get('created');
-  const noteIdRef = useRef<string>(id || crypto.randomUUID());
+  const noteIdRef = useRef<string>(
+    (id && !id.startsWith('new-')) ? id : crypto.randomUUID()
+  );
   const [user, setUser] = useState<User | null>(null);
   const [noteTitle, setNoteTitle] = useState(() => {
     if (id) {
