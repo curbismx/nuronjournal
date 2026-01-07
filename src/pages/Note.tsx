@@ -136,6 +136,7 @@ const Note = () => {
   const [currentNoteId, setCurrentNoteId] = useState<string | null>(id || null);
   const [currentPlaceholderId, setCurrentPlaceholderId] = useState<string | null>(placeholderId);
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(initialFolderId);
+  const isTransitioningRef = useRef(false);
   const [noteTitle, setNoteTitle] = useState(() => {
     const lookupId = id || placeholderId;  // Use placeholderId if id is undefined
     if (lookupId) {
@@ -474,24 +475,30 @@ const Note = () => {
   useEffect(() => {
     if (!embeddedMode) return;
     
-    const handleLoadNote = async (event: MessageEvent) => {
+    const handleLoadNote = (event: MessageEvent) => {
       if (event.data?.type !== 'load-note') return;
       
       const { noteId, placeholderId: newPlaceholderId, folderId, createdAt, cachedTitle, cachedContentBlocks } = event.data;
       
-      // Save current note before switching
-      await saveNote();
+      // Set transitioning flag FIRST - prevents all effects from firing
+      isTransitioningRef.current = true;
       
-      // Update refs and state with cached data IMMEDIATELY (no flash)
+      // Update all state synchronously
       setCurrentNoteId(noteId);
       setCurrentPlaceholderId(newPlaceholderId);
       setCurrentFolderId(folderId);
       noteIdRef.current = noteId || crypto.randomUUID();
       
-      // Set cached data immediately for instant display
+      // Set content from cache - this is instant, no flicker
       setNoteTitle(cachedTitle || '');
       setContentBlocks(cachedContentBlocks || [{ type: 'text', id: 'initial', content: '' }]);
       
+      // Set title flags based on whether note has title
+      const hasExistingTitle = cachedTitle && cachedTitle.trim();
+      setTitleGenerated(!!hasExistingTitle);
+      setTitleManuallyEdited(!!hasExistingTitle);
+      
+      // Set date
       if (createdAt) {
         const parsed = new Date(createdAt);
         if (!isNaN(parsed.getTime())) {
@@ -503,41 +510,38 @@ const Note = () => {
         existingCreatedAt.current = null;
       }
       
-      // Reset other state - but preserve title flags if note already has a title
-      // This prevents auto-title generation from running on existing notes
-      if (cachedTitle && cachedTitle.trim()) {
-        setTitleGenerated(true);
-        setTitleManuallyEdited(true);
-      } else {
-        setTitleGenerated(false);
-        setTitleManuallyEdited(false);
-      }
       isDeletedRef.current = false;
       
-      // If this is an existing note, load fresh data from Supabase in background
+      // Clear transitioning flag after React processes all updates
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          isTransitioningRef.current = false;
+        });
+      });
+      
+      // For existing notes, fetch fresh data from Supabase in background
       if (noteId && !noteId.startsWith('new-')) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data } = await supabase
-            .from('notes')
-            .select('*')
-            .eq('id', noteId)
-            .single();
-          
-          if (data) {
-            // Only update if data differs from cache (prevents flicker)
-            if (data.title !== cachedTitle) {
-              setNoteTitle(data.title || '');
-            }
-            if (JSON.stringify(data.content_blocks) !== JSON.stringify(cachedContentBlocks)) {
-              setContentBlocks(data.content_blocks as ContentBlock[]);
-            }
-            if (data.created_at) {
-              existingCreatedAt.current = data.created_at;
-              setNoteDate(new Date(data.created_at));
+        setTimeout(async () => {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user && !isTransitioningRef.current) {
+            const { data } = await supabase
+              .from('notes')
+              .select('*')
+              .eq('id', noteId)
+              .single();
+            
+            if (data) {
+              if (data.title && data.title !== cachedTitle) {
+                setNoteTitle(data.title);
+                setTitleGenerated(true);
+                setTitleManuallyEdited(true);
+              }
+              if (data.content_blocks && JSON.stringify(data.content_blocks) !== JSON.stringify(cachedContentBlocks)) {
+                setContentBlocks(data.content_blocks as ContentBlock[]);
+              }
             }
           }
-        }
+        }, 100);
       }
     };
     
@@ -2045,6 +2049,7 @@ const Note = () => {
 
   // Auto-generate title when user has written enough (only once)
   useEffect(() => {
+    if (isTransitioningRef.current) return; // Don't auto-generate during note switch
     const noteContent = getNoteContent();
     if (noteContent.trim().split(/\s+/).length >= 10 && !titleGenerated && !titleManuallyEdited && !noteTitle) {
       generateTitle(noteContent);
@@ -2232,8 +2237,7 @@ const Note = () => {
 
   // Auto-save note when content changes (for desktop view)
   useEffect(() => {
-    if (isEmbedded) {
-      // Only auto-save if there's actual content
+    if (isEmbedded && !isTransitioningRef.current) {
       const hasContent = noteTitle.trim() || 
         contentBlocks.some(b => 
           (b.type === 'text' && (b as { type: 'text'; id: string; content: string }).content.trim()) ||
@@ -2242,36 +2246,38 @@ const Note = () => {
         audioUrls.length > 0;
       
       if (hasContent) {
-        // Debounce the save - wait 1 second after user stops typing
-      const timer = setTimeout(() => {
-        saveNote();
-      }, 500);
+        const timer = setTimeout(() => {
+          if (!isTransitioningRef.current) {
+            saveNote();
+          }
+        }, 500);
         
         return () => clearTimeout(timer);
       }
     }
   }, [noteTitle, contentBlocks, audioUrls, isEmbedded]);
 
-  // Real-time updates to parent (desktop view) - debounced to 1.5 seconds
+  // Real-time updates to parent (desktop view) - debounced to 500ms
   useEffect(() => {
     if (!isEmbedded) return;
+    if (isTransitioningRef.current) return; // Don't send updates during note switch
     
     const sendUpdate = () => {
+      if (isTransitioningRef.current) return; // Double-check before sending
       window.parent.postMessage({
         type: 'note-content-update',
         noteId: noteIdRef.current,
-        placeholderId: placeholderId,
+        placeholderId: currentPlaceholderId || placeholderId,
         title: noteTitle,
         contentBlocks: contentBlocks,
         createdAt: existingCreatedAt.current || noteDate.toISOString()
       }, '*');
     };
     
-    // Send update every 500ms while typing
     const timer = setTimeout(sendUpdate, 500);
     
     return () => clearTimeout(timer);
-  }, [noteTitle, contentBlocks, isEmbedded, placeholderId, noteDate]);
+  }, [noteTitle, contentBlocks, isEmbedded, currentPlaceholderId, placeholderId, noteDate]);
 
   const handleBack = async () => {
     console.log('handleBack called');
@@ -2289,7 +2295,7 @@ const Note = () => {
       window.parent.postMessage({
         type: 'note-content-update',
         noteId: noteIdRef.current,
-        placeholderId: placeholderId,
+        placeholderId: currentPlaceholderId || placeholderId,
         title: noteTitle,
         contentBlocks: contentBlocksRef.current,
         createdAt: newDate.toISOString()
