@@ -2869,7 +2869,7 @@ onDragStart={(e) => {
                   
                   {/* Publish Folder As Blog */}
                   <div className="flex items-center justify-between">
-                    <span className="text-white/60 text-[14px] font-outfit">Publish Folder As Blog</span>
+                    <span className="text-white/60 text-[14px] font-outfit">Publish Folder online</span>
                     <button
                       onClick={() => setNewFolderIsBlog(!newFolderIsBlog)}
                       className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${newFolderIsBlog ? 'bg-green-500' : 'bg-white/20'}`}
