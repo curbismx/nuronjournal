@@ -128,6 +128,14 @@ const Note = () => {
     (id && !id.startsWith('new-')) ? id : crypto.randomUUID()
   );
   const [user, setUser] = useState<User | null>(null);
+  
+  // Embedded persistent mode state
+  const [embeddedMode] = useState(() => {
+    return new URLSearchParams(window.location.search).get('embedded') === 'true';
+  });
+  const [currentNoteId, setCurrentNoteId] = useState<string | null>(id || null);
+  const [currentPlaceholderId, setCurrentPlaceholderId] = useState<string | null>(placeholderId);
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(initialFolderId);
   const [noteTitle, setNoteTitle] = useState(() => {
     const lookupId = id || placeholderId;  // Use placeholderId if id is undefined
     if (lookupId) {
@@ -461,6 +469,75 @@ const Note = () => {
       window.removeEventListener('pagehide', handleBeforeUnload);
     };
   }, [isEmbedded]);
+
+  // Listen for load-note messages from parent (embedded mode)
+  useEffect(() => {
+    if (!embeddedMode) return;
+    
+    const handleLoadNote = async (event: MessageEvent) => {
+      if (event.data?.type !== 'load-note') return;
+      
+      const { noteId, placeholderId: newPlaceholderId, folderId, createdAt, cachedTitle, cachedContentBlocks } = event.data;
+      
+      // Save current note before switching
+      await saveNote();
+      
+      // Update refs and state with cached data IMMEDIATELY (no flash)
+      setCurrentNoteId(noteId);
+      setCurrentPlaceholderId(newPlaceholderId);
+      setCurrentFolderId(folderId);
+      noteIdRef.current = noteId || crypto.randomUUID();
+      
+      // Set cached data immediately for instant display
+      setNoteTitle(cachedTitle || '');
+      setContentBlocks(cachedContentBlocks || [{ type: 'text', id: 'initial', content: '' }]);
+      
+      if (createdAt) {
+        const parsed = new Date(createdAt);
+        if (!isNaN(parsed.getTime())) {
+          setNoteDate(parsed);
+          existingCreatedAt.current = createdAt;
+        }
+      } else {
+        setNoteDate(new Date());
+        existingCreatedAt.current = null;
+      }
+      
+      // Reset other state
+      setTitleGenerated(false);
+      setTitleManuallyEdited(false);
+      isDeletedRef.current = false;
+      
+      // If this is an existing note, load fresh data from Supabase in background
+      if (noteId && !noteId.startsWith('new-')) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data } = await supabase
+            .from('notes')
+            .select('*')
+            .eq('id', noteId)
+            .single();
+          
+          if (data) {
+            // Only update if data differs from cache (prevents flicker)
+            if (data.title !== cachedTitle) {
+              setNoteTitle(data.title || '');
+            }
+            if (JSON.stringify(data.content_blocks) !== JSON.stringify(cachedContentBlocks)) {
+              setContentBlocks(data.content_blocks as ContentBlock[]);
+            }
+            if (data.created_at) {
+              existingCreatedAt.current = data.created_at;
+              setNoteDate(new Date(data.created_at));
+            }
+          }
+        }
+      }
+    };
+    
+    window.addEventListener('message', handleLoadNote);
+    return () => window.removeEventListener('message', handleLoadNote);
+  }, [embeddedMode]);
 
   const handleMoveNote = async (folderId: string) => {
     setSelectedMoveFolder(folderId);
@@ -2040,9 +2117,9 @@ const Note = () => {
     
     if (session?.user) {
       // Logged in - save to Supabase
-      const currentFolderId = initialFolderId || localStorage.getItem('nuron-current-folder-id');
+      const folderId = currentFolderId || initialFolderId || localStorage.getItem('nuron-current-folder-id');
       // Check if this is a new note (placeholder) or existing note
-      const isNewNote = placeholderId && placeholderId.startsWith('new-');
+      const isNewNote = (currentPlaceholderId || placeholderId) && (currentPlaceholderId || placeholderId)?.startsWith('new-');
       
       // Build the upsert object - only include is_published for new notes
       const upsertData: any = {
@@ -2054,7 +2131,7 @@ const Note = () => {
         updated_at: noteData.updatedAt,
         weather: noteData.weather,
         audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : null,
-        folder_id: currentFolderId && currentFolderId !== 'local-notes' ? currentFolderId : null
+        folder_id: folderId && folderId !== 'local-notes' ? folderId : null
       };
       
       // Only set is_published for NEW notes (don't overwrite existing published status)
@@ -2121,7 +2198,7 @@ const Note = () => {
       window.parent.postMessage({ 
         type: 'note-saved', 
         noteId: noteData.id,
-        placeholderId: placeholderId,
+        placeholderId: (currentPlaceholderId || placeholderId),
         noteData: {
           id: noteData.id,
           title: noteTitle,
@@ -2129,7 +2206,7 @@ const Note = () => {
           createdAt: existingCreatedAt.current || noteDate.toISOString(),
           updatedAt: new Date().toISOString(),
           weather: weather,
-          folder_id: initialFolderId || localStorage.getItem('nuron-current-folder-id') || null
+          folder_id: (currentFolderId || initialFolderId) || localStorage.getItem('nuron-current-folder-id') || null
         }
       }, '*');
     }
