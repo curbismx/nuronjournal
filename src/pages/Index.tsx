@@ -3406,20 +3406,45 @@ onDragStart={(e) => {
           
           {/* Note content area */}
           <div className="flex-1 overflow-hidden" style={{ position: 'relative' }}>
-            {desktopSelectedNoteId && desktopSelectedNoteId.startsWith('new-') ? (
-              <iframe
-                key={desktopSelectedNoteId}
-                src={`/note?desktop=true&folder_id=${currentFolder?.id || ''}&placeholder=${desktopSelectedNoteId}&created=${encodeURIComponent(savedNotes.find(n => n.id === desktopSelectedNoteId)?.createdAt || '')}`}
-                className="absolute inset-0 w-full h-full border-0"
-                title="Note Editor"
-              />
-            ) : desktopSelectedNoteId ? (
-              <iframe
-                key={desktopSelectedNoteId}
-                src={`/note/${desktopSelectedNoteId}?desktop=true&folder_id=${currentFolder?.id || ''}&placeholder=${desktopSelectedNoteId?.startsWith('new-') ? desktopSelectedNoteId : ''}&created=${encodeURIComponent(savedNotes.find(n => n.id === desktopSelectedNoteId)?.createdAt || '')}`}
-                className="absolute inset-0 w-full h-full border-0"
-                title="Note Editor"
-              />
+            {desktopSelectedNoteId ? (
+              <>
+                {/* Cached content preview - shows immediately */}
+                {(() => {
+                  const selectedNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
+                  if (!selectedNote) return null;
+                  
+                  const textContent = selectedNote.contentBlocks
+                    ?.filter(b => b.type === 'text')
+                    .map(b => (b as { type: 'text'; id: string; content: string }).content)
+                    .join('\n\n') || '';
+                  
+                  return (
+                    <div 
+                      className="absolute inset-0 p-8 overflow-y-auto bg-white pointer-events-none"
+                      style={{ zIndex: 1 }}
+                    >
+                      <h1 className="text-[28px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4">
+                        {selectedNote.title || ''}
+                      </h1>
+                      <p className="text-[18px] font-outfit text-[hsl(0,0%,40%)] whitespace-pre-wrap">
+                        {textContent}
+                      </p>
+                    </div>
+                  );
+                })()}
+                
+                {/* Iframe loads on top - becomes visible once loaded */}
+                <iframe
+                  key={desktopSelectedNoteId}
+                  src={desktopSelectedNoteId.startsWith('new-') 
+                    ? `/note?desktop=true&folder_id=${currentFolder?.id || ''}&placeholder=${desktopSelectedNoteId}&created=${encodeURIComponent(savedNotes.find(n => n.id === desktopSelectedNoteId)?.createdAt || '')}`
+                    : `/note/${desktopSelectedNoteId}?desktop=true&folder_id=${currentFolder?.id || ''}&placeholder=${desktopSelectedNoteId?.startsWith('new-') ? desktopSelectedNoteId : ''}&created=${encodeURIComponent(savedNotes.find(n => n.id === desktopSelectedNoteId)?.createdAt || '')}`
+                  }
+                  className="absolute inset-0 w-full h-full border-0 bg-white"
+                  style={{ zIndex: 2 }}
+                  title="Note Editor"
+                />
+              </>
             ) : (
               <div className="h-full flex items-center justify-center text-[hsl(0,0%,60%)] font-outfit text-[18px]">
                 Select a note to view
