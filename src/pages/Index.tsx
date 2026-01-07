@@ -138,12 +138,7 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   const [isCreatingNewNote, setIsCreatingNewNote] = useState(false);
   const placeholderPositionRef = useRef<number | null>(null);
   const pendingSaveRef = useRef<string | null>(null);
-  const [iframeLoaded, setIframeLoaded] = useState(false);
   
-  // Reset iframe loaded state when selected note changes
-  useEffect(() => {
-    setIframeLoaded(false);
-  }, [desktopSelectedNoteId]);
   useEffect(() => {
     // Skip onboarding on desktop
     if (isDesktop) return;
@@ -373,6 +368,32 @@ const [newFolderBlogPassword, setNewFolderBlogPassword] = useState('');
   const [uploadingHeaderImage, setUploadingHeaderImage] = useState(false);
   const [blogSlugAvailable, setBlogSlugAvailable] = useState<boolean | null>(null);
   const [checkingBlogSlug, setCheckingBlogSlug] = useState(false);
+
+  // Send selected note to iframe when it changes (persistent iframe approach)
+  useEffect(() => {
+    if (!desktopSelectedNoteId) return;
+    
+    const sendNoteToIframe = () => {
+      const iframe = document.getElementById('note-editor-iframe') as HTMLIFrameElement;
+      if (iframe?.contentWindow) {
+        const selectedNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
+        iframe.contentWindow.postMessage({
+          type: 'load-note',
+          noteId: desktopSelectedNoteId.startsWith('new-') ? null : desktopSelectedNoteId,
+          placeholderId: desktopSelectedNoteId.startsWith('new-') ? desktopSelectedNoteId : null,
+          folderId: currentFolder?.id || null,
+          createdAt: selectedNote?.createdAt || new Date().toISOString(),
+          cachedTitle: selectedNote?.title || '',
+          cachedContentBlocks: selectedNote?.contentBlocks || [{ type: 'text', id: 'initial', content: '' }]
+        }, '*');
+      }
+    };
+    
+    const timer = setTimeout(sendNoteToIframe, 50);
+    sendNoteToIframe();
+    
+    return () => clearTimeout(timer);
+  }, [desktopSelectedNoteId, savedNotes, currentFolder?.id]);
 
   const themeColors = {
     default: '#2E2E2E',
@@ -3413,73 +3434,12 @@ onDragStart={(e) => {
           {/* Note content area */}
           <div className="flex-1 overflow-hidden bg-white" style={{ position: 'relative' }}>
             {desktopSelectedNoteId ? (
-              <>
-                {/* Cached content - visible while iframe loads */}
-                <div 
-                  className="absolute inset-0 overflow-y-auto bg-white transition-opacity duration-150"
-                  style={{ 
-                    zIndex: 1,
-                    opacity: iframeLoaded ? 0 : 1,
-                    pointerEvents: iframeLoaded ? 'none' : 'auto'
-                  }}
-                >
-                  {(() => {
-                    const selectedNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
-                    if (!selectedNote) return null;
-                    
-                    const textContent = selectedNote.contentBlocks
-                      ?.filter(b => b.type === 'text')
-                      .map(b => (b as { type: 'text'; id: string; content: string }).content)
-                      .join('\n\n') || '';
-                    
-                    const images = selectedNote.contentBlocks?.filter(b => b.type === 'image') as Array<{ type: 'image'; id: string; url: string; width: number }> | undefined;
-                    
-                    return (
-                      <div style={{ paddingTop: '100px', paddingLeft: '30px', paddingRight: '30px', paddingBottom: '100px' }}>
-                        <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] mb-2">
-                          {new Date(selectedNote.createdAt).toLocaleDateString('en-US', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          })}
-                        </p>
-                        <h1 className="text-[28px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 leading-tight">
-                          {selectedNote.title || ''}
-                        </h1>
-                        {images && images.map((img, idx) => (
-                          <img 
-                            key={img.id || idx}
-                            src={img.url} 
-                            alt="" 
-                            className="rounded-lg mb-4"
-                            style={{ maxWidth: '100%', maxHeight: '400px', objectFit: 'contain' }}
-                          />
-                        ))}
-                        <p className="text-[18px] font-outfit text-[hsl(0,0%,30%)] whitespace-pre-wrap leading-relaxed">
-                          {textContent}
-                        </p>
-                      </div>
-                    );
-                  })()}
-                </div>
-                
-                {/* Iframe - hidden until fully loaded */}
-                <iframe
-                  key={desktopSelectedNoteId}
-                  src={desktopSelectedNoteId.startsWith('new-') 
-                    ? `/note?desktop=true&folder_id=${currentFolder?.id || ''}&placeholder=${desktopSelectedNoteId}&created=${encodeURIComponent(savedNotes.find(n => n.id === desktopSelectedNoteId)?.createdAt || '')}`
-                    : `/note/${desktopSelectedNoteId}?desktop=true&folder_id=${currentFolder?.id || ''}&placeholder=${desktopSelectedNoteId?.startsWith('new-') ? desktopSelectedNoteId : ''}&created=${encodeURIComponent(savedNotes.find(n => n.id === desktopSelectedNoteId)?.createdAt || '')}`
-                  }
-                  onLoad={() => setIframeLoaded(true)}
-                  className="absolute inset-0 w-full h-full border-0 transition-opacity duration-150"
-                  style={{ 
-                    zIndex: 2,
-                    opacity: iframeLoaded ? 1 : 0
-                  }}
-                  title="Note Editor"
-                />
-              </>
+              <iframe
+                id="note-editor-iframe"
+                src="/note?desktop=true&embedded=true"
+                className="absolute inset-0 w-full h-full border-0 bg-white"
+                title="Note Editor"
+              />
             ) : (
               <div className="h-full flex items-center justify-center text-[hsl(0,0%,60%)] font-outfit text-[18px]">
                 Select a note to view
