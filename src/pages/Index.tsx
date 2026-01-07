@@ -3408,7 +3408,7 @@ onDragStart={(e) => {
           <div className="flex-1 overflow-hidden" style={{ position: 'relative' }}>
             {desktopSelectedNoteId ? (
               <>
-                {/* Cached content preview - shows immediately */}
+                {/* Cached content preview - shows immediately while iframe loads */}
                 {(() => {
                   const selectedNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
                   if (!selectedNote) return null;
@@ -3418,29 +3418,53 @@ onDragStart={(e) => {
                     .map(b => (b as { type: 'text'; id: string; content: string }).content)
                     .join('\n\n') || '';
                   
+                  const firstImage = selectedNote.contentBlocks?.find(b => b.type === 'image') as { type: 'image'; id: string; url: string; width: number } | undefined;
+                  
                   return (
                     <div 
-                      className="absolute inset-0 p-8 overflow-y-auto bg-white pointer-events-none"
-                      style={{ zIndex: 1 }}
+                      className="absolute inset-0 overflow-y-auto bg-white"
+                      style={{ 
+                        zIndex: 1,
+                        paddingTop: '100px',
+                        paddingLeft: '30px',
+                        paddingRight: '30px'
+                      }}
                     >
-                      <h1 className="text-[28px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4">
+                      {/* Date display to match Note.tsx layout */}
+                      <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] mb-2">
+                        {new Date(selectedNote.createdAt).toLocaleDateString('en-US', { 
+                          weekday: 'long', 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
+                      </p>
+                      <h1 className="text-[28px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-4 leading-tight">
                         {selectedNote.title || ''}
                       </h1>
-                      <p className="text-[18px] font-outfit text-[hsl(0,0%,40%)] whitespace-pre-wrap">
+                      {firstImage && (
+                        <img 
+                          src={firstImage.url} 
+                          alt="" 
+                          className="rounded-lg mb-4 max-w-full"
+                          style={{ maxHeight: '300px', objectFit: 'cover' }}
+                        />
+                      )}
+                      <p className="text-[18px] font-outfit text-[hsl(0,0%,30%)] whitespace-pre-wrap leading-relaxed">
                         {textContent}
                       </p>
                     </div>
                   );
                 })()}
                 
-                {/* Iframe loads on top - becomes visible once loaded */}
+                {/* Iframe loads on top with fade-in animation */}
                 <iframe
                   key={desktopSelectedNoteId}
                   src={desktopSelectedNoteId.startsWith('new-') 
                     ? `/note?desktop=true&folder_id=${currentFolder?.id || ''}&placeholder=${desktopSelectedNoteId}&created=${encodeURIComponent(savedNotes.find(n => n.id === desktopSelectedNoteId)?.createdAt || '')}`
                     : `/note/${desktopSelectedNoteId}?desktop=true&folder_id=${currentFolder?.id || ''}&placeholder=${desktopSelectedNoteId?.startsWith('new-') ? desktopSelectedNoteId : ''}&created=${encodeURIComponent(savedNotes.find(n => n.id === desktopSelectedNoteId)?.createdAt || '')}`
                   }
-                  className="absolute inset-0 w-full h-full border-0 bg-white"
+                  className="absolute inset-0 w-full h-full border-0 bg-white animate-in fade-in duration-200"
                   style={{ zIndex: 2 }}
                   title="Note Editor"
                 />
