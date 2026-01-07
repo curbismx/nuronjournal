@@ -503,9 +503,15 @@ const Note = () => {
         existingCreatedAt.current = null;
       }
       
-      // Reset other state
-      setTitleGenerated(false);
-      setTitleManuallyEdited(false);
+      // Reset other state - but preserve title flags if note already has a title
+      // This prevents auto-title generation from running on existing notes
+      if (cachedTitle && cachedTitle.trim()) {
+        setTitleGenerated(true);
+        setTitleManuallyEdited(true);
+      } else {
+        setTitleGenerated(false);
+        setTitleManuallyEdited(false);
+      }
       isDeletedRef.current = false;
       
       // If this is an existing note, load fresh data from Supabase in background
