@@ -139,6 +139,8 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   const [isCreatingNewNote, setIsCreatingNewNote] = useState(false);
   const placeholderPositionRef = useRef<number | null>(null);
   const pendingSaveRef = useRef<string | null>(null);
+  // Track which note we've already sent load-note for to prevent duplicate sends
+  const lastSentNoteIdRef = useRef<string | null>(null);
   
   // Check for login query param and open welcome popup
   useEffect(() => {
@@ -248,6 +250,26 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
           setDesktopSelectedNoteId(noteId);
         }
         setIsCreatingNewNote(false);
+        
+        // Update cache - Index.tsx is the single cache manager
+        // Replace placeholder ID with real ID in cache
+        const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
+        const existingIndex = cached.findIndex((n: any) => n.id === targetId || n.id === noteId);
+        const cacheEntry = {
+          id: noteId,
+          title: noteData?.title || '',
+          contentBlocks: noteData?.contentBlocks || [],
+          createdAt: noteData?.createdAt || new Date().toISOString(),
+          updatedAt: noteData?.updatedAt || new Date().toISOString(),
+          weather: noteData?.weather,
+          folder_id: noteData?.folder_id
+        };
+        if (existingIndex >= 0) {
+          cached[existingIndex] = cacheEntry;
+        } else {
+          cached.unshift(cacheEntry);
+        }
+        localStorage.setItem('nuron-notes-cache', JSON.stringify(cached));
       }
       
       // Note updated - in place (including date changes)
@@ -274,6 +296,16 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
       if (e.data?.type === 'note-deleted') {
         setSavedNotes(prev => prev.filter(n => n.id !== e.data.noteId));
         if (desktopSelectedNoteId === e.data.noteId) setDesktopSelectedNoteId(null);
+        
+        // Clear the sent ref so note selection works correctly for future notes
+        if (lastSentNoteIdRef.current === e.data.noteId) {
+          lastSentNoteIdRef.current = null;
+        }
+        
+        // Update cache to remove the deleted note
+        const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
+        const filtered = cached.filter((n: any) => n.id !== e.data.noteId);
+        localStorage.setItem('nuron-notes-cache', JSON.stringify(filtered));
       }
       
       if (e.data?.type === 'rewrite-start') setDesktopRewriteGlow(true);
@@ -379,20 +411,19 @@ const [newFolderBlogPassword, setNewFolderBlogPassword] = useState('');
   const [blogSlugAvailable, setBlogSlugAvailable] = useState<boolean | null>(null);
   const [checkingBlogSlug, setCheckingBlogSlug] = useState(false);
 
-  // Track which note we've already sent load-note for to prevent duplicates
-  const lastSentNoteIdRef = useRef<string | null>(null);
-
   // Send selected note to iframe when it changes (persistent iframe approach)
   useEffect(() => {
     if (!desktopSelectedNoteId) return;
     
-    // Skip if we've already sent load-note for this exact note
+    // CRITICAL: Only send load-note ONCE per note selection
+    // Do NOT re-send when savedNotes changes - this was causing duplicate notes!
     if (lastSentNoteIdRef.current === desktopSelectedNoteId) return;
     lastSentNoteIdRef.current = desktopSelectedNoteId;
     
     const sendNoteToIframe = () => {
       const iframe = document.getElementById('note-editor-iframe') as HTMLIFrameElement;
       if (iframe?.contentWindow) {
+        // Get note data at time of send (use current savedNotes, not reactive)
         const selectedNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
         iframe.contentWindow.postMessage({
           type: 'load-note',
@@ -406,11 +437,11 @@ const [newFolderBlogPassword, setNewFolderBlogPassword] = useState('');
       }
     };
     
+    // Small delay to ensure iframe is ready
     const timer = setTimeout(sendNoteToIframe, 50);
-    sendNoteToIframe();
     
     return () => clearTimeout(timer);
-  }, [desktopSelectedNoteId, currentFolder?.id]);
+  }, [desktopSelectedNoteId, currentFolder?.id]); // REMOVED savedNotes from dependencies!
 
   const themeColors = {
     default: '#2E2E2E',
@@ -1425,12 +1456,10 @@ query = query.eq('folder_id', currentFolder.id);
                           setFolders([newFolder, ...folders]);
                           
                           // Open folder options panel to edit the name
+                          // CRITICAL: Reset ALL folder settings to defaults - prevents blog settings from previous folder persisting!
                           setDesktopEditingFolder(newFolder);
                           setNewFolderName('Untitled');
                           setNewFolderDefaultView('collapsed');
-                          setDesktopShowFolderOptions(true);
-                          
-                          // Reset all blog settings for new folder
                           setNewFolderSortOrder('desc');
                           setNewFolderIsBlog(false);
                           setNewFolderBlogSlug('');
@@ -1439,6 +1468,7 @@ query = query.eq('folder_id', currentFolder.id);
                           setNewFolderBlogHeaderImage('');
                           setNewFolderBlogPassword('');
                           setBlogSlugAvailable(null);
+                          setDesktopShowFolderOptions(true);
                         }
                       }} 
                       className="p-0 m-0 border-0 bg-transparent"
