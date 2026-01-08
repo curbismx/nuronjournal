@@ -341,11 +341,12 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
   const [desktopRewriteGlow, setDesktopRewriteGlow] = useState(false);
 
   // Redirect logged-out desktop users with no notes to landing page
+  // But NOT if welcome popup is showing (user came from login button)
   useEffect(() => {
-    if (isDesktop && !isInitializing && !user && savedNotes.length === 0) {
+    if (isDesktop && !isInitializing && !user && savedNotes.length === 0 && !desktopShowWelcomePopup) {
       navigate('/welcome', { replace: true });
     }
-  }, [isDesktop, isInitializing, user, savedNotes.length, navigate]);
+  }, [isDesktop, isInitializing, user, savedNotes.length, navigate, desktopShowWelcomePopup]);
 
   // Folder state
   const [showFolders, setShowFolders] = useState(false);
