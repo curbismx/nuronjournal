@@ -416,19 +416,28 @@ const [newFolderBlogPassword, setNewFolderBlogPassword] = useState('');
     if (!desktopSelectedNoteId) return;
     
     // CRITICAL: Only send load-note ONCE per note selection
-    // Do NOT re-send when savedNotes changes - this was causing duplicate notes!
     if (lastSentNoteIdRef.current === desktopSelectedNoteId) return;
+    
+    const isNewNote = desktopSelectedNoteId.startsWith('new-');
+    const selectedNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
+    
+    // For existing notes, wait until we have the note data in savedNotes
+    // This handles the case where user clicks a note right after switching folders
+    // before loadNotes has completed. We'll retry when savedNotes updates.
+    if (!isNewNote && !selectedNote) {
+      return; // Don't set lastSentNoteIdRef - we'll retry when savedNotes has the data
+    }
+    
+    // Now we have the data (or it's a new note), mark as sent
     lastSentNoteIdRef.current = desktopSelectedNoteId;
     
     const sendNoteToIframe = () => {
       const iframe = document.getElementById('note-editor-iframe') as HTMLIFrameElement;
       if (iframe?.contentWindow) {
-        // Get note data at time of send (use current savedNotes, not reactive)
-        const selectedNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
         iframe.contentWindow.postMessage({
           type: 'load-note',
-          noteId: desktopSelectedNoteId.startsWith('new-') ? null : desktopSelectedNoteId,
-          placeholderId: desktopSelectedNoteId.startsWith('new-') ? desktopSelectedNoteId : null,
+          noteId: isNewNote ? null : desktopSelectedNoteId,
+          placeholderId: isNewNote ? desktopSelectedNoteId : null,
           folderId: selectedNote?.folder_id || currentFolder?.id || null,
           createdAt: selectedNote?.createdAt || new Date().toISOString(),
           cachedTitle: selectedNote?.title || '',
@@ -441,7 +450,7 @@ const [newFolderBlogPassword, setNewFolderBlogPassword] = useState('');
     const timer = setTimeout(sendNoteToIframe, 50);
     
     return () => clearTimeout(timer);
-  }, [desktopSelectedNoteId, currentFolder?.id]); // REMOVED savedNotes from dependencies!
+  }, [desktopSelectedNoteId, currentFolder?.id, savedNotes]); // savedNotes back - safe now with Note.tsx fixes
 
   const themeColors = {
     default: '#2E2E2E',
