@@ -656,23 +656,48 @@ useEffect(() => {
       .update({ 
         name: newFolderName.trim(), 
         default_view: newFolderDefaultView,
+        notes_sort_order: newFolderSortOrder,
+        is_blog: newFolderIsBlog,
+        blog_slug: newFolderIsBlog ? newFolderBlogSlug.toLowerCase() : null,
+        blog_name: newFolderIsBlog ? newFolderBlogName : null,
+        blog_subheading: newFolderIsBlog ? newFolderBlogSubheading : null,
+        blog_header_image: newFolderIsBlog ? newFolderBlogHeaderImage : null,
+        blog_password: newFolderIsBlog && newFolderBlogPassword ? newFolderBlogPassword : null,
         updated_at: new Date().toISOString()
       })
       .eq('id', editingFolder.id);
     
     if (!error) {
+      const updatedFolder = { 
+        ...editingFolder, 
+        name: newFolderName.trim(), 
+        default_view: newFolderDefaultView,
+        notes_sort_order: newFolderSortOrder,
+        is_blog: newFolderIsBlog,
+        blog_slug: newFolderIsBlog ? newFolderBlogSlug.toLowerCase() : null,
+        blog_name: newFolderIsBlog ? newFolderBlogName : null,
+        blog_subheading: newFolderIsBlog ? newFolderBlogSubheading : null,
+        blog_header_image: newFolderIsBlog ? newFolderBlogHeaderImage : null,
+        blog_password: newFolderIsBlog && newFolderBlogPassword ? newFolderBlogPassword : null
+      };
       setFolders(prev => prev.map(f => 
-        f.id === editingFolder.id 
-          ? { ...f, name: newFolderName.trim(), default_view: newFolderDefaultView }
-          : f
+        f.id === editingFolder.id ? updatedFolder : f
       ));
       if (currentFolder?.id === editingFolder.id) {
-        setCurrentFolder({ ...currentFolder, name: newFolderName.trim(), default_view: newFolderDefaultView });
+        setCurrentFolder(updatedFolder);
+        setSortOrder(newFolderSortOrder);
       }
       setShowFolderPopup(false);
       setEditingFolder(null);
       setNewFolderName("");
       setNewFolderDefaultView('collapsed');
+      setNewFolderSortOrder('desc');
+      setNewFolderIsBlog(false);
+      setNewFolderBlogSlug('');
+      setNewFolderBlogName('');
+      setNewFolderBlogSubheading('');
+      setNewFolderBlogHeaderImage('');
+      setNewFolderBlogPassword('');
     }
   };
 
@@ -701,6 +726,14 @@ useEffect(() => {
     setEditingFolder(folder);
     setNewFolderName(folder.name);
     setNewFolderDefaultView(folder.default_view);
+    setNewFolderSortOrder(folder.notes_sort_order || 'desc');
+    setNewFolderIsBlog(folder.is_blog || false);
+    setNewFolderBlogSlug(folder.blog_slug || '');
+    setNewFolderBlogName(folder.blog_name || '');
+    setNewFolderBlogSubheading(folder.blog_subheading || '');
+    setNewFolderBlogHeaderImage(folder.blog_header_image || '');
+    setNewFolderBlogPassword(folder.blog_password || '');
+    setBlogSlugAvailable(null);
     setShowFolderPopup(true);
   };
 
@@ -708,6 +741,14 @@ useEffect(() => {
     setEditingFolder(null);
     setNewFolderName("");
     setNewFolderDefaultView('collapsed');
+    setNewFolderSortOrder('desc');
+    setNewFolderIsBlog(false);
+    setNewFolderBlogSlug('');
+    setNewFolderBlogName('');
+    setNewFolderBlogSubheading('');
+    setNewFolderBlogHeaderImage('');
+    setNewFolderBlogPassword('');
+    setBlogSlugAvailable(null);
     setShowFolderPopup(true);
   };
 
@@ -1664,90 +1705,321 @@ query = query.eq('folder_id', currentFolder.id);
         {/* Folder Create/Edit Popup */}
         {showFolderPopup && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-2xl p-6 mx-8 max-w-sm w-full shadow-xl relative">
+            <div className="bg-white rounded-2xl p-5 mx-4 w-full max-w-sm shadow-xl max-h-[85vh] overflow-y-auto relative">
               <button
                 onClick={() => {
                   setShowFolderPopup(false);
                   setEditingFolder(null);
                   setNewFolderName("");
                   setNewFolderDefaultView('collapsed');
+                  setNewFolderSortOrder('desc');
+                  setNewFolderIsBlog(false);
+                  setNewFolderBlogSlug('');
+                  setNewFolderBlogName('');
+                  setNewFolderBlogSubheading('');
+                  setNewFolderBlogHeaderImage('');
+                  setNewFolderBlogPassword('');
                 }}
                 className="absolute top-4 right-4 text-[hsl(0,0%,60%)] text-xl font-light"
               >
                 ×
               </button>
               
-              <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] text-center mb-6">
+              <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] text-center mb-5">
                 {editingFolder ? 'Edit Folder' : 'New Folder'}
               </h3>
               
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-[hsl(0,0%,40%)] text-[14px]">Folder Name</Label>
+                {/* Folder Name */}
+                <div className="space-y-1">
+                  <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Folder Name</label>
                   <input
                     type="text"
                     value={newFolderName}
                     onChange={(e) => setNewFolderName(e.target.value)}
                     placeholder="Enter folder name"
-                    className="w-full px-4 py-3 rounded-xl border border-[hsl(0,0%,85%)] text-[16px] font-outfit outline-none focus:border-[hsl(0,0%,70%)]"
+                    className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit outline-none focus:border-[hsl(0,0%,70%)]"
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label className="text-[hsl(0,0%,40%)] text-[14px]">Default View</Label>
-                  <div className="flex gap-3">
+                {/* View As */}
+                <div className="space-y-1">
+                  <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">View As</label>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => setNewFolderDefaultView('collapsed')}
-                      className={`flex-1 py-3 px-4 rounded-xl font-outfit font-medium text-[14px] ${
+                      className={`flex-1 py-2.5 px-3 rounded-xl font-outfit font-medium text-[13px] ${
                         newFolderDefaultView === 'collapsed' 
                           ? 'bg-[hsl(0,0%,25%)] text-white' 
                           : 'bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)]'
                       }`}
                     >
-                      Date View
+                      Date
                     </button>
                     <button
                       onClick={() => setNewFolderDefaultView('compact')}
-                      className={`flex-1 py-3 px-4 rounded-xl font-outfit font-medium text-[14px] ${
+                      className={`flex-1 py-2.5 px-3 rounded-xl font-outfit font-medium text-[13px] ${
                         newFolderDefaultView === 'compact' 
                           ? 'bg-[hsl(0,0%,25%)] text-white' 
                           : 'bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)]'
                       }`}
                     >
-                      List View
+                      List
                     </button>
                   </div>
                 </div>
+                
+                {/* Sort By */}
+                <div className="space-y-1">
+                  <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Sort By</label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setNewFolderSortOrder('desc')}
+                      className={`flex-1 py-2.5 px-3 rounded-xl font-outfit font-medium text-[13px] ${
+                        newFolderSortOrder === 'desc' 
+                          ? 'bg-[hsl(0,0%,25%)] text-white' 
+                          : 'bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)]'
+                      }`}
+                    >
+                      Newest
+                    </button>
+                    <button
+                      onClick={() => setNewFolderSortOrder('asc')}
+                      className={`flex-1 py-2.5 px-3 rounded-xl font-outfit font-medium text-[13px] ${
+                        newFolderSortOrder === 'asc' 
+                          ? 'bg-[hsl(0,0%,25%)] text-white' 
+                          : 'bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)]'
+                      }`}
+                    >
+                      Oldest
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Separator */}
+                <div className="border-t border-[hsl(0,0%,90%)]" />
+                
+                {/* Publish Online Toggle */}
+                <div className="flex items-center justify-between">
+                  <span className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Publish Folder Online</span>
+                  <button
+                    onClick={() => setNewFolderIsBlog(!newFolderIsBlog)}
+                    className={`relative w-[46px] h-[28px] rounded-full transition-colors duration-200 ${newFolderIsBlog ? 'bg-green-500' : 'bg-[hsl(0,0%,85%)]'}`}
+                  >
+                    <span className={`absolute top-[2px] left-[2px] w-[24px] h-[24px] bg-white rounded-full shadow-md transition-transform duration-200 ${newFolderIsBlog ? 'translate-x-[18px]' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+                
+                {/* Blog Settings - shown when Publish Online is enabled */}
+                {newFolderIsBlog && (
+                  <div className="space-y-3 animate-in fade-in-0 duration-200">
+                    {/* Blog Heading */}
+                    <div className="space-y-1">
+                      <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Blog Heading</label>
+                      <input
+                        type="text"
+                        value={newFolderBlogName}
+                        onChange={(e) => setNewFolderBlogName(e.target.value)}
+                        placeholder="My Travel Adventures"
+                        className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit outline-none focus:border-[hsl(0,0%,70%)]"
+                      />
+                    </div>
+                    
+                    {/* Sub-heading */}
+                    <div className="space-y-1">
+                      <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Sub-heading (Optional)</label>
+                      <input
+                        type="text"
+                        value={newFolderBlogSubheading}
+                        onChange={(e) => setNewFolderBlogSubheading(e.target.value)}
+                        placeholder="A collection of my thoughts"
+                        className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit outline-none focus:border-[hsl(0,0%,70%)]"
+                      />
+                    </div>
+                    
+                    {/* Header Image */}
+                    <div className="space-y-1">
+                      <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Header Image (Optional)</label>
+                      {newFolderBlogHeaderImage ? (
+                        <div className="relative">
+                          <img 
+                            src={newFolderBlogHeaderImage} 
+                            alt="Header preview" 
+                            className="w-full h-[80px] object-cover rounded-xl"
+                          />
+                          <button
+                            onClick={() => setNewFolderBlogHeaderImage('')}
+                            className="absolute top-2 right-2 bg-black/50 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex items-center justify-center w-full py-2.5 bg-[hsl(0,0%,96%)] border border-[hsl(0,0%,85%)] text-[hsl(0,0%,50%)] rounded-xl cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file || !user) return;
+                              
+                              setUploadingHeaderImage(true);
+                              const fileExt = file.name.split('.').pop();
+                              const fileName = `${user.id}/blog-header-${Date.now()}.${fileExt}`;
+                              
+                              const { data, error } = await supabase.storage
+                                .from('note-images')
+                                .upload(fileName, file);
+                              
+                              if (!error && data) {
+                                const { data: urlData } = supabase.storage
+                                  .from('note-images')
+                                  .getPublicUrl(data.path);
+                                setNewFolderBlogHeaderImage(urlData.publicUrl);
+                              }
+                              setUploadingHeaderImage(false);
+                            }}
+                          />
+                          <span className="font-outfit text-[13px]">
+                            {uploadingHeaderImage ? 'Uploading...' : 'Choose Image'}
+                          </span>
+                        </label>
+                      )}
+                    </div>
+                    
+                    {/* Web Address */}
+                    <div className="space-y-1">
+                      <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Web Address</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={newFolderBlogSlug}
+                          onChange={(e) => {
+                            const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                            setNewFolderBlogSlug(value);
+                            setBlogSlugAvailable(null);
+                          }}
+                          onBlur={async () => {
+                            if (!newFolderBlogSlug || newFolderBlogSlug.length < 2 || !user) {
+                              setBlogSlugAvailable(null);
+                              return;
+                            }
+                            const reserved = ['index', 'home', 'contact', 'prices', 'features', 'blog', 'admin', 'settings', 'new', 'edit', 'delete'];
+                            if (reserved.includes(newFolderBlogSlug.toLowerCase())) {
+                              setBlogSlugAvailable(false);
+                              return;
+                            }
+                            setCheckingBlogSlug(true);
+                            const { data } = await supabase
+                              .from('folders')
+                              .select('id')
+                              .eq('user_id', user.id)
+                              .eq('blog_slug', newFolderBlogSlug.toLowerCase())
+                              .neq('id', editingFolder?.id || '')
+                              .maybeSingle();
+                            setCheckingBlogSlug(false);
+                            setBlogSlugAvailable(!data);
+                          }}
+                          placeholder="my-blog"
+                          className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit outline-none focus:border-[hsl(0,0%,70%)] pr-10"
+                        />
+                        {checkingBlogSlug && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <svg className="animate-spin h-4 w-4 text-[hsl(0,0%,60%)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          </div>
+                        )}
+                        {!checkingBlogSlug && blogSlugAvailable === true && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                        {!checkingBlogSlug && blogSlugAvailable === false && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <svg className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      {username && newFolderBlogSlug && (
+                        <a 
+                          href={`https://nuron.life/${username}/${newFolderBlogSlug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[13px] font-outfit hover:underline block mt-1"
+                          style={{ color: themeColors[theme] }}
+                        >
+                          nuron.life/{username}/{newFolderBlogSlug}
+                        </a>
+                      )}
+                      {!username && (
+                        <p className="text-yellow-600 text-[11px] font-outfit mt-1">
+                          Set your username in Account Details first
+                        </p>
+                      )}
+                    </div>
+                    
+                    {/* Password */}
+                    <div className="space-y-1">
+                      <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Password (Optional)</label>
+                      <input
+                        type="text"
+                        value={newFolderBlogPassword}
+                        onChange={(e) => setNewFolderBlogPassword(e.target.value)}
+                        placeholder="Leave blank for public"
+                        className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit outline-none focus:border-[hsl(0,0%,70%)]"
+                      />
+                      <p className="text-[hsl(0,0%,60%)] text-[11px] font-outfit">
+                        Visitors will need this password to view
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
               
-              <div className="flex gap-3 mt-6">
+              {/* Action Buttons */}
+              <div className="flex gap-3 mt-5">
                 <button
                   onClick={() => {
                     setShowFolderPopup(false);
                     setEditingFolder(null);
                     setNewFolderName("");
                     setNewFolderDefaultView('collapsed');
+                    setNewFolderSortOrder('desc');
+                    setNewFolderIsBlog(false);
+                    setNewFolderBlogSlug('');
+                    setNewFolderBlogName('');
+                    setNewFolderBlogSubheading('');
+                    setNewFolderBlogHeaderImage('');
+                    setNewFolderBlogPassword('');
                   }}
-                  className="flex-1 py-3 px-4 rounded-full bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium text-[15px]"
+                  className="flex-1 py-2.5 px-4 rounded-full bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium text-[14px]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={editingFolder ? updateFolder : createFolder}
-                  className="flex-1 py-3 px-4 rounded-full text-white font-outfit font-medium text-[15px]"
+                  className="flex-1 py-2.5 px-4 rounded-full text-white font-outfit font-medium text-[14px]"
                   style={{ backgroundColor: themeColors[theme] }}
                 >
                   {editingFolder ? 'Save' : 'Create'}
                 </button>
               </div>
               
+              {/* Delete Folder Button - only when editing */}
               {editingFolder && (
                 <button
                   onClick={() => {
                     setFolderToDelete({ id: editingFolder.id, name: editingFolder.name });
                     setShowDeleteFolderConfirm(true);
                   }}
-                  className="w-full mt-4 py-3 text-[15px] font-outfit font-medium text-red-500"
+                  className="w-full mt-3 py-2.5 text-[14px] font-outfit font-medium text-red-500"
                 >
                   Delete Folder
                 </button>
