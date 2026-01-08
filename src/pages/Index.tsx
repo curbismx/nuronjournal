@@ -379,9 +379,16 @@ const [newFolderBlogPassword, setNewFolderBlogPassword] = useState('');
   const [blogSlugAvailable, setBlogSlugAvailable] = useState<boolean | null>(null);
   const [checkingBlogSlug, setCheckingBlogSlug] = useState(false);
 
+  // Track which note we've already sent load-note for to prevent duplicates
+  const lastSentNoteIdRef = useRef<string | null>(null);
+
   // Send selected note to iframe when it changes (persistent iframe approach)
   useEffect(() => {
     if (!desktopSelectedNoteId) return;
+    
+    // Skip if we've already sent load-note for this exact note
+    if (lastSentNoteIdRef.current === desktopSelectedNoteId) return;
+    lastSentNoteIdRef.current = desktopSelectedNoteId;
     
     const sendNoteToIframe = () => {
       const iframe = document.getElementById('note-editor-iframe') as HTMLIFrameElement;
@@ -403,7 +410,7 @@ const [newFolderBlogPassword, setNewFolderBlogPassword] = useState('');
     sendNoteToIframe();
     
     return () => clearTimeout(timer);
-  }, [desktopSelectedNoteId, savedNotes, currentFolder?.id]);
+  }, [desktopSelectedNoteId, currentFolder?.id]);
 
   const themeColors = {
     default: '#2E2E2E',
@@ -1422,6 +1429,16 @@ query = query.eq('folder_id', currentFolder.id);
                           setNewFolderName('Untitled');
                           setNewFolderDefaultView('collapsed');
                           setDesktopShowFolderOptions(true);
+                          
+                          // Reset all blog settings for new folder
+                          setNewFolderSortOrder('desc');
+                          setNewFolderIsBlog(false);
+                          setNewFolderBlogSlug('');
+                          setNewFolderBlogName('');
+                          setNewFolderBlogSubheading('');
+                          setNewFolderBlogHeaderImage('');
+                          setNewFolderBlogPassword('');
+                          setBlogSlugAvailable(null);
                         }
                       }} 
                       className="p-0 m-0 border-0 bg-transparent"
