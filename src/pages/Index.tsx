@@ -381,7 +381,7 @@ const [newFolderBlogPassword, setNewFolderBlogPassword] = useState('');
           type: 'load-note',
           noteId: desktopSelectedNoteId.startsWith('new-') ? null : desktopSelectedNoteId,
           placeholderId: desktopSelectedNoteId.startsWith('new-') ? desktopSelectedNoteId : null,
-          folderId: currentFolder?.id || null,
+          folderId: selectedNote?.folder_id || currentFolder?.id || null,
           createdAt: selectedNote?.createdAt || new Date().toISOString(),
           cachedTitle: selectedNote?.title || '',
           cachedContentBlocks: selectedNote?.contentBlocks || [{ type: 'text', id: 'initial', content: '' }]
