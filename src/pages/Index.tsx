@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import settingsIcon from "@/assets/00settings-4.png";
 import newPlusIcon from "@/assets/00plus-3.png";
@@ -115,6 +115,7 @@ interface Folder {
 
 const Index = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 const isDesktop = useDesktop();
 
 
@@ -139,6 +140,16 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   const placeholderPositionRef = useRef<number | null>(null);
   const pendingSaveRef = useRef<string | null>(null);
   
+  // Check for login query param and open welcome popup
+  useEffect(() => {
+    if (searchParams.get('login') === 'true' || searchParams.get('signup') === 'true') {
+      setDesktopShowWelcomePopup(true);
+      setWelcomeIsSignUp(searchParams.get('signup') === 'true');
+      // Clear the query params
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
   useEffect(() => {
     // Skip onboarding on desktop
     if (isDesktop) return;
@@ -2984,7 +2995,7 @@ onDragStart={(e) => {
         </div>
 
         {/* Desktop Welcome/Login Popup */}
-        {desktopShowWelcomePopup && !user && savedNotes.length === 0 && !isInitializing && (
+        {desktopShowWelcomePopup && !user && !isInitializing && (
           <div 
             className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]" 
             style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
