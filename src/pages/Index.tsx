@@ -723,6 +723,17 @@ useEffect(() => {
   };
 
   const openEditFolder = (folder: Folder) => {
+    // Temporary debug - remove after fixing
+    console.log('=== FOLDER DATA DEBUG ===');
+    console.log('Full folder object:', JSON.stringify(folder, null, 2));
+    console.log('is_blog:', folder.is_blog);
+    console.log('blog_name:', folder.blog_name);
+    console.log('blog_slug:', folder.blog_slug);
+    console.log('blog_subheading:', folder.blog_subheading);
+    console.log('blog_header_image:', folder.blog_header_image);
+    console.log('blog_password:', folder.blog_password);
+    console.log('=========================');
+    
     setEditingFolder(folder);
     setNewFolderName(folder.name);
     setNewFolderDefaultView(folder.default_view);
