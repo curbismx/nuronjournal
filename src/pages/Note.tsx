@@ -471,6 +471,9 @@ const Note = () => {
     };
   }, [isEmbedded]);
 
+  // Map to remember placeholder -> real ID to prevent duplicates
+  const placeholderToIdMapRef = useRef<Map<string, string>>(new Map());
+
   // Listen for load-note messages from parent (embedded mode)
   useEffect(() => {
     if (!embeddedMode) return;
@@ -487,7 +490,22 @@ const Note = () => {
       setCurrentNoteId(noteId);
       setCurrentPlaceholderId(newPlaceholderId);
       setCurrentFolderId(folderId);
-      noteIdRef.current = noteId || crypto.randomUUID();
+      
+      // Generate stable ID for this note - prevent duplicates for same placeholder
+      if (noteId) {
+        noteIdRef.current = noteId;
+      } else if (newPlaceholderId) {
+        const existingId = placeholderToIdMapRef.current.get(newPlaceholderId);
+        if (existingId) {
+          noteIdRef.current = existingId;
+        } else {
+          const newId = crypto.randomUUID();
+          placeholderToIdMapRef.current.set(newPlaceholderId, newId);
+          noteIdRef.current = newId;
+        }
+      } else {
+        noteIdRef.current = crypto.randomUUID();
+      }
       
       // Set content from cache - this is instant, no flicker
       setNoteTitle(cachedTitle || '');
