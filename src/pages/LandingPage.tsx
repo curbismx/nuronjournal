@@ -59,13 +59,13 @@ const LandingPage = () => {
           <img src={logo} alt="Nuron" className="h-8 w-auto" />
           <div className="flex items-center gap-6">
             <button
-              onClick={() => navigate('/?login=true')}
+              onClick={() => window.location.href = '/?login=true'}
               className="text-black/60 hover:text-black font-outfit text-[12px] transition-colors"
             >
               Log In
             </button>
             <button
-              onClick={() => navigate('/?signup=true')}
+              onClick={() => window.location.href = '/?signup=true'}
               className="bg-black text-white font-outfit font-medium text-[12px] px-4 py-1.5 rounded-full hover:bg-black/80 transition-all"
             >
               Get Started
