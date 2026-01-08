@@ -44,11 +44,11 @@ const HomeRoute = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Show loading spinner while checking auth (prevents flash)
+  // Show nothing while checking auth (prevents flash)
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
-        <p className="text-white/60">Loading...</p>
+      <div className="fixed inset-0 bg-[#1a1a1a] flex items-center justify-center">
+        <div className="text-white/40 font-outfit">Loading...</div>
       </div>
     );
   }
