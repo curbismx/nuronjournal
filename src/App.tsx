@@ -9,6 +9,7 @@ import Note from "./pages/Note";
 import Onboarding from "./pages/Onboarding";
 import Blog from "./pages/Blog";
 import NotFound from "./pages/NotFound";
+import LandingPage from "./pages/LandingPage";
 import { initializePurchases } from "@/lib/purchases";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/welcome" element={<LandingPage />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/note/:id?" element={<Note />} />
             <Route path="/:username/:blogSlug" element={<Blog />} />
