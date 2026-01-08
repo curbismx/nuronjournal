@@ -145,10 +145,10 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
     if (searchParams.get('login') === 'true' || searchParams.get('signup') === 'true') {
       setDesktopShowWelcomePopup(true);
       setWelcomeIsSignUp(searchParams.get('signup') === 'true');
-      // Clear the query params
-      setSearchParams({}, { replace: true });
+      // Clear the query params using history API to avoid React Router re-render
+      window.history.replaceState({}, '', '/');
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams]);
 
   useEffect(() => {
     // Skip onboarding on desktop
