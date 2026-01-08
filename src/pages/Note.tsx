@@ -471,10 +471,10 @@ const Note = () => {
     };
   }, [isEmbedded]);
 
-  // Map to remember placeholder -> real ID to prevent duplicates
-  const placeholderToIdMapRef = useRef<Map<string, string>>(new Map());
-
   // Listen for load-note messages from parent (embedded mode)
+  // Map to track placeholder -> real ID to prevent duplicate note creation
+  const placeholderToIdMapRef = useRef<Map<string, string>>(new Map());
+  
   useEffect(() => {
     if (!embeddedMode) return;
     
@@ -491,19 +491,24 @@ const Note = () => {
       setCurrentPlaceholderId(newPlaceholderId);
       setCurrentFolderId(folderId);
       
-      // Generate stable ID for this note - prevent duplicates for same placeholder
+      // CRITICAL FIX: For new notes, reuse the same UUID if we've already generated one for this placeholder
+      // This prevents duplicate notes when load-note is called multiple times
       if (noteId) {
+        // Existing note - use the provided ID
         noteIdRef.current = noteId;
       } else if (newPlaceholderId) {
+        // New note with placeholder - check if we already have an ID for this placeholder
         const existingId = placeholderToIdMapRef.current.get(newPlaceholderId);
         if (existingId) {
           noteIdRef.current = existingId;
         } else {
+          // First time seeing this placeholder - generate and remember the ID
           const newId = crypto.randomUUID();
           placeholderToIdMapRef.current.set(newPlaceholderId, newId);
           noteIdRef.current = newId;
         }
       } else {
+        // Fallback - should rarely happen
         noteIdRef.current = crypto.randomUUID();
       }
       
@@ -2164,7 +2169,10 @@ const Note = () => {
       // ONLY set folder_id for NEW notes - existing notes keep their folder
       // This prevents notes from moving folders due to stale localStorage values
       if (isNewNote) {
-        const folderId = currentFolderId || initialFolderId || localStorage.getItem('nuron-current-folder-id');
+        // In embedded mode, ONLY use folder_id from postMessage - localStorage can be stale
+        const folderId = isEmbedded
+          ? (currentFolderId || initialFolderId)
+          : (currentFolderId || initialFolderId || localStorage.getItem('nuron-current-folder-id'));
         upsertData.folder_id = folderId && folderId !== 'local-notes' ? folderId : null;
         upsertData.is_published = false;
       }
@@ -2174,19 +2182,23 @@ const Note = () => {
       
       if (!error) {
         localStorage.setItem('nuron-has-created-note', 'true');
-        // UPDATE LOCAL CACHE so Index loads instantly
-        const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
-        const existingIndex = cached.findIndex((n: any) => n.id === noteData.id);
-        const noteDataWithAudio = {
-          ...noteData,
-          audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : undefined
-        };
-        if (existingIndex >= 0) {
-          cached[existingIndex] = noteDataWithAudio;
-        } else {
-          cached.unshift(noteDataWithAudio);
+        // Only update local cache in NON-embedded mode
+        // In embedded mode, Index.tsx manages the cache via postMessage
+        // This prevents duplicate cache entries from both files writing simultaneously
+        if (!isEmbedded) {
+          const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
+          const existingIndex = cached.findIndex((n: any) => n.id === noteData.id);
+          const noteDataWithAudio = {
+            ...noteData,
+            audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : undefined
+          };
+          if (existingIndex >= 0) {
+            cached[existingIndex] = noteDataWithAudio;
+          } else {
+            cached.unshift(noteDataWithAudio);
+          }
+          localStorage.setItem('nuron-notes-cache', JSON.stringify(cached));
         }
-        localStorage.setItem('nuron-notes-cache', JSON.stringify(cached));
       }
       
       if (error) {
@@ -2206,25 +2218,35 @@ const Note = () => {
       } else {
         notes.unshift(noteDataWithAudio);
       }
-      const isDesktopEmbed = new URLSearchParams(window.location.search).get('desktop') === 'true';
-      if (!isDesktopEmbed) {
+      // Don't write to localStorage in desktop embed mode
+      if (!isEmbedded) {
         localStorage.setItem('nuron-notes', JSON.stringify(notes));
       }
     }
 
-    // Safety: Always update local cache as backup
-    const allCached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
-    const noteExistsInCache = allCached.some((n: any) => n.id === noteData.id);
-    if (!noteExistsInCache) {
-      allCached.unshift({
-        ...noteData,
-        folder_id: initialFolderId || localStorage.getItem('nuron-current-folder-id') || null
-      });
-      localStorage.setItem('nuron-notes-cache', JSON.stringify(allCached));
+    // Safety backup - ONLY for mobile/standalone mode
+    // In embedded mode, Index.tsx is the single source of truth for cache
+    // Writing here in embedded mode causes duplicate entries
+    if (!isEmbedded) {
+      const allCached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
+      const noteExistsInCache = allCached.some((n: any) => n.id === noteData.id);
+      if (!noteExistsInCache) {
+        allCached.unshift({
+          ...noteData,
+          folder_id: currentFolderId || initialFolderId || localStorage.getItem('nuron-current-folder-id') || null
+        });
+        localStorage.setItem('nuron-notes-cache', JSON.stringify(allCached));
+      }
     }
 
     // Notify parent window (for desktop view)
     if (window.parent !== window) {
+      // In embedded mode, use ONLY postMessage data for folder_id - no localStorage fallback
+      // localStorage can be stale if user switched folders quickly
+      const noteFolderId = isEmbedded 
+        ? (currentFolderId || initialFolderId || null)
+        : (currentFolderId || initialFolderId || localStorage.getItem('nuron-current-folder-id') || null);
+      
       window.parent.postMessage({ 
         type: 'note-saved', 
         noteId: noteData.id,
@@ -2236,7 +2258,7 @@ const Note = () => {
           createdAt: existingCreatedAt.current || noteDate.toISOString(),
           updatedAt: new Date().toISOString(),
           weather: weather,
-          folder_id: (currentFolderId || initialFolderId) || localStorage.getItem('nuron-current-folder-id') || null
+          folder_id: noteFolderId
         }
       }, '*');
     }
@@ -2524,16 +2546,18 @@ const Note = () => {
       
       // LOGGED IN: Delete from Supabase
       await supabase.from('notes').delete().eq('id', noteIdRef.current);
-      // Also update cache for instant UI update
-      const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
-      const filtered = cached.filter((n: any) => n.id !== noteIdRef.current);
-      localStorage.setItem('nuron-notes-cache', JSON.stringify(filtered));
+      // Only update cache in non-embedded mode - Index.tsx manages cache in embedded mode
+      if (!isEmbedded) {
+        const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
+        const filtered = cached.filter((n: any) => n.id !== noteIdRef.current);
+        localStorage.setItem('nuron-notes-cache', JSON.stringify(filtered));
+      }
     } else {
       // NOT LOGGED IN: Delete from localStorage only
       const notes = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
       const filtered = notes.filter((n: any) => n.id !== noteIdRef.current);
-      const isDesktopEmbed = new URLSearchParams(window.location.search).get('desktop') === 'true';
-      if (!isDesktopEmbed) {
+      // Don't write to localStorage in embedded mode
+      if (!isEmbedded) {
         localStorage.setItem('nuron-notes', JSON.stringify(filtered));
       }
     }
