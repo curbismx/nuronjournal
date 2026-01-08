@@ -2128,11 +2128,10 @@ const Note = () => {
     
     if (session?.user) {
       // Logged in - save to Supabase
-      const folderId = currentFolderId || initialFolderId || localStorage.getItem('nuron-current-folder-id');
       // Check if this is a new note (placeholder) or existing note
       const isNewNote = (currentPlaceholderId || placeholderId) && (currentPlaceholderId || placeholderId)?.startsWith('new-');
       
-      // Build the upsert object - only include is_published for new notes
+      // Build the upsert object
       const upsertData: any = {
         id: noteData.id,
         user_id: session.user.id,
@@ -2141,12 +2140,14 @@ const Note = () => {
         created_at: noteData.createdAt,
         updated_at: noteData.updatedAt,
         weather: noteData.weather,
-        audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : null,
-        folder_id: folderId && folderId !== 'local-notes' ? folderId : null
+        audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : null
       };
       
-      // Only set is_published for NEW notes (don't overwrite existing published status)
+      // ONLY set folder_id for NEW notes - existing notes keep their folder
+      // This prevents notes from moving folders due to stale localStorage values
       if (isNewNote) {
+        const folderId = currentFolderId || initialFolderId || localStorage.getItem('nuron-current-folder-id');
+        upsertData.folder_id = folderId && folderId !== 'local-notes' ? folderId : null;
         upsertData.is_published = false;
       }
       
