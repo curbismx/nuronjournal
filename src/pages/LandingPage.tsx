@@ -213,7 +213,7 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#1a1a1a] overflow-y-auto overflow-x-hidden">
+    <div className="fixed inset-0 bg-[#1a1a1a] overflow-y-auto overflow-x-hidden z-0">
       {/* Animated gradient background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div 
