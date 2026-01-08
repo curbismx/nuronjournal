@@ -723,17 +723,6 @@ useEffect(() => {
   };
 
   const openEditFolder = (folder: Folder) => {
-    // Temporary debug - remove after fixing
-    console.log('=== FOLDER DATA DEBUG ===');
-    console.log('Full folder object:', JSON.stringify(folder, null, 2));
-    console.log('is_blog:', folder.is_blog);
-    console.log('blog_name:', folder.blog_name);
-    console.log('blog_slug:', folder.blog_slug);
-    console.log('blog_subheading:', folder.blog_subheading);
-    console.log('blog_header_image:', folder.blog_header_image);
-    console.log('blog_password:', folder.blog_password);
-    console.log('=========================');
-    
     setEditingFolder(folder);
     setNewFolderName(folder.name);
     setNewFolderDefaultView(folder.default_view);
@@ -4719,7 +4708,7 @@ onDragStart={(e) => {
                       value={newFolderBlogName}
                       onChange={(e) => setNewFolderBlogName(e.target.value)}
                       placeholder="My Travel Adventures"
-                      className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit outline-none focus:border-[hsl(0,0%,70%)]"
+                      className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit text-black outline-none focus:border-[hsl(0,0%,70%)]"
                     />
                   </div>
                   
@@ -4731,7 +4720,7 @@ onDragStart={(e) => {
                       value={newFolderBlogSubheading}
                       onChange={(e) => setNewFolderBlogSubheading(e.target.value)}
                       placeholder="A collection of my thoughts"
-                      className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit outline-none focus:border-[hsl(0,0%,70%)]"
+                      className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit text-black outline-none focus:border-[hsl(0,0%,70%)]"
                     />
                   </div>
                   
@@ -4820,7 +4809,7 @@ onDragStart={(e) => {
                           setBlogSlugAvailable(!data);
                         }}
                         placeholder="my-blog"
-                        className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit outline-none focus:border-[hsl(0,0%,70%)] pr-10"
+                        className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit text-black outline-none focus:border-[hsl(0,0%,70%)] pr-10"
                       />
                       {checkingBlogSlug && (
                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -4871,7 +4860,7 @@ onDragStart={(e) => {
                       value={newFolderBlogPassword}
                       onChange={(e) => setNewFolderBlogPassword(e.target.value)}
                       placeholder="Leave blank for public"
-                      className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit outline-none focus:border-[hsl(0,0%,70%)]"
+                      className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit text-black outline-none focus:border-[hsl(0,0%,70%)]"
                     />
                     <p className="text-[hsl(0,0%,60%)] text-[11px] font-outfit">
                       Visitors will need this password to view
