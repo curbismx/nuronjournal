@@ -922,10 +922,14 @@ useEffect(() => {
         // Preserve only placeholders for the CURRENT folder
         setSavedNotes(prev => {
           const placeholders = prev.filter(n => n.id.startsWith('new-') && n.folder_id === currentFolder.id);
-          if (placeholders.length > 0) {
-            return [...placeholders, ...notes];
-          }
-          return notes;
+          const combined = placeholders.length > 0 ? [...placeholders, ...notes] : notes;
+          // Deduplicate by id - keep first occurrence
+          const seen = new Set<string>();
+          return combined.filter(note => {
+            if (seen.has(note.id)) return false;
+            seen.add(note.id);
+            return true;
+          });
         });
       }
     };
@@ -1215,7 +1219,15 @@ query = query.eq('folder_id', currentFolder.id);
 
   // Sort notes based on sortOrder
   const sortedNotes = React.useMemo(() => {
-    const sorted = [...savedNotes];
+    // First deduplicate by id
+    const seen = new Set<string>();
+    const deduped = savedNotes.filter(note => {
+      if (seen.has(note.id)) return false;
+      seen.add(note.id);
+      return true;
+    });
+    
+    const sorted = [...deduped];
     if (sortOrder === 'asc') {
       sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     } else {
