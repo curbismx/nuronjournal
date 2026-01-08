@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import logo from '@/assets/logo.png';
+import logo from '@/assets/nuron-logo.png';
 
 // Intersection Observer hook for scroll animations
 const useInView = (threshold = 0.1) => {
@@ -56,7 +56,7 @@ const LandingPage = () => {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/80 border-b border-black/[0.05]">
         <div className="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between">
-          <img src={logo} alt="Nuron" className="h-8 w-auto brightness-0" />
+          <img src={logo} alt="Nuron" className="h-8 w-auto" />
           <div className="flex items-center gap-6">
             <button
               onClick={() => navigate('/?login=true')}
