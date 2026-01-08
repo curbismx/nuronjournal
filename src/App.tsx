@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useSearchParams } from "react-router-dom";
 import Index from "./pages/Index";
 import Note from "./pages/Note";
 import Onboarding from "./pages/Onboarding";
@@ -20,6 +20,10 @@ const HomeRoute = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [hasLocalNotes, setHasLocalNotes] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  // Check if login or signup is requested via query params
+  const showAuth = searchParams.get('login') === 'true' || searchParams.get('signup') === 'true';
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -53,8 +57,8 @@ const HomeRoute = () => {
     );
   }
 
-  // Show app if logged in OR has local notes
-  if (isAuthenticated || hasLocalNotes) {
+  // Show app if logged in OR has local notes OR auth is requested
+  if (isAuthenticated || hasLocalNotes || showAuth) {
     return <Index />;
   }
 
