@@ -207,20 +207,30 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
         ));
         
         // Also save to localStorage cache so content persists when iframe reloads
-        if (placeholderId) {
+        if (placeholderId || noteId) {
+          const targetId = noteId || placeholderId;
           const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
           const existingIndex = cached.findIndex((n: any) => n.id === placeholderId || n.id === noteId);
-          const noteData = {
-            id: placeholderId,
-            title: title || '',
-            contentBlocks: contentBlocks || [],
-            createdAt: createdAt || new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
+          
           if (existingIndex >= 0) {
-            cached[existingIndex] = { ...cached[existingIndex], ...noteData };
+            // UPDATE existing - preserve existing values if new ones are empty
+            cached[existingIndex] = { 
+              ...cached[existingIndex],
+              id: targetId,
+              title: title || cached[existingIndex].title || '',
+              contentBlocks: contentBlocks || cached[existingIndex].contentBlocks || [],
+              createdAt: createdAt || cached[existingIndex].createdAt || new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
           } else {
-            cached.unshift(noteData);
+            // INSERT new
+            cached.unshift({
+              id: targetId,
+              title: title || '',
+              contentBlocks: contentBlocks || [],
+              createdAt: createdAt || new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            });
           }
           localStorage.setItem('nuron-notes-cache', JSON.stringify(cached));
         }
@@ -255,19 +265,30 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
         // Replace placeholder ID with real ID in cache
         const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
         const existingIndex = cached.findIndex((n: any) => n.id === targetId || n.id === noteId);
-        const cacheEntry = {
-          id: noteId,
-          title: noteData?.title || '',
-          contentBlocks: noteData?.contentBlocks || [],
-          createdAt: noteData?.createdAt || new Date().toISOString(),
-          updatedAt: noteData?.updatedAt || new Date().toISOString(),
-          weather: noteData?.weather,
-          folder_id: noteData?.folder_id
-        };
+        
         if (existingIndex >= 0) {
-          cached[existingIndex] = cacheEntry;
+          // UPDATE existing - preserve existing values if new ones are empty
+          cached[existingIndex] = {
+            ...cached[existingIndex],
+            id: noteId,
+            title: noteData?.title || cached[existingIndex].title || '',
+            contentBlocks: noteData?.contentBlocks || cached[existingIndex].contentBlocks || [],
+            createdAt: noteData?.createdAt || cached[existingIndex].createdAt || new Date().toISOString(),
+            updatedAt: noteData?.updatedAt || new Date().toISOString(),
+            weather: noteData?.weather ?? cached[existingIndex].weather,
+            folder_id: noteData?.folder_id || cached[existingIndex].folder_id
+          };
         } else {
-          cached.unshift(cacheEntry);
+          // INSERT new
+          cached.unshift({
+            id: noteId,
+            title: noteData?.title || '',
+            contentBlocks: noteData?.contentBlocks || [],
+            createdAt: noteData?.createdAt || new Date().toISOString(),
+            updatedAt: noteData?.updatedAt || new Date().toISOString(),
+            weather: noteData?.weather,
+            folder_id: noteData?.folder_id
+          });
         }
         localStorage.setItem('nuron-notes-cache', JSON.stringify(cached));
       }
@@ -1650,6 +1671,8 @@ query = query.eq('folder_id', currentFolder.id);
                         setCurrentFolder(folder);
                         localStorage.setItem('nuron-current-folder-id', folder.id);
                         setDesktopSelectedNoteId(null);
+                        // Clear the sent ref so first note click in new folder works
+                        lastSentNoteIdRef.current = null;
                         setViewMode(folder.default_view || 'collapsed');
                         setSortOrder(folder.notes_sort_order || 'desc');
                         setUserChangedView(false);
@@ -3048,14 +3071,16 @@ onDragStart={(e) => {
           
           {/* Note content area */}
           <div className="flex-1 overflow-hidden bg-white" style={{ position: 'relative' }}>
-            {desktopSelectedNoteId ? (
-              <iframe
-                id="note-editor-iframe"
-                src="/note?desktop=true&embedded=true"
-                className="absolute inset-0 w-full h-full border-0 bg-white"
-                title="Note Editor"
-              />
-            ) : (
+            {/* PERSISTENT IFRAME - always mounted, visibility controlled by desktopSelectedNoteId */}
+            {/* This prevents message loss when selecting first note after folder switch */}
+            <iframe
+              id="note-editor-iframe"
+              src="/note?desktop=true&embedded=true"
+              className="absolute inset-0 w-full h-full border-0 bg-white"
+              style={{ display: desktopSelectedNoteId ? 'block' : 'none' }}
+              title="Note Editor"
+            />
+            {!desktopSelectedNoteId && (
               <div className="h-full flex items-center justify-center text-[hsl(0,0%,60%)] font-outfit text-[18px]">
                 Select a note to view
               </div>
