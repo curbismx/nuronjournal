@@ -4702,7 +4702,7 @@ onDragStart={(e) => {
                 <div className="space-y-3 animate-in fade-in-0 duration-200">
                   {/* Blog Heading */}
                   <div className="space-y-1">
-                    <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Blog Heading</label>
+                              <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Heading</label>
                     <input
                       type="text"
                       value={newFolderBlogName}
