@@ -108,7 +108,7 @@ const LandingPage = () => {
       {/* Hero */}
       <section className="relative bg-[#2E2E2E] pt-24 pb-16 md:pt-32 md:pb-24">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <FadeIn><h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6">Remember Everything</h1></FadeIn>
+          <FadeIn><h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold text-white mb-6">Remember Everything</h1></FadeIn>
           <FadeIn delay={0.1}><p className="text-xl md:text-2xl text-white/70 mb-4 max-w-2xl mx-auto">One tap voice recording for all those snippets of information</p></FadeIn>
           <FadeIn delay={0.2}><p className="text-base md:text-lg text-white/50 max-w-xl mx-auto mb-8">Nuron gives you the space to calm your mind and journal every aspect of your life</p></FadeIn>
           <FadeIn delay={0.3}><a href="https://apps.apple.com/app/nuron" target="_blank" rel="noopener noreferrer" className="inline-block hover:scale-105 transition-transform"><img src={appStoreBadge} alt="Download on the App Store" className="h-12 md:h-14" /></a></FadeIn>
@@ -119,7 +119,7 @@ const LandingPage = () => {
       {/* Nuron for Everybody - Card with rounded top corners overlapping hero */}
       <section className="bg-white rounded-t-[60px] -mt-[50px] relative z-10 py-20 md:py-32">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-[#333333] mb-6">Nuron for Everybody</h2></FadeIn>
+          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-6">Nuron for Everybody</h2></FadeIn>
           <FadeIn delay={0.1}><p className="text-lg text-[#666666] mb-6 leading-relaxed max-w-2xl mx-auto">Whether you're a busy professional, a creative jotting down inspiration, or anyone who wants to remember more — Nuron adapts to you.</p></FadeIn>
           <FadeIn delay={0.2}><p className="text-lg text-[#666666] leading-relaxed max-w-2xl mx-auto">Start with voice, type when you want, add photos. Your thoughts, your way, beautifully organized.</p></FadeIn>
         </div>
@@ -132,7 +132,7 @@ const LandingPage = () => {
       <section id="features" className="py-20 md:py-32 bg-[#F9F9F6]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-[#333333] mb-4">Everything You Need</h2></FadeIn>
+            <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-4">Everything You Need</h2></FadeIn>
             <FadeIn delay={0.1}><p className="text-lg text-[#666666] max-w-2xl mx-auto">Simple tools that work together to help you capture, organize, and share your thoughts.</p></FadeIn>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -160,7 +160,7 @@ const LandingPage = () => {
             </div>
           </FadeIn>
           <div className="order-1 md:order-2">
-            <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-[#333333] mb-4">Built for Power Users</h2></FadeIn>
+            <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-4">Built for Power Users</h2></FadeIn>
             <FadeIn delay={0.1}><p className="text-xl text-[#666666] mb-6">Simple on the surface, powerful underneath</p></FadeIn>
             <FadeIn delay={0.2}><ul className="space-y-3 text-[#666666]">
               {["Folder organization with custom sorting", "One-tap publishing to your personal blog", "Multiple theme options", "Grid and list views", "Cross-device sync"].map(item => (
@@ -174,7 +174,7 @@ const LandingPage = () => {
       {/* Pricing */}
       <section id="pricing" className="py-20 md:py-32 bg-white">
         <div className="max-w-3xl mx-auto px-6 text-center">
-          <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-[#333333] mb-4">Free to Start</h2></FadeIn>
+          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-4">Free to Start</h2></FadeIn>
           <FadeIn delay={0.1}><p className="text-xl text-[#666666] mb-6">No credit card required</p></FadeIn>
           <FadeIn delay={0.2}><p className="text-lg text-[#666666] mb-8">Use Nuron free on the web. Upgrade to Pro for mobile app access, cloud sync, and AI features — just $4.99/month.</p></FadeIn>
           <FadeIn delay={0.3}>
@@ -189,7 +189,7 @@ const LandingPage = () => {
       {/* Testimonials */}
       <section className="py-20 md:py-32 bg-[#2E2E2E]">
         <div className="max-w-7xl mx-auto px-6">
-          <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-white mb-16 text-center">What People Are Saying</h2></FadeIn>
+          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-white mb-16 text-center">What People Are Saying</h2></FadeIn>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {testimonials.map((t, i) => (
               <FadeIn key={t.author} delay={i * 0.1}>
@@ -208,7 +208,7 @@ const LandingPage = () => {
       {/* Final CTA */}
       <section className="py-20 md:py-32 bg-[#2E2E2E]">
         <div className="max-w-3xl mx-auto px-6 text-center">
-          <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Start Remembering Everything</h2></FadeIn>
+          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-white mb-4">Start Remembering Everything</h2></FadeIn>
           <FadeIn delay={0.1}><p className="text-xl text-white/70 mb-8">Download Nuron free today</p></FadeIn>
           <FadeIn delay={0.2}><a href="https://apps.apple.com/app/nuron" target="_blank" rel="noopener noreferrer" className="inline-block hover:scale-105 transition-transform"><img src={appStoreBadge} alt="Download on the App Store" className="h-14 md:h-16" /></a></FadeIn>
         </div>
