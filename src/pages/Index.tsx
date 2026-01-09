@@ -374,8 +374,8 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [showWeatherOnNotes, setShowWeatherOnNotes] = useState(() => {
     const stored = localStorage.getItem('nuron-show-weather');
@@ -1085,7 +1085,8 @@ useEffect(() => {
       setEmail("");
       setPassword("");
     } catch (error: any) {
-      setAuthFormError(error.message);
+      // Use generic message to prevent email enumeration
+      setAuthFormError("Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -1150,8 +1151,8 @@ useEffect(() => {
       return;
     }
     
-    if (newPassword.length < 6) {
-      setPasswordFormError("Password must be at least 6 characters");
+    if (newPassword.length < 8) {
+      setPasswordFormError("Password must be at least 8 characters");
       return;
     }
     
@@ -1165,13 +1166,57 @@ useEffect(() => {
       
       // SUCCESS: Just close the form - that's the feedback
       setShowChangePassword(false);
-      setCurrentPassword("");
       setNewPassword("");
       setConfirmNewPassword("");
     } catch (error: any) {
       setPasswordFormError(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setAuthFormError("Please enter your email address");
+      return;
+    }
+    
+    setLoading(true);
+    setAuthFormError("");
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/?login=true`,
+      });
+      
+      if (error) throw error;
+      setResetEmailSent(true);
+    } catch (error: any) {
+      // Use generic message to not reveal if email exists
+      setResetEmailSent(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWelcomeForgotPassword = async () => {
+    if (!welcomeEmail) {
+      setWelcomeError("Please enter your email address");
+      return;
+    }
+    
+    setWelcomeLoading(true);
+    setWelcomeError('');
+    
+    try {
+      await supabase.auth.resetPasswordForEmail(welcomeEmail, {
+        redirectTo: `${window.location.origin}/?login=true`,
+      });
+      setResetEmailSent(true);
+    } catch (error: any) {
+      setResetEmailSent(true); // Show success message regardless
+    } finally {
+      setWelcomeLoading(false);
     }
   };
 
@@ -2381,10 +2426,24 @@ onDragStart={(e) => {
                         }}
                         required
                         placeholder="••••••••"
-                        minLength={6}
+                        minLength={8}
                         className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
                       />
                     </div>
+                    {isSignInMode && !resetEmailSent && (
+                      <button
+                        type="button"
+                        onClick={handleForgotPassword}
+                        className="text-white/60 hover:text-white/80 text-[14px] transition-colors"
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+                    {resetEmailSent && (
+                      <p className="text-green-400 text-[14px]">
+                        If an account exists with this email, you will receive a password reset link.
+                      </p>
+                    )}
                     {authFormError && (
                       <p className="text-red-400 text-[14px]">{authFormError}</p>
                     )}
@@ -2394,6 +2453,7 @@ onDragStart={(e) => {
                     <button onClick={() => {
                       setIsSignInMode(!isSignInMode);
                       setAuthFormError("");
+                      setResetEmailSent(false);
                     }} className="w-full text-white/60 hover:text-white/80 text-[14px] transition-colors">
                       {isSignInMode ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
                     </button>
@@ -3213,6 +3273,21 @@ onDragStart={(e) => {
                   </button>
                 </div>
                 
+                {!welcomeIsSignUp && !resetEmailSent && (
+                  <button
+                    type="button"
+                    onClick={handleWelcomeForgotPassword}
+                    className="w-full text-center text-[14px] font-outfit text-[hsl(0,0%,50%)] hover:text-[hsl(0,0%,30%)]"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+                {resetEmailSent && (
+                  <p className="text-green-500 text-[14px] font-outfit text-center">
+                    If an account exists with this email, you will receive a password reset link.
+                  </p>
+                )}
+                
                 <button
                   onClick={async () => {
                     setWelcomeLoading(true);
@@ -3242,7 +3317,12 @@ onDragStart={(e) => {
                       localStorage.setItem('nuron-desktop-visited', 'true');
                       setDesktopShowWelcomePopup(false);
                     } catch (err: any) {
-                      setWelcomeError(err.message || 'An error occurred');
+                      // Use generic message to prevent email enumeration
+                      if (!welcomeIsSignUp) {
+                        setWelcomeError("Invalid email or password");
+                      } else {
+                        setWelcomeError(err.message || 'An error occurred');
+                      }
                     } finally {
                       setWelcomeLoading(false);
                     }
@@ -3255,7 +3335,10 @@ onDragStart={(e) => {
                 </button>
                 
                 <button
-                  onClick={() => setWelcomeIsSignUp(!welcomeIsSignUp)}
+                  onClick={() => {
+                    setWelcomeIsSignUp(!welcomeIsSignUp);
+                    setResetEmailSent(false);
+                  }}
                   className="w-full text-center text-[14px] font-outfit text-[hsl(0,0%,50%)] hover:text-[hsl(0,0%,30%)]"
                 >
                   {welcomeIsSignUp ? 'Already have an account? Log in' : "Don't have an account? Sign up"}
@@ -3700,10 +3783,24 @@ onDragStart={(e) => {
                   }}
                   required
                   placeholder="••••••••"
-                  minLength={6}
+                  minLength={8}
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
                 />
               </div>
+              {isSignInMode && !resetEmailSent && (
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-white/60 hover:text-white/80 text-[14px] transition-colors"
+                >
+                  Forgot password?
+                </button>
+              )}
+              {resetEmailSent && (
+                <p className="text-green-400 text-[14px]">
+                  If an account exists with this email, you will receive a password reset link.
+                </p>
+              )}
               {authFormError && (
                 <p className="text-red-400 text-[14px]">{authFormError}</p>
               )}
@@ -3713,6 +3810,7 @@ onDragStart={(e) => {
               <button type="button" onClick={() => {
                 setIsSignInMode(!isSignInMode);
                 setAuthFormError("");
+                setResetEmailSent(false);
               }} className="w-full text-white/60 hover:text-white/80 text-[14px] transition-colors">
                 {isSignInMode ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
               </button>
