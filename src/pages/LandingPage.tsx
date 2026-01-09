@@ -118,14 +118,14 @@ const LandingPage = () => {
 
       {/* Nuron for Everybody - Card with rounded top corners overlapping hero */}
       <section className="bg-white rounded-t-[60px] -mt-[50px] relative z-10 py-20 md:py-32">
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
-          <div>
-            <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-[#333333] mb-6">Nuron for Everybody</h2></FadeIn>
-            <FadeIn delay={0.1}><p className="text-lg text-[#666666] mb-6 leading-relaxed">Whether you're a busy professional, a creative jotting down inspiration, or anyone who wants to remember more — Nuron adapts to you.</p></FadeIn>
-            <FadeIn delay={0.2}><p className="text-lg text-[#666666] leading-relaxed">Start with voice, type when you want, add photos. Your thoughts, your way, beautifully organized.</p></FadeIn>
-          </div>
-          <FadeIn delay={0.3}><img src={iPhoneImage} alt="Nuron on iPhone" className="w-full max-w-sm mx-auto drop-shadow-xl" /></FadeIn>
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-[#333333] mb-6">Nuron for Everybody</h2></FadeIn>
+          <FadeIn delay={0.1}><p className="text-lg text-[#666666] mb-6 leading-relaxed max-w-2xl mx-auto">Whether you're a busy professional, a creative jotting down inspiration, or anyone who wants to remember more — Nuron adapts to you.</p></FadeIn>
+          <FadeIn delay={0.2}><p className="text-lg text-[#666666] leading-relaxed max-w-2xl mx-auto">Start with voice, type when you want, add photos. Your thoughts, your way, beautifully organized.</p></FadeIn>
         </div>
+        <FadeIn delay={0.3} className="mt-12 md:mt-16 px-6">
+          <img src={iPhoneImage} alt="Nuron on iPhone" className="w-full max-w-5xl mx-auto drop-shadow-xl" />
+        </FadeIn>
       </section>
 
       {/* Features */}
