@@ -106,7 +106,7 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero */}
-      <section className="relative bg-[#2E2E2E] pt-24 pb-32 md:pt-32 md:pb-48">
+      <section className="relative bg-[#2E2E2E] pt-24 pb-16 md:pt-32 md:pb-24">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <FadeIn><h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6">Remember Everything</h1></FadeIn>
           <FadeIn delay={0.1}><p className="text-xl md:text-2xl text-white/70 mb-4 max-w-2xl mx-auto">One tap voice recording for all those snippets of information</p></FadeIn>
@@ -114,15 +114,10 @@ const LandingPage = () => {
           <FadeIn delay={0.3}><a href="https://apps.apple.com/app/nuron" target="_blank" rel="noopener noreferrer" className="inline-block hover:scale-105 transition-transform"><img src={appStoreBadge} alt="Download on the App Store" className="h-12 md:h-14" /></a></FadeIn>
           <FadeIn delay={0.4} className="max-w-5xl mx-auto mt-12"><img src={headerImage} alt="Nuron app on multiple devices" className="w-full drop-shadow-2xl" /></FadeIn>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 overflow-hidden">
-          <svg viewBox="0 0 1440 60" fill="none" className="w-full h-auto" preserveAspectRatio="none">
-            <path d="M0 0 L0 60 L1440 60 L1440 0 Q1400 0 1400 40 L40 40 Q0 40 0 0 Z" fill="white"/>
-          </svg>
-        </div>
       </section>
 
-      {/* Nuron for Everybody */}
-      <section className="py-20 md:py-32 bg-white">
+      {/* Nuron for Everybody - Card with rounded top corners overlapping hero */}
+      <section className="bg-white rounded-t-[30px] -mt-[25px] relative z-10 py-20 md:py-32">
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
           <div>
             <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-[#333333] mb-6">Nuron for Everybody</h2></FadeIn>
