@@ -312,6 +312,7 @@ const Note = () => {
   const audioPlayerRefs = useRef<(HTMLAudioElement | null)[]>([]);
   const audioUrlsRef = useRef<string[]>([]);
   const contentBlocksRef = useRef<ContentBlock[]>([]);
+  const isSavingRef = useRef(false);
   
   // Initialize audioUrlsRef when audioUrls state is set
   useEffect(() => {
@@ -578,10 +579,16 @@ const Note = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user || !noteIdRef.current) return;
     
-    await supabase
+    const { error } = await supabase
       .from('notes')
       .update({ folder_id: folderId })
       .eq('id', noteIdRef.current);
+    
+    if (error) {
+      toast.error('Failed to move note');
+      setSelectedMoveFolder(null);
+      return;
+    }
     
     localStorage.setItem('nuron-current-folder-id', folderId);
     
@@ -2100,6 +2107,10 @@ const Note = () => {
   // Save note function
   const saveNote = async () => {
     if (isDeletedRef.current) return;
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
+    
+    try {
     
     // Use refs to get the most up-to-date state (fixes stale closure issue)
     const currentContentBlocks = contentBlocksRef.current;
@@ -2261,6 +2272,9 @@ const Note = () => {
           folder_id: noteFolderId
         }
       }, '*');
+    }
+    } finally {
+      isSavingRef.current = false;
     }
   };
 

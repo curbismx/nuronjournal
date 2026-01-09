@@ -776,6 +776,8 @@ useEffect(() => {
       setNewFolderBlogSubheading('');
       setNewFolderBlogHeaderImage('');
       setNewFolderBlogPassword('');
+    } else {
+      toast.error('Failed to update folder');
     }
   };
 
@@ -1100,14 +1102,45 @@ useEffect(() => {
   const handleDeleteAccount = async () => {
     if (!user) return;
     setShowDeleteConfirmDialog(false);
-    await supabase.from("notes").delete().eq("user_id", user.id);
-    await supabase.from("folders").delete().eq("user_id", user.id);
-    await supabase.from("profiles").delete().eq("id", user.id);
-    await supabase.auth.signOut();
+    setLoading(true);
+    
+    try {
+      // Delete images from storage
+      const { data: imageFiles } = await supabase.storage.from('note-images').list(user.id);
+      if (imageFiles && imageFiles.length > 0) {
+        await supabase.storage.from('note-images').remove(imageFiles.map(f => `${user.id}/${f.name}`));
+      }
+      
+      // Delete audio from storage
+      const { data: audioFiles } = await supabase.storage.from('audio-recordings').list(user.id);
+      if (audioFiles && audioFiles.length > 0) {
+        await supabase.storage.from('audio-recordings').remove(audioFiles.map(f => `${user.id}/${f.name}`));
+      }
+      
+      // Delete database records
+      await supabase.from("notes").delete().eq("user_id", user.id);
+      await supabase.from("folders").delete().eq("user_id", user.id);
+      await supabase.from("profiles").delete().eq("id", user.id);
+      
+      // Clear local storage
+      localStorage.removeItem('nuron-notes');
+      localStorage.removeItem('nuron-notes-cache');
+      localStorage.removeItem('nuron-current-folder-id');
+      
+      await supabase.auth.signOut();
+      toast.success('Account deleted');
+    } catch (error) {
+      console.error('Delete account error:', error);
+      toast.error('Failed to delete account');
+      setLoading(false);
+      return;
+    }
+    
     setUser(null);
     setUserProfile(null);
     setShowAccountDetails(false);
     setShowSettings(false);
+    setLoading(false);
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -1575,6 +1608,8 @@ query = query.eq('folder_id', currentFolder.id);
                           if (desktopSelectedNoteId === draggedNote.id) {
                             setDesktopSelectedNoteId(null);
                           }
+                        } else {
+                          toast.error('Failed to move note');
                         }
                         setDraggedNote(null);
                       }
@@ -3009,6 +3044,8 @@ onDragStart={(e) => {
                               ? { ...n, is_published: newPublishState }
                               : n
                           ));
+                        } else {
+                          toast.error('Failed to update publish status');
                         }
                         
                         setDesktopMenuOpen(false);
