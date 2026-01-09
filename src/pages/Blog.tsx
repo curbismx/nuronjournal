@@ -272,7 +272,7 @@ const Blog = () => {
             <h1 className="text-white font-outfit text-[32px] font-medium mb-2">
               {blogData?.blog_name}
             </h1>
-            <p className="text-white/40 font-outfit text-[16px] mb-8">
+            <p className="text-white/70 font-outfit text-[16px] mb-8">
               This blog is password protected
             </p>
             
@@ -282,7 +282,7 @@ const Blog = () => {
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
                 placeholder="Enter password"
-                className={`w-full px-4 py-3 rounded-[10px] bg-white/10 border ${passwordError ? 'border-red-500' : 'border-white/20'} text-white text-[16px] font-outfit placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-colors`}
+                className={`w-full px-4 py-3 rounded-[10px] bg-white/10 border ${passwordError ? 'border-red-500' : 'border-white/20'} text-white text-[16px] font-outfit placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-0 focus:border-white/40 transition-colors`}
                 autoFocus
               />
               <button 

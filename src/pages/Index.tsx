@@ -1533,6 +1533,7 @@ query = query.eq('folder_id', currentFolder.id);
                         }
                       }} 
                       className="p-0 m-0 border-0 bg-transparent"
+                      aria-label="Create new folder"
                     >
                       <img src={folderPlusIcon} alt="Add" style={{ width: '18px', height: '18px' }} className="opacity-70" />
                     </button>
@@ -1757,7 +1758,7 @@ query = query.eq('folder_id', currentFolder.id);
           </div>
 
           {/* Settings at bottom */}
-          <button onClick={() => setDesktopShowSettings(!desktopShowSettings)} className="px-[20px] pb-[40px] flex items-center gap-2 opacity-60 hover:opacity-80">
+          <button onClick={() => setDesktopShowSettings(!desktopShowSettings)} className="px-[20px] pb-[40px] flex items-center gap-2 opacity-60 hover:opacity-80" aria-label="Open settings">
 
             <img src={settingsIcon} alt="" className="w-[20px] h-[20px]" />
 
@@ -1801,7 +1802,7 @@ query = query.eq('folder_id', currentFolder.id);
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search"
                     autoFocus
-                    className="flex-1 bg-transparent outline-none text-[16px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[hsl(0,0%,60%)]"
+                    className="flex-1 bg-transparent outline-none text-[16px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[hsl(0,0%,60%)] focus:ring-2 focus:ring-[hsl(0,0%,70%)]/50 focus:ring-offset-0 rounded"
                   />
                   <button
                     onClick={() => {
@@ -1818,6 +1819,7 @@ query = query.eq('folder_id', currentFolder.id);
                   <button 
                     onClick={() => setIsSearching(true)}
                     className="p-0 m-0 border-0 bg-transparent"
+                    aria-label="Search notes"
                   >
                     <img 
                       src={greySearchIcon} 
@@ -3171,7 +3173,7 @@ onDragStart={(e) => {
                     placeholder="Name"
                     value={welcomeName}
                     onChange={(e) => setWelcomeName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:border-[hsl(0,0%,60%)] text-[hsl(0,0%,25%)]"
+                    className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,50%)]/50 focus:ring-offset-0 focus:border-[hsl(0,0%,60%)] text-[hsl(0,0%,25%)]"
                   />
                 )}
                 <input
@@ -3179,7 +3181,7 @@ onDragStart={(e) => {
                   placeholder="Email"
                   value={welcomeEmail}
                   onChange={(e) => setWelcomeEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:border-[hsl(0,0%,60%)] text-[hsl(0,0%,25%)]"
+                  className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,50%)]/50 focus:ring-offset-0 focus:border-[hsl(0,0%,60%)] text-[hsl(0,0%,25%)]"
                 />
                 <div className="relative">
                   <input
@@ -3187,7 +3189,7 @@ onDragStart={(e) => {
                     placeholder="Password"
                     value={welcomePassword}
                     onChange={(e) => setWelcomePassword(e.target.value)}
-                    className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:border-[hsl(0,0%,60%)] text-[hsl(0,0%,25%)]"
+                    className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,50%)]/50 focus:ring-offset-0 focus:border-[hsl(0,0%,60%)] text-[hsl(0,0%,25%)]"
                   />
                   <button
                     type="button"
@@ -3337,6 +3339,7 @@ onDragStart={(e) => {
                   <button 
                     onClick={openCreateFolder}
                     className="p-0 m-0 mr-[5px] border-0 bg-transparent"
+                    aria-label="Create new folder"
                   >
                     <img src={folderPlusIcon} alt="Add Folder" className="w-[24px] h-[24px]" />
                   </button>
@@ -3349,6 +3352,7 @@ onDragStart={(e) => {
                       if (isSearching) setSearchQuery("");
                     }}
                     className="p-0 m-0 mr-[20px] border-0 bg-transparent"
+                    aria-label="Search notes"
                   >
                     <img src={searchIcon} alt="Search" className="h-[24px] w-auto" />
                   </button>
@@ -3358,6 +3362,7 @@ onDragStart={(e) => {
                       setUserChangedView(true);
                     }}
                     className="p-0 m-0 border-0 bg-transparent"
+                    aria-label="Toggle view mode"
                   >
                     <img src={viewMode === 'collapsed' ? condenseIcon : listViewIcon} alt="Menu" className="h-[24px] w-[24px] object-contain" />
                   </button>
@@ -3434,6 +3439,7 @@ onDragStart={(e) => {
                 <button 
                   onClick={() => openEditFolder(folder)}
                   className="p-2 m-0 mr-[20px] border-0 bg-transparent"
+                  aria-label="Folder options"
                 >
                   <img src={folderSettingsIcon} alt="Options" className="w-[20px] h-auto opacity-70" />
                 </button>
@@ -3456,6 +3462,7 @@ onDragStart={(e) => {
               setShowSettings(true);
             }}
             className="flex items-center gap-3 p-0 m-0 border-0 bg-transparent"
+            aria-label="Open settings"
           >
             <img src={settingsIcon} alt="Settings" className="h-[24px] w-auto opacity-70" />
             <span className="text-white text-[18px] font-outfit font-light">Settings</span>
