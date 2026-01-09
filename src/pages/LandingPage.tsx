@@ -117,7 +117,7 @@ const LandingPage = () => {
       </section>
 
       {/* Nuron for Everybody - Card with rounded top corners overlapping hero */}
-      <section className="bg-white rounded-t-[30px] -mt-[25px] relative z-10 py-20 md:py-32">
+      <section className="bg-white rounded-t-[60px] -mt-[25px] relative z-10 py-20 md:py-32">
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
           <div>
             <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-[#333333] mb-6">Nuron for Everybody</h2></FadeIn>
