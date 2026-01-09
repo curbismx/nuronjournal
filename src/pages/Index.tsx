@@ -392,6 +392,22 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
 const [showRateAppDialog, setShowRateAppDialog] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [desktopRewriteGlow, setDesktopRewriteGlow] = useState(false);
+  
+  // Network status for offline detection
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Redirect logged-out desktop users with no notes to landing page
   // But NOT if welcome popup is showing (user came from login button)
@@ -578,7 +594,14 @@ const themeSettingsIcons = {
         .eq('user_id', session.user.id)
         .order('sort_order', { ascending: true, nullsFirst: false });
       
-      if (data && !error) {
+      if (error) {
+        console.error('Failed to load folders:', error);
+        toast.error('Failed to load folders. Please check your connection.');
+        setIsInitializing(false);
+        return;
+      }
+      
+      if (data) {
         if (data.length === 0) {
           // Only create default folder if user has NO folders at all
           const { data: newFolder, error: createError } = await supabase
@@ -977,7 +1000,13 @@ useEffect(() => {
         .eq('folder_id', currentFolder.id)
         .order('created_at', { ascending: false });
       
-      if (data && !error) {
+      if (error) {
+        console.error('Failed to load notes:', error);
+        toast.error('Failed to load notes. Please check your connection.');
+        return;
+      }
+      
+      if (data) {
         const notes = data.map(note => ({
           id: note.id,
           title: note.title || 'Untitled',
@@ -1489,7 +1518,13 @@ query = query.eq('folder_id', currentFolder.id);
 
     return (
 
-      <div className="fixed inset-0 flex">
+      <div className="fixed inset-0 flex flex-col">
+        {/* Offline indicator */}
+        {!isOnline && (
+          <div className="bg-yellow-600 text-white text-center py-2 text-sm font-outfit shrink-0">
+            You're offline. Changes may not be saved.
+          </div>
+        )}
 
         {/* Hidden drag image for note dragging */}
         <div
@@ -1518,9 +1553,12 @@ query = query.eq('folder_id', currentFolder.id);
           </svg>
         </div>
 
+        {/* Main 3-column layout */}
+        <div className="flex flex-1 min-h-0">
+
         {/* Column 1: Folders - 20% width, dark background */}
 
-        <div 
+        <div
           className="flex flex-col"
           style={{ width: '20%', backgroundColor: themeColors[theme] }}
         >
@@ -3360,6 +3398,7 @@ onDragStart={(e) => {
           </div>
         )}
 
+        </div>
       </div>
 
     );
@@ -3369,6 +3408,12 @@ onDragStart={(e) => {
   // Show timeline when notes exist
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: themeColors[theme] }}>
+      {/* Offline indicator */}
+      {!isOnline && (
+        <div className="bg-yellow-600 text-white text-center py-2 text-sm font-outfit shrink-0">
+          You're offline. Changes may not be saved.
+        </div>
+      )}
       {/* Fixed dark header */}
       <header 
         className="flex-shrink-0 z-30" 
