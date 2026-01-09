@@ -422,7 +422,33 @@ const Note = () => {
         .eq('id', id)
         .single();
       
-      if (data && !error) {
+      if (error) {
+        console.error('Failed to load note:', error);
+        // Try to load from cache as fallback
+        const cached = localStorage.getItem('nuron-notes-cache');
+        if (cached) {
+          try {
+            const cachedNotes = JSON.parse(cached);
+            const cachedNote = cachedNotes.find((n: any) => n.id === id);
+            if (cachedNote) {
+              setNoteTitle(cachedNote.title || '');
+              setNoteDate(new Date(cachedNote.createdAt));
+              existingCreatedAt.current = cachedNote.createdAt;
+              if (cachedNote.contentBlocks) {
+                setContentBlocks(cachedNote.contentBlocks);
+              }
+              toast.info('Loaded from cache. Connection issue detected.');
+              return;
+            }
+          } catch (e) {
+            console.error('Failed to parse cache:', e);
+          }
+        }
+        toast.error('Failed to load note');
+        return;
+      }
+      
+      if (data) {
         setNoteTitle(data.title || '');
         setNoteDate(new Date(data.created_at));
         existingCreatedAt.current = data.created_at;
@@ -2200,6 +2226,10 @@ const Note = () => {
       weather: weather ? { temp: weather.temp, weatherCode: weather.weatherCode } : undefined,
       audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : undefined,
     };
+    
+    // Always backup to localStorage first (in case save fails)
+    const backupKey = `nuron-note-backup-${noteData.id}`;
+    localStorage.setItem(backupKey, JSON.stringify(noteData));
 
     // ALWAYS check auth directly - don't use React state
     const { data: { session } } = await supabase.auth.getSession();
@@ -2237,6 +2267,8 @@ const Note = () => {
       console.log('Supabase upsert result:', error ? 'ERROR: ' + error.message : 'SUCCESS');
       
       if (!error) {
+        // Remove backup after successful save
+        localStorage.removeItem(backupKey);
         localStorage.setItem('nuron-has-created-note', 'true');
         // Only update local cache in NON-embedded mode
         // In embedded mode, Index.tsx manages the cache via postMessage
@@ -2433,6 +2465,7 @@ const Note = () => {
       
       if (error) {
         console.error('Error uploading image:', error);
+        toast.error('Failed to upload image. Please try again.');
         return;
       }
       
