@@ -1869,9 +1869,10 @@ const Note = () => {
     });
   };
 
-  // Cleanup transcription and recording dots intervals on unmount
+  // Cleanup ALL recording resources on unmount
   useEffect(() => {
     return () => {
+      // Clear all intervals
       if (transcriptionDotsIntervalRef.current) {
         clearInterval(transcriptionDotsIntervalRef.current);
         transcriptionDotsIntervalRef.current = null;
@@ -1888,6 +1889,34 @@ const Note = () => {
         clearInterval(recordingMessageIntervalRef.current);
         recordingMessageIntervalRef.current = null;
       }
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+        recordingIntervalRef.current = null;
+      }
+      
+      // Cancel animation frame
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      
+      // Stop media recorder
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      
+      // Stop microphone stream (CRITICAL - prevents mic staying active)
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      
+      // Revoke any blob URLs in audioUrls to free memory
+      audioUrlsRef.current.forEach(url => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
     };
   }, []);
 
