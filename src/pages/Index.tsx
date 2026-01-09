@@ -1557,7 +1557,7 @@ query = query.eq('folder_id', currentFolder.id);
 
     return (
 
-      <div className="fixed inset-0 flex flex-col">
+      <div className="fixed inset-0 flex flex-col bg-[#F9F9F6]">
         {/* Offline indicator */}
         {!isOnline && (
           <div className="bg-yellow-600 text-white text-center py-2 text-sm font-outfit shrink-0">
@@ -3282,7 +3282,7 @@ onDragStart={(e) => {
         </div>
 
         {/* Desktop Welcome/Login Popup */}
-        {desktopShowWelcomePopup && !user && !isInitializing && (
+        {desktopShowWelcomePopup && !user && (
           <div 
             className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]" 
             style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
