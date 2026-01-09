@@ -386,7 +386,7 @@ const Onboarding = () => {
               'Add images & audio',
               'Cancel anytime',
               "And lot's more...",
-              '7 days free trial'
+              '7-day free trial, then auto-renews'
             ].map((feature, index) => (
               <div 
                 key={index}
@@ -530,6 +530,41 @@ const Onboarding = () => {
             >
               Skip for now
             </button>
+          </div>
+          
+          {/* Legal disclosure */}
+          <div 
+            className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full text-center"
+            style={{ bottom: '40px', maxWidth: '360px' }}
+          >
+            <p 
+              className="text-[11px] leading-relaxed mb-3"
+              style={{ color: '#666666', fontFamily: 'Outfit' }}
+            >
+              Payment will be charged to your Apple ID account at confirmation of purchase. 
+              Subscription automatically renews unless canceled at least 24 hours before 
+              the end of the current period. Manage subscriptions in your App Store account settings.
+            </p>
+            <div className="flex justify-center gap-4">
+              <a 
+                href="https://nuron.life/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[12px]"
+                style={{ color: '#888888', fontFamily: 'Outfit', textDecoration: 'underline' }}
+              >
+                Terms of Service
+              </a>
+              <a 
+                href="https://nuron.life/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[12px]"
+                style={{ color: '#888888', fontFamily: 'Outfit', textDecoration: 'underline' }}
+              >
+                Privacy Policy
+              </a>
+            </div>
           </div>
         </>
       )}

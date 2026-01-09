@@ -355,8 +355,8 @@ const LandingPage = () => {
             © 2026 Nuron. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <a href="#" className="text-black/40 hover:text-black/70 font-outfit text-[12px] transition-colors">Privacy</a>
-            <a href="#" className="text-black/40 hover:text-black/70 font-outfit text-[12px] transition-colors">Terms</a>
+            <a href="https://nuron.life/privacy" target="_blank" rel="noopener noreferrer" className="text-black/40 hover:text-black/70 font-outfit text-[12px] transition-colors">Privacy</a>
+            <a href="https://nuron.life/terms" target="_blank" rel="noopener noreferrer" className="text-black/40 hover:text-black/70 font-outfit text-[12px] transition-colors">Terms</a>
           </div>
         </div>
       </footer>
