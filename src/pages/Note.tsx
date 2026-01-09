@@ -2841,15 +2841,20 @@ const Note = () => {
             .map((block, index) => {
             if (block.type === 'text') {
               const textBlock = block as { type: 'text'; id: string; content: string };
-              // Check if any block is transcription or recording placeholder to hide "Start writing..." on first textarea
-              const hasPlaceholder = contentBlocks.some(b => {
+              // Check if note has ANY content (images, text, or recording placeholders)
+              // If so, don't show "Start writing..." placeholder
+              const hasAnyContent = contentBlocks.some(b => {
+                if (b.type === 'image') return true; // Has an image
                 if (b.type === 'text') {
                   const tb = b as { type: 'text'; id: string; content: string };
+                  // Has actual text content
+                  if (tb.content && tb.content.trim()) return true;
+                  // Has recording/transcription placeholder
                   const isRecordingMessage = recordingMessages.some(msg => tb.content === msg + '...');
-                  return tb.content === 'listening and transcribing' || 
-                         tb.content === 'nearly there...' ||
-                         isRecordingMessage || 
-                         tb.content === 'paused...';
+                  if (tb.content === 'listening and transcribing' || 
+                      tb.content === 'nearly there...' ||
+                      isRecordingMessage || 
+                      tb.content === 'paused...') return true;
                 }
                 return false;
               });
@@ -2916,7 +2921,7 @@ const Note = () => {
                         }
                       }
                     }}
-                    placeholder={hasPlaceholder ? "" : (index === 0 ? "Start writing..." : "")}
+                    placeholder={hasAnyContent ? "" : (index === 0 ? "Start writing..." : "")}
                     className={`note-textarea w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden ${isEmbedded ? 'caret-[hsl(0,0%,25%)]' : ''}`}
                     style={{
                       minHeight: '24px',
@@ -2930,7 +2935,7 @@ const Note = () => {
                       style={{ minHeight: '24px' }}
                     >
                       {renderTextWithLinks(textBlock.content, isEmbedded)}
-                      {!textBlock.content && !hasPlaceholder && index === 0 && (
+                      {!textBlock.content && !hasAnyContent && index === 0 && (
                         <span className="text-[hsl(0,0%,60%)]">Start writing...</span>
                       )}
                     </div>
