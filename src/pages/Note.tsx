@@ -2324,7 +2324,10 @@ const Note = () => {
     console.log('handleBack called');
     await saveNote();
     console.log('saveNote completed');
-    navigate('/');
+    // Only navigate in standalone mobile mode, not in embedded desktop iframe
+    if (!isEmbedded) {
+      navigate('/');
+    }
   };
 
   const handleDateSelect = async (newDate: Date) => {
@@ -2570,7 +2573,11 @@ const Note = () => {
       }, '*');
     }
     
-    navigate('/');
+    // Only navigate in standalone mobile mode, not in embedded desktop iframe
+    // In embedded mode, Index.tsx handles the UI change via the postMessage above
+    if (!isEmbedded) {
+      navigate('/');
+    }
   };
 
   const openImageViewer = (index: number) => {
