@@ -12,6 +12,8 @@ import Onboarding from "./pages/Onboarding";
 import Blog from "./pages/Blog";
 import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import { initializePurchases } from "@/lib/purchases";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -114,6 +116,8 @@ const App = () => {
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/note/:id?" element={<Note />} />
             <Route path="/:username/:blogSlug" element={<Blog />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -1,8 +1,28 @@
-import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import logo from '@/assets/nuron-logo.png';
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { 
+  Mic, 
+  LayoutGrid, 
+  Cloud, 
+  Globe, 
+  FileText, 
+  Sparkles, 
+  Image, 
+  Paintbrush,
+  Menu,
+  X,
+  Quote
+} from "lucide-react";
 
-// Intersection Observer hook for scroll animations
+// Assets
+import nuronLogo from "@/assets/nuron_logo.png";
+import headerImage from "@/assets/header.png";
+import iPhoneImage from "@/assets/iPhone.png";
+import blogImage from "@/assets/Blog.png";
+import folderOptionsImage from "@/assets/folder_options.png";
+import menuImage from "@/assets/menu.png";
+import appStoreBadge from "@/assets/available_on_the_appstore.png";
+
 const useInView = (threshold = 0.1) => {
   const ref = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
@@ -10,7 +30,10 @@ const useInView = (threshold = 0.1) => {
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) setIsInView(true);
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
       },
       { threshold }
     );
@@ -21,161 +44,105 @@ const useInView = (threshold = 0.1) => {
   return { ref, isInView };
 };
 
-// Fade in component
-const FadeIn = ({ 
-  children, 
-  delay = 0, 
-  className = '' 
-}: { 
-  children: React.ReactNode; 
-  delay?: number; 
-  className?: string;
-}) => {
+const FadeIn = ({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) => {
   const { ref, isInView } = useInView();
-  
   return (
-    <div
-      ref={ref}
-      className={className}
-      style={{
-        opacity: isInView ? 1 : 0,
-        transform: isInView ? 'translateY(0)' : 'translateY(30px)',
-        transition: `opacity 1s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s, transform 1s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s`,
-      }}
-    >
+    <div ref={ref} className={className} style={{ opacity: isInView ? 1 : 0, transform: isInView ? "translateY(0)" : "translateY(24px)", transition: `opacity 0.6s ease-out ${delay}s, transform 0.6s ease-out ${delay}s` }}>
       {children}
     </div>
   );
 };
 
+const features = [
+  { icon: Paintbrush, title: "Beautiful Design & UI", description: "A minimalist interface that gets out of your way." },
+  { icon: Mic, title: "One Tap Recording", description: "Start capturing your thoughts instantly with a single tap." },
+  { icon: LayoutGrid, title: "Notes Your Way", description: "Organize notes in folders, switch between grid and list views." },
+  { icon: Cloud, title: "Sync Across Devices", description: "Your notes follow you everywhere seamlessly." },
+  { icon: Globe, title: "One Tap Publish", description: "Transform any note into a public blog post with a single tap." },
+  { icon: FileText, title: "Simplest Blog Ever", description: "Create a beautiful blog in seconds. No setup required." },
+  { icon: Sparkles, title: "AI Rewrite", description: "Let AI help you refine and polish your writing." },
+  { icon: Image, title: "Add Images", description: "Add photos directly from your camera or library." }
+];
+
+const testimonials = [
+  { quote: "Nuron has completely changed how I capture ideas. The voice recording is instant and the transcription is magic.", author: "Sarah M.", role: "Writer", bgColor: "bg-[#E8F0E8]" },
+  { quote: "I've tried dozens of note apps. Nuron is the first one that actually stuck. Simple, fast, beautiful.", author: "James K.", role: "Entrepreneur", bgColor: "bg-[#FDF6E3]" },
+  { quote: "The publishing feature is genius. I went from private notes to a public blog in literally one tap.", author: "Maria L.", role: "Blogger", bgColor: "bg-[#F5F5F5]" },
+  { quote: "As a power user, I appreciate the depth. Folders, sorting, themes - everything I need without the clutter.", author: "David R.", role: "Developer", bgColor: "bg-[#FFE8E5]" }
+];
+
 const LandingPage = () => {
-  const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const handleLogin = () => { window.location.href = "/?login=true"; };
+  const handleSignup = () => { window.location.href = "/?signup=true"; };
+  const scrollToSection = (id: string) => { document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); setMobileMenuOpen(false); };
 
   return (
-    <div className="fixed inset-0 bg-white overflow-y-auto overflow-x-hidden">
+    <div className="min-h-screen bg-white font-outfit overflow-x-hidden">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/80 border-b border-black/[0.05]">
-        <div className="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between">
-          <img src={logo} alt="Nuron" className="h-8 w-auto" />
-          <div className="flex items-center gap-6">
-            <button
-              onClick={() => window.location.href = '/?login=true'}
-              className="text-black/60 hover:text-black font-outfit text-[12px] transition-colors"
-            >
-              Log In
-            </button>
-            <button
-              onClick={() => window.location.href = '/?signup=true'}
-              className="bg-black text-white font-outfit font-medium text-[12px] px-4 py-1.5 rounded-full hover:bg-black/80 transition-all"
-            >
-              Get Started
-            </button>
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#2E2E2E]/95 backdrop-blur-md border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <img src={nuronLogo} alt="Nuron" className="h-8 w-auto" />
+          <div className="hidden md:flex items-center gap-8">
+            <button onClick={() => scrollToSection("features")} className="text-white/80 hover:text-white transition-colors text-sm font-medium">Features</button>
+            <button onClick={() => scrollToSection("pricing")} className="text-white/80 hover:text-white transition-colors text-sm font-medium">Pricing</button>
           </div>
+          <div className="hidden md:flex items-center gap-4">
+            <button onClick={handleLogin} className="text-white/80 hover:text-white transition-colors text-sm font-medium px-4 py-2">Log In</button>
+            <button onClick={handleSignup} className="bg-[#E57373] hover:bg-[#EF5350] text-white px-5 py-2 rounded-full text-sm font-medium transition-all hover:scale-105">Sign Up</button>
+          </div>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden text-white p-2">{mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}</button>
         </div>
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-[#2E2E2E] border-t border-white/10 px-6 py-4 space-y-4">
+            <button onClick={() => scrollToSection("features")} className="block w-full text-left text-white/80 hover:text-white py-2">Features</button>
+            <button onClick={() => scrollToSection("pricing")} className="block w-full text-left text-white/80 hover:text-white py-2">Pricing</button>
+            <div className="pt-4 border-t border-white/10 flex flex-col gap-3">
+              <button onClick={handleLogin} className="w-full text-white/80 py-2 border border-white/20 rounded-full">Log In</button>
+              <button onClick={handleSignup} className="w-full bg-[#E57373] text-white py-2 rounded-full font-medium">Sign Up</button>
+            </div>
+          </div>
+        )}
       </nav>
 
-      {/* Hero Section */}
-      <section className="min-h-screen flex flex-col items-center justify-center px-6 pt-12">
-        <div className="text-center max-w-4xl mx-auto">
-          <h1 
-            className="text-black text-[56px] sm:text-[80px] lg:text-[96px] font-outfit font-semibold leading-[1.05] tracking-[-0.03em] mb-4"
-            style={{ animation: 'fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
-          >
-            Your voice.
-            <br />
-            <span className="bg-gradient-to-r from-[#E56157] via-[#E88BAD] to-[#6BA8D8] bg-clip-text text-transparent">
-              Your story.
-            </span>
-          </h1>
-          
-          <p 
-            className="text-black/50 text-[21px] sm:text-[24px] font-outfit font-normal leading-[1.4] max-w-2xl mx-auto mb-10"
-            style={{ animation: 'fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards', opacity: 0 }}
-          >
-            Speak your thoughts. Nuron transcribes, organizes, and keeps them forever.
-          </p>
-          
-          <div 
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
-            style={{ animation: 'fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards', opacity: 0 }}
-          >
-            <button
-              onClick={() => navigate('/?signup=true')}
-              className="bg-[#E56157] hover:bg-[#d4554c] text-white font-outfit font-medium text-[17px] px-8 py-3.5 rounded-full transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Start for free
-            </button>
-            <button
-              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
-              className="text-[#6BA8D8] hover:text-[#5a97c7] font-outfit text-[17px] transition-colors"
-            >
-              Learn more →
-            </button>
+      {/* Hero */}
+      <section className="relative bg-[#2E2E2E] pt-24 pb-32 md:pt-32 md:pb-48">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <FadeIn><h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6">Remember Everything</h1></FadeIn>
+          <FadeIn delay={0.1}><p className="text-xl md:text-2xl text-white/70 mb-4 max-w-2xl mx-auto">One tap voice recording for all those snippets of information</p></FadeIn>
+          <FadeIn delay={0.2}><p className="text-base md:text-lg text-white/50 max-w-xl mx-auto mb-8">Nuron gives you the space to calm your mind and journal every aspect of your life</p></FadeIn>
+          <FadeIn delay={0.3}><a href="https://apps.apple.com/app/nuron" target="_blank" rel="noopener noreferrer" className="inline-block hover:scale-105 transition-transform"><img src={appStoreBadge} alt="Download on the App Store" className="h-12 md:h-14" /></a></FadeIn>
+          <FadeIn delay={0.4} className="max-w-5xl mx-auto mt-12"><img src={headerImage} alt="Nuron app on multiple devices" className="w-full drop-shadow-2xl" /></FadeIn>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 overflow-hidden"><svg viewBox="0 0 1440 120" fill="none" className="w-full h-auto" preserveAspectRatio="none"><path d="M0 120L1440 120L1440 0C1440 0 1080 80 720 80C360 80 0 0 0 0L0 120Z" fill="white"/></svg></div>
+      </section>
+
+      {/* Nuron for Everybody */}
+      <section className="py-20 md:py-32 bg-white">
+        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-[#333333] mb-6">Nuron for Everybody</h2></FadeIn>
+            <FadeIn delay={0.1}><p className="text-lg text-[#666666] mb-6 leading-relaxed">Whether you're a busy professional, a creative jotting down inspiration, or anyone who wants to remember more — Nuron adapts to you.</p></FadeIn>
+            <FadeIn delay={0.2}><p className="text-lg text-[#666666] leading-relaxed">Start with voice, type when you want, add photos. Your thoughts, your way, beautifully organized.</p></FadeIn>
           </div>
+          <FadeIn delay={0.3}><img src={iPhoneImage} alt="Nuron on iPhone" className="w-full max-w-sm mx-auto drop-shadow-xl" /></FadeIn>
         </div>
       </section>
 
-      {/* Voice First Section */}
-      <section className="py-32 px-6 border-t border-black/[0.05]">
-        <div className="max-w-[980px] mx-auto">
-          <FadeIn className="text-center">
-            <p className="text-[#E56157] font-outfit text-[12px] font-medium tracking-[0.08em] uppercase mb-4">
-              Voice-First
-            </p>
-            <h2 className="text-black text-[48px] sm:text-[56px] font-outfit font-semibold leading-[1.1] tracking-[-0.02em] mb-6">
-              Talk. Don't type.
-            </h2>
-            <p className="text-black/50 text-[21px] font-outfit leading-[1.5] max-w-2xl mx-auto">
-              Capture ideas at the speed of thought. Just tap and speak — 
-              Nuron transforms your words into beautifully formatted notes instantly.
-            </p>
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section id="features" className="py-32 px-6 bg-[#f5f5f7]">
-        <div className="max-w-[980px] mx-auto">
-          <FadeIn className="text-center mb-20">
-            <h2 className="text-black text-[48px] sm:text-[56px] font-outfit font-semibold leading-[1.1] tracking-[-0.02em]">
-              Everything you need.
-              <br />
-              <span className="text-black/30">Nothing you don't.</span>
-            </h2>
-          </FadeIn>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {[
-              {
-                title: 'AI Transcription',
-                description: 'Whisper-powered voice recognition delivers industry-leading accuracy. Your words, captured perfectly.',
-                gradient: 'from-[#E56157] to-[#E88BAD]'
-              },
-              {
-                title: 'Instant Search',
-                description: 'Find anything in milliseconds. Full-text search across all your notes, no matter how many.',
-                gradient: 'from-[#6BA8D8] to-[#8DBA55]'
-              },
-              {
-                title: 'Smart Organization',
-                description: 'Folders that make sense. Organize your thoughts your way, with drag-and-drop simplicity.',
-                gradient: 'from-[#E88BAD] to-[#6BA8D8]'
-              },
-              {
-                title: 'Weather & Context',
-                description: 'Every note captures the moment — weather, time, location. Your memories, in full context.',
-                gradient: 'from-[#8DBA55] to-[#E56157]'
-              },
-            ].map((feature, i) => (
-              <FadeIn key={i} delay={i * 0.1}>
-                <div className="group p-8 rounded-3xl bg-white border border-black/[0.04] hover:shadow-lg hover:shadow-black/[0.04] transition-all duration-500">
-                  <div className={`w-12 h-1 rounded-full bg-gradient-to-r ${feature.gradient} mb-6 group-hover:w-20 transition-all duration-500`} />
-                  <h3 className="text-black text-[24px] font-outfit font-semibold mb-3">
-                    {feature.title}
-                  </h3>
-                  <p className="text-black/50 text-[17px] font-outfit leading-[1.5]">
-                    {feature.description}
-                  </p>
+      {/* Features */}
+      <section id="features" className="py-20 md:py-32 bg-[#F9F9F6]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-[#333333] mb-4">Everything You Need</h2></FadeIn>
+            <FadeIn delay={0.1}><p className="text-lg text-[#666666] max-w-2xl mx-auto">Simple tools that work together to help you capture, organize, and share your thoughts.</p></FadeIn>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((f, i) => (
+              <FadeIn key={f.title} delay={i * 0.05}>
+                <div className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 h-full">
+                  <div className="w-12 h-12 bg-[#F5F5F5] rounded-xl flex items-center justify-center mb-4"><f.icon className="w-6 h-6 text-[#666666]" /></div>
+                  <h3 className="text-lg font-semibold text-[#333333] mb-2">{f.title}</h3>
+                  <p className="text-sm text-[#666666] leading-relaxed">{f.description}</p>
                 </div>
               </FadeIn>
             ))}
@@ -183,197 +150,85 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* AI Rewrite Section */}
-      <section className="py-32 px-6 border-t border-black/[0.05]">
-        <div className="max-w-[980px] mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <FadeIn>
-              <p className="text-[#E88BAD] font-outfit text-[12px] font-medium tracking-[0.08em] uppercase mb-4">
-                AI-Powered
-              </p>
-              <h2 className="text-black text-[40px] sm:text-[48px] font-outfit font-semibold leading-[1.1] tracking-[-0.02em] mb-6">
-                Write better.
-                <br />
-                Effortlessly.
-              </h2>
-              <p className="text-black/50 text-[17px] font-outfit leading-[1.6] mb-8">
-                Nuron's AI can polish your thoughts, fix grammar, adjust tone, or completely rewrite your notes. 
-                Your ideas, refined with one tap.
-              </p>
-              <ul className="space-y-4">
-                {['Fix grammar & spelling', 'Adjust tone and style', 'Expand or condense', 'Translate to any language'].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-black/60 font-outfit text-[15px]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#E88BAD]" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </FadeIn>
-            
-            <FadeIn delay={0.2}>
-              <div className="relative p-8 rounded-3xl bg-gradient-to-br from-[#E88BAD]/10 to-transparent border border-black/[0.04]">
-                <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-white border border-black/[0.06]">
-                    <p className="text-black/40 font-outfit text-[12px] uppercase tracking-wider mb-2">Original</p>
-                    <p className="text-black/60 font-outfit text-[15px] leading-relaxed">
-                      had a really good meeting today with the team we talked about alot of stuff for next quarter
-                    </p>
-                  </div>
-                  <div className="flex justify-center">
-                    <div className="w-8 h-8 rounded-full bg-[#E88BAD]/20 flex items-center justify-center">
-                      <span className="text-[#E88BAD] text-sm">↓</span>
-                    </div>
-                  </div>
-                  <div className="p-4 rounded-xl bg-[#E88BAD]/10 border border-[#E88BAD]/20">
-                    <p className="text-[#E88BAD] font-outfit text-[12px] uppercase tracking-wider mb-2">Refined</p>
-                    <p className="text-black font-outfit text-[15px] leading-relaxed">
-                      Had a productive team meeting today. We discussed key priorities and strategic initiatives for Q1, including launch timelines and resource allocation.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </FadeIn>
+      {/* Power Users */}
+      <section className="py-20 md:py-32 bg-[#EFEFEF]">
+        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+          <FadeIn className="order-2 md:order-1">
+            <div className="relative">
+              <img src={blogImage} alt="Nuron blog" className="w-full max-w-md rounded-xl shadow-lg transform -rotate-2" />
+              <img src={folderOptionsImage} alt="Folder options" className="absolute -bottom-8 -right-4 w-48 rounded-xl shadow-lg transform rotate-3" />
+              <img src={menuImage} alt="Menu" className="absolute -top-4 -right-8 w-40 rounded-xl shadow-lg transform rotate-2" />
+            </div>
+          </FadeIn>
+          <div className="order-1 md:order-2">
+            <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-[#333333] mb-4">Built for Power Users</h2></FadeIn>
+            <FadeIn delay={0.1}><p className="text-xl text-[#666666] mb-6">Simple on the surface, powerful underneath</p></FadeIn>
+            <FadeIn delay={0.2}><ul className="space-y-3 text-[#666666]">
+              {["Folder organization with custom sorting", "One-tap publishing to your personal blog", "Multiple theme options", "Grid and list views", "Cross-device sync"].map(item => (
+                <li key={item} className="flex items-center gap-3"><div className="w-2 h-2 bg-[#E57373] rounded-full"></div>{item}</li>
+              ))}
+            </ul></FadeIn>
           </div>
         </div>
       </section>
 
-      {/* Publish Section */}
-      <section className="py-32 px-6 bg-[#f5f5f7]">
-        <div className="max-w-[980px] mx-auto text-center">
-          <FadeIn>
-            <p className="text-[#6BA8D8] font-outfit text-[12px] font-medium tracking-[0.08em] uppercase mb-4">
-              Share Your Story
-            </p>
-            <h2 className="text-black text-[48px] sm:text-[56px] font-outfit font-semibold leading-[1.1] tracking-[-0.02em] mb-6">
-              From journal to blog.
-              <br />
-              <span className="text-black/30">In one tap.</span>
-            </h2>
-            <p className="text-black/50 text-[21px] font-outfit leading-[1.5] max-w-2xl mx-auto mb-12">
-              Turn any folder into a beautiful public blog. Share your thoughts with the world, 
-              or keep them private with password protection.
-            </p>
-          </FadeIn>
-          
-          <FadeIn delay={0.2} className="flex flex-wrap justify-center gap-6">
-            {[
-              'nuron.life/yourname',
-              'Password protection',
-              'Selective publishing',
-              'Beautiful themes'
-            ].map((item, i) => (
-              <span 
-                key={i}
-                className="px-5 py-2.5 rounded-full bg-white border border-black/[0.06] text-black/60 font-outfit text-[14px]"
-              >
-                {item}
-              </span>
-            ))}
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* Sync Section */}
-      <section className="py-32 px-6 border-t border-black/[0.05]">
-        <div className="max-w-[980px] mx-auto text-center">
-          <FadeIn>
-            <h2 className="text-black text-[48px] sm:text-[56px] font-outfit font-semibold leading-[1.1] tracking-[-0.02em] mb-6">
-              Everywhere you are.
-            </h2>
-            <p className="text-black/50 text-[21px] font-outfit leading-[1.5] max-w-xl mx-auto mb-12">
-              iPhone. iPad. Web. Your notes sync instantly across every device.
-            </p>
-          </FadeIn>
-          
-          <FadeIn delay={0.1} className="flex justify-center gap-12">
-            {['iPhone', 'iPad', 'Web'].map((device, i) => (
-              <div key={i} className="text-center">
-                <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-[#f5f5f7] border border-black/[0.04] flex items-center justify-center">
-                  <span className="text-2xl">
-                    {device === 'iPhone' ? '📱' : device === 'iPad' ? '📱' : '💻'}
-                  </span>
-                </div>
-                <p className="text-black/50 font-outfit text-[14px]">{device}</p>
-              </div>
-            ))}
-          </FadeIn>
-        </div>
-      </section>
-
-      {/* Security Section */}
-      <section className="py-32 px-6 bg-[#f5f5f7]">
-        <div className="max-w-[980px] mx-auto text-center">
-          <FadeIn>
-            <div className="w-20 h-20 mx-auto mb-8 rounded-full bg-white border border-black/[0.04] flex items-center justify-center">
-              <span className="text-4xl">🔒</span>
+      {/* Pricing */}
+      <section id="pricing" className="py-20 md:py-32 bg-white">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-[#333333] mb-4">Free to Start</h2></FadeIn>
+          <FadeIn delay={0.1}><p className="text-xl text-[#666666] mb-6">No credit card required</p></FadeIn>
+          <FadeIn delay={0.2}><p className="text-lg text-[#666666] mb-8">Use Nuron free on the web. Upgrade to Pro for mobile app access, cloud sync, and AI features — just $4.99/month.</p></FadeIn>
+          <FadeIn delay={0.3}>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button onClick={handleSignup} className="bg-[#E57373] hover:bg-[#EF5350] text-white px-8 py-3 rounded-full text-lg font-medium transition-all hover:scale-105">Get Started Free</button>
+              <a href="https://apps.apple.com/app/nuron" target="_blank" rel="noopener noreferrer" className="inline-block hover:scale-105 transition-transform"><img src={appStoreBadge} alt="Download on the App Store" className="h-12" /></a>
             </div>
-            <h2 className="text-black text-[40px] sm:text-[48px] font-outfit font-semibold leading-[1.1] tracking-[-0.02em] mb-6">
-              Private by design.
-            </h2>
-            <p className="text-black/50 text-[17px] font-outfit leading-[1.6] max-w-xl mx-auto">
-              Your thoughts are encrypted and secure. We never read, analyze, or sell your personal data. 
-              Your journal is yours alone.
-            </p>
           </FadeIn>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-20 md:py-32 bg-[#2E2E2E]">
+        <div className="max-w-7xl mx-auto px-6">
+          <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-white mb-16 text-center">What People Are Saying</h2></FadeIn>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {testimonials.map((t, i) => (
+              <FadeIn key={t.author} delay={i * 0.1}>
+                <div className={`${t.bgColor} rounded-2xl p-6 h-full relative`}>
+                  <Quote className="w-8 h-8 text-[#333333]/20 absolute top-4 right-4" />
+                  <p className="text-[#333333] mb-6 leading-relaxed">"{t.quote}"</p>
+                  <p className="font-semibold text-[#333333]">{t.author}</p>
+                  <p className="text-sm text-[#666666]">{t.role}</p>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="py-40 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-[#E56157]/5 to-transparent pointer-events-none" />
-        <div className="max-w-[980px] mx-auto text-center relative z-10">
-          <FadeIn>
-            <h2 className="text-black text-[56px] sm:text-[72px] font-outfit font-semibold leading-[1.05] tracking-[-0.03em] mb-6">
-              Start remembering.
-            </h2>
-            <p className="text-black/50 text-[21px] font-outfit mb-10">
-              Free forever. No credit card required.
-            </p>
-            <button
-              onClick={() => navigate('/?signup=true')}
-              className="bg-black text-white font-outfit font-semibold text-[17px] px-10 py-4 rounded-full hover:bg-black/80 transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Get started free
-            </button>
-            <p className="mt-8 text-black/40 font-outfit text-[14px]">
-              Already have an account?{' '}
-              <button
-                onClick={() => navigate('/?login=true')}
-                className="text-black/60 hover:text-black underline underline-offset-4 transition-colors"
-              >
-                Sign in
-              </button>
-            </p>
-          </FadeIn>
+      <section className="py-20 md:py-32 bg-[#2E2E2E]">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <FadeIn><h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Start Remembering Everything</h2></FadeIn>
+          <FadeIn delay={0.1}><p className="text-xl text-white/70 mb-8">Download Nuron free today</p></FadeIn>
+          <FadeIn delay={0.2}><a href="https://apps.apple.com/app/nuron" target="_blank" rel="noopener noreferrer" className="inline-block hover:scale-105 transition-transform"><img src={appStoreBadge} alt="Download on the App Store" className="h-14 md:h-16" /></a></FadeIn>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-6 border-t border-black/[0.05]">
-        <div className="max-w-[980px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-black/40 font-outfit text-[12px]">
-            © 2026 Nuron. All rights reserved.
-          </p>
-          <div className="flex items-center gap-6">
-            <a href="https://nuron.life/privacy" target="_blank" rel="noopener noreferrer" className="text-black/40 hover:text-black/70 font-outfit text-[12px] transition-colors">Privacy</a>
-            <a href="https://nuron.life/terms" target="_blank" rel="noopener noreferrer" className="text-black/40 hover:text-black/70 font-outfit text-[12px] transition-colors">Terms</a>
+      <footer className="bg-[#2E2E2E] border-t border-white/10 py-12">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8">
+          <img src={nuronLogo} alt="Nuron" className="h-6 w-auto" />
+          <div className="flex flex-wrap justify-center gap-6 text-sm">
+            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-white/60 hover:text-white transition-colors">Home</button>
+            <button onClick={() => scrollToSection("features")} className="text-white/60 hover:text-white transition-colors">Features</button>
+            <button onClick={() => scrollToSection("pricing")} className="text-white/60 hover:text-white transition-colors">Pricing</button>
+            <a href="/privacy" className="text-white/60 hover:text-white transition-colors">Privacy Policy</a>
+            <a href="/terms" className="text-white/60 hover:text-white transition-colors">Terms of Service</a>
           </div>
+          <p className="text-white/40 text-sm">© 2025 Nuron. All rights reserved.</p>
         </div>
       </footer>
-
-      {/* Global animations */}
-      <style>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </div>
   );
 };
