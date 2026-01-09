@@ -2675,6 +2675,7 @@ const Note = () => {
               <Button
                 variant="ghost"
                 onClick={handleBack}
+                aria-label="Go back"
                 className="text-journal-header-foreground hover:bg-journal-header-foreground/10 p-0 h-auto w-auto"
               >
                 <img src={backIcon} alt="Back" className="w-[30px] h-[30px]" />
@@ -2694,6 +2695,7 @@ const Note = () => {
             {!showMoveNote && (
               <button 
                 onClick={() => setMenuOpen(!menuOpen)}
+                aria-label="Open note menu"
                 className="absolute top-0"
                 style={{
                   right: `calc(30px + env(safe-area-inset-right))`
@@ -2796,7 +2798,7 @@ const Note = () => {
               setTitleManuallyEdited(true);
             }}
             placeholder="Note Title"
-            className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] outline-none bg-transparent border-none w-full mb-4 focus:outline-none focus:ring-0 -mt-[10px] placeholder:text-[hsl(60,1%,66%)]"
+            className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] outline-none bg-transparent border-none w-full mb-4 focus:outline-none focus:ring-2 focus:ring-[hsl(0,0%,70%)]/50 focus:ring-offset-0 rounded -mt-[10px] placeholder:text-[hsl(60,1%,66%)]"
           />
         </div>
 
@@ -3115,6 +3117,7 @@ const Note = () => {
                       setAudioToDelete(index);
                       setShowAudioDeleteConfirm(true);
                     }}
+                    aria-label="Delete audio recording"
                     style={{
                       width: '18px',
                       height: '18px',
