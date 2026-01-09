@@ -1160,6 +1160,7 @@ const Note = () => {
 
                 if (error) {
                   console.error('Transcription error:', error);
+                  toast.error('Transcription failed. Your audio was saved - you can listen to it anytime.');
                   // Remove placeholder on error
                   setIsTranscribing(false);
                   setShowTranscriptionNearlyThere(false);
@@ -2168,23 +2169,40 @@ const Note = () => {
         let temp: number;
         let weatherCode: number;
         
-        if (isToday) {
-          // Today: fetch current weather
-          const response = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&temperature_unit=celsius`
-          );
-          const data = await response.json();
-          temp = Math.round(data.current.temperature_2m);
-          weatherCode = data.current.weather_code;
-        } else {
-          // Past day: fetch daily high and dominant weather for that date
-          const dateStr = noteDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-          const response = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,weather_code&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`
-          );
-          const data = await response.json();
-          temp = Math.round(data.daily.temperature_2m_max[0]);
-          weatherCode = data.daily.weather_code[0];
+        // Weather fetch with 5 second timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        try {
+          if (isToday) {
+            // Today: fetch current weather
+            const response = await fetch(
+              `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&temperature_unit=celsius`,
+              { signal: controller.signal }
+            );
+            clearTimeout(timeoutId);
+            const data = await response.json();
+            temp = Math.round(data.current.temperature_2m);
+            weatherCode = data.current.weather_code;
+          } else {
+            // Past day: fetch daily high and dominant weather for that date
+            const dateStr = noteDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            const response = await fetch(
+              `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,weather_code&timezone=auto&start_date=${dateStr}&end_date=${dateStr}`,
+              { signal: controller.signal }
+            );
+            clearTimeout(timeoutId);
+            const data = await response.json();
+            temp = Math.round(data.daily.temperature_2m_max[0]);
+            weatherCode = data.daily.weather_code[0];
+          }
+        } catch (fetchError: any) {
+          clearTimeout(timeoutId);
+          if (fetchError.name === 'AbortError') {
+            console.log('Weather fetch timed out');
+            return;
+          }
+          throw fetchError;
         }
         
         let WeatherIcon = Sun;
@@ -2324,10 +2342,23 @@ const Note = () => {
         upsertData.is_published = false;
       }
       
-      const { error } = await supabase.from('notes').upsert(upsertData);
-      console.log('Supabase upsert result:', error ? 'ERROR: ' + error.message : 'SUCCESS');
+      // Retry logic for save operation (3 attempts with exponential backoff)
+      let saveError = null;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const { error } = await supabase.from('notes').upsert(upsertData);
+        if (!error) {
+          saveError = null;
+          console.log('Supabase upsert result: SUCCESS (attempt ' + attempt + ')');
+          break;
+        }
+        saveError = error;
+        console.log(`Save attempt ${attempt} failed: ${error.message}, retrying...`);
+        if (attempt < 3) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
+      }
       
-      if (!error) {
+      if (!saveError) {
         // Remove backup after successful save
         localStorage.removeItem(backupKey);
         localStorage.setItem('nuron-has-created-note', 'true');
@@ -2348,11 +2379,9 @@ const Note = () => {
           }
           localStorage.setItem('nuron-notes-cache', JSON.stringify(cached));
         }
-      }
-      
-      if (error) {
-        console.error('Error saving to Supabase:', error);
-        toast.error('Failed to save note: ' + error.message);
+      } else {
+        console.error('Error saving to Supabase after retries:', saveError);
+        toast.error('Failed to save note. Please check your connection.');
       }
     } else {
       // Not logged in - save to localStorage
@@ -2717,7 +2746,15 @@ const Note = () => {
       }
       
       // LOGGED IN: Delete from Supabase
-      await supabase.from('notes').delete().eq('id', noteIdRef.current);
+      const { error } = await supabase.from('notes').delete().eq('id', noteIdRef.current);
+      
+      if (error) {
+        console.error('Failed to delete note:', error);
+        toast.error('Failed to delete note. Please try again.');
+        isDeletedRef.current = false; // Reset flag so user can retry
+        return;
+      }
+      
       // Only update cache in non-embedded mode - Index.tsx manages cache in embedded mode
       if (!isEmbedded) {
         const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
