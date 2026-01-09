@@ -387,6 +387,15 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   });
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  // Debounce search query for performance with large note collections
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
   const [isRestoring, setIsRestoring] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 const [showRateAppDialog, setShowRateAppDialog] = useState(false);
@@ -993,12 +1002,15 @@ useEffect(() => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) return;
       
+      const NOTES_PER_PAGE = 100;
+      
       const { data, error } = await supabase
         .from('notes')
         .select('*')
         .eq('user_id', session.user.id)
         .eq('folder_id', currentFolder.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(NOTES_PER_PAGE);
       
       if (error) {
         console.error('Failed to load notes:', error);
@@ -1409,61 +1421,70 @@ query = query.eq('folder_id', currentFolder.id);
     return sorted;
   }, [savedNotes, sortOrder]);
 
-  // Group notes by date
-  const groupedNotes: GroupedNotes[] = sortedNotes.reduce((groups: GroupedNotes[], note) => {
-    const dateKey = new Date(note.createdAt).toLocaleDateString('en-US');
-    const existingGroup = groups.find(g => g.date === dateKey);
-    
-    if (existingGroup) {
-      existingGroup.notes.push(note);
-    } else {
-      groups.push({
-        date: dateKey,
-        notes: [note]
-      });
-    }
-    
-    return groups;
-  }, []);
-
-  // Sort notes within each group to ensure new notes are first in their day
-  groupedNotes.forEach(group => {
-    group.notes.sort((a, b) => {
-      const aIsNew = a.id.startsWith('new-');
-      const bIsNew = b.id.startsWith('new-');
-      if (aIsNew && !bIsNew) return -1;
-      if (bIsNew && !aIsNew) return 1;
-      // Otherwise maintain the sortOrder within the day
-      if (sortOrder === 'asc') {
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  // Group notes by date - memoized for performance
+  const groupedNotes: GroupedNotes[] = React.useMemo(() => {
+    const groups = sortedNotes.reduce((acc: GroupedNotes[], note) => {
+      const dateKey = new Date(note.createdAt).toLocaleDateString('en-US');
+      const existingGroup = acc.find(g => g.date === dateKey);
+      
+      if (existingGroup) {
+        existingGroup.notes.push(note);
       } else {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        acc.push({
+          date: dateKey,
+          notes: [note]
+        });
       }
-    });
-  });
+      
+      return acc;
+    }, []);
 
-  // Filter notes based on search
-  const filteredNotes = searchQuery.trim() === '' 
-    ? sortedNotes 
-    : sortedNotes.filter(note => {
-        const query = searchQuery.toLowerCase();
-        const titleMatch = note.title.toLowerCase().includes(query);
-        const contentMatch = note.contentBlocks
-          .filter(b => b.type === 'text')
-          .some(b => (b as { type: 'text'; id: string; content: string }).content.toLowerCase().includes(query));
-        return titleMatch || contentMatch;
+    // Sort notes within each group to ensure new notes are first in their day
+    groups.forEach(group => {
+      group.notes.sort((a, b) => {
+        const aIsNew = a.id.startsWith('new-');
+        const bIsNew = b.id.startsWith('new-');
+        if (aIsNew && !bIsNew) return -1;
+        if (bIsNew && !aIsNew) return 1;
+        // Otherwise maintain the sortOrder within the day
+        if (sortOrder === 'asc') {
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        } else {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
       });
+    });
 
-  const filteredGroupedNotes: GroupedNotes[] = filteredNotes.reduce((groups: GroupedNotes[], note) => {
-    const dateKey = new Date(note.createdAt).toLocaleDateString('en-US');
-    const existingGroup = groups.find(g => g.date === dateKey);
-    if (existingGroup) {
-      existingGroup.notes.push(note);
-    } else {
-      groups.push({ date: dateKey, notes: [note] });
-    }
     return groups;
-  }, []);
+  }, [sortedNotes, sortOrder]);
+
+  // Filter notes based on search - memoized with debounced query
+  const filteredNotes = React.useMemo(() => {
+    if (debouncedSearchQuery.trim() === '') {
+      return sortedNotes;
+    }
+    const query = debouncedSearchQuery.toLowerCase();
+    return sortedNotes.filter(note => {
+      const titleMatch = note.title.toLowerCase().includes(query);
+      const contentMatch = note.contentBlocks
+        .filter(b => b.type === 'text')
+        .some(b => (b as { type: 'text'; id: string; content: string }).content.toLowerCase().includes(query));
+      return titleMatch || contentMatch;
+    });
+  }, [sortedNotes, debouncedSearchQuery]);
+
+  const filteredGroupedNotes: GroupedNotes[] = React.useMemo(() => {
+    return filteredNotes.reduce((groups: GroupedNotes[], note) => {
+      const dateKey = new Date(note.createdAt).toLocaleDateString('en-US');
+      const existingGroup = groups.find(g => g.date === dateKey);
+      if (existingGroup) {
+        existingGroup.notes.push(note);
+      } else {
+        groups.push({ date: dateKey, notes: [note] });
+      }
+      return groups;
+    }, []);
+  }, [filteredNotes]);
 
   // Update visibleMonthYear when notes change
   useEffect(() => {
@@ -2071,6 +2092,7 @@ onDragStart={(e) => {
                                   <img 
                                     src={firstImage.url} 
                                     alt=""
+                                    loading="lazy"
                                     className="w-[50px] h-[50px] rounded-[8px] object-cover flex-shrink-0"
                                   />
                                 )}
@@ -2109,6 +2131,7 @@ onDragStart={(e) => {
                                     <img 
                                       src={firstImage.url} 
                                       alt=""
+                                      loading="lazy"
                                       className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0"
                                     />
                                   )}
@@ -4018,7 +4041,7 @@ onDragStart={(e) => {
                                   </p>
                                 </div>
                                 {firstImage && (
-                                  <img src={firstImage.url} alt="" className="w-[50px] h-[50px] rounded-[8px] object-cover flex-shrink-0" />
+                                  <img src={firstImage.url} alt="" loading="lazy" className="w-[50px] h-[50px] rounded-[8px] object-cover flex-shrink-0" />
                                 )}
                               </div>
                             ) : (
@@ -4032,7 +4055,7 @@ onDragStart={(e) => {
                                   </p>
                                 </div>
                                 {firstImage && (
-                                  <img src={firstImage.url} alt="" className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0" />
+                                  <img src={firstImage.url} alt="" loading="lazy" className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0" />
                                 )}
                               </div>
                             )}
