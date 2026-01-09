@@ -51,6 +51,22 @@ const renderTextWithLinks = (text: string): React.ReactNode => {
       href = `https://${linkText}`;
     }
     
+    // Safety check - only allow http/https/mailto protocols
+    try {
+      const url = new URL(href);
+      if (!['http:', 'https:', 'mailto:'].includes(url.protocol)) {
+        parts.push(<React.Fragment key={`text-${keyIndex}`}>{linkText}</React.Fragment>);
+        keyIndex++;
+        lastIndex = match.index + linkText.length;
+        continue;
+      }
+    } catch {
+      parts.push(<React.Fragment key={`text-${keyIndex}`}>{linkText}</React.Fragment>);
+      keyIndex++;
+      lastIndex = match.index + linkText.length;
+      continue;
+    }
+    
     parts.push(
       <a
         key={`link-${keyIndex}`}

@@ -82,6 +82,22 @@ const renderTextWithLinks = (text: string, isEmbedded: boolean) => {
       href = `mailto:${linkText}`;
     } else if (linkText.startsWith('www.')) {
       href = `https://${linkText}`;
+    } else if (!linkText.startsWith('http://') && !linkText.startsWith('https://')) {
+      href = `https://${linkText}`;
+    }
+    
+    // Safety check - only allow http/https/mailto protocols
+    try {
+      const url = new URL(href);
+      if (!['http:', 'https:', 'mailto:'].includes(url.protocol)) {
+        parts.push(linkText);
+        lastIndex = match.index + linkText.length;
+        continue;
+      }
+    } catch {
+      parts.push(linkText);
+      lastIndex = match.index + linkText.length;
+      continue;
     }
     
     // Only render clickable links on desktop embed
