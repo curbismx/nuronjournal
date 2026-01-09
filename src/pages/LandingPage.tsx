@@ -114,7 +114,11 @@ const LandingPage = () => {
           <FadeIn delay={0.3}><a href="https://apps.apple.com/app/nuron" target="_blank" rel="noopener noreferrer" className="inline-block hover:scale-105 transition-transform"><img src={appStoreBadge} alt="Download on the App Store" className="h-12 md:h-14" /></a></FadeIn>
           <FadeIn delay={0.4} className="max-w-5xl mx-auto mt-12"><img src={headerImage} alt="Nuron app on multiple devices" className="w-full drop-shadow-2xl" /></FadeIn>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 overflow-hidden"><svg viewBox="0 0 1440 120" fill="none" className="w-full h-auto" preserveAspectRatio="none"><path d="M0 120L1440 120L1440 0C1440 0 1080 80 720 80C360 80 0 0 0 0L0 120Z" fill="white"/></svg></div>
+        <div className="absolute bottom-0 left-0 right-0 overflow-hidden">
+          <svg viewBox="0 0 1440 60" fill="none" className="w-full h-auto" preserveAspectRatio="none">
+            <path d="M0 0 L0 60 L1440 60 L1440 0 Q1400 0 1400 40 L40 40 Q0 40 0 0 Z" fill="white"/>
+          </svg>
+        </div>
       </section>
 
       {/* Nuron for Everybody */}
