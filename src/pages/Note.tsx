@@ -585,7 +585,7 @@ const Note = () => {
       .eq('id', noteIdRef.current);
     
     if (error) {
-      toast.error('Failed to move note');
+      console.error('Failed to move note:', error);
       setSelectedMoveFolder(null);
       return;
     }

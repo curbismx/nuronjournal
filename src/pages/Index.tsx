@@ -1128,10 +1128,8 @@ useEffect(() => {
       localStorage.removeItem('nuron-current-folder-id');
       
       await supabase.auth.signOut();
-      toast.success('Account deleted');
     } catch (error) {
       console.error('Delete account error:', error);
-      toast.error('Failed to delete account');
       setLoading(false);
       return;
     }
