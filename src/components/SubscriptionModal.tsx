@@ -242,6 +242,36 @@ const SubscriptionModal = ({ isOpen, onClose, onSubscribed }: SubscriptionModalP
         >
           {isRestoring ? 'Restoring...' : 'Restore Purchases'}
         </button>
+
+        {/* Legal disclosure */}
+        <p 
+          className="text-[10px] leading-relaxed mt-4 text-center"
+          style={{ color: '#666666', fontFamily: 'Outfit' }}
+        >
+          Payment will be charged to your Apple ID account at confirmation of purchase. 
+          Subscription automatically renews unless canceled at least 24 hours before 
+          the end of the current period. Manage subscriptions in your App Store account settings.
+        </p>
+        <div className="flex justify-center gap-4 mt-2">
+          <a 
+            href="https://nuron.life/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px]"
+            style={{ color: '#888888', fontFamily: 'Outfit', textDecoration: 'underline' }}
+          >
+            Terms
+          </a>
+          <a 
+            href="https://nuron.life/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px]"
+            style={{ color: '#888888', fontFamily: 'Outfit', textDecoration: 'underline' }}
+          >
+            Privacy
+          </a>
+        </div>
       </div>
     </div>
   );
