@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useSearchParams } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
+import { App as CapacitorApp } from "@capacitor/app";
 import Index from "./pages/Index";
 import Note from "./pages/Note";
 import Onboarding from "./pages/Onboarding";
@@ -13,6 +14,9 @@ import NotFound from "./pages/NotFound";
 import LandingPage from "./pages/LandingPage";
 import { initializePurchases } from "@/lib/purchases";
 import { supabase } from "@/integrations/supabase/client";
+
+// Global event for app state changes (background/foreground)
+export const appStateEvent = new EventTarget();
 
 const queryClient = new QueryClient();
 
@@ -71,6 +75,31 @@ const HomeRoute = () => {
 const App = () => {
   useEffect(() => {
     initializePurchases();
+    
+    // Set up app lifecycle listeners (native only)
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+        // Dispatch event that components can listen to
+        appStateEvent.dispatchEvent(
+          new CustomEvent('stateChange', { detail: { isActive } })
+        );
+      });
+    }
+    
+    // Web fallback: visibility change
+    const handleVisibilityChange = () => {
+      appStateEvent.dispatchEvent(
+        new CustomEvent('stateChange', { 
+          detail: { isActive: !document.hidden } 
+        })
+      );
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   return (
