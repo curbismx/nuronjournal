@@ -18,38 +18,44 @@ const queryClient = new QueryClient();
 
 // Component that decides whether to show landing page or app (WEB ONLY)
 const HomeRoute = () => {
-  // On native mobile app, ALWAYS show the app directly - no landing page
-  if (Capacitor.isNativePlatform()) {
-    return <Index />;
-  }
-
   const [isLoading, setIsLoading] = useState(true);
   const [shouldShowApp, setShouldShowApp] = useState(false);
   const [searchParams] = useSearchParams();
-
-  // Check if login or signup is requested via query params
+  const isNative = Capacitor.isNativePlatform();
+  
   const showAuth = searchParams.get('login') === 'true' || searchParams.get('signup') === 'true';
 
   useEffect(() => {
+    // On native platform, always show app immediately
+    if (isNative) {
+      setShouldShowApp(true);
+      setIsLoading(false);
+      return;
+    }
+    
     const checkAuth = async () => {
-      // Check for local notes
-      const localNotes = localStorage.getItem('nuron-notes');
-      const hasNotes = localNotes && JSON.parse(localNotes).length > 0;
+      // Check for local notes - with error handling for corrupted localStorage
+      let hasNotes = false;
+      try {
+        const localNotes = localStorage.getItem('nuron-notes');
+        hasNotes = localNotes ? JSON.parse(localNotes).length > 0 : false;
+      } catch {
+        // Invalid JSON in localStorage - clear corrupted data
+        localStorage.removeItem('nuron-notes');
+      }
 
       // Check for authenticated session
       const { data: { session } } = await supabase.auth.getSession();
       
-      // Determine once whether to show app or landing page
+      // Determine whether to show app or landing page
       setShouldShowApp(!!session || hasNotes || showAuth);
       setIsLoading(false);
     };
 
     checkAuth();
-    
-    // NO auth listener here - Index.tsx handles that
-  }, [showAuth]);
+  }, [showAuth, isNative]);
 
-  // Show nothing while checking auth (prevents flash)
+  // Show loading state while checking
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-[#1a1a1a] flex items-center justify-center">
@@ -58,12 +64,8 @@ const HomeRoute = () => {
     );
   }
 
-  // Show app or landing page based on initial check only
-  if (shouldShowApp) {
-    return <Index />;
-  }
-
-  return <LandingPage />;
+  // Show app or landing page based on check result
+  return shouldShowApp ? <Index /> : <LandingPage />;
 };
 
 const App = () => {
