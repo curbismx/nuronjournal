@@ -362,7 +362,7 @@ const Note = () => {
     })()
   );
 
-  // Set body background color for desktop embed
+// Set body background color for desktop embed
   useEffect(() => {
     if (isEmbedded) {
       document.body.style.backgroundColor = '#F9F9F6';
@@ -371,6 +371,67 @@ const Note = () => {
       document.body.style.backgroundColor = '';
     };
   }, [isEmbedded]);
+
+  // Handle app going to background (native + web)
+  useEffect(() => {
+    // Dynamic import to avoid issues if appStateEvent not yet available
+    import('../App').then(({ appStateEvent }) => {
+      const handleAppStateChange = (event: Event) => {
+        const customEvent = event as CustomEvent<{ isActive: boolean }>;
+        if (!customEvent.detail.isActive) {
+          // App going to background - stop recording if active
+          if (isRecordingRef.current) {
+            // Stop recording gracefully
+            setIsRecording(false);
+            isRecordingRef.current = false;
+            if (recordingIntervalRef.current) {
+              clearInterval(recordingIntervalRef.current);
+              recordingIntervalRef.current = null;
+            }
+            // Stop speech recognition
+            if (Capacitor.isNativePlatform()) {
+              SpeechRecognition.stop();
+            } else if (recognitionRef.current) {
+              recognitionRef.current.stop();
+            }
+            // Stop media recorder
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+              mediaRecorderRef.current.stop();
+            }
+            // Stop audio stream
+            if (streamRef.current) {
+              streamRef.current.getTracks().forEach(track => track.stop());
+              streamRef.current = null;
+            }
+          }
+          // Save current note
+          saveNote();
+        }
+      };
+      
+      appStateEvent.addEventListener('stateChange', handleAppStateChange);
+      
+      return () => {
+        appStateEvent.removeEventListener('stateChange', handleAppStateChange);
+      };
+    });
+  }, []);
+
+  // Handle audio playback interruption (e.g., phone call, switching apps)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && playingAudioIndex !== null) {
+        // Pause audio when tab/app becomes hidden
+        audioPlayerRefs.current[playingAudioIndex]?.pause();
+        setPlayingAudioIndex(null);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [playingAudioIndex]);
 
   // Smooth fade-in for embedded view
   useEffect(() => {

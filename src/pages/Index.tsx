@@ -396,6 +396,24 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Auto-save when app goes to background (force-save iframe on desktop)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Force save any pending note changes in iframe
+        const iframe = document.querySelector('iframe');
+        if (iframe?.contentWindow) {
+          iframe.contentWindow.postMessage({ type: 'force-save' }, '*');
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
   const [isRestoring, setIsRestoring] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 const [showRateAppDialog, setShowRateAppDialog] = useState(false);
