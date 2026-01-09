@@ -2542,6 +2542,22 @@ const Note = () => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (session?.user) {
+      // Clean up audio files from storage
+      const currentAudioUrls = audioUrlsRef.current;
+      for (const audioUrl of currentAudioUrls) {
+        if (audioUrl.includes('supabase.co/storage')) {
+          try {
+            const urlParts = audioUrl.split('/storage/v1/object/public/audio-recordings/');
+            if (urlParts.length > 1) {
+              const filePath = urlParts[1];
+              await supabase.storage.from('audio-recordings').remove([filePath]);
+            }
+          } catch (error) {
+            console.error('Error deleting audio from storage:', error);
+          }
+        }
+      }
+      
       // Clean up images from storage
       const imageBlocks = contentBlocks.filter(b => b.type === 'image') as Array<{ type: 'image'; id: string; url: string; width: number }>;
       

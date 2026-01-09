@@ -2603,6 +2603,20 @@ onDragStart={(e) => {
                                 if (!file || !user) return;
                                 
                                 setUploadingHeaderImage(true);
+                                
+                                // Delete old header image if exists
+                                if (newFolderBlogHeaderImage && newFolderBlogHeaderImage.includes('supabase.co/storage')) {
+                                  try {
+                                    const urlParts = newFolderBlogHeaderImage.split('/storage/v1/object/public/note-images/');
+                                    if (urlParts.length > 1) {
+                                      const oldFilePath = urlParts[1];
+                                      await supabase.storage.from('note-images').remove([oldFilePath]);
+                                    }
+                                  } catch (error) {
+                                    console.error('Error deleting old header image:', error);
+                                  }
+                                }
+                                
                                 const fileExt = file.name.split('.').pop();
                                 const fileName = `${user.id}/blog-header-${Date.now()}.${fileExt}`;
                                 
@@ -4164,6 +4178,20 @@ onDragStart={(e) => {
                             if (!file || !user) return;
                             
                             setUploadingHeaderImage(true);
+                            
+                            // Delete old header image if exists
+                            if (newFolderBlogHeaderImage && newFolderBlogHeaderImage.includes('supabase.co/storage')) {
+                              try {
+                                const urlParts = newFolderBlogHeaderImage.split('/storage/v1/object/public/note-images/');
+                                if (urlParts.length > 1) {
+                                  const oldFilePath = urlParts[1];
+                                  await supabase.storage.from('note-images').remove([oldFilePath]);
+                                }
+                              } catch (error) {
+                                console.error('Error deleting old header image:', error);
+                              }
+                            }
+                            
                             const fileExt = file.name.split('.').pop();
                             const fileName = `${user.id}/blog-header-${Date.now()}.${fileExt}`;
                             
