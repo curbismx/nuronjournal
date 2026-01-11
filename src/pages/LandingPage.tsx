@@ -78,7 +78,7 @@ const LandingPage = () => {
   const scrollToSection = (id: string) => { document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); setMobileMenuOpen(false); };
 
   return (
-    <div className="min-h-screen bg-white font-outfit overflow-x-hidden">
+    <div className="fixed inset-0 bg-white font-outfit overflow-y-auto overflow-x-hidden">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
