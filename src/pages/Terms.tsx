@@ -5,199 +5,208 @@ const Terms = () => {
   return (
     <div className="min-h-screen bg-white font-outfit">
       {/* Header */}
-      <header className="bg-[#2E2E2E] py-6">
-        <div className="max-w-4xl mx-auto px-6">
-          <Link to="/welcome" className="inline-block">
+      <header className="border-b border-gray-100 py-6">
+        <div className="max-w-4xl mx-auto px-6 flex items-center justify-between">
+          <Link to="/welcome">
             <img src={nuronLogo} alt="Nuron" className="h-8 w-auto" />
+          </Link>
+          <Link to="/welcome" className="text-[#999999] hover:text-[#666666] transition-colors text-sm">
+            Back to Home
           </Link>
         </div>
       </header>
 
       {/* Content */}
       <main className="max-w-4xl mx-auto px-6 py-16">
-        <h1 className="text-4xl md:text-5xl font-bold text-[#333333] mb-8">
+        <h1 className="text-4xl md:text-5xl font-semibold text-[#333333] mb-4">
           Terms of Service
         </h1>
         
-        <p className="text-[#666666] mb-8">
+        <p className="text-[#999999] mb-12">
           Last updated: January 2025
         </p>
 
-        <div className="prose prose-lg max-w-none text-[#666666]">
-          <section className="mb-12">
+        <p className="text-[#666666] leading-relaxed mb-12">
+          Welcome to Nuron. By accessing or using our service, you agree to be bound by these Terms of Service. Please read them carefully.
+        </p>
+
+        <div className="space-y-12">
+          <section>
             <h2 className="text-2xl font-semibold text-[#333333] mb-4">
-              Agreement to Terms
+              1. Acceptance of Terms
             </h2>
-            <p className="mb-4 leading-relaxed">
-              By accessing or using Nuron, you agree to be bound by these Terms of Service. 
-              If you do not agree to these terms, please do not use our service.
+            <p className="text-[#666666] leading-relaxed">
+              By creating an account or using Nuron, you agree to these Terms of Service and our Privacy Policy. If you do not agree to these terms, please do not use our service.
             </p>
           </section>
 
-          <section className="mb-12">
+          <section>
             <h2 className="text-2xl font-semibold text-[#333333] mb-4">
-              Description of Service
+              2. Description of Service
             </h2>
-            <p className="mb-4 leading-relaxed">
-              Nuron is a note-taking and journaling application that allows you to capture 
-              thoughts through voice recording, text, and images. The service includes cloud 
-              synchronization, AI-powered transcription and rewriting, and the ability to 
-              publish notes as blog posts.
+            <p className="text-[#666666] leading-relaxed">
+              Nuron is a voice-powered journaling application that allows you to capture thoughts through voice recording, organise notes into folders, and optionally publish content to the web. The service is available via web browser and iOS application.
             </p>
           </section>
 
-          <section className="mb-12">
+          <section>
             <h2 className="text-2xl font-semibold text-[#333333] mb-4">
-              User Accounts
+              3. User Accounts
             </h2>
-            <p className="mb-4 leading-relaxed">
-              To access certain features, you must create an account. You are responsible for:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Maintaining the confidentiality of your account credentials</li>
-              <li>All activities that occur under your account</li>
+            <p className="text-[#666666] mb-4">To use certain features of Nuron, you must create an account. You are responsible for:</p>
+            <ul className="list-disc pl-6 space-y-2 text-[#666666]">
               <li>Providing accurate and complete information</li>
-              <li>Notifying us immediately of any unauthorized use</li>
+              <li>Maintaining the security of your account credentials</li>
+              <li>All activities that occur under your account</li>
+              <li>Notifying us immediately of any unauthorised use</li>
             </ul>
+            <p className="text-[#666666] mt-4">
+              You must be at least 13 years old to create an account and use Nuron.
+            </p>
           </section>
 
-          <section className="mb-12">
+          <section>
             <h2 className="text-2xl font-semibold text-[#333333] mb-4">
-              Acceptable Use
+              4. User Content
             </h2>
-            <p className="mb-4 leading-relaxed">
-              You agree not to use Nuron to:
+            <p className="text-[#666666] leading-relaxed mb-4">
+              <strong>Ownership:</strong> You retain all ownership rights to the content you create in Nuron. Your notes, journal entries, images, and recordings remain yours.
             </p>
-            <ul className="list-disc pl-6 space-y-2">
+            <p className="text-[#666666] leading-relaxed mb-4">
+              <strong>License to Nuron:</strong> By using our service, you grant us a limited license to store, process, and display your content solely for the purpose of providing the service to you. This includes:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 text-[#666666]">
+              <li>Storing your content on our servers</li>
+              <li>Processing voice recordings for transcription</li>
+              <li>Syncing content across your devices</li>
+              <li>Displaying published content to viewers (if you choose to publish)</li>
+            </ul>
+            <p className="text-[#666666] leading-relaxed mt-4">
+              <strong>Published Content:</strong> When you publish a folder to the web, you acknowledge that the content will be publicly accessible (or accessible to those with the password, if you set one). You are solely responsible for the content you publish.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold text-[#333333] mb-4">
+              5. Acceptable Use
+            </h2>
+            <p className="text-[#666666] mb-4">You agree not to use Nuron to:</p>
+            <ul className="list-disc pl-6 space-y-2 text-[#666666]">
               <li>Violate any applicable laws or regulations</li>
-              <li>Infringe on the rights of others</li>
-              <li>Upload or share illegal, harmful, or offensive content</li>
-              <li>Attempt to gain unauthorized access to our systems</li>
+              <li>Infringe on the intellectual property rights of others</li>
+              <li>Upload or publish content that is illegal, harmful, threatening, abusive, harassing, defamatory, or otherwise objectionable</li>
+              <li>Distribute malware or harmful code</li>
+              <li>Attempt to gain unauthorised access to our systems</li>
               <li>Interfere with or disrupt the service</li>
-              <li>Use the service for spam or unauthorized commercial purposes</li>
+              <li>Use automated systems to access the service without permission</li>
             </ul>
           </section>
 
-          <section className="mb-12">
+          <section>
             <h2 className="text-2xl font-semibold text-[#333333] mb-4">
-              Content Ownership
+              6. Subscription and Payment
             </h2>
-            <p className="mb-4 leading-relaxed">
-              You retain full ownership of all content you create in Nuron. By using our service, 
-              you grant us a limited license to store, process, and display your content as 
-              necessary to provide the service.
+            <p className="text-[#666666] leading-relaxed mb-4">
+              <strong>Free Tier:</strong> Basic features of Nuron are available for free on the web.
             </p>
-            <p className="mb-4 leading-relaxed">
-              When you publish content publicly, you are responsible for ensuring you have the 
-              right to share that content and that it complies with these terms.
+            <p className="text-[#666666] leading-relaxed mb-4">
+              <strong>Nuron Pro:</strong> Premium features, including cross-device sync and the iOS app, require a paid subscription. Subscriptions are managed through the Apple App Store and are subject to Apple's terms and conditions.
+            </p>
+            <p className="text-[#666666] leading-relaxed mb-4">
+              <strong>Billing:</strong> Subscription fees are billed in advance on a monthly or annual basis. You can manage or cancel your subscription through your App Store account settings.
+            </p>
+            <p className="text-[#666666] leading-relaxed">
+              <strong>Refunds:</strong> Refund requests for App Store purchases are handled by Apple according to their refund policy.
             </p>
           </section>
 
-          <section className="mb-12">
+          <section>
             <h2 className="text-2xl font-semibold text-[#333333] mb-4">
-              Published Content
+              7. Intellectual Property
             </h2>
-            <p className="mb-4 leading-relaxed">
-              When you choose to publish notes:
+            <p className="text-[#666666] leading-relaxed mb-4">
+              The Nuron service, including its design, features, and code, is owned by Nuron and protected by intellectual property laws. You may not copy, modify, distribute, or reverse engineer any part of the service without our written permission.
             </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Your content becomes publicly accessible on the internet</li>
-              <li>You are solely responsible for the content you publish</li>
-              <li>You must not publish content that violates laws or third-party rights</li>
-              <li>We reserve the right to remove published content that violates these terms</li>
-              <li>You can unpublish content at any time</li>
-            </ul>
-          </section>
-
-          <section className="mb-12">
-            <h2 className="text-2xl font-semibold text-[#333333] mb-4">
-              Subscriptions and Payments
-            </h2>
-            <p className="mb-4 leading-relaxed">
-              Nuron offers both free and paid subscription plans:
-            </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Free tier: Unlimited notes on the web</li>
-              <li>Pro subscription: Includes mobile app access, cloud sync, and AI features</li>
-            </ul>
-            <p className="mt-4 leading-relaxed">
-              Subscriptions are billed monthly or annually and automatically renew unless cancelled. 
-              You can cancel your subscription at any time through the App Store or your account settings.
-            </p>
-            <p className="mt-4 leading-relaxed">
-              Refunds are handled according to Apple's App Store policies for iOS purchases.
+            <p className="text-[#666666] leading-relaxed">
+              The Nuron name, logo, and associated branding are trademarks of Nuron. You may not use these without our prior written consent.
             </p>
           </section>
 
-          <section className="mb-12">
+          <section>
             <h2 className="text-2xl font-semibold text-[#333333] mb-4">
-              AI Features
+              8. Third-Party Services
             </h2>
-            <p className="mb-4 leading-relaxed">
-              Nuron uses artificial intelligence for transcription and text rewriting. While we 
-              strive for accuracy, AI-generated content may contain errors. You are responsible 
-              for reviewing and verifying AI-processed content before publishing.
+            <p className="text-[#666666] leading-relaxed">
+              Nuron integrates with third-party services for functionality such as authentication, storage, and transcription. Your use of these integrated services is subject to their respective terms and privacy policies.
             </p>
           </section>
 
-          <section className="mb-12">
+          <section>
             <h2 className="text-2xl font-semibold text-[#333333] mb-4">
-              Limitation of Liability
+              9. Disclaimer of Warranties
             </h2>
-            <p className="mb-4 leading-relaxed">
-              Nuron is provided "as is" without warranties of any kind. We are not liable for:
+            <p className="text-[#666666] leading-relaxed mb-4">
+              Nuron is provided "as is" and "as available" without warranties of any kind, either express or implied. We do not guarantee that the service will be uninterrupted, secure, or error-free.
             </p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>Loss of data or content</li>
-              <li>Service interruptions or downtime</li>
-              <li>Errors in AI transcription or processing</li>
-              <li>Unauthorized access to your account due to your failure to maintain security</li>
-              <li>Any indirect, incidental, or consequential damages</li>
-            </ul>
-            <p className="mt-4 leading-relaxed">
-              We recommend regularly backing up important content.
+            <p className="text-[#666666] leading-relaxed">
+              We make no warranties regarding the accuracy or reliability of transcriptions generated from voice recordings.
             </p>
           </section>
 
-          <section className="mb-12">
+          <section>
             <h2 className="text-2xl font-semibold text-[#333333] mb-4">
-              Termination
+              10. Limitation of Liability
             </h2>
-            <p className="mb-4 leading-relaxed">
-              We reserve the right to suspend or terminate your account if you violate these terms. 
-              You may also delete your account at any time through the app settings.
-            </p>
-            <p className="mb-4 leading-relaxed">
-              Upon termination, your data will be deleted in accordance with our Privacy Policy.
+            <p className="text-[#666666] leading-relaxed">
+              To the fullest extent permitted by law, Nuron shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses.
             </p>
           </section>
 
-          <section className="mb-12">
+          <section>
             <h2 className="text-2xl font-semibold text-[#333333] mb-4">
-              Changes to Terms
+              11. Indemnification
             </h2>
-            <p className="mb-4 leading-relaxed">
-              We may update these Terms of Service from time to time. Continued use of the service 
-              after changes constitutes acceptance of the new terms.
+            <p className="text-[#666666] leading-relaxed">
+              You agree to indemnify and hold harmless Nuron and its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including legal fees) arising out of your use of the service or violation of these terms.
             </p>
           </section>
 
-          <section className="mb-12">
+          <section>
             <h2 className="text-2xl font-semibold text-[#333333] mb-4">
-              Governing Law
+              12. Termination
             </h2>
-            <p className="mb-4 leading-relaxed">
-              These terms are governed by applicable law. Any disputes shall be resolved through 
-              appropriate legal channels.
+            <p className="text-[#666666] leading-relaxed mb-4">
+              We may terminate or suspend your account at any time, with or without cause, with or without notice. Upon termination, your right to use the service will cease immediately.
+            </p>
+            <p className="text-[#666666] leading-relaxed">
+              You may delete your account at any time through the app settings. Upon account deletion, your data will be permanently removed in accordance with our Privacy Policy.
             </p>
           </section>
 
-          <section className="mb-12">
+          <section>
             <h2 className="text-2xl font-semibold text-[#333333] mb-4">
-              Contact Us
+              13. Changes to Terms
             </h2>
-            <p className="mb-4 leading-relaxed">
-              If you have questions about these Terms of Service, please contact us at{" "}
+            <p className="text-[#666666] leading-relaxed">
+              We reserve the right to modify these Terms of Service at any time. We will notify users of any material changes by updating the "Last updated" date. Your continued use of the service after changes constitutes acceptance of the new terms.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold text-[#333333] mb-4">
+              14. Governing Law
+            </h2>
+            <p className="text-[#666666] leading-relaxed">
+              These Terms of Service shall be governed by and construed in accordance with the laws of the jurisdiction in which Nuron operates, without regard to its conflict of law provisions.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold text-[#333333] mb-4">
+              15. Contact Us
+            </h2>
+            <p className="text-[#666666] leading-relaxed">
+              If you have any questions about these Terms of Service, please contact us at:{" "}
               <a href="mailto:legal@nuron.life" className="text-[#E57373] hover:underline">
                 legal@nuron.life
               </a>
@@ -207,9 +216,9 @@ const Terms = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#2E2E2E] py-8">
+      <footer className="border-t border-gray-100 py-8">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <p className="text-white/40 text-sm">
+          <p className="text-[#999999] text-sm">
             © 2025 Nuron. All rights reserved.
           </p>
         </div>

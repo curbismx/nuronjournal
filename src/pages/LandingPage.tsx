@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { 
   Mic, 
   LayoutGrid, 
@@ -78,53 +78,54 @@ const LandingPage = () => {
   const scrollToSection = (id: string) => { document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); setMobileMenuOpen(false); };
 
   return (
-    <div className="fixed inset-0 bg-white font-outfit overflow-y-auto overflow-x-hidden">
+    <div className="min-h-screen bg-white font-outfit overflow-x-hidden">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#2E2E2E]/95 backdrop-blur-md border-b border-white/10">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <img src={nuronLogo} alt="Nuron" className="h-8 w-auto" />
           <div className="hidden md:flex items-center gap-8">
-            <button onClick={() => scrollToSection("features")} className="text-white/80 hover:text-white transition-colors text-sm font-medium">Features</button>
-            <button onClick={() => scrollToSection("pricing")} className="text-white/80 hover:text-white transition-colors text-sm font-medium">Pricing</button>
+            <button onClick={() => scrollToSection("features")} className="text-[#666666] hover:text-[#333333] transition-colors text-sm font-medium">Features</button>
+            <button onClick={() => scrollToSection("pricing")} className="text-[#666666] hover:text-[#333333] transition-colors text-sm font-medium">Pricing</button>
           </div>
           <div className="hidden md:flex items-center gap-4">
-            <button onClick={handleLogin} className="text-white/80 hover:text-white transition-colors text-sm font-medium px-4 py-2">Log In</button>
-            <button onClick={handleSignup} className="bg-[#E57373] hover:bg-[#EF5350] text-white px-5 py-2 rounded-full text-sm font-medium transition-all hover:scale-105">Sign Up</button>
+            <button onClick={handleLogin} className="text-[#666666] hover:text-[#333333] transition-colors text-sm font-medium px-4 py-2">Log In</button>
+            <button onClick={handleSignup} className="text-[#E57373] hover:text-[#EF5350] text-sm font-medium transition-colors">Sign Up</button>
           </div>
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden text-white p-2">{mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}</button>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden text-[#333333] p-2" aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}>{mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}</button>
         </div>
         {mobileMenuOpen && (
-          <div className="md:hidden bg-[#2E2E2E] border-t border-white/10 px-6 py-4 space-y-4">
-            <button onClick={() => scrollToSection("features")} className="block w-full text-left text-white/80 hover:text-white py-2">Features</button>
-            <button onClick={() => scrollToSection("pricing")} className="block w-full text-left text-white/80 hover:text-white py-2">Pricing</button>
-            <div className="pt-4 border-t border-white/10 flex flex-col gap-3">
-              <button onClick={handleLogin} className="w-full text-white/80 py-2 border border-white/20 rounded-full">Log In</button>
-              <button onClick={handleSignup} className="w-full bg-[#E57373] text-white py-2 rounded-full font-medium">Sign Up</button>
+          <div className="md:hidden bg-white border-t border-gray-100 px-6 py-4 space-y-4">
+            <button onClick={() => scrollToSection("features")} className="block w-full text-left text-[#666666] hover:text-[#333333] py-2">Features</button>
+            <button onClick={() => scrollToSection("pricing")} className="block w-full text-left text-[#666666] hover:text-[#333333] py-2">Pricing</button>
+            <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
+              <button onClick={handleLogin} className="w-full text-[#666666] py-2 border border-gray-200 rounded-full">Log In</button>
+              <button onClick={handleSignup} className="w-full text-[#E57373] py-2 font-medium">Sign Up</button>
             </div>
           </div>
         )}
       </nav>
 
       {/* Hero */}
-      <section className="relative bg-[#2E2E2E] pt-24 pb-16 md:pt-32 md:pb-24">
+      <section className="pt-32 pb-16 md:pt-40 md:pb-24">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <FadeIn><h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold text-white mb-6">Remember Everything</h1></FadeIn>
-          <FadeIn delay={0.1}><p className="text-xl md:text-2xl text-white/70 mb-4 max-w-2xl mx-auto">One tap voice recording for all those snippets of information</p></FadeIn>
-          <FadeIn delay={0.2}><p className="text-base md:text-lg text-white/50 max-w-xl mx-auto mb-8">Nuron gives you the space to calm your mind and journal every aspect of your life</p></FadeIn>
+          <FadeIn><h1 className="text-5xl md:text-7xl lg:text-8xl font-medium text-[#CCCCCC] mb-6 tracking-tight">Remember Everything</h1></FadeIn>
+          <FadeIn delay={0.1}><p className="text-xl md:text-2xl text-[#999999] mb-4 max-w-2xl mx-auto">One tap voice recording for all those snippets of information</p></FadeIn>
+          <FadeIn delay={0.2}><p className="text-base md:text-lg text-[#AAAAAA] max-w-xl mx-auto mb-8">Nuron gives you the space to calm your mind and journal every aspect of your life</p></FadeIn>
           <FadeIn delay={0.3}><a href="https://apps.apple.com/app/nuron" target="_blank" rel="noopener noreferrer" className="inline-block hover:scale-105 transition-transform"><img src={appStoreBadge} alt="Download on the App Store" className="h-12 md:h-14" /></a></FadeIn>
           <FadeIn delay={0.4} className="max-w-5xl mx-auto mt-12"><img src={headerImage} alt="Nuron app on multiple devices" className="w-full drop-shadow-2xl" /></FadeIn>
         </div>
       </section>
 
-      {/* Nuron for Everybody - Card with rounded top corners overlapping hero */}
-      <section className="bg-white rounded-t-[60px] -mt-[50px] relative z-10 py-20 md:py-32">
+      {/* Nuron for Everybody */}
+      <section className="py-20 md:py-32">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-6">Nuron for Everybody</h2></FadeIn>
-          <FadeIn delay={0.1}><p className="text-lg text-[#666666] mb-6 leading-relaxed max-w-2xl mx-auto">Whether you're a busy professional, a creative jotting down inspiration, or anyone who wants to remember more — Nuron adapts to you.</p></FadeIn>
-          <FadeIn delay={0.2}><p className="text-lg text-[#666666] leading-relaxed max-w-2xl mx-auto">Start with voice, type when you want, add photos. Your thoughts, your way, beautifully organized.</p></FadeIn>
+          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-8">Nuron for Everybody</h2></FadeIn>
+          <FadeIn delay={0.1}><p className="text-lg text-[#666666] leading-relaxed max-w-3xl mx-auto">
+            Life moves fast, and your best ideas don't wait for the perfect moment to write them down. Nuron lets you capture thoughts the moment they happen—just tap and speak. Whether you're a busy professional processing your day, a creative mind catching fleeting inspiration, a student organising lectures, or a parent juggling everything at once, Nuron gives you a place to offload your mental chatter.
+          </p></FadeIn>
         </div>
-        <FadeIn delay={0.3} className="mt-12 md:mt-16 px-6">
-          <img src={iPhoneImage} alt="Nuron on iPhone" className="w-full max-w-5xl mx-auto drop-shadow-xl" />
+        <FadeIn delay={0.2} className="mt-12 md:mt-16 px-6">
+          <img src={iPhoneImage} alt="Nuron on iPhone" className="w-full max-w-5xl mx-auto" />
         </FadeIn>
       </section>
 
@@ -150,7 +151,7 @@ const LandingPage = () => {
       </section>
 
       {/* Power Users */}
-      <section className="py-20 md:py-32 bg-[#EFEFEF]">
+      <section className="py-20 md:py-32 bg-white">
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
           <FadeIn className="order-2 md:order-1">
             <div className="relative">
@@ -172,7 +173,7 @@ const LandingPage = () => {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20 md:py-32 bg-white">
+      <section id="pricing" className="py-20 md:py-32 bg-[#F9F9F6]">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-4">Free to Start</h2></FadeIn>
           <FadeIn delay={0.1}><p className="text-xl text-[#666666] mb-6">No credit card required</p></FadeIn>
@@ -187,9 +188,9 @@ const LandingPage = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 md:py-32 bg-[#2E2E2E]">
+      <section className="py-20 md:py-32 bg-white">
         <div className="max-w-7xl mx-auto px-6">
-          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-white mb-16 text-center">What People Are Saying</h2></FadeIn>
+          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-16 text-center">What People Are Saying</h2></FadeIn>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {testimonials.map((t, i) => (
               <FadeIn key={t.author} delay={i * 0.1}>
@@ -206,26 +207,26 @@ const LandingPage = () => {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 md:py-32 bg-[#2E2E2E]">
+      <section className="py-20 md:py-32 bg-[#F9F9F6]">
         <div className="max-w-3xl mx-auto px-6 text-center">
-          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-white mb-4">Start Remembering Everything</h2></FadeIn>
-          <FadeIn delay={0.1}><p className="text-xl text-white/70 mb-8">Download Nuron free today</p></FadeIn>
+          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-4">Start Remembering Everything</h2></FadeIn>
+          <FadeIn delay={0.1}><p className="text-xl text-[#666666] mb-8">Download Nuron free today</p></FadeIn>
           <FadeIn delay={0.2}><a href="https://apps.apple.com/app/nuron" target="_blank" rel="noopener noreferrer" className="inline-block hover:scale-105 transition-transform"><img src={appStoreBadge} alt="Download on the App Store" className="h-14 md:h-16" /></a></FadeIn>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#2E2E2E] border-t border-white/10 py-12">
+      <footer className="bg-white border-t border-gray-100 py-12">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8">
           <img src={nuronLogo} alt="Nuron" className="h-6 w-auto" />
           <div className="flex flex-wrap justify-center gap-6 text-sm">
-            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-white/60 hover:text-white transition-colors">Home</button>
-            <button onClick={() => scrollToSection("features")} className="text-white/60 hover:text-white transition-colors">Features</button>
-            <button onClick={() => scrollToSection("pricing")} className="text-white/60 hover:text-white transition-colors">Pricing</button>
-            <a href="/privacy" className="text-white/60 hover:text-white transition-colors">Privacy Policy</a>
-            <a href="/terms" className="text-white/60 hover:text-white transition-colors">Terms of Service</a>
+            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-[#666666] hover:text-[#333333] transition-colors">Home</button>
+            <button onClick={() => scrollToSection("features")} className="text-[#666666] hover:text-[#333333] transition-colors">Features</button>
+            <button onClick={() => scrollToSection("pricing")} className="text-[#666666] hover:text-[#333333] transition-colors">Pricing</button>
+            <Link to="/privacy" className="text-[#666666] hover:text-[#333333] transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="text-[#666666] hover:text-[#333333] transition-colors">Terms of Service</Link>
           </div>
-          <p className="text-white/40 text-sm">© 2025 Nuron. All rights reserved.</p>
+          <p className="text-[#999999] text-sm">© 2025 Nuron. All rights reserved.</p>
         </div>
       </footer>
     </div>
