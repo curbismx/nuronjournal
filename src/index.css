@@ -178,27 +178,23 @@ All colors MUST be HSL.
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* Subtle mist background animation */
-@keyframes mist-drift-1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(120px, -80px) scale(1.1); }
-  50% { transform: translate(-80px, 60px) scale(0.9); }
-  75% { transform: translate(60px, 100px) scale(1.05); }
+/* Cloud-like mist animation - floats across the hero */
+@keyframes cloud-drift-1 {
+  0% { transform: translateX(-100%) translateY(0); }
+  100% { transform: translateX(100vw) translateY(20px); }
 }
 
-@keyframes mist-drift-2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(-100px, 70px) scale(0.95); }
-  50% { transform: translate(140px, -50px) scale(1.1); }
-  75% { transform: translate(-60px, -90px) scale(0.92); }
+@keyframes cloud-drift-2 {
+  0% { transform: translateX(100vw) translateY(0); }
+  100% { transform: translateX(-100%) translateY(-30px); }
 }
 
 .mist-blob-1 {
-  animation: mist-drift-1 8s ease-in-out infinite;
+  animation: cloud-drift-1 20s linear infinite;
 }
 
 .mist-blob-2 {
-  animation: mist-drift-2 10s ease-in-out infinite;
+  animation: cloud-drift-2 25s linear infinite;
 }
 
 /* Accessibility: Respect reduced motion preference */
