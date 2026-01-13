@@ -82,7 +82,7 @@ const LandingPage = () => {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <img src={nuronLogo} alt="Nuron" className="h-16 w-auto" />
+          <img src={nuronLogo} alt="Nuron" className="h-8 w-auto" />
           <div className="hidden md:flex items-center gap-8">
             <button onClick={() => scrollToSection("features")} className="text-[#666666] hover:text-[#333333] transition-colors text-sm font-medium">Features</button>
             <button onClick={() => scrollToSection("pricing")} className="text-[#666666] hover:text-[#333333] transition-colors text-sm font-medium">Pricing</button>
