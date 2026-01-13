@@ -200,15 +200,11 @@ All colors MUST be HSL.
 }
 
 .mist-blob-1 {
-  animation: mist-drift-1 25s ease-in-out infinite;
+  animation: mist-drift-1 12s ease-in-out infinite;
 }
 
 .mist-blob-2 {
-  animation: mist-drift-2 30s ease-in-out infinite;
-}
-
-.mist-blob-3 {
-  animation: mist-drift-3 35s ease-in-out infinite;
+  animation: mist-drift-2 15s ease-in-out infinite;
 }
 
 /* Accessibility: Respect reduced motion preference */
