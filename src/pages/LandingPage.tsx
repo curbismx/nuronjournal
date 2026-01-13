@@ -106,8 +106,14 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero */}
-      <section className="pt-32 pb-16 md:pt-40 md:pb-24">
-        <div className="max-w-7xl mx-auto px-6 text-center">
+      <section className="pt-32 pb-16 md:pt-40 md:pb-24 relative overflow-hidden">
+        {/* Animated mist background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="mist-blob-1 absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-blue-300/[0.07] to-purple-300/[0.04] blur-3xl" />
+          <div className="mist-blob-2 absolute top-20 -right-24 w-[450px] h-[450px] rounded-full bg-gradient-to-br from-pink-300/[0.05] to-blue-300/[0.03] blur-3xl" />
+          <div className="mist-blob-3 absolute -bottom-20 left-1/3 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-purple-300/[0.05] to-pink-300/[0.03] blur-3xl" />
+        </div>
+        <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
           <FadeIn><h1 className="text-5xl md:text-7xl lg:text-8xl font-medium text-[#6BA8D8] mb-6 tracking-tight">Remember Everything</h1></FadeIn>
           <FadeIn delay={0.1}><p className="text-xl md:text-2xl text-[#999999] mb-4 max-w-2xl mx-auto">One tap voice recording for all those snippets of information</p></FadeIn>
           <FadeIn delay={0.2}><p className="text-base md:text-lg text-[#AAAAAA] max-w-xl mx-auto mb-8">Nuron gives you the space to calm your mind and journal every aspect of your life</p></FadeIn>
