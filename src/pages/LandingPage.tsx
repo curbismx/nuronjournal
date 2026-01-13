@@ -18,9 +18,7 @@ import {
 import nuronLogo from "@/assets/nuronlogo.png";
 import headerImage from "@/assets/header.png";
 import iPhoneImage from "@/assets/iPhone.png";
-import blogImage from "@/assets/Blog.png";
-import folderOptionsImage from "@/assets/folder_options.png";
-import menuImage from "@/assets/menu.png";
+import blogPublishingImage from "@/assets/blog-publishing.png";
 import appStoreBadge from "@/assets/available_on_the_appstore.png";
 
 const useInView = (threshold = 0.1) => {
@@ -155,26 +153,17 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Power Users */}
+      {/* Publish to Web */}
       <section className="py-20 md:py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
-          <FadeIn className="order-2 md:order-1">
-            <div className="relative">
-              <img src={blogImage} alt="Nuron blog" className="w-full max-w-md rounded-xl shadow-lg transform -rotate-2" />
-              <img src={folderOptionsImage} alt="Folder options" className="absolute -bottom-8 -right-4 w-48 rounded-xl shadow-lg transform rotate-3" />
-              <img src={menuImage} alt="Menu" className="absolute -top-4 -right-8 w-40 rounded-xl shadow-lg transform rotate-2" />
-            </div>
-          </FadeIn>
-          <div className="order-1 md:order-2">
-            <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-4">Built for Power Users</h2></FadeIn>
-            <FadeIn delay={0.1}><p className="text-xl text-[#666666] mb-6">Simple on the surface, powerful underneath</p></FadeIn>
-            <FadeIn delay={0.2}><ul className="space-y-3 text-[#666666]">
-              {["Folder organization with custom sorting", "One-tap publishing to your personal blog", "Multiple theme options", "Grid and list views", "Cross-device sync"].map(item => (
-                <li key={item} className="flex items-center gap-3"><div className="w-2 h-2 bg-[#E57373] rounded-full"></div>{item}</li>
-              ))}
-            </ul></FadeIn>
-          </div>
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-4">Publish to the Web in Seconds</h2></FadeIn>
+          <FadeIn delay={0.1}><p className="text-lg text-[#666666] leading-relaxed max-w-3xl mx-auto mb-12">
+            Transform any folder into a beautiful blog or a simple one-page event description. No complicated setup, no hosting headaches. Just tap publish and your content is live. Nuron does it all for you — whether you're sharing travel stories, documenting your journey, or creating a quick event page.
+          </p></FadeIn>
         </div>
+        <FadeIn delay={0.2} className="px-6">
+          <img src={blogPublishingImage} alt="Publish your content to the web" className="w-[60%] mx-auto rounded-2xl shadow-xl" />
+        </FadeIn>
       </section>
 
       {/* Pricing */}
