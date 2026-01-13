@@ -84,12 +84,12 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <img src={nuronLogo} alt="Nuron" className="h-[22px] w-auto" />
           <div className="hidden md:flex items-center gap-8">
-            <button onClick={() => scrollToSection("features")} className="text-[#666666] hover:text-[#333333] transition-colors text-sm font-medium">Features</button>
-            <button onClick={() => scrollToSection("pricing")} className="text-[#666666] hover:text-[#333333] transition-colors text-sm font-medium">Pricing</button>
+            <button onClick={() => scrollToSection("features")} className="text-[#666666] hover:text-[#333333] transition-colors text-base font-medium">Features</button>
+            <button onClick={() => scrollToSection("pricing")} className="text-[#666666] hover:text-[#333333] transition-colors text-base font-medium">Pricing</button>
           </div>
           <div className="hidden md:flex items-center gap-4">
-            <button onClick={handleLogin} className="text-[#666666] hover:text-[#333333] transition-colors text-sm font-medium px-4 py-2">Log In</button>
-            <button onClick={handleSignup} className="text-[#E57373] hover:text-[#EF5350] text-sm font-medium transition-colors">Sign Up</button>
+            <button onClick={handleLogin} className="text-[#666666] hover:text-[#333333] transition-colors text-base font-medium px-4 py-2">Log In</button>
+            <button onClick={handleSignup} className="text-[#E57373] hover:text-[#EF5350] text-base font-medium transition-colors">Sign Up</button>
           </div>
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden text-[#333333] p-2" aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}>{mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}</button>
         </div>
