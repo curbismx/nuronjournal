@@ -109,9 +109,8 @@ const LandingPage = () => {
       <section className="pt-32 pb-16 md:pt-40 md:pb-24 relative overflow-hidden">
         {/* Animated mist background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="mist-blob-1 absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-blue-400/20 to-purple-400/15 blur-3xl" />
-          <div className="mist-blob-2 absolute top-20 -right-24 w-[550px] h-[550px] rounded-full bg-gradient-to-br from-pink-400/15 to-rose-400/10 blur-3xl" />
-          <div className="mist-blob-3 absolute -bottom-20 left-1/3 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-purple-400/15 to-indigo-400/10 blur-3xl" />
+          <div className="mist-blob-1 absolute -top-48 -left-48 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-sky-400/25 to-blue-300/15 blur-3xl" />
+          <div className="mist-blob-2 absolute top-32 -right-32 w-[350px] h-[350px] rounded-full bg-gradient-to-br from-blue-400/20 to-cyan-300/12 blur-3xl" />
         </div>
         <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
           <FadeIn><h1 className="text-5xl md:text-7xl lg:text-8xl font-medium text-[#6BA8D8] mb-6 tracking-tight">Remember Everything</h1></FadeIn>
