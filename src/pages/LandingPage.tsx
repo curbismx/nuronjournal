@@ -162,7 +162,7 @@ const LandingPage = () => {
           </p></FadeIn>
         </div>
         <FadeIn delay={0.2} className="px-6">
-          <img src={blogPublishingImage} alt="Publish your content to the web" className="w-[60%] mx-auto rounded-2xl" />
+          <img src={blogPublishingImage} alt="Publish your content to the web" className="w-[80%] mx-auto rounded-2xl" />
         </FadeIn>
       </section>
 
