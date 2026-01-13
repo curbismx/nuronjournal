@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 // Assets
-import nuronLogo from "@/assets/nuron_logo.png";
+import nuronLogo from "@/assets/nuronlogo.png";
 import headerImage from "@/assets/header.png";
 import iPhoneImage from "@/assets/iPhone.png";
 import blogImage from "@/assets/Blog.png";
