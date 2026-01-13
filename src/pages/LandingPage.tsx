@@ -108,7 +108,7 @@ const LandingPage = () => {
       {/* Hero */}
       <section className="pt-32 pb-16 md:pt-40 md:pb-24">
         <div className="max-w-7xl mx-auto px-6 text-center">
-          <FadeIn><h1 className="text-5xl md:text-7xl lg:text-8xl font-medium text-[#CCCCCC] mb-6 tracking-tight">Remember Everything</h1></FadeIn>
+          <FadeIn><h1 className="text-5xl md:text-7xl lg:text-8xl font-medium text-[#6BA8D8] mb-6 tracking-tight">Remember Everything</h1></FadeIn>
           <FadeIn delay={0.1}><p className="text-xl md:text-2xl text-[#999999] mb-4 max-w-2xl mx-auto">One tap voice recording for all those snippets of information</p></FadeIn>
           <FadeIn delay={0.2}><p className="text-base md:text-lg text-[#AAAAAA] max-w-xl mx-auto mb-8">Nuron gives you the space to calm your mind and journal every aspect of your life</p></FadeIn>
           <FadeIn delay={0.3}><a href="https://apps.apple.com/app/nuron" target="_blank" rel="noopener noreferrer" className="inline-block hover:scale-105 transition-transform"><img src={appStoreBadge} alt="Download on the App Store" className="h-12 md:h-14" /></a></FadeIn>
