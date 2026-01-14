@@ -21,6 +21,7 @@ import iPhoneImage from "@/assets/iPhone.png";
 import blogPublishingImage from "@/assets/blog-publishing.png";
 import appStoreBadge from "@/assets/available_on_the_appstore.png";
 import mobileHeroImage from "@/assets/mobile-hero.png";
+import mobileEverybodyImage from "@/assets/mobile-everybody.png";
 
 const useInView = (threshold = 0.1) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -127,7 +128,8 @@ const LandingPage = () => {
           </p></FadeIn>
         </div>
         <FadeIn delay={0.2} className="mt-12 md:mt-16 px-6">
-          <img src={iPhoneImage} alt="Nuron on iPhone" className="w-full max-w-5xl mx-auto" />
+          <img src={iPhoneImage} alt="Nuron on iPhone" className="hidden md:block w-full max-w-5xl mx-auto" />
+          <img src={mobileEverybodyImage} alt="Nuron app screens" className="md:hidden w-full max-w-sm mx-auto" />
         </FadeIn>
       </section>
 
