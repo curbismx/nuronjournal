@@ -3,15 +3,15 @@ import { Link } from "react-router-dom";
 import { 
   Mic, 
   LayoutGrid, 
-  Cloud, 
+  Clock, 
   Globe, 
-  FileText, 
+  FolderOpen, 
   Sparkles, 
   Image, 
   Paintbrush,
   Menu,
   X,
-  Quote
+  Search
 } from "lucide-react";
 
 // Assets
@@ -19,7 +19,6 @@ import nuronLogo from "@/assets/nuronlogo.png";
 import headerImage from "@/assets/header.png";
 import iPhoneImage from "@/assets/iPhone.png";
 import blogPublishingImage from "@/assets/blog-publishing.png";
-import appStoreBadge from "@/assets/available_on_the_appstore.png";
 import mobileHeroImage from "@/assets/mobile-hero.png";
 import mobileEverybodyImage from "@/assets/mobile-everybody.png";
 import mobilePublishImage from "@/assets/mobile-publish.png";
@@ -55,21 +54,14 @@ const FadeIn = ({ children, delay = 0, className = "" }: { children: React.React
 };
 
 const features = [
-  { icon: Paintbrush, title: "Beautiful Design & UI", description: "A minimalist interface that gets out of your way." },
-  { icon: Mic, title: "One Tap Recording", description: "Start capturing your thoughts instantly with a single tap." },
-  { icon: LayoutGrid, title: "Notes Your Way", description: "Organize notes in folders, switch between grid and list views." },
-  { icon: Cloud, title: "Sync Across Devices", description: "Your notes follow you everywhere seamlessly." },
-  { icon: Globe, title: "One Tap Publish", description: "Transform any note into a public blog post with a single tap." },
-  { icon: FileText, title: "Simplest Blog Ever", description: "Create a beautiful blog in seconds. No setup required." },
-  { icon: Sparkles, title: "AI Rewrite", description: "Let AI help you refine and polish your writing." },
-  { icon: Image, title: "Add Images", description: "Add photos directly from your camera or library." }
-];
-
-const testimonials = [
-  { quote: "Nuron has completely changed how I capture ideas. The voice recording is instant and the transcription is magic.", author: "Sarah M.", role: "Writer", bgColor: "bg-[#E8F0E8]" },
-  { quote: "I've tried dozens of note apps. Nuron is the first one that actually stuck. Simple, fast, beautiful.", author: "James K.", role: "Entrepreneur", bgColor: "bg-[#FDF6E3]" },
-  { quote: "The publishing feature is genius. I went from private notes to a public blog in literally one tap.", author: "Maria L.", role: "Blogger", bgColor: "bg-[#F5F5F5]" },
-  { quote: "As a power user, I appreciate the depth. Folders, sorting, themes - everything I need without the clutter.", author: "David R.", role: "Developer", bgColor: "bg-[#FFE8E5]" }
+  { icon: Mic, title: "One Tap Recording", description: "Hit record and speak. That's it. Your thoughts start capturing instantly." },
+  { icon: Sparkles, title: "AI Cleanup", description: "Rambling voice note? Nuron turns it into clear, readable text automatically." },
+  { icon: Clock, title: "Your Timeline", description: "Every thought, organised by date. Scroll back through weeks, months, years of your own thinking." },
+  { icon: FolderOpen, title: "Folders", description: "Organise however you like. Work ideas, personal reflections, random thoughts—keep them separate or don't." },
+  { icon: Search, title: "Search Everything", description: "That idea you had three months ago? Find it in seconds." },
+  { icon: Image, title: "Add Images", description: "Attach photos from your camera or library to any entry." },
+  { icon: Paintbrush, title: "Beautiful Themes", description: "Make it yours with calming colour themes." },
+  { icon: Globe, title: "Publish as Blog", description: "Turn any folder into a simple public page. Share your thoughts with a link." }
 ];
 
 const LandingPage = () => {
@@ -135,10 +127,13 @@ const LandingPage = () => {
       {/* Hero */}
       <section className="pt-32 pb-16 md:pt-40 md:pb-24 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
-          <FadeIn><h1 className="text-5xl md:text-7xl lg:text-8xl font-medium text-[#6BA8D8] mb-6 tracking-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>Remember Everything</h1></FadeIn>
-          <FadeIn delay={0.1}><p className="text-xl md:text-2xl text-[#999999] mb-4 max-w-2xl mx-auto" style={{ textShadow: '0 1px 1px rgba(0,0,0,0.06)' }}>One tap voice recording for all those snippets of information</p></FadeIn>
-          <FadeIn delay={0.2}><p className="text-base md:text-lg text-[#AAAAAA] max-w-xl mx-auto mb-8" style={{ textShadow: '0 1px 1px rgba(0,0,0,0.06)' }}>Nuron gives you the space to<br />calm your mind and journal every aspect of your life</p></FadeIn>
-          <FadeIn delay={0.3}><a href="https://apps.apple.com/app/nuron" target="_blank" rel="noopener noreferrer" className="inline-block hover:scale-105 transition-transform"><img src={appStoreBadge} alt="Download on the App Store" className="h-12 md:h-14 drop-shadow-sm" /></a></FadeIn>
+          <FadeIn><h1 className="text-5xl md:text-7xl lg:text-8xl font-medium text-[#6BA8D8] mb-6 tracking-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>Your Journal. Just Speak.</h1></FadeIn>
+          <FadeIn delay={0.1}><p className="text-xl md:text-2xl text-[#999999] mb-4 max-w-2xl mx-auto" style={{ textShadow: '0 1px 1px rgba(0,0,0,0.06)' }}>The easy way to remember your life.</p></FadeIn>
+          <FadeIn delay={0.2}><p className="text-base md:text-lg text-[#AAAAAA] max-w-xl mx-auto mb-8" style={{ textShadow: '0 1px 1px rgba(0,0,0,0.06)' }}>Nuron turns your voice into a beautiful journal. Just tap, talk, and watch your thoughts become clean, readable entries—organised in a timeline you'll actually want to look back on.</p></FadeIn>
+          <FadeIn delay={0.3}>
+            <button onClick={handleSignup} className="bg-[#E57373] hover:bg-[#EF5350] text-white px-8 py-3 rounded-full text-lg font-medium transition-all hover:scale-105">Get Started Free</button>
+            <p className="text-sm text-[#999999] mt-3">Free on web. $4.99/month for iOS sync.</p>
+          </FadeIn>
           <FadeIn delay={0.4} className="max-w-5xl mx-auto mt-12">
             <img src={headerImage} alt="Nuron app on multiple devices" className="hidden md:block w-full drop-shadow-2xl" />
             <img src={mobileHeroImage} alt="Nuron app on iPhone" className="md:hidden w-[70%] mx-auto drop-shadow-2xl" />
@@ -146,13 +141,17 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Nuron for Everybody */}
+      {/* Why Voice? */}
       <section className="py-20 md:py-32">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-8">Nuron for Everybody</h2></FadeIn>
-          <FadeIn delay={0.1}><p className="text-lg text-[#666666] leading-relaxed max-w-3xl mx-auto">
-            Life moves fast, and your best ideas don't wait for the perfect moment to write them down. Nuron lets you capture thoughts the moment they happen—just tap and speak. Whether you're a busy professional processing your day, a creative mind catching fleeting inspiration, a student organising lectures, or a parent juggling everything at once, Nuron gives you a place to offload your mental chatter.
-          </p></FadeIn>
+          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-8">You think faster than you type.</h2></FadeIn>
+          <FadeIn delay={0.1}>
+            <div className="text-lg text-[#666666] leading-relaxed max-w-3xl mx-auto space-y-6">
+              <p>Ideas come at the worst times—in the shower, on a walk, halfway through something else. By the time you open a notes app and start typing, the thought is half-gone.</p>
+              <p>Nuron lets you capture thoughts the moment they arrive. Speak naturally, even ramble—the AI cleans it up into something you'll actually want to read later.</p>
+              <p>No typing. No formatting. No friction. Just your life, in your own voice.</p>
+            </div>
+          </FadeIn>
         </div>
         <FadeIn delay={0.2} className="mt-12 md:mt-16 px-6">
           <img src={iPhoneImage} alt="Nuron on iPhone" className="hidden md:block w-full max-w-5xl mx-auto" />
@@ -164,8 +163,7 @@ const LandingPage = () => {
       <section id="features" className="py-20 md:py-32 bg-[#F9F9F6]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-4">Everything You Need</h2></FadeIn>
-            <FadeIn delay={0.1}><p className="text-lg text-[#666666] max-w-2xl mx-auto">Simple tools that work together to help you capture, organize, and share your thoughts.</p></FadeIn>
+            <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333]">Simple tools that stay out of your way.</h2></FadeIn>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((f, i) => (
@@ -181,13 +179,17 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Publish to Web */}
+      {/* Share When You're Ready */}
       <section className="py-20 md:py-32 bg-white">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-4">Publish to the Web in Seconds</h2></FadeIn>
-          <FadeIn delay={0.1}><p className="text-lg text-[#666666] leading-relaxed max-w-3xl mx-auto mb-12">
-            Transform any folder into a beautiful blog or a simple one-page event description. No complicated setup, no hosting headaches. Just tap publish and your content is live. Nuron does it all for you — whether you're sharing travel stories, documenting your journey, or creating a quick event page.
-          </p></FadeIn>
+          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-4">Share when you're ready.</h2></FadeIn>
+          <FadeIn delay={0.1}>
+            <div className="text-lg text-[#666666] leading-relaxed max-w-3xl mx-auto mb-12 space-y-6">
+              <p>Some thoughts are just for you. Others deserve an audience.</p>
+              <p>Turn any folder into a simple, beautiful blog with one tap. No setup, no hosting, no tech skills. Just your words, live on the web.</p>
+              <p>Keep it private. Make it public. It's your journal.</p>
+            </div>
+          </FadeIn>
         </div>
         <FadeIn delay={0.2} className="px-6">
           <img src={blogPublishingImage} alt="Publish your content to the web" className="hidden md:block w-[80%] mx-auto rounded-2xl" />
@@ -198,39 +200,22 @@ const LandingPage = () => {
       {/* Pricing */}
       <section id="pricing" className="py-20 md:py-32 bg-[#F9F9F6]">
         <div className="max-w-3xl mx-auto px-6 text-center">
-          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-4">Free to Get Started</h2></FadeIn>
-          <FadeIn delay={0.1}><p className="text-lg text-[#666666] mb-8">Use Nuron on the web for absolutely free. Start building your information up and then download the iPhone app to sync all your information across devices for a simple subscription of just $4.99/mnth.</p></FadeIn>
+          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-4">Free to start. Affordable to keep.</h2></FadeIn>
+          <FadeIn delay={0.1}><p className="text-lg text-[#666666] mb-8">Use Nuron on the web completely free. When you're ready to take it everywhere, the iOS app syncs all your entries for just $4.99/month.</p></FadeIn>
           <FadeIn delay={0.2}>
             <button onClick={handleSignup} className="bg-[#E57373] hover:bg-[#EF5350] text-white px-8 py-3 rounded-full text-lg font-medium transition-all hover:scale-105">Get Started Free</button>
           </FadeIn>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-20 md:py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-16 text-center">What People Are Saying</h2></FadeIn>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {testimonials.map((t, i) => (
-              <FadeIn key={t.author} delay={i * 0.1}>
-                <div className={`${t.bgColor} rounded-2xl p-6 h-full relative`}>
-                  <Quote className="w-8 h-8 text-[#333333]/20 absolute top-4 right-4" />
-                  <p className="text-[#333333] mb-6 leading-relaxed">"{t.quote}"</p>
-                  <p className="font-semibold text-[#333333]">{t.author}</p>
-                  <p className="text-sm text-[#666666]">{t.role}</p>
-                </div>
-              </FadeIn>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Final CTA */}
-      <section className="py-20 md:py-32 bg-[#F9F9F6]">
+      <section className="py-20 md:py-32 bg-white">
         <div className="max-w-3xl mx-auto px-6 text-center">
-          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-4">Start Remembering Everything</h2></FadeIn>
-          <FadeIn delay={0.1}><p className="text-xl text-[#666666] mb-8">Download Nuron free today</p></FadeIn>
-          <FadeIn delay={0.2}><a href="https://apps.apple.com/app/nuron" target="_blank" rel="noopener noreferrer" className="inline-block hover:scale-105 transition-transform"><img src={appStoreBadge} alt="Download on the App Store" className="h-14 md:h-16" /></a></FadeIn>
+          <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-4">Your thoughts are worth keeping.</h2></FadeIn>
+          <FadeIn delay={0.1}><p className="text-xl text-[#666666] mb-8">Start your voice journal today.</p></FadeIn>
+          <FadeIn delay={0.2}>
+            <button onClick={handleSignup} className="bg-[#E57373] hover:bg-[#EF5350] text-white px-8 py-3 rounded-full text-lg font-medium transition-all hover:scale-105">Get Started Free</button>
+          </FadeIn>
         </div>
       </section>
 
