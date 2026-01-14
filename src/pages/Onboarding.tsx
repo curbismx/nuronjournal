@@ -364,13 +364,13 @@ const Onboarding = () => {
               className="text-center text-[36px] font-medium mb-3"
               style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '3px' }}
             >
-              SUBSCRIPTION
+              FREE TO GET STARTED
             </h1>
             <p 
-              className="text-center text-[21px] font-light leading-tight"
+              className="text-center text-[18px] font-light leading-tight"
               style={{ color: '#8A8A8A', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
-              Join the thousands of creatives<br />in our community for less than<br />the price of a coffee
+              Use Nuron on the web for absolutely free.<br />Start building your information up and then<br />download the iPhone app to sync all your<br />information across devices for a simple<br />subscription of just $4.99/mnth.
             </p>
           </div>
           
