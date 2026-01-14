@@ -1547,8 +1547,8 @@ query = query.eq('folder_id', currentFolder.id);
   };
 
 
-  // Redirect logged-out users with no notes to landing page (mobile only)
-  if (savedNotes.length === 0 && !user && !isInitializing && !isDesktop) {
+  // Redirect logged-out users with no notes to landing page (mobile WEB only, not native apps)
+  if (savedNotes.length === 0 && !user && !isInitializing && !isDesktop && !Capacitor.isNativePlatform()) {
     return <Navigate to="/welcome" replace />;
   }
 
