@@ -74,12 +74,38 @@ const testimonials = [
 
 const LandingPage = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showMobileLoginMessage, setShowMobileLoginMessage] = useState(false);
   const handleLogin = () => { window.location.href = "/?login=true"; };
   const handleSignup = () => { window.location.href = "/?signup=true"; };
+  const handleMobileLogin = () => { setShowMobileLoginMessage(true); setMobileMenuOpen(false); };
   const scrollToSection = (id: string) => { document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); setMobileMenuOpen(false); };
 
   return (
     <div className="fixed inset-0 bg-white font-outfit overflow-y-auto overflow-x-hidden">
+      {/* Mobile Login Message Modal */}
+      {showMobileLoginMessage && (
+        <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-6">
+          <div className="bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-xl">
+            <h2 className="text-2xl font-semibold text-[#333333] mb-4">Not Available on Mobile</h2>
+            <p className="text-[#666666] mb-6">Please download Nuron on the App Store</p>
+            <a 
+              href="https://apps.apple.com/app/nuron" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="block w-full bg-[#E57373] hover:bg-[#EF5350] text-white py-3 rounded-full font-medium mb-4 transition-colors"
+            >
+              Download on App Store
+            </a>
+            <p className="text-[#999999] text-sm mb-4">To use Nuron on computer, please visit using a computer or tablet</p>
+            <button 
+              onClick={() => setShowMobileLoginMessage(false)}
+              className="text-[#666666] hover:text-[#333333] transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -99,8 +125,8 @@ const LandingPage = () => {
             <button onClick={() => scrollToSection("features")} className="block w-full text-left text-[#666666] hover:text-[#333333] py-2">Features</button>
             <button onClick={() => scrollToSection("pricing")} className="block w-full text-left text-[#666666] hover:text-[#333333] py-2">Pricing</button>
             <div className="pt-4 border-t border-gray-100 flex flex-col gap-3">
-              <button onClick={handleLogin} className="w-full text-[#666666] py-2 border border-gray-200 rounded-full">Log In</button>
-              <button onClick={handleSignup} className="w-full text-[#E57373] py-2 font-medium">Sign Up</button>
+              <button onClick={handleMobileLogin} className="w-full text-[#666666] py-2 border border-gray-200 rounded-full">Log In</button>
+              <button onClick={handleMobileLogin} className="w-full text-[#E57373] py-2 font-medium">Sign Up</button>
             </div>
           </div>
         )}
