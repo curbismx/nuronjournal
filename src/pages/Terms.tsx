@@ -1,14 +1,14 @@
 import { Link } from "react-router-dom";
-import nuronLogo from "@/assets/nuron_logo.png";
+import nuronLogo from "@/assets/nuronlogo.png";
 
 const Terms = () => {
   return (
-    <div className="min-h-screen bg-white font-outfit">
+    <div className="fixed inset-0 bg-white font-outfit overflow-y-auto">
       {/* Header */}
       <header className="border-b border-gray-100 py-6">
         <div className="max-w-4xl mx-auto px-6 flex items-center justify-between">
           <Link to="/welcome">
-            <img src={nuronLogo} alt="Nuron" className="h-8 w-auto" />
+            <img src={nuronLogo} alt="Nuron" className="h-[22px] w-auto" />
           </Link>
           <Link to="/welcome" className="text-[#999999] hover:text-[#666666] transition-colors text-sm">
             Back to Home
