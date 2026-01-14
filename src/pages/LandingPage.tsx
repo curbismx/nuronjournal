@@ -170,11 +170,8 @@ const LandingPage = () => {
         <div className="max-w-3xl mx-auto px-6 text-center">
           <FadeIn><h2 className="text-3xl md:text-5xl font-semibold text-[#333333] mb-4">Free to Get Started</h2></FadeIn>
           <FadeIn delay={0.1}><p className="text-lg text-[#666666] mb-8">Use Nuron on the web for absolutely free. Start building your information up and then download the iPhone app to sync all your information across devices for a simple subscription of just $4.99/mnth.</p></FadeIn>
-          <FadeIn delay={0.3}>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button onClick={handleSignup} className="bg-[#E57373] hover:bg-[#EF5350] text-white px-8 py-3 rounded-full text-lg font-medium transition-all hover:scale-105">Get Started Free</button>
-              <a href="https://apps.apple.com/app/nuron" target="_blank" rel="noopener noreferrer" className="inline-block hover:scale-105 transition-transform"><img src={appStoreBadge} alt="Download on the App Store" className="h-12" /></a>
-            </div>
+          <FadeIn delay={0.2}>
+            <button onClick={handleSignup} className="bg-[#E57373] hover:bg-[#EF5350] text-white px-8 py-3 rounded-full text-lg font-medium transition-all hover:scale-105">Get Started Free</button>
           </FadeIn>
         </div>
       </section>
