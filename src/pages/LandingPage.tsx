@@ -22,6 +22,7 @@ import blogPublishingImage from "@/assets/blog-publishing.png";
 import appStoreBadge from "@/assets/available_on_the_appstore.png";
 import mobileHeroImage from "@/assets/mobile-hero.png";
 import mobileEverybodyImage from "@/assets/mobile-everybody.png";
+import mobilePublishImage from "@/assets/mobile-publish.png";
 
 const useInView = (threshold = 0.1) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -163,7 +164,8 @@ const LandingPage = () => {
           </p></FadeIn>
         </div>
         <FadeIn delay={0.2} className="px-6">
-          <img src={blogPublishingImage} alt="Publish your content to the web" className="w-[80%] mx-auto rounded-2xl" />
+          <img src={blogPublishingImage} alt="Publish your content to the web" className="hidden md:block w-[80%] mx-auto rounded-2xl" />
+          <img src={mobilePublishImage} alt="Publish your content to the web" className="md:hidden w-full max-w-sm mx-auto rounded-2xl" />
         </FadeIn>
       </section>
 
