@@ -1,6 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://nuronjournal.com/sitemap.xml
-
-# Nuron Journal - Voice-powered journaling app
+Sitemap: https://nuron.life/sitemap.xml
