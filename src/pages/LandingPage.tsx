@@ -109,7 +109,7 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
           <FadeIn><h1 className="text-5xl md:text-7xl lg:text-8xl font-medium text-[#6BA8D8] mb-6 tracking-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>Remember Everything</h1></FadeIn>
           <FadeIn delay={0.1}><p className="text-xl md:text-2xl text-[#999999] mb-4 max-w-2xl mx-auto" style={{ textShadow: '0 1px 1px rgba(0,0,0,0.06)' }}>One tap voice recording for all those snippets of information</p></FadeIn>
-          <FadeIn delay={0.2}><p className="text-base md:text-lg text-[#AAAAAA] max-w-xl mx-auto mb-8" style={{ textShadow: '0 1px 1px rgba(0,0,0,0.06)' }}>Nuron gives you the space to calm your mind and journal every aspect of your life</p></FadeIn>
+          <FadeIn delay={0.2}><p className="text-base md:text-lg text-[#AAAAAA] max-w-xl mx-auto mb-8" style={{ textShadow: '0 1px 1px rgba(0,0,0,0.06)' }}>Nuron gives you the space to<br />calm your mind and journal every aspect of your life</p></FadeIn>
           <FadeIn delay={0.3}><a href="https://apps.apple.com/app/nuron" target="_blank" rel="noopener noreferrer" className="inline-block hover:scale-105 transition-transform"><img src={appStoreBadge} alt="Download on the App Store" className="h-12 md:h-14 drop-shadow-sm" /></a></FadeIn>
           <FadeIn delay={0.4} className="max-w-5xl mx-auto mt-12">
             <img src={headerImage} alt="Nuron app on multiple devices" className="hidden md:block w-full drop-shadow-2xl" />
