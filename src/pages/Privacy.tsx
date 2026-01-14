@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import nuronLogo from "@/assets/nuron_logo.png";
+import nuronLogo from "@/assets/nuronlogo.png";
 
 const Privacy = () => {
   return (
