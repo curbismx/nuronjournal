@@ -105,11 +105,6 @@ const LandingPage = () => {
 
       {/* Hero */}
       <section className="pt-32 pb-16 md:pt-40 md:pb-24 relative overflow-hidden">
-        {/* Animated mist background */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="mist-blob-1 absolute top-0 w-[400px] h-[300px] rounded-full bg-gradient-to-r from-sky-400/25 via-blue-300/20 to-transparent blur-3xl" />
-          <div className="mist-blob-2 absolute top-1/3 w-[350px] h-[250px] rounded-full bg-gradient-to-l from-blue-400/20 via-cyan-300/15 to-transparent blur-3xl" />
-        </div>
         <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
           <FadeIn><h1 className="text-5xl md:text-7xl lg:text-8xl font-medium text-[#6BA8D8] mb-6 tracking-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>Remember Everything</h1></FadeIn>
           <FadeIn delay={0.1}><p className="text-xl md:text-2xl text-[#999999] mb-4 max-w-2xl mx-auto" style={{ textShadow: '0 1px 1px rgba(0,0,0,0.06)' }}>One tap voice recording for all those snippets of information</p></FadeIn>
