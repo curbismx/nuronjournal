@@ -2974,7 +2974,7 @@ const Note = () => {
               setTitleManuallyEdited(true);
             }}
             placeholder="Note Title"
-            className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] outline-none bg-transparent border-none w-full mb-4 focus:outline-none focus:ring-2 focus:ring-[hsl(0,0%,70%)]/50 focus:ring-offset-0 rounded -mt-[10px] placeholder:text-[hsl(60,1%,66%)]"
+            className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] outline-none bg-transparent border-none w-full mb-4 focus:outline-none focus:ring-0 rounded -mt-[10px] placeholder:text-[hsl(60,1%,66%)]"
           />
         </div>
 
