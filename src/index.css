@@ -178,24 +178,6 @@ All colors MUST be HSL.
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* Cloud-like mist animation - floats across the hero */
-@keyframes cloud-drift-1 {
-  0% { transform: translateX(-100%) translateY(0); }
-  100% { transform: translateX(100vw) translateY(20px); }
-}
-
-@keyframes cloud-drift-2 {
-  0% { transform: translateX(100vw) translateY(0); }
-  100% { transform: translateX(-100%) translateY(-30px); }
-}
-
-.mist-blob-1 {
-  animation: cloud-drift-1 20s linear infinite;
-}
-
-.mist-blob-2 {
-  animation: cloud-drift-2 25s linear infinite;
-}
 
 /* Accessibility: Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
