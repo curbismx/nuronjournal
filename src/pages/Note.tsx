@@ -60,8 +60,8 @@ type ContentBlock =
 const renderTextWithLinks = (text: string, isEmbedded: boolean) => {
   if (!text) return null;
 
-  // Regex to match URLs and email addresses
-  const linkRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+  // Regex to match URLs and email addresses (case insensitive)
+  const linkRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gi;
 
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
@@ -80,9 +80,9 @@ const renderTextWithLinks = (text: string, isEmbedded: boolean) => {
     if (match[3]) {
       // Email
       href = `mailto:${linkText}`;
-    } else if (linkText.startsWith('www.')) {
+    } else if (linkText.toLowerCase().startsWith('www.')) {
       href = `https://${linkText}`;
-    } else if (!linkText.startsWith('http://') && !linkText.startsWith('https://')) {
+    } else if (!linkText.toLowerCase().startsWith('http://') && !linkText.toLowerCase().startsWith('https://')) {
       href = `https://${linkText}`;
     }
 
@@ -100,27 +100,23 @@ const renderTextWithLinks = (text: string, isEmbedded: boolean) => {
       continue;
     }
 
-    // Only render clickable links on desktop embed
-    if (isEmbedded) {
-      parts.push(
-        <a
-          key={match.index}
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => {
-            e.stopPropagation();
-            window.open(href, '_blank');
-          }}
-          className="pointer-events-auto"
-          style={{ color: '#E56157', textDecoration: 'underline', cursor: 'pointer' }}
-        >
-          {linkText}
-        </a>
-      );
-    } else {
-      parts.push(linkText);
-    }
+    // Always render clickable links
+    parts.push(
+      <a
+        key={match.index}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => {
+          e.stopPropagation();
+          window.open(href, '_blank');
+        }}
+        className="pointer-events-auto relative z-20"
+        style={{ color: '#E56157', textDecoration: 'underline', cursor: 'pointer' }}
+      >
+        {linkText}
+      </a>
+    );
 
     lastIndex = match.index + linkText.length;
   }
@@ -3135,24 +3131,22 @@ const Note = () => {
                           }
                         }}
                         placeholder={hasAnyContent ? "" : (index === 0 ? "Start writing..." : "")}
-                        className={`note-textarea w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden ${isEmbedded ? 'caret-[hsl(0,0%,25%)]' : ''}`}
+                        className={`note-textarea w-full resize-none bg-transparent border-none outline-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] placeholder:text-[hsl(0,0%,60%)] focus:outline-none focus:ring-0 overflow-hidden caret-[hsl(0,0%,25%)]`}
                         style={{
                           minHeight: '24px',
-                          color: isEmbedded ? 'transparent' : undefined,
-                          caretColor: isEmbedded ? 'hsl(0,0%,25%)' : undefined,
+                          color: 'transparent',
+                          caretColor: 'hsl(0,0%,25%)',
                         }}
                       />
-                      {isEmbedded && (
-                        <div
-                          className="absolute inset-0 pointer-events-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] whitespace-pre-wrap break-words"
-                          style={{ minHeight: '24px' }}
-                        >
-                          {renderTextWithLinks(textBlock.content, isEmbedded)}
-                          {!textBlock.content && !hasAnyContent && index === 0 && (
-                            <span className="text-[hsl(0,0%,60%)]">Start writing...</span>
-                          )}
-                        </div>
-                      )}
+                      <div
+                        className="absolute inset-0 pointer-events-none text-[16px] font-outfit leading-relaxed text-[hsl(0,0%,25%)] whitespace-pre-wrap break-words"
+                        style={{ minHeight: '24px' }}
+                      >
+                        {renderTextWithLinks(textBlock.content, isEmbedded)}
+                        {!textBlock.content && !hasAnyContent && index === 0 && (
+                          <span className="text-[hsl(0,0%,60%)]">Start writing...</span>
+                        )}
+                      </div>
                     </div>
                   );
                 } else {
