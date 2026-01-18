@@ -116,21 +116,21 @@ interface Folder {
 const Index = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-const isDesktop = useDesktop();
+  const isDesktop = useDesktop();
 
 
-const [desktopSelectedNoteId, setDesktopSelectedNoteId] = useState<string | null>(null);
-const [desktopShowSettings, setDesktopShowSettings] = useState(false);
-const [draggedNote, setDraggedNote] = useState<SavedNote | null>(null);
-const [folderDropFlash, setFolderDropFlash] = useState<string | null>(null);
-const [isLoadingNotes, setIsLoadingNotes] = useState(false);
-const [desktopShowAccountDetails, setDesktopShowAccountDetails] = useState(false);
-const [desktopShowChangePassword, setDesktopShowChangePassword] = useState(false);
-const [desktopShowSignUp, setDesktopShowSignUp] = useState(false);
-const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
-const [desktopShowFolderOptions, setDesktopShowFolderOptions] = useState(false);
-const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(null);
-const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
+  const [desktopSelectedNoteId, setDesktopSelectedNoteId] = useState<string | null>(null);
+  const [desktopShowSettings, setDesktopShowSettings] = useState(false);
+  const [draggedNote, setDraggedNote] = useState<SavedNote | null>(null);
+  const [folderDropFlash, setFolderDropFlash] = useState<string | null>(null);
+  const [isLoadingNotes, setIsLoadingNotes] = useState(false);
+  const [desktopShowAccountDetails, setDesktopShowAccountDetails] = useState(false);
+  const [desktopShowChangePassword, setDesktopShowChangePassword] = useState(false);
+  const [desktopShowSignUp, setDesktopShowSignUp] = useState(false);
+  const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
+  const [desktopShowFolderOptions, setDesktopShowFolderOptions] = useState(false);
+  const [desktopEditingFolder, setDesktopEditingFolder] = useState<Folder | null>(null);
+  const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   const [desktopShowMoveNote, setDesktopShowMoveNote] = useState(false);
   const [useMobileColorScheme, setUseMobileColorScheme] = useState(() => {
     const stored = localStorage.getItem('nuron-use-mobile-color-scheme');
@@ -141,7 +141,7 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   const pendingSaveRef = useRef<string | null>(null);
   // Track which note we've already sent load-note for to prevent duplicate sends
   const lastSentNoteIdRef = useRef<string | null>(null);
-  
+
   // Check for login query param and open welcome popup
   useEffect(() => {
     if (searchParams.get('login') === 'true' || searchParams.get('signup') === 'true') {
@@ -155,7 +155,7 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   useEffect(() => {
     // Skip onboarding on desktop
     if (isDesktop) return;
-    
+
     const onboardingComplete = localStorage.getItem('nuron-onboarding-complete');
     if (!onboardingComplete) {
       navigate('/onboarding');
@@ -171,18 +171,18 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   useEffect(() => {
     if (isCreatingNewNote && (!desktopSelectedNoteId || !desktopSelectedNoteId.startsWith('new-'))) {
       setIsCreatingNewNote(false);
-      
+
       // Only remove EMPTY placeholders - keep ones with content (save is pending)
       setSavedNotes(prev => prev.filter(n => {
         if (!n.id.startsWith('new-')) return true; // Keep real notes
-        
+
         // Check if placeholder has any content
         const hasTitle = n.title && n.title.trim();
-        const hasContent = n.contentBlocks?.some(b => 
-          b.type === 'image' || 
+        const hasContent = n.contentBlocks?.some(b =>
+          b.type === 'image' ||
           (b.type === 'text' && (b as { type: 'text'; id: string; content: string }).content?.trim())
         );
-        
+
         // Keep if has content (save is pending), remove if empty
         return hasTitle || hasContent;
       }));
@@ -195,26 +195,26 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
       // Real-time content updates
       if (e.data?.type === 'note-content-update') {
         const { noteId, placeholderId, title, contentBlocks, createdAt } = e.data;
-        setSavedNotes(prev => prev.map(n => 
-          (n.id === placeholderId || n.id === noteId) 
-            ? { 
-                ...n, 
-                title: title ?? n.title, 
-                contentBlocks: contentBlocks || n.contentBlocks,
-                createdAt: createdAt || n.createdAt
-              }
+        setSavedNotes(prev => prev.map(n =>
+          (n.id === placeholderId || n.id === noteId)
+            ? {
+              ...n,
+              title: title ?? n.title,
+              contentBlocks: contentBlocks || n.contentBlocks,
+              createdAt: createdAt || n.createdAt
+            }
             : n
         ));
-        
+
         // Also save to localStorage cache so content persists when iframe reloads
         if (placeholderId || noteId) {
           const targetId = noteId || placeholderId;
           const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
           const existingIndex = cached.findIndex((n: any) => n.id === placeholderId || n.id === noteId);
-          
+
           if (existingIndex >= 0) {
             // UPDATE existing - preserve existing values if new ones are empty
-            cached[existingIndex] = { 
+            cached[existingIndex] = {
               ...cached[existingIndex],
               id: targetId,
               title: title || cached[existingIndex].title || '',
@@ -235,37 +235,37 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
           localStorage.setItem('nuron-notes-cache', JSON.stringify(cached));
         }
       }
-      
+
       // Note saved - swap ID using placeholderId from message
       if (e.data?.type === 'note-saved') {
         const { noteId, noteData, placeholderId } = e.data;
         // Use placeholderId from message (more reliable than current selection)
         const targetId = placeholderId || desktopSelectedNoteId;
-        setSavedNotes(prev => prev.map(n => 
+        setSavedNotes(prev => prev.map(n =>
           n.id === targetId
-            ? { 
-                ...n, 
-                id: noteId, 
-                title: noteData?.title ?? n.title, 
-                contentBlocks: noteData?.contentBlocks || n.contentBlocks,
-                createdAt: noteData?.createdAt || n.createdAt,
-                updatedAt: noteData?.updatedAt || n.updatedAt,
-                weather: noteData?.weather ?? n.weather,
-                folder_id: noteData?.folder_id || n.folder_id,
-                is_published: n.is_published || false
-              }
+            ? {
+              ...n,
+              id: noteId,
+              title: noteData?.title ?? n.title,
+              contentBlocks: noteData?.contentBlocks || n.contentBlocks,
+              createdAt: noteData?.createdAt || n.createdAt,
+              updatedAt: noteData?.updatedAt || n.updatedAt,
+              weather: noteData?.weather ?? n.weather,
+              folder_id: noteData?.folder_id || n.folder_id,
+              is_published: n.is_published || false
+            }
             : n
         ));
         if (targetId === desktopSelectedNoteId && desktopSelectedNoteId?.startsWith('new-')) {
           setDesktopSelectedNoteId(noteId);
         }
         setIsCreatingNewNote(false);
-        
+
         // Update cache - Index.tsx is the single cache manager
         // Replace placeholder ID with real ID in cache
         const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
         const existingIndex = cached.findIndex((n: any) => n.id === targetId || n.id === noteId);
-        
+
         if (existingIndex >= 0) {
           // UPDATE existing - preserve existing values if new ones are empty
           cached[existingIndex] = {
@@ -292,51 +292,51 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
         }
         localStorage.setItem('nuron-notes-cache', JSON.stringify(cached));
       }
-      
+
       // Note updated - in place (including date changes)
       if (e.data?.type === 'note-updated') {
         const { noteData } = e.data;
         if (noteData) {
-          setSavedNotes(prev => prev.map(n => 
-            n.id === noteData.id 
-              ? { 
-                  ...n, 
-                  title: noteData.title ?? n.title, 
-                  contentBlocks: noteData.contentBlocks || n.contentBlocks,
-                  createdAt: noteData.createdAt || n.createdAt,
-                  updatedAt: noteData.updatedAt || n.updatedAt,
-                  weather: noteData.weather ?? n.weather,
-                  is_published: n.is_published 
-                }
+          setSavedNotes(prev => prev.map(n =>
+            n.id === noteData.id
+              ? {
+                ...n,
+                title: noteData.title ?? n.title,
+                contentBlocks: noteData.contentBlocks || n.contentBlocks,
+                createdAt: noteData.createdAt || n.createdAt,
+                updatedAt: noteData.updatedAt || n.updatedAt,
+                weather: noteData.weather ?? n.weather,
+                is_published: n.is_published
+              }
               : n
           ));
         }
       }
-      
+
       // Note deleted
       if (e.data?.type === 'note-deleted') {
         setSavedNotes(prev => prev.filter(n => n.id !== e.data.noteId));
         if (desktopSelectedNoteId === e.data.noteId) setDesktopSelectedNoteId(null);
-        
+
         // Clear the sent ref so note selection works correctly for future notes
         if (lastSentNoteIdRef.current === e.data.noteId) {
           lastSentNoteIdRef.current = null;
         }
-        
+
         // Update cache to remove the deleted note
         const cached = JSON.parse(localStorage.getItem('nuron-notes-cache') || '[]');
         const filtered = cached.filter((n: any) => n.id !== e.data.noteId);
         localStorage.setItem('nuron-notes-cache', JSON.stringify(filtered));
       }
-      
+
       if (e.data?.type === 'rewrite-start') setDesktopRewriteGlow(true);
       if (e.data?.type === 'rewrite-end') setDesktopRewriteGlow(false);
     };
-    
+
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [desktopSelectedNoteId]);
-  
+
   useEffect(() => {
     localStorage.setItem('nuron-use-mobile-color-scheme', JSON.stringify(useMobileColorScheme));
   }, [useMobileColorScheme]);
@@ -350,7 +350,7 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   const [username, setUsername] = useState('');
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
-  
+
   // Welcome popup form states
   const [welcomeEmail, setWelcomeEmail] = useState('');
   const [welcomePassword, setWelcomePassword] = useState('');
@@ -359,7 +359,7 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   const [welcomeLoading, setWelcomeLoading] = useState(false);
   const [welcomeError, setWelcomeError] = useState('');
   const [welcomeShowPassword, setWelcomeShowPassword] = useState(false);
-  
+
   // Auto-close welcome popup when user logs in
   useEffect(() => {
     if (user && desktopShowWelcomePopup) {
@@ -408,7 +408,7 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
         }
       }
     };
-    
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -416,20 +416,20 @@ const [desktopShowWelcomePopup, setDesktopShowWelcomePopup] = useState(false);
   }, []);
   const [isRestoring, setIsRestoring] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-const [showRateAppDialog, setShowRateAppDialog] = useState(false);
+  const [showRateAppDialog, setShowRateAppDialog] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [desktopRewriteGlow, setDesktopRewriteGlow] = useState(false);
-  
+
   // Network status for offline detection
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  
+
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-    
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -463,12 +463,12 @@ const [showRateAppDialog, setShowRateAppDialog] = useState(false);
   const [draggedFolder, setDraggedFolder] = useState<Folder | null>(null);
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const [dropLineIndex, setDropLineIndex] = useState<number | null>(null);
-  
+
   // Blog settings states
   const [newFolderIsBlog, setNewFolderIsBlog] = useState(false);
   const [newFolderBlogSlug, setNewFolderBlogSlug] = useState('');
   const [newFolderBlogName, setNewFolderBlogName] = useState('');
-const [newFolderBlogPassword, setNewFolderBlogPassword] = useState('');
+  const [newFolderBlogPassword, setNewFolderBlogPassword] = useState('');
   const [newFolderBlogSubheading, setNewFolderBlogSubheading] = useState('');
   const [newFolderBlogHeaderImage, setNewFolderBlogHeaderImage] = useState('');
   const [uploadingHeaderImage, setUploadingHeaderImage] = useState(false);
@@ -478,23 +478,23 @@ const [newFolderBlogPassword, setNewFolderBlogPassword] = useState('');
   // Send selected note to iframe when it changes (persistent iframe approach)
   useEffect(() => {
     if (!desktopSelectedNoteId) return;
-    
+
     // CRITICAL: Only send load-note ONCE per note selection
     if (lastSentNoteIdRef.current === desktopSelectedNoteId) return;
-    
+
     const isNewNote = desktopSelectedNoteId.startsWith('new-');
     const selectedNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
-    
+
     // For existing notes, wait until we have the note data in savedNotes
     // This handles the case where user clicks a note right after switching folders
     // before loadNotes has completed. We'll retry when savedNotes updates.
     if (!isNewNote && !selectedNote) {
       return; // Don't set lastSentNoteIdRef - we'll retry when savedNotes has the data
     }
-    
+
     // Now we have the data (or it's a new note), mark as sent
     lastSentNoteIdRef.current = desktopSelectedNoteId;
-    
+
     const sendNoteToIframe = () => {
       const iframe = document.getElementById('note-editor-iframe') as HTMLIFrameElement;
       if (iframe?.contentWindow) {
@@ -509,10 +509,10 @@ const [newFolderBlogPassword, setNewFolderBlogPassword] = useState('');
         }, '*');
       }
     };
-    
+
     // Small delay to ensure iframe is ready
     const timer = setTimeout(sendNoteToIframe, 50);
-    
+
     return () => clearTimeout(timer);
   }, [desktopSelectedNoteId, currentFolder?.id, savedNotes]); // savedNotes back - safe now with Note.tsx fixes
 
@@ -530,12 +530,12 @@ const [newFolderBlogPassword, setNewFolderBlogPassword] = useState('');
     pink: plusIconPink
   };
 
-const themeSettingsIcons = {
-  default: themeIconDark,
-  green: themeIconGreen,
-  blue: themeIconBlue,
-  pink: themeIconPink
-};
+  const themeSettingsIcons = {
+    default: themeIconDark,
+    green: themeIconGreen,
+    blue: themeIconBlue,
+    pink: themeIconPink
+  };
 
   const [showMergeDialog, setShowMergeDialog] = useState(false);
   const [localNotesToMerge, setLocalNotesToMerge] = useState<SavedNote[]>([]);
@@ -596,7 +596,7 @@ const themeSettingsIcons = {
     const loadFolders = async () => {
       // Wait for auth to be determined before loading folders
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session?.user) {
         // Not logged in - use local folder
         const localFolder: Folder = {
@@ -614,20 +614,20 @@ const themeSettingsIcons = {
         setIsInitializing(false);
         return;
       }
-      
+
       const { data, error } = await supabase
         .from('folders')
         .select('*')
         .eq('user_id', session.user.id)
         .order('sort_order', { ascending: true, nullsFirst: false });
-      
+
       if (error) {
         console.error('Failed to load folders:', error);
         toast.error('Failed to load folders. Please check your connection.');
         setIsInitializing(false);
         return;
       }
-      
+
       if (data) {
         if (data.length === 0) {
           // Only create default folder if user has NO folders at all
@@ -636,7 +636,7 @@ const themeSettingsIcons = {
             .insert({ user_id: session.user.id, name: 'Notes', default_view: 'collapsed' })
             .select()
             .single();
-          
+
           if (newFolder && !createError) {
             const typedFolder: Folder = {
               ...newFolder,
@@ -655,7 +655,7 @@ const themeSettingsIcons = {
             notes_sort_order: (f.notes_sort_order || 'desc') as 'asc' | 'desc'
           }));
           setFolders(typedFolders);
-          
+
           // Fix any folders with null sort_order
           const foldersNeedingOrder = typedFolders.filter(f => f.sort_order === null || f.sort_order === undefined);
           if (foldersNeedingOrder.length > 0) {
@@ -668,11 +668,11 @@ const themeSettingsIcons = {
                 .eq('id', folder.id);
             }
           }
-          
+
           // ALWAYS check localStorage first to restore the previously selected folder
           const savedFolderId = localStorage.getItem('nuron-current-folder-id');
           const savedFolder = savedFolderId ? typedFolders.find(f => f.id === savedFolderId) : null;
-          
+
           if (savedFolder) {
             setCurrentFolder(savedFolder);
             if (!userChangedView) {
@@ -691,7 +691,7 @@ const themeSettingsIcons = {
       }
       setIsInitializing(false);
     };
-    
+
     loadFolders();
   }, [user]);
 
@@ -699,7 +699,7 @@ const themeSettingsIcons = {
   useEffect(() => {
     const migrateNotes = async () => {
       if (!user || !currentFolder || currentFolder.id === 'local-notes' || isCreatingNewNote) return;
-      
+
       // Update any notes without a folder_id to use the current folder
       const { data: updatedNotes } = await supabase
         .from('notes')
@@ -707,7 +707,7 @@ const themeSettingsIcons = {
         .eq('user_id', user.id)
         .is('folder_id', null)
         .select();
-      
+
       // If notes were migrated, reload all notes
       if (updatedNotes && updatedNotes.length > 0) {
         const { data } = await supabase
@@ -716,7 +716,7 @@ const themeSettingsIcons = {
           .eq('user_id', user.id)
           .eq('folder_id', currentFolder.id)
           .order('created_at', { ascending: false });
-        
+
         if (data) {
           const notes = data.map(note => ({
             id: note.id,
@@ -733,36 +733,36 @@ const themeSettingsIcons = {
         }
       }
     };
-    
+
     migrateNotes();
   }, [user, currentFolder]);
 
   // Store current folder id for Note.tsx
-useEffect(() => {
-  // Don't save folder during initialization - wait for proper folder to load
-  if (isInitializing) return;
-  if (currentFolder && currentFolder.id !== 'local-notes') {
-    localStorage.setItem('nuron-current-folder-id', currentFolder.id);
-    // Clear the notes cache so old folder's notes don't show
-    localStorage.removeItem('nuron-notes-cache');
-  }
-}, [currentFolder, isInitializing]);
+  useEffect(() => {
+    // Don't save folder during initialization - wait for proper folder to load
+    if (isInitializing) return;
+    if (currentFolder && currentFolder.id !== 'local-notes') {
+      localStorage.setItem('nuron-current-folder-id', currentFolder.id);
+      // Clear the notes cache so old folder's notes don't show
+      localStorage.removeItem('nuron-notes-cache');
+    }
+  }, [currentFolder, isInitializing]);
 
   // Folder CRUD functions
   const createFolder = async () => {
     if (!user || !newFolderName.trim()) return;
-    
+
     const { data, error } = await supabase
       .from('folders')
-      .insert({ 
-        user_id: user.id, 
-        name: newFolderName.trim(), 
+      .insert({
+        user_id: user.id,
+        name: newFolderName.trim(),
         default_view: newFolderDefaultView,
         sort_order: folders.length  // Put new folder at the end
       })
       .select()
       .single();
-    
+
     if (data && !error) {
       const typedFolder: Folder = {
         ...data,
@@ -778,11 +778,11 @@ useEffect(() => {
 
   const updateFolder = async () => {
     if (!editingFolder || !newFolderName.trim()) return;
-    
+
     const { error } = await supabase
       .from('folders')
-      .update({ 
-        name: newFolderName.trim(), 
+      .update({
+        name: newFolderName.trim(),
         default_view: newFolderDefaultView,
         notes_sort_order: newFolderSortOrder,
         is_blog: newFolderIsBlog,
@@ -794,11 +794,11 @@ useEffect(() => {
         updated_at: new Date().toISOString()
       })
       .eq('id', editingFolder.id);
-    
+
     if (!error) {
-      const updatedFolder = { 
-        ...editingFolder, 
-        name: newFolderName.trim(), 
+      const updatedFolder = {
+        ...editingFolder,
+        name: newFolderName.trim(),
         default_view: newFolderDefaultView,
         notes_sort_order: newFolderSortOrder,
         is_blog: newFolderIsBlog,
@@ -808,7 +808,7 @@ useEffect(() => {
         blog_header_image: newFolderIsBlog ? newFolderBlogHeaderImage : null,
         blog_password: newFolderIsBlog && newFolderBlogPassword ? newFolderBlogPassword : null
       };
-      setFolders(prev => prev.map(f => 
+      setFolders(prev => prev.map(f =>
         f.id === editingFolder.id ? updatedFolder : f
       ));
       if (currentFolder?.id === editingFolder.id) {
@@ -833,12 +833,12 @@ useEffect(() => {
 
   const deleteFolder = async () => {
     if (!folderToDelete) return;
-    
+
     const { error } = await supabase
       .from('folders')
       .delete()
       .eq('id', folderToDelete.id);
-    
+
     if (!error) {
       setFolders(prev => prev.filter(f => f.id !== folderToDelete.id));
       if (currentFolder?.id === folderToDelete.id) {
@@ -886,7 +886,7 @@ useEffect(() => {
     // CRITICAL: Reset creating state FIRST
     setIsCreatingNewNote(false);
     setSavedNotes(prev => prev.filter(n => !n.id.startsWith('new-')));
-    
+
     // Brief fade out before switching
     const contentEl = document.querySelector('.notes-list-container');
     if (contentEl) {
@@ -914,21 +914,21 @@ useEffect(() => {
   const saveNewNoteDirectly = async (note: SavedNote) => {
     // Only save new notes with content
     if (!note.id.startsWith('new-')) return null;
-    
+
     const hasTitle = note.title && note.title.trim();
-    const hasContent = note.contentBlocks?.some(b => 
-      b.type === 'image' || 
+    const hasContent = note.contentBlocks?.some(b =>
+      b.type === 'image' ||
       (b.type === 'text' && (b as { type: 'text'; id: string; content: string }).content?.trim())
     );
-    
+
     if (!hasTitle && !hasContent) return null; // Nothing to save
-    
+
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) return null;
-    
+
     const realId = crypto.randomUUID();
     const currentFolderId = currentFolder?.id;
-    
+
     const { error } = await supabase.from('notes').upsert({
       id: realId,
       user_id: session.user.id,
@@ -939,28 +939,28 @@ useEffect(() => {
       folder_id: currentFolderId && currentFolderId !== 'local-notes' ? currentFolderId : null,
       is_published: false
     });
-    
+
     if (error) {
       console.error('Error saving note:', error);
       return null;
     }
-    
+
     return realId; // Return the new UUID
   };
 
   const updateFolderOrder = async (folderId: string, newIndex: number) => {
     if (!user) return;
-    
+
     const newFolders = [...folders];
     const oldIndex = newFolders.findIndex(f => f.id === folderId);
     if (oldIndex === -1) return;
-    
+
     const [movedFolder] = newFolders.splice(oldIndex, 1);
     newFolders.splice(newIndex, 0, movedFolder);
-    
+
     // Update local state immediately
     setFolders(newFolders);
-    
+
     // Update sort_order in database for all folders
     for (let i = 0; i < newFolders.length; i++) {
       await supabase
@@ -981,13 +981,13 @@ useEffect(() => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
-      
+
       // Only reload notes on actual sign in/out events, not on initial load
       if (event === 'SIGNED_IN') {
         setTimeout(() => {
           loadUserProfile(session!.user.id);
           setShowFolders(false);
-          
+
           // Check for local notes to merge
           const localNotes = localStorage.getItem('nuron-notes');
           if (localNotes) {
@@ -997,7 +997,7 @@ useEffect(() => {
               setShowMergeDialog(true);
             }
           }
-          
+
         }, 0);
       } else if (event === 'SIGNED_OUT') {
         setUserProfile(null);
@@ -1013,15 +1013,21 @@ useEffect(() => {
 
   useEffect(() => {
     const loadNotes = async () => {
-      if (!currentFolder || currentFolder.id === 'local-notes') {
+      if (!currentFolder) return;
+
+      // Load from localStorage for local notes (not logged in)
+      if (currentFolder.id === 'local-notes') {
+        const stored = localStorage.getItem('nuron-notes');
+        setSavedNotes(stored ? JSON.parse(stored) : []);
+        console.log('Loaded notes from localStorage:', stored ? JSON.parse(stored).length : 0);
         return;
       }
-      
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) return;
-      
+
       const NOTES_PER_PAGE = 100;
-      
+
       const { data, error } = await supabase
         .from('notes')
         .select('*')
@@ -1029,13 +1035,13 @@ useEffect(() => {
         .eq('folder_id', currentFolder.id)
         .order('created_at', { ascending: false })
         .limit(NOTES_PER_PAGE);
-      
+
       if (error) {
         console.error('Failed to load notes:', error);
         toast.error('Failed to load notes. Please check your connection.');
         return;
       }
-      
+
       if (data) {
         const notes = data.map(note => ({
           id: note.id,
@@ -1047,7 +1053,7 @@ useEffect(() => {
           folder_id: note.folder_id,
           is_published: note.is_published || false
         }));
-        
+
         // Preserve only placeholders for the CURRENT folder
         setSavedNotes(prev => {
           const placeholders = prev.filter(n => n.id.startsWith('new-') && n.folder_id === currentFolder.id);
@@ -1062,7 +1068,7 @@ useEffect(() => {
         });
       }
     };
-    
+
     loadNotes();
   }, [currentFolder?.id]);
 
@@ -1072,7 +1078,7 @@ useEffect(() => {
       .select('name, email, username')
       .eq('id', userId)
       .single();
-    
+
     if (data) {
       setUserProfile(data);
       setUsername(data.username || '');
@@ -1084,23 +1090,23 @@ useEffect(() => {
       setUsernameAvailable(null);
       return;
     }
-    
+
     // Reserved words that cannot be used as usernames
     const reserved = ['index', 'home', 'contact', 'prices', 'features', 'blog', 'admin', 'api', 'app', 'www'];
     if (reserved.includes(usernameToCheck.toLowerCase())) {
       setUsernameAvailable(false);
       return;
     }
-    
+
     setCheckingUsername(true);
-    
+
     const { data } = await supabase
       .from('profiles')
       .select('id')
       .eq('username', usernameToCheck.toLowerCase())
       .neq('id', user?.id || '')
       .maybeSingle();
-    
+
     setCheckingUsername(false);
     setUsernameAvailable(!data);
   };
@@ -1163,37 +1169,37 @@ useEffect(() => {
     if (!user) return;
     setShowDeleteConfirmDialog(false);
     setLoading(true);
-    
+
     try {
       // Delete images from storage
       const { data: imageFiles } = await supabase.storage.from('note-images').list(user.id);
       if (imageFiles && imageFiles.length > 0) {
         await supabase.storage.from('note-images').remove(imageFiles.map(f => `${user.id}/${f.name}`));
       }
-      
+
       // Delete audio from storage
       const { data: audioFiles } = await supabase.storage.from('audio-recordings').list(user.id);
       if (audioFiles && audioFiles.length > 0) {
         await supabase.storage.from('audio-recordings').remove(audioFiles.map(f => `${user.id}/${f.name}`));
       }
-      
+
       // Delete database records
       await supabase.from("notes").delete().eq("user_id", user.id);
       await supabase.from("folders").delete().eq("user_id", user.id);
       await supabase.from("profiles").delete().eq("id", user.id);
-      
+
       // Clear local storage
       localStorage.removeItem('nuron-notes');
       localStorage.removeItem('nuron-notes-cache');
       localStorage.removeItem('nuron-current-folder-id');
-      
+
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Delete account error:', error);
       setLoading(false);
       return;
     }
-    
+
     setUser(null);
     setUserProfile(null);
     setShowAccountDetails(false);
@@ -1204,25 +1210,25 @@ useEffect(() => {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordFormError("");
-    
+
     if (newPassword !== confirmNewPassword) {
       setPasswordFormError("Passwords don't match");
       return;
     }
-    
+
     if (newPassword.length < 8) {
       setPasswordFormError("Password must be at least 8 characters");
       return;
     }
-    
+
     setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
-      
+
       if (error) throw error;
-      
+
       // SUCCESS: Just close the form - that's the feedback
       setShowChangePassword(false);
       setNewPassword("");
@@ -1239,15 +1245,15 @@ useEffect(() => {
       setAuthFormError("Please enter your email address");
       return;
     }
-    
+
     setLoading(true);
     setAuthFormError("");
-    
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/?login=true`,
       });
-      
+
       if (error) throw error;
       setResetEmailSent(true);
     } catch (error: any) {
@@ -1263,10 +1269,10 @@ useEffect(() => {
       setWelcomeError("Please enter your email address");
       return;
     }
-    
+
     setWelcomeLoading(true);
     setWelcomeError('');
-    
+
     try {
       await supabase.auth.resetPasswordForEmail(welcomeEmail, {
         redirectTo: `${window.location.origin}/?login=true`,
@@ -1284,9 +1290,9 @@ useEffect(() => {
       alert('Restore is only available on iOS');
       return;
     }
-    
+
     setIsRestoring(true);
-    
+
     try {
       const customerInfo = await restorePurchases();
       if (customerInfo && customerInfo.activeSubscriptions.length > 0) {
@@ -1299,7 +1305,7 @@ useEffect(() => {
       console.error('Restore failed:', error);
       alert('Failed to restore purchases. Please try again.');
     }
-    
+
     setIsRestoring(false);
   };
 
@@ -1340,13 +1346,13 @@ useEffect(() => {
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
-    
+
     if (currentFolder && currentFolder.id !== 'local-notes') {
-query = query.eq('folder_id', currentFolder.id);
+      query = query.eq('folder_id', currentFolder.id);
     }
-    
+
     const { data } = await query;
-    
+
     if (data) {
       setSavedNotes(data.map(note => ({
         id: note.id,
@@ -1363,7 +1369,7 @@ query = query.eq('folder_id', currentFolder.id);
 
   const mergeAndSyncNotes = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       // Upload ALL local notes to Supabase (upsert handles duplicates)
@@ -1379,23 +1385,23 @@ query = query.eq('folder_id', currentFolder.id);
           folder_id: currentFolder?.id !== 'local-notes' ? currentFolder?.id : null
         });
       }
-      
+
       // Clear localStorage
       localStorage.removeItem('nuron-notes');
-      
+
       // Reload everything from Supabase
       let query = supabase
         .from('notes')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
-      
+
       if (currentFolder && currentFolder.id !== 'local-notes') {
         query = query.eq('folder_id', currentFolder.id);
       }
-      
+
       const { data } = await query;
-      
+
       if (data) {
         setSavedNotes(data.map(note => ({
           id: note.id,
@@ -1408,7 +1414,7 @@ query = query.eq('folder_id', currentFolder.id);
           is_published: note.is_published || false
         })));
       }
-      
+
       setLocalNotesToMerge([]);
     } catch (error: any) {
       console.error('Error syncing notes:', error);
@@ -1429,7 +1435,7 @@ query = query.eq('folder_id', currentFolder.id);
       seen.add(note.id);
       return true;
     });
-    
+
     const sorted = [...deduped];
     if (sortOrder === 'asc') {
       sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
@@ -1444,7 +1450,7 @@ query = query.eq('folder_id', currentFolder.id);
     const groups = sortedNotes.reduce((acc: GroupedNotes[], note) => {
       const dateKey = new Date(note.createdAt).toLocaleDateString('en-US');
       const existingGroup = acc.find(g => g.date === dateKey);
-      
+
       if (existingGroup) {
         existingGroup.notes.push(note);
       } else {
@@ -1453,7 +1459,7 @@ query = query.eq('folder_id', currentFolder.id);
           notes: [note]
         });
       }
-      
+
       return acc;
     }, []);
 
@@ -1595,1849 +1601,1846 @@ query = query.eq('folder_id', currentFolder.id);
         {/* Main 3-column layout */}
         <div className="flex flex-1 min-h-0">
 
-        {/* Column 1: Folders - 20% width, dark background */}
+          {/* Column 1: Folders - 20% width, dark background */}
 
-        <div
-          className="flex flex-col"
-          style={{ width: '20%', backgroundColor: themeColors[theme] }}
-        >
-          {/* Header area - 50px to match Column 2 */}
-          <div className="h-[50px] flex items-center justify-end pl-[20px] pr-[23px]">
-                  {user && (
-                    <button 
-                      onClick={async () => {
-                        if (!user) return;
-                        
-                        // Create new folder with sort_order 0 (top of list)
-                        const { data, error } = await supabase
-                          .from('folders')
-                          .insert({ 
-                            user_id: user.id, 
-                            name: 'Untitled', 
-                            default_view: 'collapsed',
-                            sort_order: 0
-                          })
-                          .select()
-                          .single();
-                        
-                        if (data && !error) {
-                          // Update sort_order for all other folders (push them down)
-                          for (let i = 0; i < folders.length; i++) {
-                            await supabase
-                              .from('folders')
-                              .update({ sort_order: i + 1 })
-                              .eq('id', folders[i].id);
-                          }
-                          
-                          const newFolder: Folder = {
-                            ...data,
-                            default_view: (data.default_view || 'collapsed') as 'collapsed' | 'compact',
-                            notes_sort_order: (data.notes_sort_order || 'desc') as 'asc' | 'desc'
-                          };
-                          
-                          // Add new folder to top of list
-                          setFolders([newFolder, ...folders]);
-                          
-                          // Open folder options panel to edit the name
-                          // CRITICAL: Reset ALL folder settings to defaults - prevents blog settings from previous folder persisting!
-                          setDesktopEditingFolder(newFolder);
-                          setNewFolderName('Untitled');
-                          setNewFolderDefaultView('collapsed');
-                          setNewFolderSortOrder('desc');
-                          setNewFolderIsBlog(false);
-                          setNewFolderBlogSlug('');
-                          setNewFolderBlogName('');
-                          setNewFolderBlogSubheading('');
-                          setNewFolderBlogHeaderImage('');
-                          setNewFolderBlogPassword('');
-                          setBlogSlugAvailable(null);
-                          setDesktopShowFolderOptions(true);
-                        }
-                      }} 
-                      className="p-0 m-0 border-0 bg-transparent"
-                      aria-label="Create new folder"
-                    >
-                      <img src={folderPlusIcon} alt="Add" style={{ width: '18px', height: '18px' }} className="opacity-70" />
-                    </button>
-                  )}
-                </div>
+          <div
+            className="flex flex-col"
+            style={{ width: '20%', backgroundColor: themeColors[theme] }}
+          >
+            {/* Header area - 50px to match Column 2 */}
+            <div className="h-[50px] flex items-center justify-end pl-[20px] pr-[23px]">
+              {user && (
+                <button
+                  onClick={async () => {
+                    if (!user) return;
 
-          {/* Folders list - below the header */}
-          <div className="flex-1 px-[20px] pt-[30px] overflow-y-auto relative">
-            <div className="relative">
-              {folders.map((folder, folderIndex) => {
-                const isDragging = draggedFolder?.id === folder.id;
-                const showLineBefore = dropLineIndex === folderIndex && !isDragging;
-                const showLineAfter = dropLineIndex === folderIndex + 1 && folderIndex === folders.length - 1 && !isDragging;
-                
-                return (
-                  <div
-                    key={folder.id}
-                    draggable
-                    onDragStart={(e) => {
-                      setDraggedFolder(folder);
-                      e.dataTransfer.effectAllowed = 'move';
-                      setTimeout(() => {
-                        (e.target as HTMLElement).style.opacity = '0.3';
-                      }, 0);
-                    }}
-                    onDragEnd={(e) => {
-                      (e.target as HTMLElement).style.opacity = '';
-                      setDraggedFolder(null);
-                      setDropLineIndex(null);
-                    }}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      
-                      // Handle note drops (keep existing behavior)
-                      if (draggedNote && draggedNote.folder_id !== folder.id) {
-                        setDragOverFolder(folder.id);
-                      }
-                      
-                      // Handle folder reordering with line position
-                      if (!draggedFolder || draggedFolder.id === folder.id) return;
-                      
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const midpoint = rect.top + rect.height / 2;
-                      
-                      if (e.clientY < midpoint) {
-                        if (dropLineIndex !== folderIndex) {
-                          setDropLineIndex(folderIndex);
-                        }
-                      } else {
-                        if (dropLineIndex !== folderIndex + 1) {
-                          setDropLineIndex(folderIndex + 1);
-                        }
-                      }
-                    }}
-                    onDrop={async (e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      
-                      // Handle note drops (existing logic)
-                      if (draggedNote && draggedNote.folder_id !== folder.id) {
-                        const { error } = await supabase
-                          .from('notes')
-                          .update({ folder_id: folder.id })
-                          .eq('id', draggedNote.id);
-                        
-                        if (!error) {
-                          setFolderDropFlash(folder.id);
-                          setTimeout(() => setFolderDropFlash(null), 500);
-                          setSavedNotes(prev => prev.filter(n => n.id !== draggedNote.id));
-                          if (desktopSelectedNoteId === draggedNote.id) {
-                            setDesktopSelectedNoteId(null);
-                          }
-                        } else {
-                          toast.error('Failed to move note');
-                        }
-                        setDraggedNote(null);
-                      }
-                      
-                      // Handle folder reordering
-                      if (!draggedFolder || dropLineIndex === null) {
-                        setDraggedFolder(null);
-                        setDropLineIndex(null);
-                        return;
-                      }
-                      
-                      const oldIndex = folders.findIndex(f => f.id === draggedFolder.id);
-                      let newIndex = dropLineIndex;
-                      
-                      // Don't do anything if dropping in same position
-                      if (newIndex === oldIndex || newIndex === oldIndex + 1) {
-                        setDraggedFolder(null);
-                        setDropLineIndex(null);
-                        return;
-                      }
-                      
-                      // Adjust index if moving down
-                      if (oldIndex < newIndex) {
-                        newIndex--;
-                      }
-                      
-                      // Reorder locally first for instant feedback
-                      const newFolders = [...folders];
-                      const [movedFolder] = newFolders.splice(oldIndex, 1);
-                      newFolders.splice(newIndex, 0, movedFolder);
-                      setFolders(newFolders);
-                      
-                      // Update database
-                      for (let i = 0; i < newFolders.length; i++) {
+                    // Create new folder with sort_order 0 (top of list)
+                    const { data, error } = await supabase
+                      .from('folders')
+                      .insert({
+                        user_id: user.id,
+                        name: 'Untitled',
+                        default_view: 'collapsed',
+                        sort_order: 0
+                      })
+                      .select()
+                      .single();
+
+                    if (data && !error) {
+                      // Update sort_order for all other folders (push them down)
+                      for (let i = 0; i < folders.length; i++) {
                         await supabase
                           .from('folders')
-                          .update({ sort_order: i })
-                          .eq('id', newFolders[i].id);
+                          .update({ sort_order: i + 1 })
+                          .eq('id', folders[i].id);
                       }
-                      
-                      setDraggedFolder(null);
-                      setDropLineIndex(null);
+
+                      const newFolder: Folder = {
+                        ...data,
+                        default_view: (data.default_view || 'collapsed') as 'collapsed' | 'compact',
+                        notes_sort_order: (data.notes_sort_order || 'desc') as 'asc' | 'desc'
+                      };
+
+                      // Add new folder to top of list
+                      setFolders([newFolder, ...folders]);
+
+                      // Open folder options panel to edit the name
+                      // CRITICAL: Reset ALL folder settings to defaults - prevents blog settings from previous folder persisting!
+                      setDesktopEditingFolder(newFolder);
+                      setNewFolderName('Untitled');
+                      setNewFolderDefaultView('collapsed');
+                      setNewFolderSortOrder('desc');
+                      setNewFolderIsBlog(false);
+                      setNewFolderBlogSlug('');
+                      setNewFolderBlogName('');
+                      setNewFolderBlogSubheading('');
+                      setNewFolderBlogHeaderImage('');
+                      setNewFolderBlogPassword('');
+                      setBlogSlugAvailable(null);
+                      setDesktopShowFolderOptions(true);
+                    }
+                  }}
+                  className="p-0 m-0 border-0 bg-transparent"
+                  aria-label="Create new folder"
+                >
+                  <img src={folderPlusIcon} alt="Add" style={{ width: '18px', height: '18px' }} className="opacity-70" />
+                </button>
+              )}
+            </div>
+
+            {/* Folders list - below the header */}
+            <div className="flex-1 px-[20px] pt-[30px] overflow-y-auto relative">
+              <div className="relative">
+                {folders.map((folder, folderIndex) => {
+                  const isDragging = draggedFolder?.id === folder.id;
+                  const showLineBefore = dropLineIndex === folderIndex && !isDragging;
+                  const showLineAfter = dropLineIndex === folderIndex + 1 && folderIndex === folders.length - 1 && !isDragging;
+
+                  return (
+                    <div
+                      key={folder.id}
+                      draggable
+                      onDragStart={(e) => {
+                        setDraggedFolder(folder);
+                        e.dataTransfer.effectAllowed = 'move';
+                        setTimeout(() => {
+                          (e.target as HTMLElement).style.opacity = '0.3';
+                        }, 0);
+                      }}
+                      onDragEnd={(e) => {
+                        (e.target as HTMLElement).style.opacity = '';
+                        setDraggedFolder(null);
+                        setDropLineIndex(null);
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        // Handle note drops (keep existing behavior)
+                        if (draggedNote && draggedNote.folder_id !== folder.id) {
+                          setDragOverFolder(folder.id);
+                        }
+
+                        // Handle folder reordering with line position
+                        if (!draggedFolder || draggedFolder.id === folder.id) return;
+
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const midpoint = rect.top + rect.height / 2;
+
+                        if (e.clientY < midpoint) {
+                          if (dropLineIndex !== folderIndex) {
+                            setDropLineIndex(folderIndex);
+                          }
+                        } else {
+                          if (dropLineIndex !== folderIndex + 1) {
+                            setDropLineIndex(folderIndex + 1);
+                          }
+                        }
+                      }}
+                      onDrop={async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        // Handle note drops (existing logic)
+                        if (draggedNote && draggedNote.folder_id !== folder.id) {
+                          const { error } = await supabase
+                            .from('notes')
+                            .update({ folder_id: folder.id })
+                            .eq('id', draggedNote.id);
+
+                          if (!error) {
+                            setFolderDropFlash(folder.id);
+                            setTimeout(() => setFolderDropFlash(null), 500);
+                            setSavedNotes(prev => prev.filter(n => n.id !== draggedNote.id));
+                            if (desktopSelectedNoteId === draggedNote.id) {
+                              setDesktopSelectedNoteId(null);
+                            }
+                          } else {
+                            toast.error('Failed to move note');
+                          }
+                          setDraggedNote(null);
+                        }
+
+                        // Handle folder reordering
+                        if (!draggedFolder || dropLineIndex === null) {
+                          setDraggedFolder(null);
+                          setDropLineIndex(null);
+                          return;
+                        }
+
+                        const oldIndex = folders.findIndex(f => f.id === draggedFolder.id);
+                        let newIndex = dropLineIndex;
+
+                        // Don't do anything if dropping in same position
+                        if (newIndex === oldIndex || newIndex === oldIndex + 1) {
+                          setDraggedFolder(null);
+                          setDropLineIndex(null);
+                          return;
+                        }
+
+                        // Adjust index if moving down
+                        if (oldIndex < newIndex) {
+                          newIndex--;
+                        }
+
+                        // Reorder locally first for instant feedback
+                        const newFolders = [...folders];
+                        const [movedFolder] = newFolders.splice(oldIndex, 1);
+                        newFolders.splice(newIndex, 0, movedFolder);
+                        setFolders(newFolders);
+
+                        // Update database
+                        for (let i = 0; i < newFolders.length; i++) {
+                          await supabase
+                            .from('folders')
+                            .update({ sort_order: i })
+                            .eq('id', newFolders[i].id);
+                        }
+
+                        setDraggedFolder(null);
+                        setDropLineIndex(null);
+                      }}
+                      className={`relative flex items-center justify-between w-full py-2 transition-all duration-200 ${currentFolder?.id === folder.id ? 'opacity-100' : 'opacity-50 hover:opacity-70'
+                        } ${draggedFolder?.id === folder.id ? 'opacity-30' : ''
+                        }`}
+                      style={{ cursor: 'grab' }}
+                    >
+                      {/* Full-width highlight overlay for note drop */}
+                      {dragOverFolder === folder.id && (
+                        <div
+                          className="absolute inset-y-0 bg-white/20 rounded-[8px] pointer-events-none"
+                          style={{ left: '-20px', right: '-20px' }}
+                        />
+                      )}
+
+                      {/* Flash overlay */}
+                      {folderDropFlash === folder.id && (
+                        <div
+                          className="absolute inset-y-0 bg-white/40 rounded-[8px] pointer-events-none"
+                          style={{ left: '-20px', right: '-20px' }}
+                        />
+                      )}
+
+                      {/* Drop line for folder reordering */}
+                      {dropLineIndex === folderIndex && draggedFolder && draggedFolder.id !== folder.id && (
+                        <div
+                          className="absolute left-[-20px] right-[-20px] h-[2px] bg-white rounded-full"
+                          style={{ top: '-4px' }}
+                        />
+                      )}
+
+                      <button
+                        onClick={async () => {
+                          // Save any new note before switching folders
+                          if (desktopSelectedNoteId?.startsWith('new-')) {
+                            const newNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
+                            if (newNote) {
+                              const realId = await saveNewNoteDirectly(newNote);
+                              if (realId) {
+                                setSavedNotes(prev => prev.map(n =>
+                                  n.id === desktopSelectedNoteId ? { ...n, id: realId } : n
+                                ));
+                              }
+                            }
+                          }
+
+                          // CRITICAL: Reset creating state FIRST to allow loadNotes to run
+                          setIsCreatingNewNote(false);
+                          setSavedNotes(prev => prev.filter(n => !n.id.startsWith('new-')));
+
+                          setCurrentFolder(folder);
+                          localStorage.setItem('nuron-current-folder-id', folder.id);
+                          setDesktopSelectedNoteId(null);
+                          // Clear the sent ref so first note click in new folder works
+                          lastSentNoteIdRef.current = null;
+                          setViewMode(folder.default_view || 'collapsed');
+                          setSortOrder(folder.notes_sort_order || 'desc');
+                          setUserChangedView(false);
+                        }}
+                        className="flex items-center gap-3 flex-1 text-left relative z-10"
+                      >
+                        <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
+                        <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (desktopShowFolderOptions && desktopEditingFolder?.id === folder.id) {
+                            setDesktopShowFolderOptions(false);
+                            setDesktopEditingFolder(null);
+                          } else {
+                            setDesktopEditingFolder(folder);
+                            setNewFolderName(folder.name);
+                            setNewFolderDefaultView(folder.default_view || 'collapsed');
+                            setNewFolderSortOrder(folder.notes_sort_order || 'desc');
+                            setNewFolderIsBlog(folder.is_blog || false);
+                            setNewFolderBlogSlug(folder.blog_slug || '');
+                            setNewFolderBlogName(folder.blog_name || '');
+                            setNewFolderBlogPassword(folder.blog_password || '');
+                            setNewFolderBlogSubheading(folder.blog_subheading || '');
+                            setNewFolderBlogHeaderImage(folder.blog_header_image || '');
+                            setBlogSlugAvailable(null);
+                            setDesktopShowFolderOptions(true);
+                          }
+                        }}
+                        className="mr-[10px] p-0 m-0 border-0 bg-transparent relative z-10"
+                      >
+                        <img
+                          src={threeDotsIcon}
+                          alt="Options"
+                          style={{ width: '4px', height: '18px' }}
+                          className="opacity-70"
+                        />
+                      </button>
+                    </div>
+                  );
+                })}
+
+                {/* Drop line at very end of list */}
+                {dropLineIndex === folders.length && draggedFolder && (
+                  <div className="h-[2px] bg-white rounded-full mt-1" />
+                )}
+              </div>
+            </div>
+
+            {/* Settings at bottom */}
+            <button onClick={() => setDesktopShowSettings(!desktopShowSettings)} className="px-[20px] pb-[40px] flex items-center gap-2 opacity-60 hover:opacity-80" aria-label="Open settings">
+
+              <img src={settingsIcon} alt="" className="w-[20px] h-[20px]" />
+
+              <span className="text-white text-[16px] font-outfit">Settings</span>
+
+            </button>
+
+          </div>
+
+          {/* Column 2: Notes list OR Settings */}
+          <div
+            className="relative overflow-hidden"
+            style={{ width: '30%', cursor: draggedNote ? 'grabbing' : 'default' }}
+          >
+            {/* Notes list - slides right when settings or folder options shown */}
+            <div
+              className={`absolute inset-0 flex flex-col transition-transform duration-300 ${desktopShowSettings || desktopShowFolderOptions ? 'translate-x-full' : 'translate-x-0'} ${useMobileColorScheme ? 'bg-journal-content' : ''}`}
+              style={{ backgroundColor: useMobileColorScheme ? undefined : '#F9F9F6' }}
+            >
+              {/* 50px header with icons */}
+              <div
+                className={`h-[50px] flex-shrink-0 flex items-center relative ${useMobileColorScheme ? 'bg-journal-content' : ''}`}
+                style={{ backgroundColor: useMobileColorScheme ? undefined : '#F9F9F6' }}
+              >
+                {isSearching ? (
+                  <div
+                    className="flex items-center bg-white border border-[hsl(0,0%,80%)]"
+                    style={{
+                      position: 'absolute',
+                      top: '5px',
+                      left: '5px',
+                      right: '5px',
+                      bottom: '5px',
+                      borderRadius: '8px',
+                      padding: '0 12px'
                     }}
-                    className={`relative flex items-center justify-between w-full py-2 transition-all duration-200 ${
-                      currentFolder?.id === folder.id ? 'opacity-100' : 'opacity-50 hover:opacity-70'
-                    } ${
-                      draggedFolder?.id === folder.id ? 'opacity-30' : ''
-                    }`}
-                    style={{ cursor: 'grab' }}
                   >
-                    {/* Full-width highlight overlay for note drop */}
-                    {dragOverFolder === folder.id && (
-                      <div 
-                        className="absolute inset-y-0 bg-white/20 rounded-[8px] pointer-events-none"
-                        style={{ left: '-20px', right: '-20px' }}
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search"
+                      autoFocus
+                      className="flex-1 bg-transparent outline-none text-[16px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[hsl(0,0%,60%)] focus:ring-2 focus:ring-[hsl(0,0%,70%)]/50 focus:ring-offset-0 rounded"
+                    />
+                    <button
+                      onClick={() => {
+                        setIsSearching(false);
+                        setSearchQuery("");
+                      }}
+                      className="w-[18px] h-[18px] bg-[hsl(0,0%,85%)] rounded-full flex items-center justify-center ml-2"
+                    >
+                      <span className="text-[12px] text-white font-medium leading-none">×</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex-1 flex items-center justify-end gap-[25px] pr-[17px]">
+                    <button
+                      onClick={() => setIsSearching(true)}
+                      className="p-0 m-0 border-0 bg-transparent"
+                      aria-label="Search notes"
+                    >
+                      <img
+                        src={greySearchIcon}
+                        alt="Search"
+                        style={{ width: '18px', height: '18px' }}
                       />
-                    )}
-                    
-                    {/* Flash overlay */}
-                    {folderDropFlash === folder.id && (
-                      <div 
-                        className="absolute inset-y-0 bg-white/40 rounded-[8px] pointer-events-none"
-                        style={{ left: '-20px', right: '-20px' }}
-                      />
-                    )}
-                    
-                    {/* Drop line for folder reordering */}
-                    {dropLineIndex === folderIndex && draggedFolder && draggedFolder.id !== folder.id && (
-                      <div 
-                        className="absolute left-[-20px] right-[-20px] h-[2px] bg-white rounded-full"
-                        style={{ top: '-4px' }}
-                      />
-                    )}
-                    
+                    </button>
+                    {/* New note */}
                     <button
                       onClick={async () => {
-                        // Save any new note before switching folders
+                        // If already on a new note, save it first
                         if (desktopSelectedNoteId?.startsWith('new-')) {
                           const newNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
                           if (newNote) {
                             const realId = await saveNewNoteDirectly(newNote);
                             if (realId) {
-                              setSavedNotes(prev => prev.map(n => 
+                              setSavedNotes(prev => prev.map(n =>
                                 n.id === desktopSelectedNoteId ? { ...n, id: realId } : n
                               ));
+                            } else {
+                              setSavedNotes(prev => prev.filter(n => n.id !== desktopSelectedNoteId));
                             }
                           }
+                          setIsCreatingNewNote(false);
                         }
-                        
-                        // CRITICAL: Reset creating state FIRST to allow loadNotes to run
-                        setIsCreatingNewNote(false);
-                        setSavedNotes(prev => prev.filter(n => !n.id.startsWith('new-')));
-                        
-                        setCurrentFolder(folder);
-                        localStorage.setItem('nuron-current-folder-id', folder.id);
-                        setDesktopSelectedNoteId(null);
-                        // Clear the sent ref so first note click in new folder works
-                        lastSentNoteIdRef.current = null;
-                        setViewMode(folder.default_view || 'collapsed');
-                        setSortOrder(folder.notes_sort_order || 'desc');
-                        setUserChangedView(false);
+
+                        const newId = 'new-' + Date.now();
+                        const now = new Date();
+
+                        setIsCreatingNewNote(true);
+                        setDesktopSelectedNoteId(newId);
+
+                        // Add to TOP of list - simple, no sorting
+                        setSavedNotes(prev => [{
+                          id: newId,
+                          title: '',
+                          contentBlocks: [{ type: 'text' as const, id: 'initial', content: '' }],
+                          createdAt: now.toISOString(),
+                          updatedAt: now.toISOString(),
+                          weather: null,
+                          folder_id: currentFolder?.id || null,
+                          is_published: false
+                        }, ...prev]);
                       }}
-                      className="flex items-center gap-3 flex-1 text-left relative z-10"
+                      className="p-0 m-0 border-0 bg-transparent"
                     >
-                      <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
-                      <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
-                    </button>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (desktopShowFolderOptions && desktopEditingFolder?.id === folder.id) {
-                          setDesktopShowFolderOptions(false);
-                          setDesktopEditingFolder(null);
-                        } else {
-                      setDesktopEditingFolder(folder);
-                        setNewFolderName(folder.name);
-                        setNewFolderDefaultView(folder.default_view || 'collapsed');
-                        setNewFolderSortOrder(folder.notes_sort_order || 'desc');
-                        setNewFolderIsBlog(folder.is_blog || false);
-                        setNewFolderBlogSlug(folder.blog_slug || '');
-                        setNewFolderBlogName(folder.blog_name || '');
-                        setNewFolderBlogPassword(folder.blog_password || '');
-                        setNewFolderBlogSubheading(folder.blog_subheading || '');
-                        setNewFolderBlogHeaderImage(folder.blog_header_image || '');
-                        setBlogSlugAvailable(null);
-                        setDesktopShowFolderOptions(true);
-                        }
-                      }} 
-                      className="mr-[10px] p-0 m-0 border-0 bg-transparent relative z-10"
-                    >
-                      <img 
-                        src={threeDotsIcon} 
-                        alt="Options" 
-                        style={{ width: '4px', height: '18px' }} 
-                        className="opacity-70" 
+                      <img
+                        src={desktopPlusIcon}
+                        alt="New Note"
+                        style={{ width: '18px', height: '18px' }}
                       />
                     </button>
                   </div>
-                );
-              })}
-              
-              {/* Drop line at very end of list */}
-              {dropLineIndex === folders.length && draggedFolder && (
-                <div className="h-[2px] bg-white rounded-full mt-1" />
-              )}
-            </div>
-          </div>
-
-          {/* Settings at bottom */}
-          <button onClick={() => setDesktopShowSettings(!desktopShowSettings)} className="px-[20px] pb-[40px] flex items-center gap-2 opacity-60 hover:opacity-80" aria-label="Open settings">
-
-            <img src={settingsIcon} alt="" className="w-[20px] h-[20px]" />
-
-            <span className="text-white text-[16px] font-outfit">Settings</span>
-
-          </button>
-
-        </div>
-
-        {/* Column 2: Notes list OR Settings */}
-        <div 
-          className="relative overflow-hidden"
-          style={{ width: '30%', cursor: draggedNote ? 'grabbing' : 'default' }}
-        >
-          {/* Notes list - slides right when settings or folder options shown */}
-          <div 
-            className={`absolute inset-0 flex flex-col transition-transform duration-300 ${desktopShowSettings || desktopShowFolderOptions ? 'translate-x-full' : 'translate-x-0'} ${useMobileColorScheme ? 'bg-journal-content' : ''}`}
-            style={{ backgroundColor: useMobileColorScheme ? undefined : '#F9F9F6' }}
-          >
-            {/* 50px header with icons */}
-            <div 
-              className={`h-[50px] flex-shrink-0 flex items-center relative ${useMobileColorScheme ? 'bg-journal-content' : ''}`}
-              style={{ backgroundColor: useMobileColorScheme ? undefined : '#F9F9F6' }}
-            >
-              {isSearching ? (
-                <div 
-                  className="flex items-center bg-white border border-[hsl(0,0%,80%)]"
-                  style={{ 
-                    position: 'absolute',
-                    top: '5px',
-                    left: '5px',
-                    right: '5px',
-                    bottom: '5px',
-                    borderRadius: '8px',
-                    padding: '0 12px'
-                  }}
-                >
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search"
-                    autoFocus
-                    className="flex-1 bg-transparent outline-none text-[16px] font-outfit text-[hsl(0,0%,30%)] placeholder:text-[hsl(0,0%,60%)] focus:ring-2 focus:ring-[hsl(0,0%,70%)]/50 focus:ring-offset-0 rounded"
-                  />
-                  <button
-                    onClick={() => {
-                      setIsSearching(false);
-                      setSearchQuery("");
-                    }}
-                    className="w-[18px] h-[18px] bg-[hsl(0,0%,85%)] rounded-full flex items-center justify-center ml-2"
-                  >
-                    <span className="text-[12px] text-white font-medium leading-none">×</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="flex-1 flex items-center justify-end gap-[25px] pr-[17px]">
-                  <button 
-                    onClick={() => setIsSearching(true)}
-                    className="p-0 m-0 border-0 bg-transparent"
-                    aria-label="Search notes"
-                  >
-                    <img 
-                      src={greySearchIcon} 
-                      alt="Search" 
-                      style={{ width: '18px', height: '18px' }} 
-                    />
-                  </button>
-                  {/* New note */}
-                  <button 
-                    onClick={async () => {
-                      // If already on a new note, save it first
-                      if (desktopSelectedNoteId?.startsWith('new-')) {
-                        const newNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
-                        if (newNote) {
-                          const realId = await saveNewNoteDirectly(newNote);
-                          if (realId) {
-                            setSavedNotes(prev => prev.map(n => 
-                              n.id === desktopSelectedNoteId ? { ...n, id: realId } : n
-                            ));
-                          } else {
-                            setSavedNotes(prev => prev.filter(n => n.id !== desktopSelectedNoteId));
-                          }
-                        }
-                        setIsCreatingNewNote(false);
-                      }
-                      
-                      const newId = 'new-' + Date.now();
-                      const now = new Date();
-                      
-                      setIsCreatingNewNote(true);
-                      setDesktopSelectedNoteId(newId);
-                      
-                      // Add to TOP of list - simple, no sorting
-                      setSavedNotes(prev => [{
-                        id: newId,
-                        title: '',
-                        contentBlocks: [{ type: 'text' as const, id: 'initial', content: '' }],
-                        createdAt: now.toISOString(),
-                        updatedAt: now.toISOString(),
-                        weather: null,
-                        folder_id: currentFolder?.id || null,
-                        is_published: false
-                      }, ...prev]);
-                    }}
-                    className="p-0 m-0 border-0 bg-transparent"
-                  >
-                    <img 
-                      src={desktopPlusIcon} 
-                      alt="New Note" 
-                      style={{ width: '18px', height: '18px' }} 
-                    />
-                  </button>
-                </div>
-              )}
-            </div>
-            
-            {/* Scrollable notes list */}
-            <div 
-              className="flex-1 overflow-y-auto overscroll-y-auto"
-              style={{ 
-                WebkitOverflowScrolling: 'touch',
-                overscrollBehaviorY: 'auto',
-                overflowAnchor: 'none'
-              }}
-            >
-              <div style={{ minHeight: 'calc(100% + 1px)' }}>
-                {/* Top divider line - only in list view (compact) */}
-                {viewMode === 'compact' && (
-                  <div className="border-b border-[hsl(0,0%,85%)]" />
                 )}
-                {(isSearching ? filteredGroupedNotes : groupedNotes).flatMap((group, groupIndex, allGroups) => {
-                  const groupMonthYear = new Date(group.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
-                  const prevGroup = groupIndex > 0 ? allGroups[groupIndex - 1] : null;
-                  const prevMonthYear = prevGroup ? new Date(prevGroup.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase() : null;
-                  const showMonthHeader = viewMode !== 'compact' && (groupIndex === 0 || groupMonthYear !== prevMonthYear);
-                  
-                  const elements: React.ReactNode[] = [];
-                  
-                  // Add month header as separate element (direct child of scroll container)
-                  if (showMonthHeader) {
-                    elements.push(
-                      <div 
-                        key={`month-${groupMonthYear}-${groupIndex}`}
-                        className={`sticky top-0 z-10 px-[22px] ${useMobileColorScheme ? 'bg-[#CACAC2]' : 'bg-[#E8E8E5]'}`}
-                        style={{ height: '22px', display: 'flex', alignItems: 'center' }}
-                      >
-                        <span className={`text-[18px] font-outfit font-light tracking-wider leading-none ${useMobileColorScheme ? 'text-white' : 'text-[hsl(60,1%,50%)]'}`}>
-                          {groupMonthYear}
-                        </span>
-                      </div>
-                    );
-                  }
-                  
-                  // Add notes
-                  group.notes.forEach((note, index) => {
-                    const noteDate = new Date(note.createdAt);
-                    const dayNumber = noteDate.getDate().toString().padStart(2, '0');
-                    const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
-                    const preview = getNotePreview(note);
-                    const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; id: string; url: string; width: number } | undefined;
-                    
-                    elements.push(
-                      <div 
-                        key={note.id}
-                        draggable
-onDragStart={(e) => {
-                          setDraggedNote(note);
-                          e.dataTransfer.effectAllowed = 'move';
-                          
-                          const dragImage = document.getElementById('note-drag-image');
-                          if (dragImage) {
-                            e.dataTransfer.setDragImage(dragImage, 22, 22);
-                          }
-                        }}
-                        onDragEnd={() => {
-                          setDraggedNote(null);
-                          setDragOverFolder(null);
-                        }}
-                        className={`border-b border-[hsl(0,0%,85%)] cursor-pointer transition-all duration-300 ease-out ${desktopSelectedNoteId === note.id ? (useMobileColorScheme ? 'bg-white/50' : 'bg-[#F2F3EC]') : (useMobileColorScheme ? 'hover:bg-white/30' : 'hover:bg-[#F0F0ED]')} ${draggedNote?.id === note.id ? 'opacity-30' : ''} relative`}
-                              onClick={async () => {
-                                // If switching away from a new note, save it directly before switching
-                                if (desktopSelectedNoteId?.startsWith('new-') && desktopSelectedNoteId !== note.id) {
-                                  const newNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
-                                  if (newNote) {
-                                    const realId = await saveNewNoteDirectly(newNote);
-                                    if (realId) {
-                                      // Swap the placeholder ID to real ID in savedNotes
-                                      setSavedNotes(prev => prev.map(n => 
-                                        n.id === desktopSelectedNoteId ? { ...n, id: realId } : n
-                                      ));
-                                    } else {
-                                      // No content to save, remove the placeholder
-                                      setSavedNotes(prev => prev.filter(n => n.id !== desktopSelectedNoteId));
-                                    }
-                                  }
-                                  setIsCreatingNewNote(false);
-                                }
-                                setDesktopSelectedNoteId(note.id);
-                              }}
-                      >
-                        {/* Day letter - absolute positioned from note box edge */}
-                        {index === 0 && viewMode !== 'compact' && (
-                          <span 
-                            className="absolute text-[12px] font-outfit font-bold text-[hsl(60,1%,66%)]"
-                            style={{ top: '12px', left: '12px' }}
-                          >
-                            {dayName.charAt(0).toUpperCase()}
+              </div>
+
+              {/* Scrollable notes list */}
+              <div
+                className="flex-1 overflow-y-auto overscroll-y-auto"
+                style={{
+                  WebkitOverflowScrolling: 'touch',
+                  overscrollBehaviorY: 'auto',
+                  overflowAnchor: 'none'
+                }}
+              >
+                <div style={{ minHeight: 'calc(100% + 1px)' }}>
+                  {/* Top divider line - only in list view (compact) */}
+                  {viewMode === 'compact' && (
+                    <div className="border-b border-[hsl(0,0%,85%)]" />
+                  )}
+                  {(isSearching ? filteredGroupedNotes : groupedNotes).flatMap((group, groupIndex, allGroups) => {
+                    const groupMonthYear = new Date(group.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+                    const prevGroup = groupIndex > 0 ? allGroups[groupIndex - 1] : null;
+                    const prevMonthYear = prevGroup ? new Date(prevGroup.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase() : null;
+                    const showMonthHeader = viewMode !== 'compact' && (groupIndex === 0 || groupMonthYear !== prevMonthYear);
+
+                    const elements: React.ReactNode[] = [];
+
+                    // Add month header as separate element (direct child of scroll container)
+                    if (showMonthHeader) {
+                      elements.push(
+                        <div
+                          key={`month-${groupMonthYear}-${groupIndex}`}
+                          className={`sticky top-0 z-10 px-[22px] ${useMobileColorScheme ? 'bg-[#CACAC2]' : 'bg-[#E8E8E5]'}`}
+                          style={{ height: '22px', display: 'flex', alignItems: 'center' }}
+                        >
+                          <span className={`text-[18px] font-outfit font-light tracking-wider leading-none ${useMobileColorScheme ? 'text-white' : 'text-[hsl(60,1%,50%)]'}`}>
+                            {groupMonthYear}
                           </span>
-                        )}
-                        <div className={viewMode === 'compact' ? "px-[22px] pt-[17px] pb-4" : "px-[22px] py-[12px]"}>
-                          
-                          {/* Title and Body Container */}
-                          <div className="min-w-0">
-                            {viewMode === 'compact' ? (
-                              /* COMPACT VIEW */
-                              <div className="flex items-center gap-[12px]">
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] break-words overflow-wrap-anywhere">
-                                    {note.title || 'Untitled'}
-                                  </h3>
-                      <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] truncate break-words overflow-wrap-anywhere">
-                        {Array.isArray(preview) ? (preview[0] || '-') : (preview || '-')}
-                      </p>
-                                </div>
-                                {firstImage && (
-                                  <img 
-                                    src={firstImage.url} 
-                                    alt=""
-                                    loading="lazy"
-                                    className="w-[50px] h-[50px] rounded-[8px] object-cover flex-shrink-0"
-                                  />
-                                )}
-                              </div>
-                            ) : (
-                              /* COLLAPSED VIEW (Date View) */
-                              <div className="flex items-center min-h-[70px]">
-                                {/* Date area - big number only, vertically centered */}
-                                <div className="w-[70px] flex-shrink-0 flex items-center justify-center ml-[-10px] mr-[10px]">
-                                  {index === 0 ? (
-                                    <span 
-                                      className="text-[48px] font-bold leading-none text-[hsl(60,1%,66%)]"
-                                      style={{ fontFamily: 'Roboto Mono, monospace', letterSpacing: '-0.05em' }}
-                                    >
-                                      {dayNumber}
-                                    </span>
-                                  ) : null}
-                                </div>
-                                
-                                {/* Content + Image area */}
-                                <div className="flex-1 min-w-0 flex items-start gap-[15px]">
+                        </div>
+                      );
+                    }
+
+                    // Add notes
+                    group.notes.forEach((note, index) => {
+                      const noteDate = new Date(note.createdAt);
+                      const dayNumber = noteDate.getDate().toString().padStart(2, '0');
+                      const dayName = noteDate.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+                      const preview = getNotePreview(note);
+                      const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; id: string; url: string; width: number } | undefined;
+
+                      elements.push(
+                        <div
+                          key={note.id}
+                          draggable
+                          onDragStart={(e) => {
+                            setDraggedNote(note);
+                            e.dataTransfer.effectAllowed = 'move';
+
+                            const dragImage = document.getElementById('note-drag-image');
+                            if (dragImage) {
+                              e.dataTransfer.setDragImage(dragImage, 22, 22);
+                            }
+                          }}
+                          onDragEnd={() => {
+                            setDraggedNote(null);
+                            setDragOverFolder(null);
+                          }}
+                          className={`border-b border-[hsl(0,0%,85%)] cursor-pointer transition-all duration-300 ease-out ${desktopSelectedNoteId === note.id ? (useMobileColorScheme ? 'bg-white/50' : 'bg-[#F2F3EC]') : (useMobileColorScheme ? 'hover:bg-white/30' : 'hover:bg-[#F0F0ED]')} ${draggedNote?.id === note.id ? 'opacity-30' : ''} relative`}
+                          onClick={async () => {
+                            // If switching away from a new note, save it directly before switching
+                            if (desktopSelectedNoteId?.startsWith('new-') && desktopSelectedNoteId !== note.id) {
+                              const newNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
+                              if (newNote) {
+                                const realId = await saveNewNoteDirectly(newNote);
+                                if (realId) {
+                                  // Swap the placeholder ID to real ID in savedNotes
+                                  setSavedNotes(prev => prev.map(n =>
+                                    n.id === desktopSelectedNoteId ? { ...n, id: realId } : n
+                                  ));
+                                } else {
+                                  // No content to save, remove the placeholder
+                                  setSavedNotes(prev => prev.filter(n => n.id !== desktopSelectedNoteId));
+                                }
+                              }
+                              setIsCreatingNewNote(false);
+                            }
+                            setDesktopSelectedNoteId(note.id);
+                          }}
+                        >
+                          {/* Day letter - absolute positioned from note box edge */}
+                          {index === 0 && viewMode !== 'compact' && (
+                            <span
+                              className="absolute text-[12px] font-outfit font-bold text-[hsl(60,1%,66%)]"
+                              style={{ top: '12px', left: '12px' }}
+                            >
+                              {dayName.charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                          <div className={viewMode === 'compact' ? "px-[22px] pt-[17px] pb-4" : "px-[22px] py-[12px]"}>
+
+                            {/* Title and Body Container */}
+                            <div className="min-w-0">
+                              {viewMode === 'compact' ? (
+                                /* COMPACT VIEW */
+                                <div className="flex items-center gap-[12px]">
                                   <div className="flex-1 min-w-0">
-                                    <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-[6px] break-words overflow-wrap-anywhere leading-tight">
+                                    <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] break-words overflow-wrap-anywhere">
                                       {note.title || 'Untitled'}
                                     </h3>
-                                    <div className="text-[14px] font-outfit text-[hsl(0,0%,50%)] leading-snug min-h-[40px]">
-                                      <div className="truncate">
-                                        {(Array.isArray(preview) ? preview[0] : preview) || '\u00A0'}
-                                      </div>
-                                      <div className="truncate">
-                                        {(Array.isArray(preview) && preview[1]) || '\u00A0'}
-                                      </div>
-                                    </div>
+                                    <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] truncate break-words overflow-wrap-anywhere">
+                                      {Array.isArray(preview) ? (preview[0] || '-') : (preview || '-')}
+                                    </p>
                                   </div>
                                   {firstImage && (
-                                    <img 
-                                      src={firstImage.url} 
+                                    <img
+                                      src={firstImage.url}
                                       alt=""
                                       loading="lazy"
-                                      className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0"
+                                      className="w-[50px] h-[50px] rounded-[8px] object-cover flex-shrink-0"
                                     />
                                   )}
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        {/* Published indicator - green dot bottom right */}
-                        {note.is_published && currentFolder?.is_blog && (
-                          <div 
-                            className="absolute bottom-[8px] right-[12px] w-[8px] h-[8px] bg-green-500 rounded-full"
-                            title="Published to blog"
-                          />
-                        )}
-                      </div>
-                    );
-                  });
-                  
-                  return elements;
-                })}
-              </div>
-            </div>
+                              ) : (
+                                /* COLLAPSED VIEW (Date View) */
+                                <div className="flex items-center min-h-[70px]">
+                                  {/* Date area - big number only, vertically centered */}
+                                  <div className="w-[70px] flex-shrink-0 flex items-center justify-center ml-[-10px] mr-[10px]">
+                                    {index === 0 ? (
+                                      <span
+                                        className="text-[48px] font-bold leading-none text-[hsl(60,1%,66%)]"
+                                        style={{ fontFamily: 'Roboto Mono, monospace', letterSpacing: '-0.05em' }}
+                                      >
+                                        {dayNumber}
+                                      </span>
+                                    ) : null}
+                                  </div>
 
-          </div>
-
-          {/* Settings panel - slides in from left */}
-          <div 
-            className={`absolute inset-0 flex flex-col overflow-hidden transition-transform duration-300 ${desktopShowSettings ? 'translate-x-0' : '-translate-x-full'}`}
-            style={{ backgroundColor: themeColors[theme] }}
-          >
-            {/* Invisible 50px header for settings too */}
-            <div className="h-[50px] flex-shrink-0" style={{ backgroundColor: themeColors[theme] }} />
-            
-            {/* Scrollable settings content */}
-            <div className="flex-1 overflow-y-auto px-8">
-              <button 
-                onClick={() => {
-                  if (desktopShowChangePassword) {
-                    setDesktopShowChangePassword(false);
-                  } else if (desktopShowAccountDetails) {
-                    setDesktopShowAccountDetails(false);
-                  } else {
-                    setDesktopShowSettings(false);
-                  }
-                }} 
-                className="mb-6"
-              >
-                <img src={backIcon} alt="Back" className="w-[24px] h-[24px]" />
-              </button>
-
-              <h1 className="text-white text-[24px] font-outfit font-light tracking-wider mb-8">
-                {desktopShowChangePassword ? 'CHANGE PASSWORD' : desktopShowAccountDetails ? 'ACCOUNT DETAILS' : 'SETTINGS'}
-              </h1>
-
-              <div className="space-y-6">
-                {desktopShowChangePassword ? (
-                  /* Change Password Form */
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <Label className="text-white/80 text-[14px]">New Password</Label>
-                      <Input
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => {
-                          setNewPassword(e.target.value);
-                          setPasswordFormError("");
-                        }}
-                        required
-                        placeholder="Enter new password"
-                        minLength={6}
-                        className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-white/80 text-[14px]">Confirm New Password</Label>
-                      <Input
-                        type="password"
-                        value={confirmNewPassword}
-                        onChange={(e) => {
-                          setConfirmNewPassword(e.target.value);
-                          setPasswordFormError("");
-                        }}
-                        required
-                        placeholder="Confirm new password"
-                        minLength={6}
-                        className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
-                      />
-                    </div>
-                    {passwordFormError && (
-                      <p className="text-red-400 text-[14px]">{passwordFormError}</p>
-                    )}
-                    <div className="pt-4">
-                      <div className="flex gap-3">
-                        <button
-                          onClick={handleChangePassword}
-                          disabled={loading}
-                          className="flex-1 px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors disabled:opacity-50 text-[14px]"
-                        >
-                          {loading ? "Updating..." : "Update Password"}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setDesktopShowChangePassword(false);
-                            setNewPassword("");
-                            setConfirmNewPassword("");
-                            setPasswordFormError("");
-                          }}
-                          className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ) : desktopShowAccountDetails ? (
-                  /* Account Details View */
-                  user && userProfile && (
-                    <>
-                      <div className="space-y-4">
-                        <div className="py-4 border-b border-white/10">
-                          <span className="text-white/60 text-[14px] block mb-1">Name</span>
-                          <span className="text-white text-[18px] font-outfit font-light">
-                            {userProfile.name || 'Not set'}
-                          </span>
-                        </div>
-                        <div className="py-4 border-b border-white/10">
-                          <span className="text-white/60 text-[14px] block mb-1">Email</span>
-                          <span className="text-white text-[18px] font-outfit font-light">
-                            {userProfile.email}
-                          </span>
-                        </div>
-                        <div className="py-4 border-b border-white/10">
-                          <span className="text-white/60 text-[14px] block mb-1">Username (for blog URL)</span>
-                          <div className="flex gap-2 mt-2">
-                            <div className="flex-1 relative">
-                              <input
-                                type="text"
-                                value={username}
-                                onChange={(e) => {
-                                  const value = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '');
-                                  setUsername(value);
-                                  setUsernameAvailable(null);
-                                }}
-                                onBlur={() => checkUsernameAvailability(username)}
-                                placeholder="yourname"
-                                className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-3 text-[16px] font-outfit pr-10"
-                              />
-                              {checkingUsername && (
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                  <svg className="animate-spin h-5 w-5 text-white/60" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                  </svg>
-                                </div>
-                              )}
-                              {!checkingUsername && usernameAvailable === true && (
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                  <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                </div>
-                              )}
-                              {!checkingUsername && usernameAvailable === false && (
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                  <svg className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
+                                  {/* Content + Image area */}
+                                  <div className="flex-1 min-w-0 flex items-start gap-[15px]">
+                                    <div className="flex-1 min-w-0">
+                                      <h3 className="text-[20px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-[6px] break-words overflow-wrap-anywhere leading-tight">
+                                        {note.title || 'Untitled'}
+                                      </h3>
+                                      <div className="text-[14px] font-outfit text-[hsl(0,0%,50%)] leading-snug min-h-[40px]">
+                                        <div className="truncate">
+                                          {(Array.isArray(preview) ? preview[0] : preview) || '\u00A0'}
+                                        </div>
+                                        <div className="truncate">
+                                          {(Array.isArray(preview) && preview[1]) || '\u00A0'}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    {firstImage && (
+                                      <img
+                                        src={firstImage.url}
+                                        alt=""
+                                        loading="lazy"
+                                        className="w-[70px] h-[70px] rounded-[10px] object-cover flex-shrink-0"
+                                      />
+                                    )}
+                                  </div>
                                 </div>
                               )}
                             </div>
-                            <button
-                              onClick={async () => {
-                                if (username && usernameAvailable && user) {
-                                  const { error } = await supabase
-                                    .from('profiles')
-                                    .update({ username: username.toLowerCase() })
-                                    .eq('id', user.id);
-                                  
-                                  if (!error) {
-                                    setUserProfile(prev => prev ? { ...prev, username } : null);
-                                    toast.success('Username saved');
-                                  }
-                                }
-                              }}
-                              disabled={!usernameAvailable || checkingUsername}
-                              className="px-4 py-3 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-white/10 text-white rounded-[10px] font-outfit text-[14px] transition-colors"
-                            >
-                              Save
-                            </button>
                           </div>
-                          {username && (
-                            <p className="text-white/40 text-[12px] font-outfit mt-2">
-                              Your blog URLs will be: nuron.life/{username}/blogname
-                            </p>
+                          {/* Published indicator - green dot bottom right */}
+                          {note.is_published && currentFolder?.is_blog && (
+                            <div
+                              className="absolute bottom-[8px] right-[12px] w-[8px] h-[8px] bg-green-500 rounded-full"
+                              title="Published to blog"
+                            />
                           )}
                         </div>
-                        <div className="py-4 border-b border-white/10">
-                          <span className="text-white/60 text-[14px] block mb-1">Password</span>
-                          <span className="text-white text-[18px] font-outfit font-light">
-                            ••••••••
-                          </span>
-                          <div className="mt-2">
-                            <button
-                              onClick={() => {
-                                setDesktopShowChangePassword(true);
-                                setPasswordFormError("");
-                              }}
-                              className="text-red-500 hover:text-red-400 text-[14px] transition-colors text-left"
-                            >
-                              Change Password
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-3 pt-4">
-                        <button 
-                          onClick={() => { handleSignOut(); setDesktopShowSettings(false); }} 
-                          className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]"
-                        >
-                          Sign Out
-                        </button>
-                        <button 
-                          onClick={() => setShowDeleteConfirmDialog(true)} 
-                          className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white rounded-[10px] transition-colors text-[14px]"
-                        >
-                          Delete Account
-                        </button>
-                      </div>
-                    </>
-                  )
-                ) : user && userProfile ? (
-                  /* Settings View - logged in */
-                  <div className="space-y-6">
-                    {/* Account section */}
-                    <button
-                      onClick={() => setDesktopShowAccountDetails(true)}
-                      className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[20px] font-light"
-                    >
-                      Account Details
-                      <img src={accountArrow} alt="" className="w-[24px] h-[24px] opacity-60" />
-                    </button>
-                    
-                    {/* Restore Purchases */}
-                    <button onClick={handleRestorePurchases} disabled={isRestoring} className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[18px] font-light disabled:opacity-50">
-                      {isRestoring ? 'Restoring...' : 'Restore Purchases'}
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 opacity-60">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                      </svg>
-                    </button>
-                    <p className="text-white/60 text-[12px] font-outfit mt-2 px-1">
-                      To manage or cancel your subscription, go to Settings → [Your Name] → Subscriptions on your iPhone.
-                    </p>
-                    
-                    {/* View Website */}
-                    <button 
-                      onClick={() => navigate('/welcome')}
-                      className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[18px] font-light"
-                    >
-                      View Website
-                      <img src={accountArrow} alt="" className="w-[16px] h-[16px] opacity-60" />
-                    </button>
-                    
-                    {/* Separator line */}
-                    <div className="border-t border-white/20 my-6" />
-                    
-                    {/* Show weather toggle */}
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-white text-[18px] font-outfit font-light">Show weather on notes</span>
-                      <button
-                        onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
-                        className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
-                      >
-                        <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-md transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`} />
-                      </button>
-                    </div>
+                      );
+                    });
 
-                    {/* Use mobile colour scheme toggle */}
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-white text-[18px] font-outfit font-light">Use mobile colour scheme</span>
-                      <button
-                        onClick={() => setUseMobileColorScheme(!useMobileColorScheme)}
-                        className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${useMobileColorScheme ? 'bg-green-500' : 'bg-white/20'}`}
-                      >
-                        <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-md transition-transform duration-200 ${useMobileColorScheme ? 'translate-x-[20px]' : 'translate-x-0'}`} />
-                      </button>
-                    </div>
+                    return elements;
+                  })}
+                </div>
+              </div>
 
-                    {/* Theme colour */}
-                    <div className="space-y-4">
-                      <span className="text-white text-[18px] font-outfit font-light">Theme colour</span>
-                      <div className="flex gap-4">
-                        {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
-                          <button
-                            key={t}
-                            onClick={() => setTheme(t)}
-                            className="flex flex-col items-center relative"
-                            style={{ height: '54px' }}
-                          >
-                            <img src={desktopThemeIcons[t]} alt={t} className="w-[50px] h-[50px]" />
-                            {theme === t && (
-                              <div 
-                                className="w-[6px] h-[6px] bg-white rounded-full absolute"
-                                style={{ bottom: '-10px' }}
-                              />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : desktopShowSignUp ? (
-                  /* Sign Up / Sign In Form */
-                  <div className="space-y-6">
-                    {!isSignInMode && (
+            </div>
+
+            {/* Settings panel - slides in from left */}
+            <div
+              className={`absolute inset-0 flex flex-col overflow-hidden transition-transform duration-300 ${desktopShowSettings ? 'translate-x-0' : '-translate-x-full'}`}
+              style={{ backgroundColor: themeColors[theme] }}
+            >
+              {/* Invisible 50px header for settings too */}
+              <div className="h-[50px] flex-shrink-0" style={{ backgroundColor: themeColors[theme] }} />
+
+              {/* Scrollable settings content */}
+              <div className="flex-1 overflow-y-auto px-8">
+                <button
+                  onClick={() => {
+                    if (desktopShowChangePassword) {
+                      setDesktopShowChangePassword(false);
+                    } else if (desktopShowAccountDetails) {
+                      setDesktopShowAccountDetails(false);
+                    } else {
+                      setDesktopShowSettings(false);
+                    }
+                  }}
+                  className="mb-6"
+                >
+                  <img src={backIcon} alt="Back" className="w-[24px] h-[24px]" />
+                </button>
+
+                <h1 className="text-white text-[24px] font-outfit font-light tracking-wider mb-8">
+                  {desktopShowChangePassword ? 'CHANGE PASSWORD' : desktopShowAccountDetails ? 'ACCOUNT DETAILS' : 'SETTINGS'}
+                </h1>
+
+                <div className="space-y-6">
+                  {desktopShowChangePassword ? (
+                    /* Change Password Form */
+                    <div className="space-y-6">
                       <div className="space-y-2">
-                        <Label className="text-white/80 text-[14px]">Name</Label>
+                        <Label className="text-white/80 text-[14px]">New Password</Label>
                         <Input
-                          type="text"
-                          value={name}
+                          type="password"
+                          value={newPassword}
                           onChange={(e) => {
-                            setName(e.target.value);
-                            setAuthFormError("");
+                            setNewPassword(e.target.value);
+                            setPasswordFormError("");
                           }}
                           required
-                          placeholder="Your name"
+                          placeholder="Enter new password"
+                          minLength={6}
                           className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
                         />
                       </div>
-                    )}
-                    <div className="space-y-2">
-                      <Label className="text-white/80 text-[14px]">Email</Label>
-                      <Input
-                        type="email"
-                        value={email}
-                        onChange={(e) => {
-                          setEmail(e.target.value);
-                          setAuthFormError("");
-                        }}
-                        required
-                        placeholder="you@example.com"
-                        className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-white/80 text-[14px]">Password</Label>
-                      <Input
-                        type="password"
-                        value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          setAuthFormError("");
-                        }}
-                        required
-                        placeholder="••••••••"
-                        minLength={8}
-                        className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
-                      />
-                    </div>
-                    {isSignInMode && !resetEmailSent && (
-                      <button
-                        type="button"
-                        onClick={handleForgotPassword}
-                        className="text-white/60 hover:text-white/80 text-[14px] transition-colors"
-                      >
-                        Forgot password?
-                      </button>
-                    )}
-                    {resetEmailSent && (
-                      <p className="text-green-400 text-[14px]">
-                        If an account exists with this email, you will receive a password reset link.
-                      </p>
-                    )}
-                    {authFormError && (
-                      <p className="text-red-400 text-[14px]">{authFormError}</p>
-                    )}
-                    <button onClick={isSignInMode ? handleSignIn : handleSignUp} disabled={loading} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors disabled:opacity-50">
-                      {loading ? "Loading..." : isSignInMode ? "Sign In" : "Create Account"}
-                    </button>
-                    <button onClick={() => {
-                      setIsSignInMode(!isSignInMode);
-                      setAuthFormError("");
-                      setResetEmailSent(false);
-                    }} className="w-full text-white/60 hover:text-white/80 text-[14px] transition-colors">
-                      {isSignInMode ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-                    </button>
-                    <button onClick={() => {
-                      setDesktopShowSignUp(false);
-                      setAuthFormError("");
-                    }} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  /* Initial buttons - not logged in */
-                  <div className="space-y-6">
-                    <button onClick={() => { 
-                      setDesktopShowSignUp(true); 
-                      setIsSignInMode(false);
-                      setAuthFormError("");
-                    }} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors">
-                      Create Account
-                    </button>
-                    <button onClick={() => { 
-                      setDesktopShowSignUp(true); 
-                      setIsSignInMode(true);
-                      setAuthFormError("");
-                    }} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
-                      Sign In
-                    </button>
-                    
-                    {/* Separator line */}
-                    <div className="border-t border-white/20 my-6" />
-                    
-                    {/* Show weather toggle */}
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-white text-[18px] font-outfit font-light">Show weather on notes</span>
-                      <button
-                        onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
-                        className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
-                      >
-                        <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-md transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`} />
-                      </button>
-                    </div>
-
-                    {/* Theme colour */}
-                    <div className="space-y-4">
-                      <span className="text-white text-[18px] font-outfit font-light">Theme colour</span>
-                      <div className="flex gap-4">
-                        {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
-                          <button
-                            key={t}
-                            onClick={() => setTheme(t)}
-                            className="flex flex-col items-center relative"
-                            style={{ height: '54px' }}
-                          >
-                            <img src={desktopThemeIcons[t]} alt={t} className="w-[50px] h-[50px]" />
-                            {theme === t && (
-                              <div 
-                                className="w-[6px] h-[6px] bg-white rounded-full absolute"
-                                style={{ bottom: '-10px' }}
-                              />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Folder Options panel - slides in from left */}
-          <div 
-            className={`absolute inset-0 flex flex-col overflow-hidden transition-transform duration-300 ${desktopShowFolderOptions ? 'translate-x-0' : '-translate-x-full'}`}
-            style={{ backgroundColor: themeColors[theme] }}
-          >
-            <div className="h-[50px] flex-shrink-0" style={{ backgroundColor: themeColors[theme] }} />
-            <div className="flex-1 overflow-y-auto px-8">
-              <button 
-                onClick={() => {
-                  setDesktopShowFolderOptions(false);
-                  setDesktopEditingFolder(null);
-                }} 
-                className="mb-6"
-              >
-                <img src={backIcon} alt="Back" className="w-[24px] h-[24px]" />
-              </button>
-
-              <h1 className="text-white text-[24px] font-outfit font-light tracking-wider mb-8">
-                FOLDER OPTIONS
-              </h1>
-
-              {desktopEditingFolder && (
-                <div className="space-y-5">
-                  {/* Folder Name */}
-                  <div className="space-y-2">
-                    <label className="text-white/60 text-[14px] font-outfit">Folder Name</label>
-                    <input
-                      type="text"
-                      value={newFolderName}
-                      onChange={(e) => setNewFolderName(e.target.value)}
-                      autoFocus
-                      onFocus={(e) => e.target.select()}
-                      className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit"
-                    />
-                  </div>
-                  
-                  {/* View By - inline with buttons on right */}
-                  <div className="flex items-center justify-between">
-                    <label className="text-white/60 text-[14px] font-outfit">View As</label>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setNewFolderDefaultView('collapsed')}
-                        className={`px-4 h-[40px] rounded-[10px] font-outfit text-[14px] transition-colors ${newFolderDefaultView === 'collapsed' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
-                      >
-                        Date
-                      </button>
-                      <button
-                        onClick={() => setNewFolderDefaultView('compact')}
-                        className={`px-4 h-[40px] rounded-[10px] font-outfit text-[14px] transition-colors ${newFolderDefaultView === 'compact' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
-                      >
-                        List
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Sort By - inline with buttons on right */}
-                  <div className="flex items-center justify-between">
-                    <label className="text-white/60 text-[14px] font-outfit">Sort By</label>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setNewFolderSortOrder('desc')}
-                        className={`px-4 h-[40px] rounded-[10px] font-outfit text-[14px] transition-colors flex items-center gap-2 ${newFolderSortOrder === 'desc' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
-                      >
-                        <img src={sortDownIcon} alt="" style={{ height: '14px', width: 'auto' }} />
-                        Newest
-                      </button>
-                      <button
-                        onClick={() => setNewFolderSortOrder('asc')}
-                        className={`px-4 h-[40px] rounded-[10px] font-outfit text-[14px] transition-colors flex items-center gap-2 ${newFolderSortOrder === 'asc' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
-                      >
-                        <img src={sortUpIcon} alt="" style={{ height: '14px', width: 'auto' }} />
-                        Oldest
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Separator */}
-                  <div className="border-t border-white/20 pt-4" />
-                  
-                  {/* Publish Folder As Blog */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/60 text-[14px] font-outfit">Publish Folder online</span>
-                    <button
-                      onClick={() => setNewFolderIsBlog(!newFolderIsBlog)}
-                      className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${newFolderIsBlog ? 'bg-green-500' : 'bg-white/20'}`}
-                    >
-                      <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-md transition-transform duration-200 ${newFolderIsBlog ? 'translate-x-[20px]' : 'translate-x-0'}`} />
-                    </button>
-                  </div>
-                  
-                  {newFolderIsBlog && (
-                    <div className="space-y-4 animate-in fade-in-0 duration-200">
-                      {/* Blog Heading */}
                       <div className="space-y-2">
-                        <label className="text-white/60 text-[14px] font-outfit">Heading</label>
-                        <input
-                          type="text"
-                          value={newFolderBlogName}
-                          onChange={(e) => setNewFolderBlogName(e.target.value)}
-                          placeholder="My Travel Adventures"
-                          className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit placeholder:text-white/30"
+                        <Label className="text-white/80 text-[14px]">Confirm New Password</Label>
+                        <Input
+                          type="password"
+                          value={confirmNewPassword}
+                          onChange={(e) => {
+                            setConfirmNewPassword(e.target.value);
+                            setPasswordFormError("");
+                          }}
+                          required
+                          placeholder="Confirm new password"
+                          minLength={6}
+                          className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
                         />
                       </div>
-
-                      {/* Blog Sub-heading */}
-                      <div className="space-y-2">
-                        <label className="text-white/60 text-[14px] font-outfit">Sub-heading (Optional)</label>
-                        <input
-                          type="text"
-                          value={newFolderBlogSubheading}
-                          onChange={(e) => setNewFolderBlogSubheading(e.target.value)}
-                          placeholder="A collection of my thoughts and experiences"
-                          className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit placeholder:text-white/30"
-                        />
-                      </div>
-
-                      {/* Header Image */}
-                      <div className="space-y-2">
-                        <label className="text-white/60 text-[14px] font-outfit">Header Image (Optional)</label>
-                        {newFolderBlogHeaderImage ? (
-                          <div className="relative">
-                            <img 
-                              src={newFolderBlogHeaderImage} 
-                              alt="Header preview" 
-                              className="w-full h-[100px] object-cover rounded-[10px]"
-                            />
-                            <button
-                              onClick={() => setNewFolderBlogHeaderImage('')}
-                              className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full w-6 h-6 flex items-center justify-center"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ) : (
-                          <label className="flex items-center justify-center w-full h-[40px] bg-white/5 border border-white/20 text-white/60 rounded-[10px] cursor-pointer hover:bg-white/10 transition-colors">
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={async (e) => {
-                                const file = e.target.files?.[0];
-                                if (!file || !user) return;
-                                
-                                setUploadingHeaderImage(true);
-                                
-                                // Delete old header image if exists
-                                if (newFolderBlogHeaderImage && newFolderBlogHeaderImage.includes('supabase.co/storage')) {
-                                  try {
-                                    const urlParts = newFolderBlogHeaderImage.split('/storage/v1/object/public/note-images/');
-                                    if (urlParts.length > 1) {
-                                      const oldFilePath = urlParts[1];
-                                      await supabase.storage.from('note-images').remove([oldFilePath]);
-                                    }
-                                  } catch (error) {
-                                    console.error('Error deleting old header image:', error);
-                                  }
-                                }
-                                
-                                const fileExt = file.name.split('.').pop();
-                                const fileName = `${user.id}/blog-header-${Date.now()}.${fileExt}`;
-                                
-                                const { data, error } = await supabase.storage
-                                  .from('note-images')
-                                  .upload(fileName, file);
-                                
-                                if (!error && data) {
-                                  const { data: urlData } = supabase.storage
-                                    .from('note-images')
-                                    .getPublicUrl(data.path);
-                                  setNewFolderBlogHeaderImage(urlData.publicUrl);
-                                }
-                                setUploadingHeaderImage(false);
-                              }}
-                            />
-                            {uploadingHeaderImage ? (
-                              <span className="font-outfit text-[14px]">Uploading...</span>
-                            ) : (
-                              <span className="font-outfit text-[14px]">Choose Image</span>
-                            )}
-                          </label>
-                        )}
-                      </div>
-                      
-                      {/* Web Address */}
-                      <div className="space-y-2">
-                        <label className="text-white/60 text-[14px] font-outfit">Web Address</label>
-                        <div className="relative">
-                          <input
-                            type="text"
-                            value={newFolderBlogSlug}
-                            onChange={(e) => {
-                              const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-                              setNewFolderBlogSlug(value);
-                              setBlogSlugAvailable(null);
-                            }}
-                            onBlur={async () => {
-                              if (!newFolderBlogSlug || newFolderBlogSlug.length < 2 || !user) {
-                                setBlogSlugAvailable(null);
-                                return;
-                              }
-                              const reserved = ['index', 'home', 'contact', 'prices', 'features', 'blog', 'admin', 'settings', 'new', 'edit', 'delete'];
-                              if (reserved.includes(newFolderBlogSlug.toLowerCase())) {
-                                setBlogSlugAvailable(false);
-                                return;
-                              }
-                              setCheckingBlogSlug(true);
-                              const { data } = await supabase
-                                .from('folders')
-                                .select('id')
-                                .eq('user_id', user.id)
-                                .eq('blog_slug', newFolderBlogSlug.toLowerCase())
-                                .neq('id', desktopEditingFolder?.id || '')
-                                .maybeSingle();
-                              setCheckingBlogSlug(false);
-                              setBlogSlugAvailable(!data);
-                            }}
-                            placeholder="my-travels"
-                            className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit pr-10 placeholder:text-white/30"
-                          />
-                          {checkingBlogSlug && (
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                              <svg className="animate-spin h-5 w-5 text-white/60" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                            </div>
-                          )}
-                          {!checkingBlogSlug && blogSlugAvailable === true && (
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                              <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                          )}
-                          {!checkingBlogSlug && blogSlugAvailable === false && (
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                              <svg className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
-                        {username && newFolderBlogSlug && (
-                          <a 
-                            href={`https://nuron.life/${username}/${newFolderBlogSlug}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[#E56157] text-[16px] font-outfit hover:underline cursor-pointer block mt-2"
-                          >
-                            nuron.life/{username}/{newFolderBlogSlug}
-                          </a>
-                        )}
-                        {!username && (
-                          <p className="text-yellow-400/80 text-[12px] font-outfit">
-                            Set your username in Account Details first
-                          </p>
-                        )}
-                      </div>
-                      
-                      {/* Password (Optional) */}
-                      <div className="space-y-2">
-                        <label className="text-white/60 text-[14px] font-outfit">Password (Optional)</label>
-                        <input
-                          type="text"
-                          value={newFolderBlogPassword}
-                          onChange={(e) => setNewFolderBlogPassword(e.target.value)}
-                          placeholder="Leave blank for public access"
-                          className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit placeholder:text-white/30"
-                        />
-                        <p className="text-white/40 text-[12px] font-outfit">
-                          Visitors will need this password to view your blog
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Save Button */}
-                  <button
-                    onClick={async () => {
-                      if (desktopEditingFolder) {
-                        const { error } = await supabase
-                          .from('folders')
-                          .update({ 
-                            name: newFolderName.trim() || 'Untitled', 
-                            default_view: newFolderDefaultView,
-                            notes_sort_order: newFolderSortOrder,
-                            is_blog: newFolderIsBlog,
-                            blog_slug: newFolderIsBlog ? newFolderBlogSlug.toLowerCase() : null,
-                            blog_name: newFolderIsBlog ? newFolderBlogName : null,
-                            blog_subheading: newFolderIsBlog ? newFolderBlogSubheading : null,
-                            blog_header_image: newFolderIsBlog ? newFolderBlogHeaderImage : null,
-                            blog_password: newFolderIsBlog && newFolderBlogPassword ? newFolderBlogPassword : null,
-                            updated_at: new Date().toISOString()
-                          })
-                          .eq('id', desktopEditingFolder.id);
-                        
-                        if (!error) {
-                          // Update local state
-                          const updatedFolder = { 
-                            ...desktopEditingFolder, 
-                            name: newFolderName.trim() || 'Untitled', 
-                            default_view: newFolderDefaultView,
-                            notes_sort_order: newFolderSortOrder,
-                            is_blog: newFolderIsBlog,
-                            blog_slug: newFolderIsBlog ? newFolderBlogSlug.toLowerCase() : null,
-                            blog_name: newFolderIsBlog ? newFolderBlogName : null,
-                            blog_subheading: newFolderIsBlog ? newFolderBlogSubheading : null,
-                            blog_header_image: newFolderIsBlog ? newFolderBlogHeaderImage : null,
-                            blog_password: newFolderIsBlog && newFolderBlogPassword ? newFolderBlogPassword : null
-                          };
-                          setFolders(prev => prev.map(f => 
-                            f.id === desktopEditingFolder.id ? updatedFolder : f
-                          ));
-                          
-                          // Select the folder
-                          setCurrentFolder(updatedFolder);
-                          localStorage.setItem('nuron-current-folder-id', updatedFolder.id);
-                          setViewMode(updatedFolder.default_view);
-                          setSortOrder(updatedFolder.notes_sort_order || 'desc');
-                          
-                          setDesktopShowFolderOptions(false);
-                          setDesktopEditingFolder(null);
-                        }
-                      }
-                    }}
-                    className="w-full py-3 bg-white text-journal-header font-medium rounded-[10px] font-outfit"
-                  >
-                    Save Changes
-                  </button>
-                  
-                  {/* Delete Button */}
-                  <button
-                    onClick={() => {
-                      setDesktopShowDeleteFolderConfirm(true);
-                    }}
-                    className="w-full py-3 bg-red-500/20 text-red-400 rounded-[10px] font-outfit"
-                  >
-                    Delete Folder
-                  </button>
-                  
-                  {/* Delete Folder Confirmation */}
-                  {desktopShowDeleteFolderConfirm && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setDesktopShowDeleteFolderConfirm(false)}>
-                      <div 
-                        className="bg-white rounded-[20px] p-6 w-[280px] shadow-xl"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <h3 className="text-[18px] font-outfit font-semibold text-center text-[hsl(0,0%,25%)] mb-2">
-                          Delete Folder?
-                        </h3>
-                        <p className="text-[14px] font-outfit text-center text-[hsl(0,0%,50%)] mb-6">
-                          Are you sure you want to delete "{desktopEditingFolder?.name}"? Notes in this folder will not be deleted.
-                        </p>
+                      {passwordFormError && (
+                        <p className="text-red-400 text-[14px]">{passwordFormError}</p>
+                      )}
+                      <div className="pt-4">
                         <div className="flex gap-3">
                           <button
-                            onClick={() => setDesktopShowDeleteFolderConfirm(false)}
-                            className="flex-1 py-3 bg-[hsl(0,0%,90%)] text-[hsl(0,0%,30%)] rounded-[10px] font-outfit text-[14px]"
+                            onClick={handleChangePassword}
+                            disabled={loading}
+                            className="flex-1 px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors disabled:opacity-50 text-[14px]"
+                          >
+                            {loading ? "Updating..." : "Update Password"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setDesktopShowChangePassword(false);
+                              setNewPassword("");
+                              setConfirmNewPassword("");
+                              setPasswordFormError("");
+                            }}
+                            className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]"
                           >
                             Cancel
                           </button>
-                          <button
-                            onClick={async () => {
-                              if (!desktopEditingFolder) return;
-                              
-                              const { error } = await supabase
-                                .from('folders')
-                                .delete()
-                                .eq('id', desktopEditingFolder.id);
-                              
-                              if (!error) {
-                                // Remove folder from list
-                                setFolders(prev => prev.filter(f => f.id !== desktopEditingFolder.id));
-                                
-                                // If deleted folder was current, switch to first remaining folder
-                                if (currentFolder?.id === desktopEditingFolder.id) {
-                                  const remaining = folders.filter(f => f.id !== desktopEditingFolder.id);
-                                  if (remaining.length > 0) {
-                                    setCurrentFolder(remaining[0]);
-                                    localStorage.setItem('nuron-current-folder-id', remaining[0].id);
-                                  } else {
-                                    setCurrentFolder(null);
+                        </div>
+                      </div>
+                    </div>
+                  ) : desktopShowAccountDetails ? (
+                    /* Account Details View */
+                    user && userProfile && (
+                      <>
+                        <div className="space-y-4">
+                          <div className="py-4 border-b border-white/10">
+                            <span className="text-white/60 text-[14px] block mb-1">Name</span>
+                            <span className="text-white text-[18px] font-outfit font-light">
+                              {userProfile.name || 'Not set'}
+                            </span>
+                          </div>
+                          <div className="py-4 border-b border-white/10">
+                            <span className="text-white/60 text-[14px] block mb-1">Email</span>
+                            <span className="text-white text-[18px] font-outfit font-light">
+                              {userProfile.email}
+                            </span>
+                          </div>
+                          <div className="py-4 border-b border-white/10">
+                            <span className="text-white/60 text-[14px] block mb-1">Username (for blog URL)</span>
+                            <div className="flex gap-2 mt-2">
+                              <div className="flex-1 relative">
+                                <input
+                                  type="text"
+                                  value={username}
+                                  onChange={(e) => {
+                                    const value = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '');
+                                    setUsername(value);
+                                    setUsernameAvailable(null);
+                                  }}
+                                  onBlur={() => checkUsernameAvailability(username)}
+                                  placeholder="yourname"
+                                  className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-3 text-[16px] font-outfit pr-10"
+                                />
+                                {checkingUsername && (
+                                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <svg className="animate-spin h-5 w-5 text-white/60" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                  </div>
+                                )}
+                                {!checkingUsername && usernameAvailable === true && (
+                                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  </div>
+                                )}
+                                {!checkingUsername && usernameAvailable === false && (
+                                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <svg className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                onClick={async () => {
+                                  if (username && usernameAvailable && user) {
+                                    const { error } = await supabase
+                                      .from('profiles')
+                                      .update({ username: username.toLowerCase() })
+                                      .eq('id', user.id);
+
+                                    if (!error) {
+                                      setUserProfile(prev => prev ? { ...prev, username } : null);
+                                      toast.success('Username saved');
+                                    }
                                   }
-                                }
-                                
-                                // Close everything
-                                setDesktopShowDeleteFolderConfirm(false);
-                                setDesktopShowFolderOptions(false);
-                                setDesktopEditingFolder(null);
-                              }
-                            }}
-                            className="flex-1 py-3 bg-red-500 text-white rounded-[10px] font-outfit text-[14px]"
+                                }}
+                                disabled={!usernameAvailable || checkingUsername}
+                                className="px-4 py-3 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-white/10 text-white rounded-[10px] font-outfit text-[14px] transition-colors"
+                              >
+                                Save
+                              </button>
+                            </div>
+                            {username && (
+                              <p className="text-white/40 text-[12px] font-outfit mt-2">
+                                Your blog URLs will be: nuron.life/{username}/blogname
+                              </p>
+                            )}
+                          </div>
+                          <div className="py-4 border-b border-white/10">
+                            <span className="text-white/60 text-[14px] block mb-1">Password</span>
+                            <span className="text-white text-[18px] font-outfit font-light">
+                              ••••••••
+                            </span>
+                            <div className="mt-2">
+                              <button
+                                onClick={() => {
+                                  setDesktopShowChangePassword(true);
+                                  setPasswordFormError("");
+                                }}
+                                className="text-red-500 hover:text-red-400 text-[14px] transition-colors text-left"
+                              >
+                                Change Password
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-3 pt-4">
+                          <button
+                            onClick={() => { handleSignOut(); setDesktopShowSettings(false); }}
+                            className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]"
                           >
-                            Delete
+                            Sign Out
                           </button>
+                          <button
+                            onClick={() => setShowDeleteConfirmDialog(true)}
+                            className="flex-1 px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-white rounded-[10px] transition-colors text-[14px]"
+                          >
+                            Delete Account
+                          </button>
+                        </div>
+                      </>
+                    )
+                  ) : user && userProfile ? (
+                    /* Settings View - logged in */
+                    <div className="space-y-6">
+                      {/* Account section */}
+                      <button
+                        onClick={() => setDesktopShowAccountDetails(true)}
+                        className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[20px] font-light"
+                      >
+                        Account Details
+                        <img src={accountArrow} alt="" className="w-[24px] h-[24px] opacity-60" />
+                      </button>
+
+                      {/* Restore Purchases */}
+                      <button onClick={handleRestorePurchases} disabled={isRestoring} className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[18px] font-light disabled:opacity-50">
+                        {isRestoring ? 'Restoring...' : 'Restore Purchases'}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 opacity-60">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                      </button>
+                      <p className="text-white/60 text-[12px] font-outfit mt-2 px-1">
+                        To manage or cancel your subscription, go to Settings → [Your Name] → Subscriptions on your iPhone.
+                      </p>
+
+                      {/* View Website */}
+                      <button
+                        onClick={() => navigate('/welcome')}
+                        className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[18px] font-light"
+                      >
+                        View Website
+                        <img src={accountArrow} alt="" className="w-[16px] h-[16px] opacity-60" />
+                      </button>
+
+                      {/* Separator line */}
+                      <div className="border-t border-white/20 my-6" />
+
+                      {/* Show weather toggle */}
+                      <div className="flex items-center justify-between py-2">
+                        <span className="text-white text-[18px] font-outfit font-light">Show weather on notes</span>
+                        <button
+                          onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
+                          className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
+                        >
+                          <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-md transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`} />
+                        </button>
+                      </div>
+
+                      {/* Use mobile colour scheme toggle */}
+                      <div className="flex items-center justify-between py-2">
+                        <span className="text-white text-[18px] font-outfit font-light">Use mobile colour scheme</span>
+                        <button
+                          onClick={() => setUseMobileColorScheme(!useMobileColorScheme)}
+                          className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${useMobileColorScheme ? 'bg-green-500' : 'bg-white/20'}`}
+                        >
+                          <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-md transition-transform duration-200 ${useMobileColorScheme ? 'translate-x-[20px]' : 'translate-x-0'}`} />
+                        </button>
+                      </div>
+
+                      {/* Theme colour */}
+                      <div className="space-y-4">
+                        <span className="text-white text-[18px] font-outfit font-light">Theme colour</span>
+                        <div className="flex gap-4">
+                          {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
+                            <button
+                              key={t}
+                              onClick={() => setTheme(t)}
+                              className="flex flex-col items-center relative"
+                              style={{ height: '54px' }}
+                            >
+                              <img src={desktopThemeIcons[t]} alt={t} className="w-[50px] h-[50px]" />
+                              {theme === t && (
+                                <div
+                                  className="w-[6px] h-[6px] bg-white rounded-full absolute"
+                                  style={{ bottom: '-10px' }}
+                                />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : desktopShowSignUp ? (
+                    /* Sign Up / Sign In Form */
+                    <div className="space-y-6">
+                      {!isSignInMode && (
+                        <div className="space-y-2">
+                          <Label className="text-white/80 text-[14px]">Name</Label>
+                          <Input
+                            type="text"
+                            value={name}
+                            onChange={(e) => {
+                              setName(e.target.value);
+                              setAuthFormError("");
+                            }}
+                            required
+                            placeholder="Your name"
+                            className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                          />
+                        </div>
+                      )}
+                      <div className="space-y-2">
+                        <Label className="text-white/80 text-[14px]">Email</Label>
+                        <Input
+                          type="email"
+                          value={email}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            setAuthFormError("");
+                          }}
+                          required
+                          placeholder="you@example.com"
+                          className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-white/80 text-[14px]">Password</Label>
+                        <Input
+                          type="password"
+                          value={password}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            setAuthFormError("");
+                          }}
+                          required
+                          placeholder="••••••••"
+                          minLength={8}
+                          className="bg-white/5 border-white/20 text-white placeholder:text-white/40 rounded-[10px]"
+                        />
+                      </div>
+                      {isSignInMode && !resetEmailSent && (
+                        <button
+                          type="button"
+                          onClick={handleForgotPassword}
+                          className="text-white/60 hover:text-white/80 text-[14px] transition-colors"
+                        >
+                          Forgot password?
+                        </button>
+                      )}
+                      {resetEmailSent && (
+                        <p className="text-green-400 text-[14px]">
+                          If an account exists with this email, you will receive a password reset link.
+                        </p>
+                      )}
+                      {authFormError && (
+                        <p className="text-red-400 text-[14px]">{authFormError}</p>
+                      )}
+                      <button onClick={isSignInMode ? handleSignIn : handleSignUp} disabled={loading} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors disabled:opacity-50">
+                        {loading ? "Loading..." : isSignInMode ? "Sign In" : "Create Account"}
+                      </button>
+                      <button onClick={() => {
+                        setIsSignInMode(!isSignInMode);
+                        setAuthFormError("");
+                        setResetEmailSent(false);
+                      }} className="w-full text-white/60 hover:text-white/80 text-[14px] transition-colors">
+                        {isSignInMode ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+                      </button>
+                      <button onClick={() => {
+                        setDesktopShowSignUp(false);
+                        setAuthFormError("");
+                      }} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    /* Initial buttons - not logged in */
+                    <div className="space-y-6">
+                      <button onClick={() => {
+                        setDesktopShowSignUp(true);
+                        setIsSignInMode(false);
+                        setAuthFormError("");
+                      }} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors">
+                        Create Account
+                      </button>
+                      <button onClick={() => {
+                        setDesktopShowSignUp(true);
+                        setIsSignInMode(true);
+                        setAuthFormError("");
+                      }} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
+                        Sign In
+                      </button>
+
+                      {/* Separator line */}
+                      <div className="border-t border-white/20 my-6" />
+
+                      {/* Show weather toggle */}
+                      <div className="flex items-center justify-between py-2">
+                        <span className="text-white text-[18px] font-outfit font-light">Show weather on notes</span>
+                        <button
+                          onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
+                          className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
+                        >
+                          <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-md transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`} />
+                        </button>
+                      </div>
+
+                      {/* Theme colour */}
+                      <div className="space-y-4">
+                        <span className="text-white text-[18px] font-outfit font-light">Theme colour</span>
+                        <div className="flex gap-4">
+                          {(['default', 'green', 'blue', 'pink'] as const).map((t) => (
+                            <button
+                              key={t}
+                              onClick={() => setTheme(t)}
+                              className="flex flex-col items-center relative"
+                              style={{ height: '54px' }}
+                            >
+                              <img src={desktopThemeIcons[t]} alt={t} className="w-[50px] h-[50px]" />
+                              {theme === t && (
+                                <div
+                                  className="w-[6px] h-[6px] bg-white rounded-full absolute"
+                                  style={{ bottom: '-10px' }}
+                                />
+                              )}
+                            </button>
+                          ))}
                         </div>
                       </div>
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Divider line */}
-
-        <div className="w-[1px] bg-[hsl(0,0%,80%)]" />
-
-        {/* Desktop Move Note Popup */}
-        {desktopShowMoveNote && desktopSelectedNoteId && (
-          <>
-            <div 
-              className="fixed inset-0 z-50 bg-black/50"
-              onClick={() => setDesktopShowMoveNote(false)}
-            />
-            <div 
-              className="fixed z-50 rounded-2xl shadow-xl p-5 w-[280px]"
-              style={{ 
-                top: '50%', 
-                left: '50%', 
-                transform: 'translate(-50%, -50%)',
-                backgroundColor: themeColors[theme],
-                border: '1px solid rgba(255,255,255,0.2)'
-              }}
-            >
-              <button
-                onClick={() => setDesktopShowMoveNote(false)}
-                className="absolute top-3 right-4 text-white/60 text-xl font-light hover:text-white/80"
-              >
-                ×
-              </button>
-              
-              <h3 className="text-[16px] font-outfit font-medium text-white/90 mb-4">
-                Move Note
-              </h3>
-              
-              <div className="space-y-1 max-h-[300px] overflow-y-auto">
-                {folders.map((folder) => {
-                  const isCurrentFolder = folder.id === currentFolder?.id;
-                  return (
-                    <button
-                      key={folder.id}
-                      disabled={isCurrentFolder}
-                      onClick={async () => {
-                        if (isCurrentFolder || !desktopSelectedNoteId) return;
-                        
-                        const { error } = await supabase
-                          .from('notes')
-                          .update({ folder_id: folder.id })
-                          .eq('id', desktopSelectedNoteId);
-                        
-                        if (!error) {
-                          setSavedNotes(prev => prev.filter(n => n.id !== desktopSelectedNoteId));
-                          setDesktopSelectedNoteId(null);
-                          setDesktopShowMoveNote(false);
-                          toast.success(`Note moved to ${folder.name}`);
-                        }
-                      }}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${
-                        isCurrentFolder 
-                          ? 'opacity-30 cursor-not-allowed' 
-                          : 'hover:bg-white/10'
-                      }`}
-                    >
-                      <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
-                      <span className="text-white text-[16px] font-outfit font-light">
-                        {folder.name}
-                      </span>
-                      {isCurrentFolder && (
-                        <span className="ml-auto text-[11px] text-white/40">(current)</span>
-                      )}
-                    </button>
-                  );
-                })}
               </div>
             </div>
-          </>
-        )}
 
-        {/* Column 3: Note view - 50% width */}
-        <div 
-          className="relative flex flex-col"
-          style={{ width: '50%', backgroundColor: '#F9F9F6' }}
-        >
-          {/* Cream header - 50px with 3dots menu */}
-          <div className="h-[50px] flex-shrink-0 flex items-center justify-end pr-[20px]" style={{ backgroundColor: '#F9F9F6' }}>
-                  <button
-                    onClick={() => desktopSelectedNoteId && setDesktopMenuOpen(!desktopMenuOpen)}
-                    className={`p-3 m-0 border-0 bg-transparent hover:bg-black/5 rounded-lg transition-colors ${!desktopSelectedNoteId ? 'opacity-30' : ''}`}
-                  >
-                    <img 
-                      src={threeDotsDesktopIcon} 
-                      alt="Menu" 
-                      style={{ height: '18px', width: 'auto' }} 
-                    />
-                  </button>
-          </div>
-          
-          {/* Desktop 3-dots menu dropdown */}
-          {desktopMenuOpen && desktopSelectedNoteId && (
-            <>
-              {/* Invisible overlay to catch clicks outside menu */}
-              <div 
-                className="fixed inset-0 z-40"
-                onClick={() => setDesktopMenuOpen(false)}
-              />
-              <div 
-                className="absolute right-4 top-[50px] z-50 bg-white rounded-2xl shadow-lg py-4 w-[250px] animate-in fade-in-0 zoom-in-95 duration-200"
-              >
-              <div className="flex flex-col">
-                <button 
+            {/* Folder Options panel - slides in from left */}
+            <div
+              className={`absolute inset-0 flex flex-col overflow-hidden transition-transform duration-300 ${desktopShowFolderOptions ? 'translate-x-0' : '-translate-x-full'}`}
+              style={{ backgroundColor: themeColors[theme] }}
+            >
+              <div className="h-[50px] flex-shrink-0" style={{ backgroundColor: themeColors[theme] }} />
+              <div className="flex-1 overflow-y-auto px-8">
+                <button
                   onClick={() => {
-                    const iframe = document.querySelector('iframe');
-                    if (iframe?.contentWindow) {
-                      iframe.contentWindow.postMessage({ type: 'menu-action', action: 'rewrite' }, '*');
-                    }
-                    setDesktopMenuOpen(false);
-                  }} 
-                  className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
-                >
-                  <img src={starIcon} alt="" className="w-6 h-6" />
-                  <span className="text-gray-600 font-outfit">AI Rewrite</span>
-                </button>
-                <button 
-                  onClick={() => {
-                    const iframe = document.querySelector('iframe');
-                    if (iframe?.contentWindow) {
-                      iframe.contentWindow.postMessage({ type: 'menu-action', action: 'image' }, '*');
-                    }
-                    setDesktopMenuOpen(false);
-                  }} 
-                  className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
-                >
-                  <img src={addImageIcon} alt="" className="w-6 h-6" />
-                  <span className="text-gray-600 font-outfit">Add Image</span>
-                </button>
-                <button 
-                  onClick={() => {
-                    setDesktopShowMoveNote(true);
-                    setDesktopMenuOpen(false);
+                    setDesktopShowFolderOptions(false);
+                    setDesktopEditingFolder(null);
                   }}
-                  className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
+                  className="mb-6"
                 >
-                  <img src={moveIcon} alt="" className="w-6 h-6" />
-                  <span className="text-gray-600 font-outfit">Move Note</span>
+                  <img src={backIcon} alt="Back" className="w-[24px] h-[24px]" />
                 </button>
-                <button 
-                  onClick={() => {
-                    const iframe = document.querySelector('iframe');
-                    if (iframe?.contentWindow) {
-                      iframe.contentWindow.postMessage({ type: 'menu-action', action: 'share' }, '*');
-                    }
-                    setDesktopMenuOpen(false);
-                  }} 
-                  className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
-                >
-                  <img src={sharedIcon} alt="" className="w-6 h-6" />
-                  <span className="text-gray-600 font-outfit">Share Note</span>
-                </button>
-                <button 
-                  onClick={() => {
-                    const iframe = document.querySelector('iframe');
-                    if (iframe?.contentWindow) {
-                      iframe.contentWindow.postMessage({ type: 'menu-action', action: 'delete' }, '*');
-                    }
-                    setDesktopMenuOpen(false);
-                  }} 
-                  className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
-                >
-                  <img src={trashIcon} alt="" className="w-6 h-6" />
-                  <span className="text-red-500 font-outfit">Delete Note</span>
-                </button>
-                
-                {/* Publish to Blog - only show if current folder is a blog */}
-                {currentFolder?.is_blog && desktopSelectedNoteId && !desktopSelectedNoteId.startsWith('new-') && (
-                  <>
-                    <div className="border-t border-gray-100 my-2" />
-                    <button 
-                      onClick={async () => {
-                        const selectedNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
-                        if (!selectedNote) return;
-                        
-                        const newPublishState = !selectedNote.is_published;
-                        
-                        // Update in Supabase
-                        const { error } = await supabase
-                          .from('notes')
-                          .update({ is_published: newPublishState })
-                          .eq('id', desktopSelectedNoteId);
-                        
-                        if (!error) {
-                          // Update local state
-                          setSavedNotes(prev => prev.map(n => 
-                            n.id === desktopSelectedNoteId 
-                              ? { ...n, is_published: newPublishState }
-                              : n
-                          ));
-                        } else {
-                          toast.error('Failed to update publish status');
-                        }
-                        
-                        setDesktopMenuOpen(false);
-                      }} 
-                      className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors w-full"
-                    >
-                      {savedNotes.find(n => n.id === desktopSelectedNoteId)?.is_published ? (
-                        <>
-                          <img src={unpublishIcon} alt="Unpublish" className="w-6 h-6" />
-                          <span className="text-gray-600 font-outfit">Unpublish From Blog</span>
-                        </>
-                      ) : (
-                        <>
-                          <img src={publishIcon} alt="Publish" className="w-6 h-6" />
-                          <span className="text-gray-600 font-outfit">Publish To Blog</span>
-                        </>
-                      )}
-                    </button>
-                  </>
-                )}
-                
-                {/* Divider */}
-                <div className="border-t border-gray-100 my-2" />
 
-                {/* Stats Section */}
-                {desktopSelectedNoteId && (() => {
-                  const selectedNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
-                  if (!selectedNote) return null;
-                  
-                  const noteContent = selectedNote.contentBlocks
-                    .filter(b => b.type === 'text')
-                    .map(b => (b as { type: 'text'; id: string; content: string }).content)
-                    .join('\n\n');
-                  
-                  const wordCount = noteContent.trim() ? noteContent.trim().split(/\s+/).length : 0;
-                  const characterCount = noteContent.length;
-                  const paragraphCount = noteContent.trim() ? noteContent.split(/\n\n+/).filter(p => p.trim()).length : 0;
-                  
-                  return (
-                    <div className="px-6 py-2">
-                      <div className="flex items-center gap-8 py-1 text-gray-400 font-outfit">
-                        <span className="w-6 text-center">{wordCount}</span>
-                        <span>Words</span>
-                      </div>
-                      <div className="flex items-center gap-8 py-1 text-gray-400 font-outfit">
-                        <span className="w-6 text-center">{characterCount}</span>
-                        <span>Characters</span>
-                      </div>
-                      <div className="flex items-center gap-8 py-1 text-gray-400 font-outfit">
-                        <span className="w-6 text-center">{paragraphCount}</span>
-                        <span>Paragraphs</span>
+                <h1 className="text-white text-[24px] font-outfit font-light tracking-wider mb-8">
+                  FOLDER OPTIONS
+                </h1>
+
+                {desktopEditingFolder && (
+                  <div className="space-y-5">
+                    {/* Folder Name */}
+                    <div className="space-y-2">
+                      <label className="text-white/60 text-[14px] font-outfit">Folder Name</label>
+                      <input
+                        type="text"
+                        value={newFolderName}
+                        onChange={(e) => setNewFolderName(e.target.value)}
+                        autoFocus
+                        onFocus={(e) => e.target.select()}
+                        className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit"
+                      />
+                    </div>
+
+                    {/* View By - inline with buttons on right */}
+                    <div className="flex items-center justify-between">
+                      <label className="text-white/60 text-[14px] font-outfit">View As</label>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setNewFolderDefaultView('collapsed')}
+                          className={`px-4 h-[40px] rounded-[10px] font-outfit text-[14px] transition-colors ${newFolderDefaultView === 'collapsed' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
+                        >
+                          Date
+                        </button>
+                        <button
+                          onClick={() => setNewFolderDefaultView('compact')}
+                          className={`px-4 h-[40px] rounded-[10px] font-outfit text-[14px] transition-colors ${newFolderDefaultView === 'compact' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
+                        >
+                          List
+                        </button>
                       </div>
                     </div>
-                  );
-                })()}
+
+                    {/* Sort By - inline with buttons on right */}
+                    <div className="flex items-center justify-between">
+                      <label className="text-white/60 text-[14px] font-outfit">Sort By</label>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setNewFolderSortOrder('desc')}
+                          className={`px-4 h-[40px] rounded-[10px] font-outfit text-[14px] transition-colors flex items-center gap-2 ${newFolderSortOrder === 'desc' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
+                        >
+                          <img src={sortDownIcon} alt="" style={{ height: '14px', width: 'auto' }} />
+                          Newest
+                        </button>
+                        <button
+                          onClick={() => setNewFolderSortOrder('asc')}
+                          className={`px-4 h-[40px] rounded-[10px] font-outfit text-[14px] transition-colors flex items-center gap-2 ${newFolderSortOrder === 'asc' ? 'bg-white text-journal-header' : 'bg-white/10 text-white'}`}
+                        >
+                          <img src={sortUpIcon} alt="" style={{ height: '14px', width: 'auto' }} />
+                          Oldest
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Separator */}
+                    <div className="border-t border-white/20 pt-4" />
+
+                    {/* Publish Folder As Blog */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/60 text-[14px] font-outfit">Publish Folder online</span>
+                      <button
+                        onClick={() => setNewFolderIsBlog(!newFolderIsBlog)}
+                        className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${newFolderIsBlog ? 'bg-green-500' : 'bg-white/20'}`}
+                      >
+                        <span className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow-md transition-transform duration-200 ${newFolderIsBlog ? 'translate-x-[20px]' : 'translate-x-0'}`} />
+                      </button>
+                    </div>
+
+                    {newFolderIsBlog && (
+                      <div className="space-y-4 animate-in fade-in-0 duration-200">
+                        {/* Blog Heading */}
+                        <div className="space-y-2">
+                          <label className="text-white/60 text-[14px] font-outfit">Heading</label>
+                          <input
+                            type="text"
+                            value={newFolderBlogName}
+                            onChange={(e) => setNewFolderBlogName(e.target.value)}
+                            placeholder="My Travel Adventures"
+                            className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit placeholder:text-white/30"
+                          />
+                        </div>
+
+                        {/* Blog Sub-heading */}
+                        <div className="space-y-2">
+                          <label className="text-white/60 text-[14px] font-outfit">Sub-heading (Optional)</label>
+                          <input
+                            type="text"
+                            value={newFolderBlogSubheading}
+                            onChange={(e) => setNewFolderBlogSubheading(e.target.value)}
+                            placeholder="A collection of my thoughts and experiences"
+                            className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit placeholder:text-white/30"
+                          />
+                        </div>
+
+                        {/* Header Image */}
+                        <div className="space-y-2">
+                          <label className="text-white/60 text-[14px] font-outfit">Header Image (Optional)</label>
+                          {newFolderBlogHeaderImage ? (
+                            <div className="relative">
+                              <img
+                                src={newFolderBlogHeaderImage}
+                                alt="Header preview"
+                                className="w-full h-[100px] object-cover rounded-[10px]"
+                              />
+                              <button
+                                onClick={() => setNewFolderBlogHeaderImage('')}
+                                className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ) : (
+                            <label className="flex items-center justify-center w-full h-[40px] bg-white/5 border border-white/20 text-white/60 rounded-[10px] cursor-pointer hover:bg-white/10 transition-colors">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file || !user) return;
+
+                                  setUploadingHeaderImage(true);
+
+                                  // Delete old header image if exists
+                                  if (newFolderBlogHeaderImage && newFolderBlogHeaderImage.includes('supabase.co/storage')) {
+                                    try {
+                                      const urlParts = newFolderBlogHeaderImage.split('/storage/v1/object/public/note-images/');
+                                      if (urlParts.length > 1) {
+                                        const oldFilePath = urlParts[1];
+                                        await supabase.storage.from('note-images').remove([oldFilePath]);
+                                      }
+                                    } catch (error) {
+                                      console.error('Error deleting old header image:', error);
+                                    }
+                                  }
+
+                                  const fileExt = file.name.split('.').pop();
+                                  const fileName = `${user.id}/blog-header-${Date.now()}.${fileExt}`;
+
+                                  const { data, error } = await supabase.storage
+                                    .from('note-images')
+                                    .upload(fileName, file);
+
+                                  if (!error && data) {
+                                    const { data: urlData } = supabase.storage
+                                      .from('note-images')
+                                      .getPublicUrl(data.path);
+                                    setNewFolderBlogHeaderImage(urlData.publicUrl);
+                                  }
+                                  setUploadingHeaderImage(false);
+                                }}
+                              />
+                              {uploadingHeaderImage ? (
+                                <span className="font-outfit text-[14px]">Uploading...</span>
+                              ) : (
+                                <span className="font-outfit text-[14px]">Choose Image</span>
+                              )}
+                            </label>
+                          )}
+                        </div>
+
+                        {/* Web Address */}
+                        <div className="space-y-2">
+                          <label className="text-white/60 text-[14px] font-outfit">Web Address</label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={newFolderBlogSlug}
+                              onChange={(e) => {
+                                const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                                setNewFolderBlogSlug(value);
+                                setBlogSlugAvailable(null);
+                              }}
+                              onBlur={async () => {
+                                if (!newFolderBlogSlug || newFolderBlogSlug.length < 2 || !user) {
+                                  setBlogSlugAvailable(null);
+                                  return;
+                                }
+                                const reserved = ['index', 'home', 'contact', 'prices', 'features', 'blog', 'admin', 'settings', 'new', 'edit', 'delete'];
+                                if (reserved.includes(newFolderBlogSlug.toLowerCase())) {
+                                  setBlogSlugAvailable(false);
+                                  return;
+                                }
+                                setCheckingBlogSlug(true);
+                                const { data } = await supabase
+                                  .from('folders')
+                                  .select('id')
+                                  .eq('user_id', user.id)
+                                  .eq('blog_slug', newFolderBlogSlug.toLowerCase())
+                                  .neq('id', desktopEditingFolder?.id || '')
+                                  .maybeSingle();
+                                setCheckingBlogSlug(false);
+                                setBlogSlugAvailable(!data);
+                              }}
+                              placeholder="my-travels"
+                              className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit pr-10 placeholder:text-white/30"
+                            />
+                            {checkingBlogSlug && (
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <svg className="animate-spin h-5 w-5 text-white/60" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                              </div>
+                            )}
+                            {!checkingBlogSlug && blogSlugAvailable === true && (
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <svg className="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
+                            {!checkingBlogSlug && blogSlugAvailable === false && (
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <svg className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          {username && newFolderBlogSlug && (
+                            <a
+                              href={`https://nuron.life/${username}/${newFolderBlogSlug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[#E56157] text-[16px] font-outfit hover:underline cursor-pointer block mt-2"
+                            >
+                              nuron.life/{username}/{newFolderBlogSlug}
+                            </a>
+                          )}
+                          {!username && (
+                            <p className="text-yellow-400/80 text-[12px] font-outfit">
+                              Set your username in Account Details first
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Password (Optional) */}
+                        <div className="space-y-2">
+                          <label className="text-white/60 text-[14px] font-outfit">Password (Optional)</label>
+                          <input
+                            type="text"
+                            value={newFolderBlogPassword}
+                            onChange={(e) => setNewFolderBlogPassword(e.target.value)}
+                            placeholder="Leave blank for public access"
+                            className="w-full bg-white/5 border border-white/20 text-white rounded-[10px] px-4 h-[40px] text-[16px] font-outfit placeholder:text-white/30"
+                          />
+                          <p className="text-white/40 text-[12px] font-outfit">
+                            Visitors will need this password to view your blog
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Save Button */}
+                    <button
+                      onClick={async () => {
+                        if (desktopEditingFolder) {
+                          const { error } = await supabase
+                            .from('folders')
+                            .update({
+                              name: newFolderName.trim() || 'Untitled',
+                              default_view: newFolderDefaultView,
+                              notes_sort_order: newFolderSortOrder,
+                              is_blog: newFolderIsBlog,
+                              blog_slug: newFolderIsBlog ? newFolderBlogSlug.toLowerCase() : null,
+                              blog_name: newFolderIsBlog ? newFolderBlogName : null,
+                              blog_subheading: newFolderIsBlog ? newFolderBlogSubheading : null,
+                              blog_header_image: newFolderIsBlog ? newFolderBlogHeaderImage : null,
+                              blog_password: newFolderIsBlog && newFolderBlogPassword ? newFolderBlogPassword : null,
+                              updated_at: new Date().toISOString()
+                            })
+                            .eq('id', desktopEditingFolder.id);
+
+                          if (!error) {
+                            // Update local state
+                            const updatedFolder = {
+                              ...desktopEditingFolder,
+                              name: newFolderName.trim() || 'Untitled',
+                              default_view: newFolderDefaultView,
+                              notes_sort_order: newFolderSortOrder,
+                              is_blog: newFolderIsBlog,
+                              blog_slug: newFolderIsBlog ? newFolderBlogSlug.toLowerCase() : null,
+                              blog_name: newFolderIsBlog ? newFolderBlogName : null,
+                              blog_subheading: newFolderIsBlog ? newFolderBlogSubheading : null,
+                              blog_header_image: newFolderIsBlog ? newFolderBlogHeaderImage : null,
+                              blog_password: newFolderIsBlog && newFolderBlogPassword ? newFolderBlogPassword : null
+                            };
+                            setFolders(prev => prev.map(f =>
+                              f.id === desktopEditingFolder.id ? updatedFolder : f
+                            ));
+
+                            // Select the folder
+                            setCurrentFolder(updatedFolder);
+                            localStorage.setItem('nuron-current-folder-id', updatedFolder.id);
+                            setViewMode(updatedFolder.default_view);
+                            setSortOrder(updatedFolder.notes_sort_order || 'desc');
+
+                            setDesktopShowFolderOptions(false);
+                            setDesktopEditingFolder(null);
+                          }
+                        }
+                      }}
+                      className="w-full py-3 bg-white text-journal-header font-medium rounded-[10px] font-outfit"
+                    >
+                      Save Changes
+                    </button>
+
+                    {/* Delete Button */}
+                    <button
+                      onClick={() => {
+                        setDesktopShowDeleteFolderConfirm(true);
+                      }}
+                      className="w-full py-3 bg-red-500/20 text-red-400 rounded-[10px] font-outfit"
+                    >
+                      Delete Folder
+                    </button>
+
+                    {/* Delete Folder Confirmation */}
+                    {desktopShowDeleteFolderConfirm && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setDesktopShowDeleteFolderConfirm(false)}>
+                        <div
+                          className="bg-white rounded-[20px] p-6 w-[280px] shadow-xl"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <h3 className="text-[18px] font-outfit font-semibold text-center text-[hsl(0,0%,25%)] mb-2">
+                            Delete Folder?
+                          </h3>
+                          <p className="text-[14px] font-outfit text-center text-[hsl(0,0%,50%)] mb-6">
+                            Are you sure you want to delete "{desktopEditingFolder?.name}"? Notes in this folder will not be deleted.
+                          </p>
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => setDesktopShowDeleteFolderConfirm(false)}
+                              className="flex-1 py-3 bg-[hsl(0,0%,90%)] text-[hsl(0,0%,30%)] rounded-[10px] font-outfit text-[14px]"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!desktopEditingFolder) return;
+
+                                const { error } = await supabase
+                                  .from('folders')
+                                  .delete()
+                                  .eq('id', desktopEditingFolder.id);
+
+                                if (!error) {
+                                  // Remove folder from list
+                                  setFolders(prev => prev.filter(f => f.id !== desktopEditingFolder.id));
+
+                                  // If deleted folder was current, switch to first remaining folder
+                                  if (currentFolder?.id === desktopEditingFolder.id) {
+                                    const remaining = folders.filter(f => f.id !== desktopEditingFolder.id);
+                                    if (remaining.length > 0) {
+                                      setCurrentFolder(remaining[0]);
+                                      localStorage.setItem('nuron-current-folder-id', remaining[0].id);
+                                    } else {
+                                      setCurrentFolder(null);
+                                    }
+                                  }
+
+                                  // Close everything
+                                  setDesktopShowDeleteFolderConfirm(false);
+                                  setDesktopShowFolderOptions(false);
+                                  setDesktopEditingFolder(null);
+                                }
+                              }}
+                              className="flex-1 py-3 bg-red-500 text-white rounded-[10px] font-outfit text-[14px]"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
-          </>
-          )}
-          
-          {/* Note content area */}
-          <div className="flex-1 overflow-hidden bg-white" style={{ position: 'relative' }}>
-            {/* PERSISTENT IFRAME - always mounted, visibility controlled by desktopSelectedNoteId */}
-            {/* This prevents message loss when selecting first note after folder switch */}
-            <iframe
-              id="note-editor-iframe"
-              src="/note?desktop=true&embedded=true"
-              className="absolute inset-0 w-full h-full border-0 bg-white"
-              style={{ display: desktopSelectedNoteId ? 'block' : 'none' }}
-              title="Note Editor"
-            />
-            {!desktopSelectedNoteId && (
-              <div className="h-full flex items-center justify-center text-[hsl(0,0%,60%)] font-outfit text-[18px]">
-                Select a note to view
-              </div>
-            )}
           </div>
-        </div>
 
-        {/* Desktop Welcome/Login Popup */}
-        {desktopShowWelcomePopup && !user && (
-          <div 
-            className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]" 
-            style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-            onClick={() => setDesktopShowWelcomePopup(false)}
-          >
-            <div 
-              className="bg-white rounded-[20px] p-8 shadow-2xl" 
-              style={{ width: '400px', maxWidth: '90%' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="text-center mb-6">
-                <h2 className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-2">
-                  Welcome to Nuron
-                </h2>
-                <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] leading-relaxed">
-                  Sign up or log in to sync your journal across all your devices - phone, tablet, and desktop.
-                </p>
+          {/* Divider line */}
+
+          <div className="w-[1px] bg-[hsl(0,0%,80%)]" />
+
+          {/* Desktop Move Note Popup */}
+          {desktopShowMoveNote && desktopSelectedNoteId && (
+            <>
+              <div
+                className="fixed inset-0 z-50 bg-black/50"
+                onClick={() => setDesktopShowMoveNote(false)}
+              />
+              <div
+                className="fixed z-50 rounded-2xl shadow-xl p-5 w-[280px]"
+                style={{
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  backgroundColor: themeColors[theme],
+                  border: '1px solid rgba(255,255,255,0.2)'
+                }}
+              >
+                <button
+                  onClick={() => setDesktopShowMoveNote(false)}
+                  className="absolute top-3 right-4 text-white/60 text-xl font-light hover:text-white/80"
+                >
+                  ×
+                </button>
+
+                <h3 className="text-[16px] font-outfit font-medium text-white/90 mb-4">
+                  Move Note
+                </h3>
+
+                <div className="space-y-1 max-h-[300px] overflow-y-auto">
+                  {folders.map((folder) => {
+                    const isCurrentFolder = folder.id === currentFolder?.id;
+                    return (
+                      <button
+                        key={folder.id}
+                        disabled={isCurrentFolder}
+                        onClick={async () => {
+                          if (isCurrentFolder || !desktopSelectedNoteId) return;
+
+                          const { error } = await supabase
+                            .from('notes')
+                            .update({ folder_id: folder.id })
+                            .eq('id', desktopSelectedNoteId);
+
+                          if (!error) {
+                            setSavedNotes(prev => prev.filter(n => n.id !== desktopSelectedNoteId));
+                            setDesktopSelectedNoteId(null);
+                            setDesktopShowMoveNote(false);
+                            toast.success(`Note moved to ${folder.name}`);
+                          }
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${isCurrentFolder
+                            ? 'opacity-30 cursor-not-allowed'
+                            : 'hover:bg-white/10'
+                          }`}
+                      >
+                        <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
+                        <span className="text-white text-[16px] font-outfit font-light">
+                          {folder.name}
+                        </span>
+                        {isCurrentFolder && (
+                          <span className="ml-auto text-[11px] text-white/40">(current)</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              
-              {welcomeError && (
-                <div className="bg-red-50 text-red-600 text-[14px] font-outfit p-3 rounded-lg mb-4 text-center">
-                  {welcomeError}
+            </>
+          )}
+
+          {/* Column 3: Note view - 50% width */}
+          <div
+            className="relative flex flex-col"
+            style={{ width: '50%', backgroundColor: '#F9F9F6' }}
+          >
+            {/* Cream header - 50px with 3dots menu */}
+            <div className="h-[50px] flex-shrink-0 flex items-center justify-end pr-[20px]" style={{ backgroundColor: '#F9F9F6' }}>
+              <button
+                onClick={() => desktopSelectedNoteId && setDesktopMenuOpen(!desktopMenuOpen)}
+                className={`p-3 m-0 border-0 bg-transparent hover:bg-black/5 rounded-lg transition-colors ${!desktopSelectedNoteId ? 'opacity-30' : ''}`}
+              >
+                <img
+                  src={threeDotsDesktopIcon}
+                  alt="Menu"
+                  style={{ height: '18px', width: 'auto' }}
+                />
+              </button>
+            </div>
+
+            {/* Desktop 3-dots menu dropdown */}
+            {desktopMenuOpen && desktopSelectedNoteId && (
+              <>
+                {/* Invisible overlay to catch clicks outside menu */}
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setDesktopMenuOpen(false)}
+                />
+                <div
+                  className="absolute right-4 top-[50px] z-50 bg-white rounded-2xl shadow-lg py-4 w-[250px] animate-in fade-in-0 zoom-in-95 duration-200"
+                >
+                  <div className="flex flex-col">
+                    <button
+                      onClick={() => {
+                        const iframe = document.querySelector('iframe');
+                        if (iframe?.contentWindow) {
+                          iframe.contentWindow.postMessage({ type: 'menu-action', action: 'rewrite' }, '*');
+                        }
+                        setDesktopMenuOpen(false);
+                      }}
+                      className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
+                    >
+                      <img src={starIcon} alt="" className="w-6 h-6" />
+                      <span className="text-gray-600 font-outfit">AI Rewrite</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const iframe = document.querySelector('iframe');
+                        if (iframe?.contentWindow) {
+                          iframe.contentWindow.postMessage({ type: 'menu-action', action: 'image' }, '*');
+                        }
+                        setDesktopMenuOpen(false);
+                      }}
+                      className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
+                    >
+                      <img src={addImageIcon} alt="" className="w-6 h-6" />
+                      <span className="text-gray-600 font-outfit">Add Image</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDesktopShowMoveNote(true);
+                        setDesktopMenuOpen(false);
+                      }}
+                      className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
+                    >
+                      <img src={moveIcon} alt="" className="w-6 h-6" />
+                      <span className="text-gray-600 font-outfit">Move Note</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const iframe = document.querySelector('iframe');
+                        if (iframe?.contentWindow) {
+                          iframe.contentWindow.postMessage({ type: 'menu-action', action: 'share' }, '*');
+                        }
+                        setDesktopMenuOpen(false);
+                      }}
+                      className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
+                    >
+                      <img src={sharedIcon} alt="" className="w-6 h-6" />
+                      <span className="text-gray-600 font-outfit">Share Note</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const iframe = document.querySelector('iframe');
+                        if (iframe?.contentWindow) {
+                          iframe.contentWindow.postMessage({ type: 'menu-action', action: 'delete' }, '*');
+                        }
+                        setDesktopMenuOpen(false);
+                      }}
+                      className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors"
+                    >
+                      <img src={trashIcon} alt="" className="w-6 h-6" />
+                      <span className="text-red-500 font-outfit">Delete Note</span>
+                    </button>
+
+                    {/* Publish to Blog - only show if current folder is a blog */}
+                    {currentFolder?.is_blog && desktopSelectedNoteId && !desktopSelectedNoteId.startsWith('new-') && (
+                      <>
+                        <div className="border-t border-gray-100 my-2" />
+                        <button
+                          onClick={async () => {
+                            const selectedNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
+                            if (!selectedNote) return;
+
+                            const newPublishState = !selectedNote.is_published;
+
+                            // Update in Supabase
+                            const { error } = await supabase
+                              .from('notes')
+                              .update({ is_published: newPublishState })
+                              .eq('id', desktopSelectedNoteId);
+
+                            if (!error) {
+                              // Update local state
+                              setSavedNotes(prev => prev.map(n =>
+                                n.id === desktopSelectedNoteId
+                                  ? { ...n, is_published: newPublishState }
+                                  : n
+                              ));
+                            } else {
+                              toast.error('Failed to update publish status');
+                            }
+
+                            setDesktopMenuOpen(false);
+                          }}
+                          className="flex items-center gap-8 px-6 py-3 hover:bg-gray-50 transition-colors w-full"
+                        >
+                          {savedNotes.find(n => n.id === desktopSelectedNoteId)?.is_published ? (
+                            <>
+                              <img src={unpublishIcon} alt="Unpublish" className="w-6 h-6" />
+                              <span className="text-gray-600 font-outfit">Unpublish From Blog</span>
+                            </>
+                          ) : (
+                            <>
+                              <img src={publishIcon} alt="Publish" className="w-6 h-6" />
+                              <span className="text-gray-600 font-outfit">Publish To Blog</span>
+                            </>
+                          )}
+                        </button>
+                      </>
+                    )}
+
+                    {/* Divider */}
+                    <div className="border-t border-gray-100 my-2" />
+
+                    {/* Stats Section */}
+                    {desktopSelectedNoteId && (() => {
+                      const selectedNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
+                      if (!selectedNote) return null;
+
+                      const noteContent = selectedNote.contentBlocks
+                        .filter(b => b.type === 'text')
+                        .map(b => (b as { type: 'text'; id: string; content: string }).content)
+                        .join('\n\n');
+
+                      const wordCount = noteContent.trim() ? noteContent.trim().split(/\s+/).length : 0;
+                      const characterCount = noteContent.length;
+                      const paragraphCount = noteContent.trim() ? noteContent.split(/\n\n+/).filter(p => p.trim()).length : 0;
+
+                      return (
+                        <div className="px-6 py-2">
+                          <div className="flex items-center gap-8 py-1 text-gray-400 font-outfit">
+                            <span className="w-6 text-center">{wordCount}</span>
+                            <span>Words</span>
+                          </div>
+                          <div className="flex items-center gap-8 py-1 text-gray-400 font-outfit">
+                            <span className="w-6 text-center">{characterCount}</span>
+                            <span>Characters</span>
+                          </div>
+                          <div className="flex items-center gap-8 py-1 text-gray-400 font-outfit">
+                            <span className="w-6 text-center">{paragraphCount}</span>
+                            <span>Paragraphs</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Note content area */}
+            <div className="flex-1 overflow-hidden bg-white" style={{ position: 'relative' }}>
+              {/* PERSISTENT IFRAME - always mounted, visibility controlled by desktopSelectedNoteId */}
+              {/* This prevents message loss when selecting first note after folder switch */}
+              <iframe
+                id="note-editor-iframe"
+                src="/note?desktop=true&embedded=true"
+                className="absolute inset-0 w-full h-full border-0 bg-white"
+                style={{ display: desktopSelectedNoteId ? 'block' : 'none' }}
+                title="Note Editor"
+              />
+              {!desktopSelectedNoteId && (
+                <div className="h-full flex items-center justify-center text-[hsl(0,0%,60%)] font-outfit text-[18px]">
+                  Select a note to view
                 </div>
               )}
-              
-              <div className="space-y-4">
-                {welcomeIsSignUp && (
-                  <input
-                    type="text"
-                    placeholder="Name"
-                    value={welcomeName}
-                    onChange={(e) => setWelcomeName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,50%)]/50 focus:ring-offset-0 focus:border-[hsl(0,0%,60%)] text-[hsl(0,0%,25%)]"
-                  />
-                )}
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={welcomeEmail}
-                  onChange={(e) => setWelcomeEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,50%)]/50 focus:ring-offset-0 focus:border-[hsl(0,0%,60%)] text-[hsl(0,0%,25%)]"
-                />
-                <div className="relative">
-                  <input
-                    type={welcomeShowPassword ? "text" : "password"}
-                    placeholder="Password"
-                    value={welcomePassword}
-                    onChange={(e) => setWelcomePassword(e.target.value)}
-                    className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,50%)]/50 focus:ring-offset-0 focus:border-[hsl(0,0%,60%)] text-[hsl(0,0%,25%)]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setWelcomeShowPassword(!welcomeShowPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1"
-                  >
-                    {welcomeShowPassword ? (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="hsl(0,0%,60%)" strokeWidth="2">
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                        <line x1="1" y1="1" x2="23" y2="23" />
-                      </svg>
-                    ) : (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="hsl(0,0%,60%)" strokeWidth="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-                
-                {!welcomeIsSignUp && !resetEmailSent && (
-                  <button
-                    type="button"
-                    onClick={handleWelcomeForgotPassword}
-                    className="w-full text-center text-[14px] font-outfit text-[hsl(0,0%,50%)] hover:text-[hsl(0,0%,30%)]"
-                  >
-                    Forgot password?
-                  </button>
-                )}
-                {resetEmailSent && (
-                  <p className="text-green-500 text-[14px] font-outfit text-center">
-                    If an account exists with this email, you will receive a password reset link.
-                  </p>
-                )}
-                
-                <button
-                  onClick={async () => {
-                    setWelcomeLoading(true);
-                    setWelcomeError('');
-                    try {
-                      if (welcomeIsSignUp) {
-                        const { data, error } = await supabase.auth.signUp({
-                          email: welcomeEmail,
-                          password: welcomePassword,
-                          options: { data: { name: welcomeName } }
-                        });
-                        if (error) throw error;
-                        if (data.user) {
-                          await supabase.from('profiles').upsert({
-                            id: data.user.id,
-                            name: welcomeName,
-                            email: welcomeEmail
-                          });
-                        }
-                      } else {
-                        const { error } = await supabase.auth.signInWithPassword({
-                          email: welcomeEmail,
-                          password: welcomePassword
-                        });
-                        if (error) throw error;
-                      }
-                      localStorage.setItem('nuron-desktop-visited', 'true');
-                      setDesktopShowWelcomePopup(false);
-                    } catch (err: any) {
-                      // Use generic message to prevent email enumeration
-                      if (!welcomeIsSignUp) {
-                        setWelcomeError("Invalid email or password");
-                      } else {
-                        setWelcomeError(err.message || 'An error occurred');
-                      }
-                    } finally {
-                      setWelcomeLoading(false);
-                    }
-                  }}
-                  disabled={welcomeLoading}
-                  className="w-full py-3 rounded-[10px] text-white font-outfit font-medium text-[16px] disabled:opacity-50"
-                  style={{ backgroundColor: themeColors[theme] }}
-                >
-                  {welcomeLoading ? 'Please wait...' : welcomeIsSignUp ? 'Sign Up' : 'Log In'}
-                </button>
-                
-                <button
-                  onClick={() => {
-                    setWelcomeIsSignUp(!welcomeIsSignUp);
-                    setResetEmailSent(false);
-                  }}
-                  className="w-full text-center text-[14px] font-outfit text-[hsl(0,0%,50%)] hover:text-[hsl(0,0%,30%)]"
-                >
-                  {welcomeIsSignUp ? 'Already have an account? Log in' : "Don't have an account? Sign up"}
-                </button>
-              </div>
-              
-              <div className="mt-6 pt-6 border-t border-[hsl(0,0%,90%)]">
-                <button
-                  onClick={() => {
-                    localStorage.setItem('nuron-desktop-visited', 'true');
-                    setDesktopShowWelcomePopup(false);
-                  }}
-                  className="w-full text-center text-[14px] font-outfit text-[hsl(0,0%,60%)] hover:text-[hsl(0,0%,40%)]"
-                >
-                  Use on desktop — sign up later
-                </button>
-              </div>
             </div>
           </div>
-        )}
+
+          {/* Desktop Welcome/Login Popup */}
+          {desktopShowWelcomePopup && !user && (
+            <div
+              className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]"
+              style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+              onClick={() => setDesktopShowWelcomePopup(false)}
+            >
+              <div
+                className="bg-white rounded-[20px] p-8 shadow-2xl"
+                style={{ width: '400px', maxWidth: '90%' }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="text-center mb-6">
+                  <h2 className="text-[24px] font-outfit font-semibold text-[hsl(0,0%,25%)] mb-2">
+                    Welcome to Nuron
+                  </h2>
+                  <p className="text-[14px] font-outfit text-[hsl(0,0%,50%)] leading-relaxed">
+                    Sign up or log in to sync your journal across all your devices - phone, tablet, and desktop.
+                  </p>
+                </div>
+
+                {welcomeError && (
+                  <div className="bg-red-50 text-red-600 text-[14px] font-outfit p-3 rounded-lg mb-4 text-center">
+                    {welcomeError}
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {welcomeIsSignUp && (
+                    <input
+                      type="text"
+                      placeholder="Name"
+                      value={welcomeName}
+                      onChange={(e) => setWelcomeName(e.target.value)}
+                      className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,50%)]/50 focus:ring-offset-0 focus:border-[hsl(0,0%,60%)] text-[hsl(0,0%,25%)]"
+                    />
+                  )}
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={welcomeEmail}
+                    onChange={(e) => setWelcomeEmail(e.target.value)}
+                    className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,50%)]/50 focus:ring-offset-0 focus:border-[hsl(0,0%,60%)] text-[hsl(0,0%,25%)]"
+                  />
+                  <div className="relative">
+                    <input
+                      type={welcomeShowPassword ? "text" : "password"}
+                      placeholder="Password"
+                      value={welcomePassword}
+                      onChange={(e) => setWelcomePassword(e.target.value)}
+                      className="w-full px-4 py-3 rounded-[10px] border border-[hsl(0,0%,85%)] text-[16px] font-outfit focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,50%)]/50 focus:ring-offset-0 focus:border-[hsl(0,0%,60%)] text-[hsl(0,0%,25%)]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setWelcomeShowPassword(!welcomeShowPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1"
+                    >
+                      {welcomeShowPassword ? (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="hsl(0,0%,60%)" strokeWidth="2">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                          <line x1="1" y1="1" x2="23" y2="23" />
+                        </svg>
+                      ) : (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="hsl(0,0%,60%)" strokeWidth="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+
+                  {!welcomeIsSignUp && !resetEmailSent && (
+                    <button
+                      type="button"
+                      onClick={handleWelcomeForgotPassword}
+                      className="w-full text-center text-[14px] font-outfit text-[hsl(0,0%,50%)] hover:text-[hsl(0,0%,30%)]"
+                    >
+                      Forgot password?
+                    </button>
+                  )}
+                  {resetEmailSent && (
+                    <p className="text-green-500 text-[14px] font-outfit text-center">
+                      If an account exists with this email, you will receive a password reset link.
+                    </p>
+                  )}
+
+                  <button
+                    onClick={async () => {
+                      setWelcomeLoading(true);
+                      setWelcomeError('');
+                      try {
+                        if (welcomeIsSignUp) {
+                          const { data, error } = await supabase.auth.signUp({
+                            email: welcomeEmail,
+                            password: welcomePassword,
+                            options: { data: { name: welcomeName } }
+                          });
+                          if (error) throw error;
+                          if (data.user) {
+                            await supabase.from('profiles').upsert({
+                              id: data.user.id,
+                              name: welcomeName,
+                              email: welcomeEmail
+                            });
+                          }
+                        } else {
+                          const { error } = await supabase.auth.signInWithPassword({
+                            email: welcomeEmail,
+                            password: welcomePassword
+                          });
+                          if (error) throw error;
+                        }
+                        localStorage.setItem('nuron-desktop-visited', 'true');
+                        setDesktopShowWelcomePopup(false);
+                      } catch (err: any) {
+                        // Use generic message to prevent email enumeration
+                        if (!welcomeIsSignUp) {
+                          setWelcomeError("Invalid email or password");
+                        } else {
+                          setWelcomeError(err.message || 'An error occurred');
+                        }
+                      } finally {
+                        setWelcomeLoading(false);
+                      }
+                    }}
+                    disabled={welcomeLoading}
+                    className="w-full py-3 rounded-[10px] text-white font-outfit font-medium text-[16px] disabled:opacity-50"
+                    style={{ backgroundColor: themeColors[theme] }}
+                  >
+                    {welcomeLoading ? 'Please wait...' : welcomeIsSignUp ? 'Sign Up' : 'Log In'}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setWelcomeIsSignUp(!welcomeIsSignUp);
+                      setResetEmailSent(false);
+                    }}
+                    className="w-full text-center text-[14px] font-outfit text-[hsl(0,0%,50%)] hover:text-[hsl(0,0%,30%)]"
+                  >
+                    {welcomeIsSignUp ? 'Already have an account? Log in' : "Don't have an account? Sign up"}
+                  </button>
+                </div>
+
+                <div className="mt-6 pt-6 border-t border-[hsl(0,0%,90%)]">
+                  <button
+                    onClick={() => {
+                      localStorage.setItem('nuron-desktop-visited', 'true');
+                      setDesktopShowWelcomePopup(false);
+                    }}
+                    className="w-full text-center text-[14px] font-outfit text-[hsl(0,0%,60%)] hover:text-[hsl(0,0%,40%)]"
+                  >
+                    Use on desktop — sign up later
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>
@@ -3456,9 +3459,9 @@ onDragStart={(e) => {
         </div>
       )}
       {/* Fixed dark header */}
-      <header 
-        className="flex-shrink-0 z-30" 
-        style={{ 
+      <header
+        className="flex-shrink-0 z-30"
+        style={{
           backgroundColor: themeColors[theme],
           paddingTop: `calc(30px + env(safe-area-inset-top))`,
           paddingLeft: `calc(30px + env(safe-area-inset-left))`,
@@ -3469,7 +3472,7 @@ onDragStart={(e) => {
       >
         <div className="flex items-center justify-between mb-auto -mt-[15px]">
           <div className="relative">
-            <button 
+            <button
               onClick={() => {
                 if (showChangePassword) {
                   setShowChangePassword(false);
@@ -3486,10 +3489,10 @@ onDragStart={(e) => {
               className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
             >
               {showSettings || showAccountDetails || showChangePassword || showFolders ? (
-                <img 
-                  src={backIcon} 
-                  alt="Back" 
-                  className="h-[24px] w-[24px]" 
+                <img
+                  src={backIcon}
+                  alt="Back"
+                  className="h-[24px] w-[24px]"
                 />
               ) : (
                 <img src={hamburgerIcon} alt="Menu" className="h-[24px] w-[24px] object-contain" />
@@ -3503,12 +3506,12 @@ onDragStart={(e) => {
             {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : showFolders ? 'FOLDERS' : currentFolder?.name?.toUpperCase() || ''}
           </h1>
           {!showSettings && !showAccountDetails && !showChangePassword && (
-              <div 
-                className="absolute top-[-5px] right-0 flex items-center gap-[30px]"
-              >
+            <div
+              className="absolute top-[-5px] right-0 flex items-center gap-[30px]"
+            >
               {showFolders ? (
                 user && (
-                  <button 
+                  <button
                     onClick={openCreateFolder}
                     className="p-0 m-0 mr-[5px] border-0 bg-transparent"
                     aria-label="Create new folder"
@@ -3518,7 +3521,7 @@ onDragStart={(e) => {
                 )
               ) : (
                 <>
-                  <button 
+                  <button
                     onClick={() => {
                       setIsSearching(!isSearching);
                       if (isSearching) setSearchQuery("");
@@ -3528,7 +3531,7 @@ onDragStart={(e) => {
                   >
                     <img src={searchIcon} alt="Search" className="h-[24px] w-auto" />
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                       setViewMode(prev => prev === 'collapsed' ? 'compact' : 'collapsed');
                       setUserChangedView(true);
@@ -3546,9 +3549,9 @@ onDragStart={(e) => {
       </header>
 
       {/* Folders panel - sits behind the card */}
-      <div 
-        className={`absolute inset-x-0 bottom-0 transition-opacity duration-200 overflow-y-auto ${showFolders && !showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
-        style={{ 
+      <div
+        className={`absolute inset-x-0 bottom-0 transition-opacity duration-200 overflow-y-auto ${showFolders && !showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        style={{
           backgroundColor: themeColors[theme],
           top: `calc(60px + env(safe-area-inset-top))`,
           paddingLeft: `calc(30px + env(safe-area-inset-left))`,
@@ -3559,7 +3562,7 @@ onDragStart={(e) => {
         {/* Folders list */}
         <div className="space-y-1 pt-[70px]">
           {folders.map((folder) => (
-            <div 
+            <div
               key={folder.id}
               draggable
               onDragStart={(e) => {
@@ -3588,13 +3591,10 @@ onDragStart={(e) => {
                 setDraggedFolder(null);
                 setDragOverFolder(null);
               }}
-              className={`flex items-center gap-3 py-2 transition-all duration-500 ease-out ${
-                currentFolder?.id === folder.id ? 'bg-white/10 mx-[-32px] px-[32px]' : 'px-0'
-              } ${
-                draggedFolder?.id === folder.id ? 'opacity-50 scale-[0.98]' : ''
-              } ${
-                dragOverFolder === folder.id ? 'border-t-2 border-white/50' : ''
-              }`}
+              className={`flex items-center gap-3 py-2 transition-all duration-500 ease-out ${currentFolder?.id === folder.id ? 'bg-white/10 mx-[-32px] px-[32px]' : 'px-0'
+                } ${draggedFolder?.id === folder.id ? 'opacity-50 scale-[0.98]' : ''
+                } ${dragOverFolder === folder.id ? 'border-t-2 border-white/50' : ''
+                }`}
               style={{
                 cursor: 'grab',
                 transition: 'transform 0.5s ease-out, opacity 0.3s ease-out'
@@ -3608,7 +3608,7 @@ onDragStart={(e) => {
                 {folder.name}
               </button>
               {user && folder.id !== 'local-notes' && (
-                <button 
+                <button
                   onClick={() => openEditFolder(folder)}
                   className="p-2 m-0 mr-[20px] border-0 bg-transparent"
                   aria-label="Folder options"
@@ -3616,7 +3616,7 @@ onDragStart={(e) => {
                   <img src={folderSettingsIcon} alt="Options" className="w-[20px] h-auto opacity-70" />
                 </button>
               )}
-              <button 
+              <button
                 onClick={() => selectFolder(folder)}
                 className="p-2 m-0 border-0 bg-transparent"
               >
@@ -3625,7 +3625,7 @@ onDragStart={(e) => {
             </div>
           ))}
         </div>
-        
+
         {/* Settings link at bottom */}
         <div className="absolute left-8" style={{ bottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
           <button
@@ -3683,27 +3683,27 @@ onDragStart={(e) => {
               )}
               <div className="pt-6">
                 <div className="flex gap-4">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors disabled:opacity-50 text-[14px]"
-                >
-                  {loading ? "Updating..." : "Update Password"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowChangePassword(false);
-                    setNewPassword("");
-                    setConfirmNewPassword("");
-                    setPasswordFormError("");
-                  }}
-                  className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]"
-                >
-                  Cancel
-                </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors disabled:opacity-50 text-[14px]"
+                  >
+                    {loading ? "Updating..." : "Update Password"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowChangePassword(false);
+                      setNewPassword("");
+                      setConfirmNewPassword("");
+                      setPasswordFormError("");
+                    }}
+                    className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors text-[14px]"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
-            </div>
             </form>
           ) : showAccountDetails ? (
             /* Account Details View */
@@ -3761,10 +3761,10 @@ onDragStart={(e) => {
                 <span>Account Details</span>
                 <img src={accountArrow} alt="" className="w-[20px] h-[20px] opacity-60" />
               </button>
-              
+
               {/* Separator line */}
               <div className="border-t border-white/20 my-[80px]"></div>
-              
+
               {/* Other settings */}
               <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
                 <span className="text-[20px] font-light">Show weather on notes</span>
@@ -3772,7 +3772,7 @@ onDragStart={(e) => {
                   onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
                   className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
                 >
-                  <span 
+                  <span
                     className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`}
                   />
                 </button>
@@ -3790,7 +3790,7 @@ onDragStart={(e) => {
                     >
                       <img src={mobileThemeIcons[t]} alt={t} className="w-[40px] h-[40px] rounded-[10px]" />
                       {theme === t && (
-                        <div 
+                        <div
                           className="w-[6px] h-[6px] bg-white rounded-full absolute"
                           style={{ bottom: '0px' }}
                         />
@@ -3817,7 +3817,7 @@ onDragStart={(e) => {
               </p>
 
               {/* View Website */}
-              <button 
+              <button
                 onClick={() => navigate('/welcome')}
                 className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[20px] font-light"
               >
@@ -3911,24 +3911,24 @@ onDragStart={(e) => {
             /* Initial buttons - not logged in */
             <div className="space-y-4">
               {/* Account section */}
-              <button onClick={() => { 
-                setShowSignUp(true); 
+              <button onClick={() => {
+                setShowSignUp(true);
                 setIsSignInMode(false);
                 setAuthFormError("");
               }} className="w-full px-6 py-3 bg-white text-journal-header font-medium rounded-[10px] hover:bg-white/90 transition-colors">
                 Create Account
               </button>
-              <button onClick={() => { 
-                setShowSignUp(true); 
+              <button onClick={() => {
+                setShowSignUp(true);
                 setIsSignInMode(true);
                 setAuthFormError("");
               }} className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-[10px] transition-colors">
                 Sign In
               </button>
-              
+
               {/* Separator line */}
               <div className="border-t border-white/20 my-[80px]"></div>
-              
+
               {/* Other settings */}
               <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
                 <span className="text-[20px] font-light">Show weather on notes</span>
@@ -3936,7 +3936,7 @@ onDragStart={(e) => {
                   onClick={() => setShowWeatherOnNotes(!showWeatherOnNotes)}
                   className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${showWeatherOnNotes ? 'bg-green-500' : 'bg-white/20'}`}
                 >
-                  <span 
+                  <span
                     className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${showWeatherOnNotes ? 'translate-x-[20px]' : 'translate-x-0'}`}
                   />
                 </button>
@@ -3954,7 +3954,7 @@ onDragStart={(e) => {
                     >
                       <img src={mobileThemeIcons[t]} alt={t} className="w-[40px] h-[40px] rounded-[10px]" />
                       {theme === t && (
-                        <div 
+                        <div
                           className="w-[6px] h-[6px] bg-white rounded-full absolute"
                           style={{ bottom: '0px' }}
                         />
@@ -3969,10 +3969,10 @@ onDragStart={(e) => {
       </div>
 
       {/* Scrollable content area */}
-      <div 
+      <div
         ref={scrollContainerRef}
         className={`notes-list-container flex-1 overflow-y-scroll overflow-x-hidden bg-journal-content rounded-t-[30px] overscroll-y-auto z-40 transition-all duration-200 ${showSettings || showFolders ? 'translate-y-[100%]' : '-mt-[25px]'} ${isInitializing ? 'opacity-0' : 'opacity-100'}`}
-        style={{ 
+        style={{
           WebkitOverflowScrolling: 'touch',
           overscrollBehaviorY: 'auto',
           minHeight: 0
@@ -3981,7 +3981,7 @@ onDragStart={(e) => {
         <div style={{ minHeight: 'calc(100% + 1px)' }}>
           {isSearching && (
             <div className="px-[30px] pt-[30px] pb-2">
-               <div className="flex items-center bg-[#F6F6F6] rounded-full px-4 py-3 border border-[hsl(60,5%,80%)]">
+              <div className="flex items-center bg-[#F6F6F6] rounded-full px-4 py-3 border border-[hsl(60,5%,80%)]">
                 <input
                   type="text"
                   value={searchQuery}
@@ -4013,7 +4013,7 @@ onDragStart={(e) => {
               const prevGroup = groupIndex > 0 ? allGroups[groupIndex - 1] : null;
               const prevMonthYear = prevGroup ? new Date(prevGroup.notes[0].createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase() : null;
               const showMonthHeader = viewMode !== 'compact' && (groupIndex === 0 || groupMonthYear !== prevMonthYear);
-              
+
               return (
                 <React.Fragment key={group.date}>
                   {showMonthHeader && (
@@ -4031,7 +4031,7 @@ onDragStart={(e) => {
                     const firstImage = note.contentBlocks.find(b => b.type === 'image') as { type: 'image'; id: string; url: string; width: number } | undefined;
 
                     return (
-                      <div 
+                      <div
                         key={note.id}
                         className="border-b border-[hsl(0,0%,85%)] cursor-pointer"
                         onClick={() => navigate(`/note/${note.id}`)}
@@ -4101,8 +4101,8 @@ onDragStart={(e) => {
             height: '51px'
           }}
         >
-          <img 
-            src={themePlusIcons[theme]} 
+          <img
+            src={themePlusIcons[theme]}
             alt="Add Note"
             className="w-full h-full"
             style={{
@@ -4157,7 +4157,7 @@ onDragStart={(e) => {
                   setLocalNotesToMerge([]);
                   // Trigger re-render to reload notes via useEffect
                   if (currentFolder) {
-                    setCurrentFolder({...currentFolder});
+                    setCurrentFolder({ ...currentFolder });
                   }
                 }}
                 className="flex-1 py-3 px-4 rounded-xl bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)] font-outfit font-medium"
@@ -4177,7 +4177,7 @@ onDragStart={(e) => {
         </div>
       )}
 
-      <SubscriptionModal 
+      <SubscriptionModal
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
         onSubscribed={() => setShowSubscriptionModal(false)}
@@ -4234,11 +4234,11 @@ onDragStart={(e) => {
             >
               ×
             </button>
-            
+
             <h3 className="text-[18px] font-outfit font-semibold text-[hsl(0,0%,25%)] text-center mb-5">
               {editingFolder ? 'Edit Folder' : 'New Folder'}
             </h3>
-            
+
             <div className="space-y-4">
               {/* Folder Name */}
               <div className="space-y-1">
@@ -4251,64 +4251,60 @@ onDragStart={(e) => {
                   className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit text-black outline-none focus:border-[hsl(0,0%,70%)]"
                 />
               </div>
-              
+
               {/* View As */}
               <div className="space-y-1">
                 <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">View As</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setNewFolderDefaultView('collapsed')}
-                    className={`flex-1 py-2.5 px-3 rounded-xl font-outfit font-medium text-[13px] ${
-                      newFolderDefaultView === 'collapsed' 
-                        ? 'bg-[hsl(0,0%,25%)] text-white' 
+                    className={`flex-1 py-2.5 px-3 rounded-xl font-outfit font-medium text-[13px] ${newFolderDefaultView === 'collapsed'
+                        ? 'bg-[hsl(0,0%,25%)] text-white'
                         : 'bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)]'
-                    }`}
+                      }`}
                   >
                     Date
                   </button>
                   <button
                     onClick={() => setNewFolderDefaultView('compact')}
-                    className={`flex-1 py-2.5 px-3 rounded-xl font-outfit font-medium text-[13px] ${
-                      newFolderDefaultView === 'compact' 
-                        ? 'bg-[hsl(0,0%,25%)] text-white' 
+                    className={`flex-1 py-2.5 px-3 rounded-xl font-outfit font-medium text-[13px] ${newFolderDefaultView === 'compact'
+                        ? 'bg-[hsl(0,0%,25%)] text-white'
                         : 'bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)]'
-                    }`}
+                      }`}
                   >
                     List
                   </button>
                 </div>
               </div>
-              
+
               {/* Sort By */}
               <div className="space-y-1">
                 <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Sort By</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setNewFolderSortOrder('desc')}
-                    className={`flex-1 py-2.5 px-3 rounded-xl font-outfit font-medium text-[13px] ${
-                      newFolderSortOrder === 'desc' 
-                        ? 'bg-[hsl(0,0%,25%)] text-white' 
+                    className={`flex-1 py-2.5 px-3 rounded-xl font-outfit font-medium text-[13px] ${newFolderSortOrder === 'desc'
+                        ? 'bg-[hsl(0,0%,25%)] text-white'
                         : 'bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)]'
-                    }`}
+                      }`}
                   >
                     Newest
                   </button>
                   <button
                     onClick={() => setNewFolderSortOrder('asc')}
-                    className={`flex-1 py-2.5 px-3 rounded-xl font-outfit font-medium text-[13px] ${
-                      newFolderSortOrder === 'asc' 
-                        ? 'bg-[hsl(0,0%,25%)] text-white' 
+                    className={`flex-1 py-2.5 px-3 rounded-xl font-outfit font-medium text-[13px] ${newFolderSortOrder === 'asc'
+                        ? 'bg-[hsl(0,0%,25%)] text-white'
                         : 'bg-[hsl(0,0%,92%)] text-[hsl(0,0%,25%)]'
-                    }`}
+                      }`}
                   >
                     Oldest
                   </button>
                 </div>
               </div>
-              
+
               {/* Separator */}
               <div className="border-t border-[hsl(0,0%,90%)]" />
-              
+
               {/* Publish Online Toggle */}
               <div className="flex items-center justify-between">
                 <span className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Publish Folder Online</span>
@@ -4319,13 +4315,13 @@ onDragStart={(e) => {
                   <span className={`absolute top-[2px] left-[2px] w-[24px] h-[24px] bg-white rounded-full shadow-md transition-transform duration-200 ${newFolderIsBlog ? 'translate-x-[18px]' : 'translate-x-0'}`} />
                 </button>
               </div>
-              
+
               {/* Blog Settings - shown when Publish Online is enabled */}
               {newFolderIsBlog && (
                 <div className="space-y-3 animate-in fade-in-0 duration-200">
                   {/* Blog Heading */}
                   <div className="space-y-1">
-                              <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Heading</label>
+                    <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Heading</label>
                     <input
                       type="text"
                       value={newFolderBlogName}
@@ -4334,7 +4330,7 @@ onDragStart={(e) => {
                       className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit text-black outline-none focus:border-[hsl(0,0%,70%)]"
                     />
                   </div>
-                  
+
                   {/* Sub-heading */}
                   <div className="space-y-1">
                     <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Sub-heading (Optional)</label>
@@ -4346,15 +4342,15 @@ onDragStart={(e) => {
                       className="w-full px-3 py-2.5 rounded-xl border border-[hsl(0,0%,85%)] text-[15px] font-outfit text-black outline-none focus:border-[hsl(0,0%,70%)]"
                     />
                   </div>
-                  
+
                   {/* Header Image */}
                   <div className="space-y-1">
                     <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Header Image (Optional)</label>
                     {newFolderBlogHeaderImage ? (
                       <div className="relative">
-                        <img 
-                          src={newFolderBlogHeaderImage} 
-                          alt="Header preview" 
+                        <img
+                          src={newFolderBlogHeaderImage}
+                          alt="Header preview"
                           className="w-full h-[80px] object-cover rounded-xl"
                         />
                         <button
@@ -4373,9 +4369,9 @@ onDragStart={(e) => {
                           onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (!file || !user) return;
-                            
+
                             setUploadingHeaderImage(true);
-                            
+
                             // Delete old header image if exists
                             if (newFolderBlogHeaderImage && newFolderBlogHeaderImage.includes('supabase.co/storage')) {
                               try {
@@ -4388,14 +4384,14 @@ onDragStart={(e) => {
                                 console.error('Error deleting old header image:', error);
                               }
                             }
-                            
+
                             const fileExt = file.name.split('.').pop();
                             const fileName = `${user.id}/blog-header-${Date.now()}.${fileExt}`;
-                            
+
                             const { data, error } = await supabase.storage
                               .from('note-images')
                               .upload(fileName, file);
-                            
+
                             if (!error && data) {
                               const { data: urlData } = supabase.storage
                                 .from('note-images')
@@ -4411,7 +4407,7 @@ onDragStart={(e) => {
                       </label>
                     )}
                   </div>
-                  
+
                   {/* Web Address */}
                   <div className="space-y-1">
                     <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Web Address</label>
@@ -4472,7 +4468,7 @@ onDragStart={(e) => {
                       )}
                     </div>
                     {username && newFolderBlogSlug && (
-                      <a 
+                      <a
                         href={`https://nuron.life/${username}/${newFolderBlogSlug}`}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -4488,7 +4484,7 @@ onDragStart={(e) => {
                       </p>
                     )}
                   </div>
-                  
+
                   {/* Password */}
                   <div className="space-y-1">
                     <label className="text-[hsl(0,0%,40%)] text-[13px] font-outfit">Password (Optional)</label>
@@ -4506,7 +4502,7 @@ onDragStart={(e) => {
                 </div>
               )}
             </div>
-            
+
             {/* Action Buttons */}
             <div className="flex gap-3 mt-5">
               <button
@@ -4535,7 +4531,7 @@ onDragStart={(e) => {
                 {editingFolder ? 'Save' : 'Create'}
               </button>
             </div>
-            
+
             {/* Delete Folder Button - only when editing */}
             {editingFolder && (
               <button

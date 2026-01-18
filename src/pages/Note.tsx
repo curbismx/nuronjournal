@@ -2396,10 +2396,9 @@ const Note = () => {
         } else {
           notes.unshift(noteDataWithAudio);
         }
-        // Don't write to localStorage in desktop embed mode
-        if (!isEmbedded) {
-          localStorage.setItem('nuron-notes', JSON.stringify(notes));
-        }
+        // Save to localStorage when not logged in (even in embedded mode, as fallback)
+        localStorage.setItem('nuron-notes', JSON.stringify(notes));
+        console.log('Saved to localStorage (not logged in)');
       }
 
       // Safety backup - ONLY for mobile/standalone mode
