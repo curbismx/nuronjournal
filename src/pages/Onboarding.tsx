@@ -19,7 +19,7 @@ const Onboarding = () => {
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
-  
+
   // Account setup state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,8 +36,8 @@ const Onboarding = () => {
   });
 
   const toggleUse = (use: string) => {
-    setSelectedUses(prev => 
-      prev.includes(use) 
+    setSelectedUses(prev =>
+      prev.includes(use)
         ? prev.filter(u => u !== use)
         : [...prev, use]
     );
@@ -90,9 +90,9 @@ const Onboarding = () => {
     try {
       if (Capacitor.isNativePlatform()) {
         const result = await Geolocation.requestPermissions();
-        setPermissions(prev => ({ 
-          ...prev, 
-          location: result.location === 'granted' 
+        setPermissions(prev => ({
+          ...prev,
+          location: result.location === 'granted'
         }));
       } else {
         navigator.geolocation.getCurrentPosition(
@@ -123,13 +123,13 @@ const Onboarding = () => {
       setCurrentPage(4);
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     // Find the correct package based on selected plan
     const packageId = selectedPlan === 'monthly' ? '$rc_monthly' : '$rc_annual';
     const selectedPackage = packages.find(p => p.identifier === packageId);
-    
+
     if (selectedPackage) {
       const customerInfo = await purchasePackage(selectedPackage);
       if (customerInfo && customerInfo.activeSubscriptions.length > 0) {
@@ -141,7 +141,7 @@ const Onboarding = () => {
       console.log('Package not found, going to account setup');
       setCurrentPage(4);
     }
-    
+
     setIsLoading(false);
   };
 
@@ -150,9 +150,9 @@ const Onboarding = () => {
       alert('Restore is only available on iOS');
       return;
     }
-    
+
     setIsRestoring(true);
-    
+
     try {
       const customerInfo = await restorePurchases();
       if (customerInfo && customerInfo.activeSubscriptions.length > 0) {
@@ -165,7 +165,7 @@ const Onboarding = () => {
       console.error('Restore failed:', error);
       alert('Failed to restore purchases. Please try again.');
     }
-    
+
     setIsRestoring(false);
   };
 
@@ -177,7 +177,7 @@ const Onboarding = () => {
     e.preventDefault();
     setAuthLoading(true);
     setAuthError('');
-    
+
     try {
       if (isSignInMode) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -190,7 +190,7 @@ const Onboarding = () => {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { 
+          options: {
             data: { name },
             emailRedirectTo: `${window.location.origin}/`
           }
@@ -204,7 +204,7 @@ const Onboarding = () => {
     } catch (error) {
       setAuthError('An unexpected error occurred');
     }
-    
+
     setAuthLoading(false);
   };
 
@@ -214,7 +214,7 @@ const Onboarding = () => {
   };
 
   return (
-    <div 
+    <div
       className="min-h-screen relative"
       style={{ backgroundColor: '#2E2E2E' }}
     >
@@ -222,23 +222,23 @@ const Onboarding = () => {
       {currentPage === 0 && (
         <>
           {/* Logo - 239px wide, 180px from top */}
-          <div 
+          <div
             className="absolute left-1/2 transform -translate-x-1/2"
             style={{ top: '100px' }}
           >
-            <img 
-              src={logo} 
-              alt="Nuron Journal" 
+            <img
+              src={logo}
+              alt="Nuron Journal"
               style={{ width: '239px', height: 'auto' }}
             />
           </div>
-          
+
           {/* Tagline - 600px from top */}
-          <div 
+          <div
             className="absolute left-1/2 transform -translate-x-1/2"
             style={{ top: '400px' }}
           >
-            <p 
+            <p
               className="text-center font-light text-[22px] leading-relaxed"
               style={{ color: '#8A8A8A', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
@@ -247,39 +247,39 @@ const Onboarding = () => {
           </div>
         </>
       )}
-      
+
       {/* Page 2 content */}
       {currentPage === 1 && (
         <>
           {/* Text - 180px from top */}
-          <div 
+          <div
             className="absolute left-1/2 transform -translate-x-1/2 px-8"
             style={{ top: '100px', width: '100%', maxWidth: '400px' }}
           >
-            <p 
+            <p
               className="text-center font-medium text-[26px] leading-snug mb-8"
               style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
               Turn your speech into well written text using our amazing AI
             </p>
-            <p 
+            <p
               className="text-center font-light text-[26px] leading-snug"
               style={{ color: '#8A8A8A', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
               No more forgetting those great ideas, just jot it down in an instant and view later in a journal format
             </p>
           </div>
-          
+
           {/* Microphone icon - centered vertically lower */}
-          <div 
+          <div
             className="absolute left-1/2 transform -translate-x-1/2"
             style={{ top: '450px' }}
           >
-            <img 
-              src={mic} 
-              alt="Microphone" 
-              style={{ 
-                width: '60px', 
+            <img
+              src={mic}
+              alt="Microphone"
+              style={{
+                width: '60px',
                 height: 'auto',
                 filter: 'brightness(0) saturate(100%) invert(56%) sepia(57%) saturate(594%) hue-rotate(314deg) brightness(97%) contrast(84%)'
               }}
@@ -287,25 +287,25 @@ const Onboarding = () => {
           </div>
         </>
       )}
-      
+
       {/* Page 3 content - What do you want to do */}
       {currentPage === 2 && (
         <>
           {/* Header */}
-          <div 
+          <div
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
             style={{ top: '100px' }}
           >
-            <h1 
+            <h1
               className="text-center text-[26px] font-medium leading-relaxed"
               style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
               What do you want to do<br />with Nuron?
             </h1>
           </div>
-          
+
           {/* Options */}
-          <div 
+          <div
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
             style={{ top: '240px', maxWidth: '360px' }}
           >
@@ -325,15 +325,15 @@ const Onboarding = () => {
                   borderColor: selectedUses.includes(option) ? '#E57373' : '#555555'
                 }}
               >
-                <span 
+                <span
                   className="text-[18px]"
                   style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
                 >
                   {option}
                 </span>
-                
+
                 {/* Checkbox */}
-                <div 
+                <div
                   className="w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all"
                   style={{
                     borderColor: selectedUses.includes(option) ? '#E57373' : '#555555',
@@ -351,31 +351,31 @@ const Onboarding = () => {
           </div>
         </>
       )}
-      
+
       {/* Page 4 content - Subscription */}
       {currentPage === 3 && (
         <>
           {/* Header */}
-          <div 
+          <div
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
             style={{ top: '50px' }}
           >
-            <h1 
+            <h1
               className="text-center text-[36px] font-medium mb-3"
               style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '3px' }}
             >
               SUBSCRIPTION
             </h1>
-            <p 
+            <p
               className="text-center text-[21px] font-light leading-tight"
               style={{ color: '#8A8A8A', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
               Join the thousands of creatives<br />in our community for less than<br />the price of a coffee
             </p>
           </div>
-          
+
           {/* Features list - centered with inline ticks */}
-          <div 
+          <div
             className="absolute left-1/2 transform -translate-x-1/2 w-full text-center"
             style={{ top: '210px' }}
           >
@@ -388,14 +388,14 @@ const Onboarding = () => {
               "And lot's more...",
               '7-day free trial, then auto-renews'
             ].map((feature, index) => (
-              <div 
+              <div
                 key={index}
                 className="inline-flex items-center justify-center gap-2 mb-1.5 w-full"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E57373" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
-                <span 
+                <span
                   className="text-[18px]"
                   style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
                 >
@@ -404,9 +404,9 @@ const Onboarding = () => {
               </div>
             ))}
           </div>
-          
+
           {/* Plan options - positioned below features */}
-          <div 
+          <div
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full flex gap-4"
             style={{ top: '455px', maxWidth: '360px' }}
           >
@@ -419,26 +419,26 @@ const Onboarding = () => {
                 borderColor: selectedPlan === 'monthly' ? '#E57373' : '#555555'
               }}
             >
-              <span 
+              <span
                 className="block text-[16px] mb-1"
                 style={{ color: '#AAAAAA', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 Monthly
               </span>
-              <span 
+              <span
                 className="block text-[28px] font-medium"
                 style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 $3.99
               </span>
-              <span 
+              <span
                 className="block text-[12px]"
                 style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 per month
               </span>
             </button>
-            
+
             {/* Yearly option */}
             <button
               onClick={() => setSelectedPlan('yearly')}
@@ -449,17 +449,17 @@ const Onboarding = () => {
               }}
             >
               {/* Save badge - circle at top right */}
-              <div 
+              <div
                 className="absolute flex items-center justify-center"
-                style={{ 
-                  top: '-14px', 
+                style={{
+                  top: '-14px',
                   right: '-14px',
                   width: '50px',
                   height: '50px',
                   borderRadius: '50%',
-                  backgroundColor: 'rgba(229,115,115,0.7)', 
-                  color: '#FFFFFF', 
-                  fontFamily: 'Advent Pro', 
+                  backgroundColor: 'rgba(229,115,115,0.7)',
+                  color: '#FFFFFF',
+                  fontFamily: 'Advent Pro',
                   fontSize: '10px',
                   fontWeight: '500',
                   letterSpacing: '0.5px',
@@ -469,19 +469,19 @@ const Onboarding = () => {
               >
                 SAVE<br />17%
               </div>
-              <span 
+              <span
                 className="block text-[16px] mb-1"
                 style={{ color: '#AAAAAA', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 Yearly
               </span>
-              <span 
+              <span
                 className="block text-[28px] font-medium"
                 style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
                 $39.99
               </span>
-              <span 
+              <span
                 className="block text-[12px]"
                 style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
               >
@@ -489,26 +489,26 @@ const Onboarding = () => {
               </span>
             </button>
           </div>
-          
+
           {/* Subscribe button */}
-          <div 
+          <div
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
-            style={{ top: '620px', maxWidth: '360px' }}
+            style={{ top: '620px', maxWidth: '360px', zIndex: 10 }}
           >
             <button
               onClick={handleSubscribe}
               disabled={isLoading}
               className="w-full py-4 rounded-full text-[18px] font-medium transition-all disabled:opacity-70"
-              style={{ 
-                backgroundColor: '#E57373', 
-                color: '#FFFFFF', 
+              style={{
+                backgroundColor: '#E57373',
+                color: '#FFFFFF',
                 fontFamily: 'Advent Pro',
                 letterSpacing: '1px'
               }}
             >
               {isLoading ? 'Processing...' : `Subscribe for ${selectedPlan === 'monthly' ? '$3.99/month' : '$39.99/year'}`}
             </button>
-            
+
             {/* Restore Purchases */}
             <button
               onClick={handleRestore}
@@ -531,22 +531,22 @@ const Onboarding = () => {
               Skip for now
             </button>
           </div>
-          
+
           {/* Legal disclosure */}
-          <div 
+          <div
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full text-center"
             style={{ bottom: '40px', maxWidth: '360px' }}
           >
-            <p 
+            <p
               className="text-[11px] leading-relaxed mb-3"
               style={{ color: '#666666', fontFamily: 'Outfit' }}
             >
-              Payment will be charged to your Apple ID account at confirmation of purchase. 
-              Subscription automatically renews unless canceled at least 24 hours before 
+              Payment will be charged to your Apple ID account at confirmation of purchase.
+              Subscription automatically renews unless canceled at least 24 hours before
               the end of the current period. Manage subscriptions in your App Store account settings.
             </p>
             <div className="flex justify-center gap-4">
-              <a 
+              <a
                 href="https://nuron.life/terms"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -555,7 +555,7 @@ const Onboarding = () => {
               >
                 Terms of Service
               </a>
-              <a 
+              <a
                 href="https://nuron.life/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -573,26 +573,26 @@ const Onboarding = () => {
       {currentPage === 4 && (
         <>
           {/* Header */}
-          <div 
+          <div
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
             style={{ top: '80px' }}
           >
-            <h1 
+            <h1
               className="text-center text-[36px] font-medium mb-6"
               style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '3px' }}
             >
               SET UP ACCOUNT
             </h1>
-            <p 
+            <p
               className="text-center text-[22px] font-light leading-relaxed"
               style={{ color: '#8A8A8A', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
               Sync your notes across devices<br />and never lose them
             </p>
           </div>
-          
+
           {/* Form */}
-          <form 
+          <form
             onSubmit={handleAuthSubmit}
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
             style={{ top: '260px', maxWidth: '360px' }}
@@ -606,7 +606,7 @@ const Onboarding = () => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full p-4 rounded-2xl border-2 bg-transparent outline-none transition-all"
-                  style={{ 
+                  style={{
                     borderColor: '#555555',
                     color: '#FFFFFF',
                     fontFamily: 'Advent Pro',
@@ -616,7 +616,7 @@ const Onboarding = () => {
                 />
               </div>
             )}
-            
+
             {/* Email field */}
             <div className="mb-4">
               <input
@@ -626,7 +626,7 @@ const Onboarding = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full p-4 rounded-2xl border-2 bg-transparent outline-none transition-all"
-                style={{ 
+                style={{
                   borderColor: '#555555',
                   color: '#FFFFFF',
                   fontFamily: 'Advent Pro',
@@ -635,7 +635,7 @@ const Onboarding = () => {
                 }}
               />
             </div>
-            
+
             {/* Password field */}
             <div className="mb-4">
               <input
@@ -646,7 +646,7 @@ const Onboarding = () => {
                 required
                 minLength={6}
                 className="w-full p-4 rounded-2xl border-2 bg-transparent outline-none transition-all"
-                style={{ 
+                style={{
                   borderColor: '#555555',
                   color: '#FFFFFF',
                   fontFamily: 'Advent Pro',
@@ -655,32 +655,32 @@ const Onboarding = () => {
                 }}
               />
             </div>
-            
+
             {/* Error message */}
             {authError && (
-              <p 
+              <p
                 className="text-center mb-4 text-[14px]"
                 style={{ color: '#E57373', fontFamily: 'Advent Pro' }}
               >
                 {authError}
               </p>
             )}
-            
+
             {/* Submit button */}
             <button
               type="submit"
               disabled={authLoading}
               className="w-full py-4 rounded-full text-[18px] font-medium transition-all disabled:opacity-70"
-              style={{ 
-                backgroundColor: '#E57373', 
-                color: '#FFFFFF', 
+              style={{
+                backgroundColor: '#E57373',
+                color: '#FFFFFF',
                 fontFamily: 'Advent Pro',
                 letterSpacing: '1px'
               }}
             >
               {authLoading ? 'Please wait...' : (isSignInMode ? 'Sign In' : 'Create Account')}
             </button>
-            
+
             {/* Toggle sign in/sign up */}
             <button
               type="button"
@@ -711,26 +711,26 @@ const Onboarding = () => {
       {currentPage === 5 && (
         <>
           {/* Header */}
-          <div 
+          <div
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
             style={{ top: '80px' }}
           >
-            <h1 
+            <h1
               className="text-center text-[36px] font-medium mb-6"
               style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '3px' }}
             >
               PERMISSIONS
             </h1>
-            <p 
+            <p
               className="text-center text-[22px] font-light leading-relaxed"
               style={{ color: '#8A8A8A', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
             >
               Allow access to use all features
             </p>
           </div>
-          
+
           {/* Permissions list */}
-          <div 
+          <div
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
             style={{ top: '260px', maxWidth: '360px' }}
           >
@@ -746,13 +746,13 @@ const Onboarding = () => {
               <div className="flex items-center gap-3">
                 <span className="text-[24px]">🎙️</span>
                 <div className="text-left">
-                  <span 
+                  <span
                     className="block text-[18px]"
                     style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
                   >
                     SPEECH RECOGNITION
                   </span>
-                  <span 
+                  <span
                     className="block text-[14px]"
                     style={{ color: '#8A8A8A', fontFamily: 'Advent Pro' }}
                   >
@@ -760,9 +760,9 @@ const Onboarding = () => {
                   </span>
                 </div>
               </div>
-              
+
               {/* Checkbox */}
-              <div 
+              <div
                 className="w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all"
                 style={{
                   borderColor: permissions.speechRecognition ? '#E57373' : '#555555',
@@ -789,13 +789,13 @@ const Onboarding = () => {
               <div className="flex items-center gap-3">
                 <span className="text-[24px]">🖼️</span>
                 <div className="text-left">
-                  <span 
+                  <span
                     className="block text-[18px]"
                     style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
                   >
                     PHOTO LIBRARY
                   </span>
-                  <span 
+                  <span
                     className="block text-[14px]"
                     style={{ color: '#8A8A8A', fontFamily: 'Advent Pro' }}
                   >
@@ -803,9 +803,9 @@ const Onboarding = () => {
                   </span>
                 </div>
               </div>
-              
+
               {/* Checkbox */}
-              <div 
+              <div
                 className="w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all"
                 style={{
                   borderColor: permissions.photoLibrary ? '#E57373' : '#555555',
@@ -832,13 +832,13 @@ const Onboarding = () => {
               <div className="flex items-center gap-3">
                 <span className="text-[24px]">📍</span>
                 <div className="text-left">
-                  <span 
+                  <span
                     className="block text-[18px]"
                     style={{ color: '#FFFFFF', fontFamily: 'Advent Pro', letterSpacing: '1px' }}
                   >
                     LOCATION
                   </span>
-                  <span 
+                  <span
                     className="block text-[14px]"
                     style={{ color: '#8A8A8A', fontFamily: 'Advent Pro' }}
                   >
@@ -846,9 +846,9 @@ const Onboarding = () => {
                   </span>
                 </div>
               </div>
-              
+
               {/* Checkbox */}
-              <div 
+              <div
                 className="w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all"
                 style={{
                   borderColor: permissions.location ? '#E57373' : '#555555',
@@ -865,16 +865,16 @@ const Onboarding = () => {
           </div>
 
           {/* Continue button */}
-          <div 
+          <div
             className="absolute left-1/2 transform -translate-x-1/2 px-8 w-full"
             style={{ bottom: '80px', maxWidth: '360px' }}
           >
             <button
               onClick={completeOnboarding}
               className="w-full py-4 rounded-full text-[18px] font-medium transition-all"
-              style={{ 
-                backgroundColor: '#E57373', 
-                color: '#FFFFFF', 
+              style={{
+                backgroundColor: '#E57373',
+                color: '#FFFFFF',
                 fontFamily: 'Advent Pro',
                 letterSpacing: '1px'
               }}
@@ -893,7 +893,7 @@ const Onboarding = () => {
           </div>
         </>
       )}
-      
+
       {/* Arrow button - 30px, positioned higher (hidden on page 4, 5, 6) */}
       {currentPage < 3 && (
         <button
@@ -901,9 +901,9 @@ const Onboarding = () => {
           className="absolute left-1/2 transform -translate-x-1/2"
           style={{ top: '680px' }}
         >
-          <img 
-            src={arrow} 
-            alt="Next" 
+          <img
+            src={arrow}
+            alt="Next"
             style={{ width: '30px', height: '30px' }}
           />
         </button>
