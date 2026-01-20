@@ -3532,16 +3532,15 @@ const Note = () => {
                   maxWidth: '90vw'
                 }}
               >
-                {/* REC Button */}
+                {/* REC/PAUSE Toggle Button */}
                 <button
-                  onClick={stopRecording}
-                  className="flex flex-col items-center justify-center"
+                  onClick={handleRecorderTap}
+                  className="flex items-center gap-2"
                   style={{
                     background: 'none',
                     border: 'none',
                     padding: 0,
-                    cursor: 'pointer',
-                    minWidth: '43px'
+                    cursor: 'pointer'
                   }}
                 >
                   <div
@@ -3552,18 +3551,40 @@ const Note = () => {
                       border: '2.4px solid white',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: '2.4px'
+                      justifyContent: 'center'
                     }}
                   >
-                    <div
-                      style={{
-                        width: '9.6px',
-                        height: '9.6px',
-                        borderRadius: '50%',
-                        backgroundColor: 'white'
-                      }}
-                    />
+                    {isPaused ? (
+                      // Show REC icon when paused
+                      <div
+                        style={{
+                          width: '9.6px',
+                          height: '9.6px',
+                          borderRadius: '50%',
+                          backgroundColor: 'white'
+                        }}
+                      />
+                    ) : (
+                      // Show PAUSE icon when recording
+                      <div style={{ display: 'flex', gap: '2.4px' }}>
+                        <div
+                          style={{
+                            width: '3.6px',
+                            height: '12px',
+                            backgroundColor: 'white',
+                            borderRadius: '1px'
+                          }}
+                        />
+                        <div
+                          style={{
+                            width: '3.6px',
+                            height: '12px',
+                            backgroundColor: 'white',
+                            borderRadius: '1px'
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
                   <span
                     style={{
@@ -3574,112 +3595,7 @@ const Note = () => {
                       textTransform: 'uppercase'
                     }}
                   >
-                    REC
-                  </span>
-                </button>
-
-                {/* PAUSE Button */}
-                <button
-                  onClick={handleRecorderTap}
-                  className="flex flex-col items-center justify-center"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                    minWidth: '36px'
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '28.8px',
-                      height: '28.8px',
-                      borderRadius: '50%',
-                      border: '2.4px solid white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '2.4px',
-                      marginBottom: '2.4px'
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '3.6px',
-                        height: '12px',
-                        backgroundColor: 'white',
-                        borderRadius: '1px'
-                      }}
-                    />
-                    <div
-                      style={{
-                        width: '3.6px',
-                        height: '12px',
-                        backgroundColor: 'white',
-                        borderRadius: '1px'
-                      }}
-                    />
-                  </div>
-                  <span
-                    style={{
-                      color: 'white',
-                      fontSize: '8px',
-                      fontFamily: 'Outfit',
-                      fontWeight: '500',
-                      textTransform: 'uppercase'
-                    }}
-                  >
-                    PAUSE
-                  </span>
-                </button>
-
-                {/* DONE Button */}
-                <button
-                  onClick={stopRecording}
-                  className="flex flex-col items-center justify-center"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    cursor: 'pointer',
-                    minWidth: '36px'
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '28.8px',
-                      height: '28.8px',
-                      borderRadius: '50%',
-                      border: '2.4px solid white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: '2.4px'
-                    }}
-                  >
-                    <svg
-                      width="14.4"
-                      height="14.4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="white"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="18 8 10 16 6 12" />
-                    </svg>
-                  </div>
-                  <span
-                    style={{
-                      color: 'white',
-                      fontSize: '8px',
-                      fontFamily: 'Outfit',
-                      fontWeight: '500',
-                      textTransform: 'uppercase'
-                    }}
-                  >
-                    DONE
+                    {isPaused ? 'REC' : 'PAUSE'}
                   </span>
                 </button>
 
@@ -3718,6 +3634,25 @@ const Note = () => {
                 >
                   {formatTime(recordingTime)}
                 </div>
+
+                {/* DONE Button */}
+                <button
+                  onClick={stopRecording}
+                  style={{
+                    border: '1.5px solid white',
+                    borderRadius: '12px',
+                    padding: '6px 16px',
+                    background: 'none',
+                    cursor: 'pointer',
+                    color: 'white',
+                    fontSize: '9.6px',
+                    fontFamily: 'Outfit',
+                    fontWeight: '500',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  DONE
+                </button>
               </div>
             </>
           )}
