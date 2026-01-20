@@ -4,6 +4,7 @@ import { User } from "@supabase/supabase-js";
 import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 import { SpeechRecognition } from '@capacitor-community/speech-recognition';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import DatePicker from '@/components/DatePicker';
 
 interface SavedNote {
@@ -1606,6 +1607,7 @@ const Note = () => {
   };
 
   const pauseRecording = async () => {
+    triggerHaptic();
     const isNativePlatform = Capacitor.isNativePlatform();
 
     // First, convert any interim text to final text (keep the text, just remove ||)
@@ -1663,6 +1665,7 @@ const Note = () => {
   };
 
   const resumeRecording = async () => {
+    triggerHaptic();
     const isNativePlatform = Capacitor.isNativePlatform();
 
     // Set recording state first
@@ -1782,6 +1785,7 @@ const Note = () => {
   };
 
   const stopRecording = async () => {
+    triggerHaptic();
     isRecordingRef.current = false;
 
     // Stop audio level monitoring
@@ -1870,7 +1874,19 @@ const Note = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Haptic feedback helper
+  const triggerHaptic = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await Haptics.impact({ style: ImpactStyle.Medium });
+      } catch (error) {
+        // Silently fail if haptics not available
+      }
+    }
+  };
+
   const openRecorder = () => {
+    triggerHaptic();
     setIsRecordingOpen(true);
     audioChunksRef.current = [];
     startRecording();
@@ -3506,7 +3522,7 @@ const Note = () => {
 
               {/* Horizontal Recording Bar */}
               <div
-                className="fixed z-50 flex items-center gap-3 px-5 py-4 rounded-full shadow-2xl"
+                className="fixed z-50 flex items-center gap-3 px-5 py-4 rounded-[20px] shadow-2xl"
                 style={{
                   bottom: `calc(30px + env(safe-area-inset-bottom))`,
                   left: '50%',

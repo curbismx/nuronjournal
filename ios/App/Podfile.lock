@@ -1,6 +1,8 @@
 PODS:
   - Capacitor (7.4.4):
     - CapacitorCordova
+  - CapacitorApp (7.1.1):
+    - Capacitor
   - CapacitorCamera (7.0.2):
     - Capacitor
   - CapacitorCommunitySpeechRecognition (7.0.1):
@@ -9,6 +11,8 @@ PODS:
   - CapacitorGeolocation (7.1.6):
     - Capacitor
     - IONGeolocationLib (= 1.0.1)
+  - CapacitorHaptics (8.0.0):
+    - Capacitor
   - IONGeolocationLib (1.0.1)
   - PurchasesHybridCommon (17.21.0):
     - RevenueCat (= 5.49.0)
@@ -19,10 +23,12 @@ PODS:
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
   - "CapacitorCamera (from `../../node_modules/@capacitor/camera`)"
   - "CapacitorCommunitySpeechRecognition (from `../../node_modules/@capacitor-community/speech-recognition`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorGeolocation (from `../../node_modules/@capacitor/geolocation`)"
+  - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
   - "RevenuecatPurchasesCapacitor (from `../../node_modules/@revenuecat/purchases-capacitor`)"
 
 SPEC REPOS:
@@ -34,6 +40,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   Capacitor:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorApp:
+    :path: "../../node_modules/@capacitor/app"
   CapacitorCamera:
     :path: "../../node_modules/@capacitor/camera"
   CapacitorCommunitySpeechRecognition:
@@ -42,20 +50,24 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorGeolocation:
     :path: "../../node_modules/@capacitor/geolocation"
+  CapacitorHaptics:
+    :path: "../../node_modules/@capacitor/haptics"
   RevenuecatPurchasesCapacitor:
     :path: "../../node_modules/@revenuecat/purchases-capacitor"
 
 SPEC CHECKSUMS:
   Capacitor: 09d9ff8e9618e8c4b3cab2bbee34a17215dd2fef
+  CapacitorApp: 3ddbd30ac18c321531c3da5e707b60873d89dd60
   CapacitorCamera: 6e18d54c8ab30d7dc7b8cd93d96f9b4f57e9202a
   CapacitorCommunitySpeechRecognition: b133f6f6ba84316639fc2fd1760a6d7ab99fb23b
   CapacitorCordova: bf648a636f3c153f652d312ae145fb508b6ffced
   CapacitorGeolocation: 0f143aec09027ee55ff5b0aa2e9e7fe9a180f01b
+  CapacitorHaptics: 7a77ce744c4b516b3ffd7f8c96d3de574d77b898
   IONGeolocationLib: 20f9d0248a0b5264511fb57a37e25dd2badf797a
   PurchasesHybridCommon: 988d080cd69d7aa0895e52f993dae53b45a0e929
   RevenueCat: fa9ad7e1c8817deddb737646946b6b3d8b25f54b
   RevenuecatPurchasesCapacitor: b6b2edc502f419a22facde96874a9ff0000bf15e
 
-PODFILE CHECKSUM: 6836b0c9258627893330cdac7a57bc35c708a2fd
+PODFILE CHECKSUM: 32ffeb6f73166dde536f710e02f331d7ea0fa8f5
 
 COCOAPODS: 1.16.2
