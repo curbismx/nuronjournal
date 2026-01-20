@@ -47,6 +47,7 @@ import recorderIcon from '@/assets/00recorder.png';
 import recorderIconGreen from '@/assets/00recorder_green.png';
 import recorderIconBlue from '@/assets/00recorder_blue.png';
 import recorderIconPink from '@/assets/00recorder_pink.png';
+import recordButton from '@/assets/recordbutton.png';
 import moveIcon from '@/assets/move.png';
 import folderIcon from '@/assets/folder_icon.png';
 import folderArrow from '@/assets/folder_arrow.png';
@@ -3543,29 +3544,29 @@ const Note = () => {
                     cursor: 'pointer'
                   }}
                 >
-                  <div
-                    style={{
-                      width: '28.8px',
-                      height: '28.8px',
-                      borderRadius: '50%',
-                      border: '2.4px solid white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    {isPaused ? (
-                      // Show REC icon when paused
-                      <div
-                        style={{
-                          width: '9.6px',
-                          height: '9.6px',
-                          borderRadius: '50%',
-                          backgroundColor: 'white'
-                        }}
-                      />
-                    ) : (
-                      // Show PAUSE icon when recording
+                  {isPaused ? (
+                    // Show REC icon when paused - using recordbutton.png
+                    <img
+                      src={recordButton}
+                      alt="REC"
+                      style={{
+                        width: '28.8px',
+                        height: '28.8px'
+                      }}
+                    />
+                  ) : (
+                    // Show PAUSE icon when recording
+                    <div
+                      style={{
+                        width: '28.8px',
+                        height: '28.8px',
+                        borderRadius: '50%',
+                        border: '2.4px solid white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
                       <div style={{ display: 'flex', gap: '2.4px' }}>
                         <div
                           style={{
@@ -3584,8 +3585,8 @@ const Note = () => {
                           }}
                         />
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                   <span
                     style={{
                       color: 'white',
