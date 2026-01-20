@@ -1008,8 +1008,8 @@ const Note = () => {
 
               // Smooth interpolation for better visual feedback
               setAudioLevel(prev => {
-                // Smooth interpolation: 80% new value, 20% previous (faster but still smooth)
-                const newLevel = prev * 0.2 + normalizedLevel * 0.8;
+                // Smooth interpolation: 90% new value, 10% previous (faster response)
+                const newLevel = prev * 0.1 + normalizedLevel * 0.9;
                 return newLevel;
               });
 
@@ -1368,8 +1368,8 @@ const Note = () => {
 
             // Smooth interpolation for better visual feedback
             setAudioLevel(prev => {
-              // Smooth interpolation: 80% new value, 20% previous (faster but still smooth)
-              const newLevel = prev * 0.2 + normalizedLevel * 0.8;
+              // Smooth interpolation: 90% new value, 10% previous (faster response)
+              const newLevel = prev * 0.1 + normalizedLevel * 0.9;
               return newLevel;
             });
 
@@ -1761,8 +1761,8 @@ const Note = () => {
 
           // Smooth interpolation for better visual feedback
           setAudioLevel(prev => {
-            // Smooth interpolation: 80% new value, 20% previous (faster but still smooth)
-            const newLevel = prev * 0.2 + normalizedLevel * 0.8;
+            // Smooth interpolation: 90% new value, 10% previous (faster response)
+            const newLevel = prev * 0.1 + normalizedLevel * 0.9;
             return newLevel;
           });
 
@@ -3696,10 +3696,10 @@ const Note = () => {
                       key={i}
                       style={{
                         width: '2.4px',
-                        height: `${7.2 + (isPaused ? 0 : Math.random() * 14.4 + audioLevel * 0.12)}px`,
+                        height: `${7.2 + (isPaused ? 0 : Math.random() * 14.4 + audioLevel * 0.3)}px`,
                         backgroundColor: 'white',
                         borderRadius: '1px',
-                        transition: 'height 0.1s ease-out'
+                        transition: 'height 0.05s ease-out'
                       }}
                     />
                   ))}
