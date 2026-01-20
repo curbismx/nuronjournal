@@ -3527,7 +3527,7 @@ const Note = () => {
                   bottom: `calc(30px + env(safe-area-inset-bottom))`,
                   left: '50%',
                   transform: 'translateX(-50%)',
-                  backgroundColor: '#E57373',
+                  backgroundColor: '#E56157',
                   minWidth: '336px',
                   maxWidth: '90vw'
                 }}
