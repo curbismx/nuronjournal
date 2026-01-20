@@ -3641,7 +3641,7 @@ const Note = () => {
                   onClick={stopRecording}
                   style={{
                     border: '1.5px solid white',
-                    borderRadius: '12px',
+                    borderRadius: '8px',
                     padding: '6px 16px',
                     background: 'none',
                     cursor: 'pointer',
