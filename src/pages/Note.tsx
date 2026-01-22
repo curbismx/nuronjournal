@@ -328,6 +328,9 @@ const Note = () => {
   const audioUrlsRef = useRef<string[]>([]);
   const contentBlocksRef = useRef<ContentBlock[]>([]);
   const isSavingRef = useRef(false);
+  
+  // Ref to always have the latest saveNote function (avoids stale closure in event handlers)
+  const saveNoteRef = useRef<() => Promise<void>>();
 
   // Initialize audioUrlsRef when audioUrls state is set
   useEffect(() => {
@@ -403,8 +406,8 @@ const Note = () => {
               streamRef.current = null;
             }
           }
-          // Save current note
-          saveNote();
+          // Save current note - use ref to get latest saveNote
+          saveNoteRef.current?.();
         }
       };
 
@@ -561,7 +564,8 @@ const Note = () => {
         handleMenuAction(event.data.action);
       }
       if (event.data?.type === 'force-save') {
-        saveNote();
+        // Use ref to call the LATEST saveNote, not a stale closure
+        saveNoteRef.current?.();
       }
     };
 
@@ -574,7 +578,8 @@ const Note = () => {
     if (!isEmbedded) return;
 
     const handleBeforeUnload = () => {
-      saveNote();
+      // Use ref to call the LATEST saveNote, not a stale closure
+      saveNoteRef.current?.();
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -2494,6 +2499,9 @@ const Note = () => {
       isSavingRef.current = false;
     }
   };
+
+  // Keep ref updated with latest saveNote function
+  saveNoteRef.current = saveNote;
 
   // Prevent body scroll when viewer is open
   useEffect(() => {
