@@ -2444,7 +2444,7 @@ const Note = () => {
       } else {
         // Not logged in - save to localStorage
         const notes = JSON.parse(localStorage.getItem('nuron-notes') || '[]');
-        const existingIndex = notes.findIndex((n: any) => n.id === noteIdRef.current);
+        const existingIndex = notes.findIndex((n: any) => n.id === noteData.id);
         const noteDataWithAudio = {
           ...noteData,
           audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : undefined
@@ -2468,7 +2468,7 @@ const Note = () => {
         if (!noteExistsInCache) {
           allCached.unshift({
             ...noteData,
-            folder_id: currentFolderId || initialFolderId || localStorage.getItem('nuron-current-folder-id') || null
+            folder_id: capturedFolderId || localStorage.getItem('nuron-current-folder-id') || null
           });
           localStorage.setItem('nuron-notes-cache', JSON.stringify(allCached));
         }
