@@ -329,8 +329,9 @@ const Note = () => {
   const contentBlocksRef = useRef<ContentBlock[]>([]);
   const isSavingRef = useRef(false);
   
-  // Ref to always have the latest saveNote function (avoids stale closure in event handlers)
+  // Refs to always have the latest functions (avoids stale closure in event handlers with [] deps)
   const saveNoteRef = useRef<() => Promise<void>>();
+  const handleMenuActionRef = useRef<(action: string) => void>();
 
   // Initialize audioUrlsRef when audioUrls state is set
   useEffect(() => {
@@ -561,7 +562,8 @@ const Note = () => {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'menu-action') {
-        handleMenuAction(event.data.action);
+        // Use ref to call the LATEST handleMenuAction, not a stale closure
+        handleMenuActionRef.current?.(event.data.action);
       }
       if (event.data?.type === 'force-save') {
         // Use ref to call the LATEST saveNote, not a stale closure
@@ -2769,6 +2771,9 @@ const Note = () => {
     }
     setMenuOpen(false);
   };
+
+  // Keep ref updated with latest handleMenuAction function
+  handleMenuActionRef.current = handleMenuAction;
 
   const deleteNote = async () => {
     isDeletedRef.current = true;
