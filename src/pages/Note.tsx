@@ -2303,6 +2303,15 @@ const Note = () => {
     isSavingRef.current = true;
 
     try {
+      // CRITICAL FIX: Capture ALL values at the VERY START before any async operations
+      // This prevents state/ref changes during await from corrupting the save
+      const capturedNoteId = noteIdRef.current;
+      const capturedPlaceholderId = currentPlaceholderId || placeholderId;
+      const capturedFolderId = currentFolderId || initialFolderId;
+      const capturedTitle = noteTitle;
+      const capturedCreatedAt = existingCreatedAt.current || new Date().toISOString();
+      const capturedWeather = weather ? { temp: weather.temp, weatherCode: weather.weatherCode } : undefined;
+      const capturedNoteDate = noteDate;
 
       // Use refs to get the most up-to-date state (fixes stale closure issue)
       const currentContentBlocks = contentBlocksRef.current;
@@ -2331,7 +2340,7 @@ const Note = () => {
       const hasAudio = currentAudioUrls.length > 0 || audioUrls.length > 0;
 
       // Save if there's title, content, images, or audio
-      if (!noteTitle.trim() && !noteContent.trim() && !hasImages && !hasAudio) {
+      if (!capturedTitle.trim() && !noteContent.trim() && !hasImages && !hasAudio) {
         console.log('No content to save, returning early');
         return;
       }
@@ -2339,12 +2348,12 @@ const Note = () => {
       console.log('Proceeding to save...');
 
       const noteData = {
-        id: noteIdRef.current,
-        title: noteTitle,
+        id: capturedNoteId,
+        title: capturedTitle,
         contentBlocks: currentContentBlocks,
-        createdAt: existingCreatedAt.current || new Date().toISOString(),
+        createdAt: capturedCreatedAt,
         updatedAt: new Date().toISOString(),
-        weather: weather ? { temp: weather.temp, weatherCode: weather.weatherCode } : undefined,
+        weather: capturedWeather,
         audio_data: currentAudioUrls.length > 0 ? JSON.stringify(currentAudioUrls) : undefined,
       };
 
@@ -2359,7 +2368,7 @@ const Note = () => {
       if (session?.user) {
         // Logged in - save to Supabase
         // Check if this is a new note (placeholder) or existing note
-        const isNewNote = (currentPlaceholderId || placeholderId) && (currentPlaceholderId || placeholderId)?.startsWith('new-');
+        const isNewNote = capturedPlaceholderId && capturedPlaceholderId.startsWith('new-');
 
         // Build the upsert object
         const upsertData: any = {
@@ -2378,8 +2387,8 @@ const Note = () => {
         if (isNewNote) {
           // In embedded mode, ONLY use folder_id from postMessage - localStorage can be stale
           const folderId = isEmbedded
-            ? (currentFolderId || initialFolderId)
-            : (currentFolderId || initialFolderId || localStorage.getItem('nuron-current-folder-id'));
+            ? capturedFolderId
+            : (capturedFolderId || localStorage.getItem('nuron-current-folder-id'));
           upsertData.folder_id = folderId && folderId !== 'local-notes' ? folderId : null;
           upsertData.is_published = false;
         }
@@ -2463,20 +2472,20 @@ const Note = () => {
         // In embedded mode, use ONLY postMessage data for folder_id - no localStorage fallback
         // localStorage can be stale if user switched folders quickly
         const noteFolderId = isEmbedded
-          ? (currentFolderId || initialFolderId || null)
-          : (currentFolderId || initialFolderId || localStorage.getItem('nuron-current-folder-id') || null);
+          ? (capturedFolderId || null)
+          : (capturedFolderId || localStorage.getItem('nuron-current-folder-id') || null);
 
         window.parent.postMessage({
           type: 'note-saved',
           noteId: noteData.id,
-          placeholderId: (currentPlaceholderId || placeholderId),
+          placeholderId: capturedPlaceholderId,
           noteData: {
             id: noteData.id,
-            title: noteTitle,
-            contentBlocks: contentBlocks,
-            createdAt: existingCreatedAt.current || noteDate.toISOString(),
-            updatedAt: new Date().toISOString(),
-            weather: weather,
+            title: noteData.title,
+            contentBlocks: noteData.contentBlocks,
+            createdAt: noteData.createdAt,
+            updatedAt: noteData.updatedAt,
+            weather: noteData.weather,
             folder_id: noteFolderId
           }
         }, '*');
@@ -2525,15 +2534,23 @@ const Note = () => {
     if (!isEmbedded) return;
     if (isTransitioningRef.current) return; // Don't send updates during note switch
 
+    // CRITICAL FIX: Capture ALL values NOW, not at timer-fire time
+    // This prevents sending old content with new note's ID when switching notes
+    const capturedNoteId = noteIdRef.current;
+    const capturedPlaceholderId = currentPlaceholderId || placeholderId;
+    const capturedTitle = noteTitle;
+    const capturedContentBlocks = contentBlocks;
+    const capturedCreatedAt = existingCreatedAt.current || noteDate.toISOString();
+
     const sendUpdate = () => {
       if (isTransitioningRef.current) return; // Double-check before sending
       window.parent.postMessage({
         type: 'note-content-update',
-        noteId: noteIdRef.current,
-        placeholderId: currentPlaceholderId || placeholderId,
-        title: noteTitle,
-        contentBlocks: contentBlocks,
-        createdAt: existingCreatedAt.current || noteDate.toISOString()
+        noteId: capturedNoteId,
+        placeholderId: capturedPlaceholderId,
+        title: capturedTitle,
+        contentBlocks: capturedContentBlocks,
+        createdAt: capturedCreatedAt
       }, '*');
     };
 
