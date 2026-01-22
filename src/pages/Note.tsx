@@ -811,7 +811,11 @@ const Note = () => {
           const imageBlocks = prev.filter(b => b.type === 'image');
           // Replace all text blocks with the rewritten content as a single text block
           const rewrittenTextBlock = { type: 'text' as const, id: crypto.randomUUID(), content: data.rewrittenText };
-          // Combine: rewritten text first, then images (or you could preserve order - this is simpler)
+          // Combine: rewritten text first, then images, then empty text block for typing below
+          if (imageBlocks.length > 0) {
+            const trailingTextBlock = { type: 'text' as const, id: crypto.randomUUID(), content: '' };
+            return [rewrittenTextBlock, ...imageBlocks, trailingTextBlock];
+          }
           return [rewrittenTextBlock, ...imageBlocks];
         });
 
