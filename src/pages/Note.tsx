@@ -1910,9 +1910,9 @@ const Note = () => {
     setIsPaused(false);
     setIsRecordingOpen(false);
 
-    // Save the note with transcribed text
+    // Save the note with transcribed text - use ref to get latest saveNote
     setTimeout(() => {
-      saveNote();
+      saveNoteRef.current?.();
     }, 100);
   };
 
@@ -2003,7 +2003,7 @@ const Note = () => {
     // Use requestAnimationFrame to ensure state updates are processed
     requestAnimationFrame(() => {
       setTimeout(() => {
-        saveNote();
+        saveNoteRef.current?.();
       }, 50);
     });
   };
@@ -2599,9 +2599,9 @@ const Note = () => {
       }, '*');
     }
 
-    // Also save to Supabase after a short delay
-    setTimeout(async () => {
-      await saveNote();
+    // Also save to Supabase after a short delay - use ref to get latest saveNote
+    setTimeout(() => {
+      saveNoteRef.current?.();
     }, 100);
   };
 
