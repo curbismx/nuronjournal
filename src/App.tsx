@@ -50,11 +50,14 @@ const HomeRoute = () => {
         localStorage.removeItem('nuron-notes');
       }
 
+      // Check if onboarding was completed
+      const onboardingComplete = localStorage.getItem('nuron-onboarding-complete') === 'true';
+
       // Check for authenticated session
       const { data: { session } } = await supabase.auth.getSession();
       
       // Determine whether to show app or landing page
-      setShouldShowApp(!!session || hasNotes || showAuth);
+      setShouldShowApp(!!session || hasNotes || showAuth || onboardingComplete);
       setIsLoading(false);
     };
 
