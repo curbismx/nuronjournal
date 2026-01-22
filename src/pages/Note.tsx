@@ -1282,9 +1282,9 @@ const Note = () => {
                 setContentBlocks(prev => prev.filter(b => b.id !== transcriptionPlaceholderId));
               }
 
-              // Save note after audio is added
+              // Save note after audio is added - use ref to get latest saveNote
               setTimeout(() => {
-                saveNote();
+                saveNoteRef.current?.();
               }, 100);
             }
 
@@ -2348,7 +2348,7 @@ const Note = () => {
       console.log('contentBlocks:', currentContentBlocks);
 
       const hasImages = currentContentBlocks.filter(b => b.type === 'image').length > 0;
-      const hasAudio = currentAudioUrls.length > 0 || audioUrls.length > 0;
+      const hasAudio = currentAudioUrls.length > 0;
 
       // Save if there's title, content, images, or audio
       if (!capturedTitle.trim() && !noteContent.trim() && !hasImages && !hasAudio) {
