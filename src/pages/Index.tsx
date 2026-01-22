@@ -390,6 +390,10 @@ const Index = () => {
     const stored = localStorage.getItem('nuron-show-weather');
     return stored !== null ? JSON.parse(stored) : true; // Default to ON
   });
+  const [autoRecordNewNote, setAutoRecordNewNote] = useState(() => {
+    const stored = localStorage.getItem('nuron-auto-record-new-note');
+    return stored !== null ? JSON.parse(stored) : false; // Default OFF
+  });
   const [theme, setTheme] = useState<'default' | 'green' | 'blue' | 'pink'>(() => {
     const stored = localStorage.getItem('nuron-theme');
     return (stored as 'default' | 'green' | 'blue' | 'pink') || 'default';
@@ -561,6 +565,10 @@ const Index = () => {
   useEffect(() => {
     localStorage.setItem('nuron-show-weather', JSON.stringify(showWeatherOnNotes));
   }, [showWeatherOnNotes]);
+
+  useEffect(() => {
+    localStorage.setItem('nuron-auto-record-new-note', JSON.stringify(autoRecordNewNote));
+  }, [autoRecordNewNote]);
 
   useEffect(() => {
     localStorage.setItem('nuron-theme', theme);
@@ -3815,6 +3823,19 @@ const Index = () => {
                 </button>
               </div>
 
+              {/* Auto-record new note toggle */}
+              <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
+                <span className="text-[20px] font-light">Auto-record on new note</span>
+                <button
+                  onClick={() => setAutoRecordNewNote(!autoRecordNewNote)}
+                  className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${autoRecordNewNote ? 'bg-green-500' : 'bg-white/20'}`}
+                >
+                  <span
+                    className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${autoRecordNewNote ? 'translate-x-[20px]' : 'translate-x-0'}`}
+                  />
+                </button>
+              </div>
+
               <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
                 <span className="text-[20px] font-light">Theme colour</span>
                 <div className="flex items-center gap-3">
@@ -3979,6 +4000,19 @@ const Index = () => {
                 </button>
               </div>
 
+              {/* Auto-record new note toggle */}
+              <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
+                <span className="text-[20px] font-light">Auto-record on new note</span>
+                <button
+                  onClick={() => setAutoRecordNewNote(!autoRecordNewNote)}
+                  className={`relative w-[51px] h-[31px] rounded-full transition-colors duration-200 ${autoRecordNewNote ? 'bg-green-500' : 'bg-white/20'}`}
+                >
+                  <span
+                    className={`absolute top-[2px] left-[2px] w-[27px] h-[27px] bg-white rounded-full shadow transition-transform duration-200 ${autoRecordNewNote ? 'translate-x-[20px]' : 'translate-x-0'}`}
+                  />
+                </button>
+              </div>
+
               <div className="bg-white/5 border border-white/20 text-white rounded-[10px] px-4 py-4 flex items-center justify-between">
                 <span className="text-[20px] font-light">Theme colour</span>
                 <div className="flex items-center gap-3">
@@ -4129,7 +4163,7 @@ const Index = () => {
       {/* Floating add button */}
       {!showSettings && !showFolders && (
         <button
-          onClick={() => navigate('/note')}
+          onClick={() => navigate(autoRecordNewNote ? '/note?autorecord=true' : '/note')}
           className="fixed z-50 cursor-pointer p-0 border-0 bg-transparent"
           style={{
             bottom: `calc(30px + env(safe-area-inset-bottom))`,
