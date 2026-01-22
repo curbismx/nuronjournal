@@ -49,6 +49,16 @@ const HomeRoute = () => {
         // Invalid JSON in localStorage - clear corrupted data
         localStorage.removeItem('nuron-notes');
       }
+      
+      // Also check the notes cache (used during note creation before full save)
+      if (!hasNotes) {
+        try {
+          const cachedNotes = localStorage.getItem('nuron-notes-cache');
+          hasNotes = cachedNotes ? JSON.parse(cachedNotes).length > 0 : false;
+        } catch {
+          localStorage.removeItem('nuron-notes-cache');
+        }
+      }
 
       // Check if onboarding was completed
       const onboardingComplete = localStorage.getItem('nuron-onboarding-complete') === 'true';
