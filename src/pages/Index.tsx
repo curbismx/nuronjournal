@@ -1571,9 +1571,10 @@ const Index = () => {
 
 
   // Redirect logged-out users with no notes to landing page (mobile WEB only, not native apps)
-  if (savedNotes.length === 0 && !user && !isInitializing && !isDesktop && !Capacitor.isNativePlatform()) {
-    return <Navigate to="/welcome" replace />;
-  }
+  // TEMPORARILY DISABLED FOR TESTING - Re-enable before production
+  // if (savedNotes.length === 0 && !user && !isInitializing && !isDesktop && !Capacitor.isNativePlatform()) {
+  //   return <Navigate to="/welcome" replace />;
+  // }
 
   // DESKTOP LAYOUT - 3 columns side by side
   if (isDesktop) {
