@@ -138,6 +138,7 @@ const Note = () => {
   const initialFolderId = new URLSearchParams(window.location.search).get('folder_id');
   const placeholderId = new URLSearchParams(window.location.search).get('placeholder');
   const initialCreatedAt = new URLSearchParams(window.location.search).get('created');
+  const autoRecordOnOpen = new URLSearchParams(window.location.search).get('autorecord') === 'true';
   const noteIdRef = useRef<string>(
     (id && !id.startsWith('new-')) ? id : crypto.randomUUID()
   );
@@ -445,6 +446,18 @@ const Note = () => {
       setIsReady(true);
     }
   }, [isEmbedded]);
+
+  // Auto-start recording on new note if setting is enabled (mobile only)
+  useEffect(() => {
+    if (autoRecordOnOpen && !id && !isEmbedded && isReady) {
+      // Small delay to ensure UI is ready
+      const timer = setTimeout(() => {
+        setIsRecordingOpen(true);
+        startRecording();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [autoRecordOnOpen, id, isEmbedded, isReady]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
