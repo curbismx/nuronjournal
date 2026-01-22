@@ -2271,10 +2271,12 @@ const Note = () => {
   useEffect(() => {
     if (isTransitioningRef.current) return; // Don't auto-generate during note switch
     const noteContent = getNoteContent();
+    // CRITICAL: noteTitle must be in dependency array to avoid stale closure
+    // Only generate if all conditions are met with CURRENT values
     if (noteContent.trim().split(/\s+/).length >= 10 && !titleGenerated && !titleManuallyEdited && !noteTitle) {
       generateTitle(noteContent);
     }
-  }, [contentBlocks, titleGenerated, titleManuallyEdited]);
+  }, [contentBlocks, titleGenerated, titleManuallyEdited, noteTitle]);
 
 
   // Click outside handler to close menu
