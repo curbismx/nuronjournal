@@ -164,6 +164,12 @@ const Index = () => {
 
 
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
+  
+  // CRITICAL: Keep a ref of savedNotes for click handlers to avoid stale closure issues
+  const savedNotesRef = useRef<SavedNote[]>([]);
+  useEffect(() => {
+    savedNotesRef.current = savedNotes;
+  }, [savedNotes]);
 
   // Listen for postMessage from iframe when note is saved
   // Cleanup if user clicks away from new note without saving
@@ -199,7 +205,8 @@ const Index = () => {
           (n.id === placeholderId || n.id === noteId)
             ? {
               ...n,
-              title: title ?? n.title,
+              // Use || not ?? - empty string should fall back to existing title
+              title: title || n.title,
               contentBlocks: contentBlocks || n.contentBlocks,
               createdAt: createdAt || n.createdAt
             }
@@ -246,7 +253,8 @@ const Index = () => {
             ? {
               ...n,
               id: noteId,
-              title: noteData?.title ?? n.title,
+              // Use || not ?? - empty string should fall back to existing title
+              title: noteData?.title || n.title,
               contentBlocks: noteData?.contentBlocks || n.contentBlocks,
               createdAt: noteData?.createdAt || n.createdAt,
               updatedAt: noteData?.updatedAt || n.updatedAt,
@@ -301,7 +309,8 @@ const Index = () => {
             n.id === noteData.id
               ? {
                 ...n,
-                title: noteData.title ?? n.title,
+                // Use || not ?? - empty string should fall back to existing title
+                title: noteData.title || n.title,
                 contentBlocks: noteData.contentBlocks || n.contentBlocks,
                 createdAt: noteData.createdAt || n.createdAt,
                 updatedAt: noteData.updatedAt || n.updatedAt,
@@ -1813,7 +1822,16 @@ const Index = () => {
                         onClick={async () => {
                           // Save any new note before switching folders
                           if (desktopSelectedNoteId?.startsWith('new-')) {
-                            const newNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
+                            // CRITICAL: Request iframe to send its latest content IMMEDIATELY
+                            const iframe = document.getElementById('note-editor-iframe') as HTMLIFrameElement;
+                            if (iframe?.contentWindow) {
+                              iframe.contentWindow.postMessage({ type: 'request-content-sync' }, '*');
+                              // Small delay to allow sync message to be processed
+                              await new Promise(resolve => setTimeout(resolve, 50));
+                            }
+                            
+                            // Use savedNotesRef to get the LATEST notes (avoids stale closure)
+                            const newNote = savedNotesRef.current.find(n => n.id === desktopSelectedNoteId);
                             if (newNote) {
                               const realId = await saveNewNoteDirectly(newNote);
                               if (realId) {
@@ -1958,7 +1976,17 @@ const Index = () => {
                       onClick={async () => {
                         // If already on a new note, save it first
                         if (desktopSelectedNoteId?.startsWith('new-')) {
-                          const newNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
+                          // CRITICAL: Request iframe to send its latest content IMMEDIATELY
+                          // This ensures we have the latest title/content before saving
+                          const iframe = document.getElementById('note-editor-iframe') as HTMLIFrameElement;
+                          if (iframe?.contentWindow) {
+                            iframe.contentWindow.postMessage({ type: 'request-content-sync' }, '*');
+                            // Small delay to allow sync message to be processed
+                            await new Promise(resolve => setTimeout(resolve, 50));
+                          }
+                          
+                          // Use savedNotesRef to get the LATEST notes (avoids stale closure)
+                          const newNote = savedNotesRef.current.find(n => n.id === desktopSelectedNoteId);
                           if (newNote) {
                             const realId = await saveNewNoteDirectly(newNote);
                             if (realId) {
@@ -2068,7 +2096,16 @@ const Index = () => {
                           onClick={async () => {
                             // If switching away from a new note, save it directly before switching
                             if (desktopSelectedNoteId?.startsWith('new-') && desktopSelectedNoteId !== note.id) {
-                              const newNote = savedNotes.find(n => n.id === desktopSelectedNoteId);
+                              // CRITICAL: Request iframe to send its latest content IMMEDIATELY
+                              const iframe = document.getElementById('note-editor-iframe') as HTMLIFrameElement;
+                              if (iframe?.contentWindow) {
+                                iframe.contentWindow.postMessage({ type: 'request-content-sync' }, '*');
+                                // Small delay to allow sync message to be processed
+                                await new Promise(resolve => setTimeout(resolve, 50));
+                              }
+                              
+                              // Use savedNotesRef to get the LATEST notes (avoids stale closure)
+                              const newNote = savedNotesRef.current.find(n => n.id === desktopSelectedNoteId);
                               if (newNote) {
                                 const realId = await saveNewNoteDirectly(newNote);
                                 if (realId) {

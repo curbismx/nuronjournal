@@ -674,6 +674,29 @@ const Note = () => {
     return () => window.removeEventListener('message', handleLoadNote);
   }, [embeddedMode]);
 
+  // CRITICAL: Handle request-content-sync from parent
+  // This allows parent to request immediate sync of current content before saving
+  useEffect(() => {
+    if (!embeddedMode) return;
+    
+    const handleContentSyncRequest = (event: MessageEvent) => {
+      if (event.data?.type !== 'request-content-sync') return;
+      
+      // Immediately send current content to parent (no debounce)
+      window.parent.postMessage({
+        type: 'note-content-update',
+        noteId: noteIdRef.current,
+        placeholderId: currentPlaceholderId || placeholderId,
+        title: noteTitle,
+        contentBlocks: contentBlocksRef.current,
+        createdAt: existingCreatedAt.current || noteDate.toISOString()
+      }, '*');
+    };
+    
+    window.addEventListener('message', handleContentSyncRequest);
+    return () => window.removeEventListener('message', handleContentSyncRequest);
+  }, [embeddedMode, noteTitle, currentPlaceholderId, placeholderId, noteDate]);
+
   const handleMoveNote = async (folderId: string) => {
     setSelectedMoveFolder(folderId);
 
