@@ -1,203 +1,181 @@
 
 
-## Comprehensive Data Persistence Overhaul
+## Full-Screen Debug Log Viewer
 
-This plan implements a bulletproof data persistence system to prevent image loss and data corruption. The root cause of issues is the lack of a unified save/verification system across multiple data channels (React state, refs, localStorage, Supabase, postMessage).
+Replace the current "View Debug Logs" button (which prints to console) with a full-screen overlay that displays logs directly in the app, making it usable on mobile devices.
 
 ---
 
 ## Overview
 
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                   Current Problem                                │
-├─────────────────────────────────────────────────────────────────┤
-│  Multiple save paths:                                            │
-│  • React state updates → useEffect auto-save                    │
-│  • Direct saveNote() calls                                       │
-│  • postMessage to parent                                         │
-│  • localStorage writes                                           │
-│                                                                  │
-│  No verification that data actually persisted                   │
-│  No recovery mechanism for failed saves                         │
-│  Refs can be out of sync with state                             │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   Solution                                       │
-├─────────────────────────────────────────────────────────────────┤
-│  1. Create centralized dataPersistence service                  │
-│  2. Backup-first approach (localStorage before Supabase)        │
-│  3. Verify saves by reading back from database                  │
-│  4. Keep backups until verification succeeds                    │
-│  5. Recover lost data on app startup                            │
-│  6. Sync refs immediately after state changes                   │
-│  7. Log everything for debugging                                │
-└─────────────────────────────────────────────────────────────────┘
-```
+The debug log viewer will be a full-screen overlay that:
+- Shows all log entries from `nuron-debug-logs` localStorage key
+- Displays timestamp, operation name, and data for each entry
+- Has a back button to close the viewer
+- Has a clear button to delete all logs
+- Uses the same visual styling as other settings panels
 
 ---
 
-## Part 1: Create Data Persistence Service
+## Changes Required
 
-### New File: `src/lib/dataPersistence.ts`
+### File 1: `src/lib/dataPersistence.ts`
 
-This centralized service handles ALL data operations:
-
-| Function | Purpose |
-|----------|---------|
-| `saveNote()` | Single entry point for all saves with backup, retry, and verification |
-| `loadNote()` | Multi-source loading with fallback chain |
-| `runIntegrityCheck()` | Startup recovery from backups |
-| `getDebugLogs()` | Retrieve last 50 log entries |
-| `clearDebugLogs()` | Clear debug history |
-
-**Key Features:**
-- Logs every operation to `nuron-debug-logs` localStorage (last 50 entries)
-- Always creates backup in localStorage BEFORE attempting Supabase save
-- Retries Supabase saves up to 3 times with exponential backoff
-- VERIFIES each save by reading back and comparing image counts
-- Only removes backup after verified success
-- Fallback chain: Supabase → cache → localStorage → backup
+No changes needed - `getDebugLogs()` and `clearDebugLogs()` already exist.
 
 ---
 
-## Part 2: Update Note.tsx
+### File 2: `src/pages/Index.tsx`
 
-### 2.1 Import the Service
+#### 2.1 Add State Variable
+
+Add a new state variable near other show/hide states (around line 351):
+
 ```typescript
-import { saveNote as persistNote, loadNote as fetchNote, runIntegrityCheck } from '@/lib/dataPersistence';
+const [showDebugLogs, setShowDebugLogs] = useState(false);
+const [debugLogs, setDebugLogs] = useState<any[]>([]);
 ```
 
-### 2.2 Replace saveNote Function (around line 2311)
+#### 2.2 Add Import for clearDebugLogs
 
-The new `saveNote` function will:
-1. Sync refs with current state BEFORE capturing values
-2. Create backup immediately
-3. Use the centralized `persistNote()` function
-4. Handle success/failure appropriately
-5. Notify parent window as before
+Update the import from dataPersistence (line 78):
 
-### 2.3 Add Explicit Save After Image Insert
-
-After `handleImageSelect` completes (around line 2700), add:
 ```typescript
-// EXPLICIT SAVE after image is added
-setTimeout(() => {
-  console.log('[Note] Explicit save after image add');
-  saveNoteRef.current?.();
-}, 200);
+import { runIntegrityCheck, getDebugLogs, clearDebugLogs } from '@/lib/dataPersistence';
 ```
 
-### 2.4 Sync contentBlocksRef Immediately
+#### 2.3 Update Back Button Logic
 
-Update these locations to sync the ref immediately after setState:
+Update the back button click handler (around line 3461-3472) to handle the debug logs view:
 
-| Location | Line | Context |
-|----------|------|---------|
-| Image insert at cursor | ~2666 | `setContentBlocks(newBlocks); contentBlocksRef.current = newBlocks;` |
-| Image append to end | ~2685 | After setContentBlocks in fallback path |
-| After audio recording | ~1157 | After transcription content update |
-| After rewrite | ~809 | After rewritten content replaces text blocks |
-
-### 2.5 Add Integrity Check on Startup
-
-New useEffect after other initialization effects:
 ```typescript
-useEffect(() => {
-  const checkIntegrity = async () => {
-    const { recovered, issues } = await runIntegrityCheck();
-    if (recovered > 0) {
-      toast.success(`Recovered ${recovered} note(s) from backup`);
-    }
-  };
-  
-  if (!isEmbedded) {
-    checkIntegrity();
-  }
-}, []);
+onClick={() => {
+  if (showDebugLogs) {
+    setShowDebugLogs(false);
+  } else if (showChangePassword) {
+    setShowChangePassword(false);
+  } else if (showAccountDetails) {
+    // ... rest of existing logic
 ```
 
----
+#### 2.4 Update Header Title
 
-## Part 3: Update Index.tsx
+Update the header title logic (around line 3491) to show "DEBUG LOGS" when active:
 
-### 3.1 Import the Service
 ```typescript
-import { runIntegrityCheck, getDebugLogs } from '@/lib/dataPersistence';
+{showDebugLogs ? 'DEBUG LOGS' : showChangePassword ? 'CHANGE PASSWORD' : ...}
 ```
 
-### 3.2 Add Integrity Check on Startup
+#### 2.5 Update Back Icon Visibility
 
-New useEffect triggered when user is authenticated:
+Update the condition for showing the back icon (around line 3476):
+
 ```typescript
-useEffect(() => {
-  const checkIntegrity = async () => {
-    if (!user) return;
-    
-    const { recovered, issues } = await runIntegrityCheck();
-    
-    if (recovered > 0) {
-      toast.success(`Recovered ${recovered} note(s) from backup`);
-      // Reload notes to show recovered content
-      const stored = localStorage.getItem('nuron-notes-cache');
-      if (stored) {
-        setSavedNotes(JSON.parse(stored));
-      }
-    }
-  };
-  
-  checkIntegrity();
-}, [user]);
+{showDebugLogs || showSettings || showAccountDetails || showChangePassword || showFolders ? (
 ```
 
-### 3.3 Add Debug Log Viewer (Optional)
+#### 2.6 Replace Debug Logs Button
 
-Add to Settings section for troubleshooting:
+Replace the existing button (lines 3826-3844) with one that opens the viewer:
+
 ```typescript
 <button
   onClick={() => {
-    const logs = getDebugLogs();
-    console.log('=== NURON DEBUG LOGS ===');
-    logs.forEach((log: any) => console.log(log));
-    toast.info(`${logs.length} log entries printed to console`);
+    setDebugLogs(getDebugLogs());
+    setShowDebugLogs(true);
   }}
-  className="w-full py-3 px-4 rounded-xl bg-white/10 text-white/80 text-left font-outfit"
+  className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[20px] font-light"
 >
-  View Debug Logs (Console)
+  <span>View Debug Logs</span>
+  <img src={accountArrow} alt="" className="w-[20px] h-[20px] opacity-60" />
 </button>
+```
+
+#### 2.7 Add Debug Logs Panel
+
+Add a new panel in the settings area (after the showSettings panel, around line 3631). This panel will display when `showDebugLogs` is true:
+
+```typescript
+{/* Debug Logs panel */}
+<div 
+  className={`absolute inset-x-0 top-[150px] bottom-0 px-8 pt-[80px] transition-opacity duration-200 overflow-hidden flex flex-col ${showDebugLogs ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+  style={{ backgroundColor: themeColors[theme] }}
+>
+  <div className="flex items-center justify-between mb-4">
+    <span className="text-white/60 text-[14px] font-outfit">
+      {debugLogs.length} log entries
+    </span>
+    <button
+      onClick={() => {
+        clearDebugLogs();
+        setDebugLogs([]);
+        toast.success('Debug logs cleared');
+      }}
+      className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-[10px] text-[14px] font-outfit transition-colors"
+    >
+      Clear All
+    </button>
+  </div>
+  
+  <div className="flex-1 overflow-y-auto pb-[100px]">
+    {debugLogs.length === 0 ? (
+      <div className="text-white/40 text-center py-8 font-outfit">
+        No debug logs yet
+      </div>
+    ) : (
+      <div className="space-y-3">
+        {debugLogs.map((log, index) => (
+          <div 
+            key={index} 
+            className="bg-white/5 border border-white/10 rounded-[10px] p-4 font-mono text-[12px]"
+          >
+            <div className="flex items-start justify-between mb-2">
+              <span className="text-white/90 font-semibold">
+                {log.operation}
+              </span>
+              <span className="text-white/40 text-[10px]">
+                {new Date(log.timestamp).toLocaleTimeString()}
+              </span>
+            </div>
+            <pre className="text-white/60 whitespace-pre-wrap break-all overflow-x-auto">
+              {JSON.stringify(
+                Object.fromEntries(
+                  Object.entries(log).filter(([key]) => key !== 'operation' && key !== 'timestamp')
+                ),
+                null,
+                2
+              )}
+            </pre>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
 ```
 
 ---
 
-## Summary of Changes
+## Visual Design
 
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `src/lib/dataPersistence.ts` | **NEW** | Centralized data service (~300 lines) |
-| `src/pages/Note.tsx` | **MODIFY** | Import service, replace saveNote, add ref syncs, add integrity check |
-| `src/pages/Index.tsx` | **MODIFY** | Import service, add integrity check, add debug button |
-
----
-
-## How This Fixes Image Loss
-
-1. **Backup First**: Before any Supabase attempt, data is backed up to localStorage
-2. **Verification**: After save, we READ BACK from database and compare image counts
-3. **Retry**: Failed saves retry 3 times with exponential backoff
-4. **Recovery**: On startup, we find orphaned backups and re-save them
-5. **Ref Sync**: Immediately sync refs after state changes so async operations use fresh data
-6. **Logging**: Every operation is logged for debugging
+| Element | Style |
+|---------|-------|
+| Background | Theme color (same as settings) |
+| Log entry card | `bg-white/5 border border-white/10 rounded-[10px]` |
+| Operation name | White, semibold, monospace |
+| Timestamp | White/40, 10px, right-aligned |
+| Data | White/60, 12px monospace, pre-formatted |
+| Clear button | Red/20 bg, red text |
+| Empty state | Centered, white/40 text |
 
 ---
 
-## Verification Scenarios
+## Summary
 
-After implementation, these scenarios should work:
+| File | Change |
+|------|--------|
+| `src/pages/Index.tsx` | Add state, update back button, add debug logs panel |
+| `src/lib/dataPersistence.ts` | No changes (already has required functions) |
 
-1. Add image to note → Close app → Reopen → Image is there
-2. Add multiple images → Switch notes → Switch back → All images preserved
-3. Add content offline → Kill app → Go online → Open app → Content recovered
-4. Check debug logs → See verified save entries for each operation
+This creates a mobile-friendly debug log viewer that integrates seamlessly with the existing settings navigation pattern.
 
