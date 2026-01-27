@@ -420,13 +420,17 @@ const Note = () => {
     });
   }, []);
 
-  // Handle audio playback interruption (e.g., phone call, switching apps)
+  // Handle audio playback interruption AND save when app goes to background
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden && playingAudioIndex !== null) {
+      if (document.hidden) {
         // Pause audio when tab/app becomes hidden
-        audioPlayerRefs.current[playingAudioIndex]?.pause();
-        setPlayingAudioIndex(null);
+        if (playingAudioIndex !== null) {
+          audioPlayerRefs.current[playingAudioIndex]?.pause();
+          setPlayingAudioIndex(null);
+        }
+        // SAVE note when app goes to background (prevents data loss)
+        saveNoteRef.current?.();
       }
     };
 
@@ -2327,6 +2331,12 @@ const Note = () => {
       // Use refs to get the most up-to-date state (fixes stale closure issue)
       const currentContentBlocks = contentBlocksRef.current;
       const currentAudioUrls = audioUrlsRef.current;
+
+      // Safety check for empty contentBlocks
+      if (!currentContentBlocks || currentContentBlocks.length === 0) {
+        console.log('No content blocks, returning early');
+        return;
+      }
 
       // Get note content from the current content blocks
       const noteContent = currentContentBlocks
