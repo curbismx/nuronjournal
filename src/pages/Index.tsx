@@ -659,6 +659,9 @@ const Index = () => {
             setCurrentFolder(typedFolder);
             setViewMode(typedFolder.default_view);
             localStorage.setItem('nuron-current-folder-id', typedFolder.id);
+          } else if (createError) {
+            console.error('Failed to create default folder:', createError);
+            toast.error('Failed to create folder. Please try again.');
           }
         } else {
           const typedFolders = data.map(f => ({
