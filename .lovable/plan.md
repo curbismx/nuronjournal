@@ -1,65 +1,43 @@
 
-
-## Fix: Image Saving in Note.tsx
+## Fix: Default Folder Empty on Login
 
 ### Problem
-Images added to notes are not being saved properly because:
-1. `contentBlocksRef` is not synced immediately after state update
-2. No explicit save is triggered after adding an image
+When a user logs in, the notes list doesn't automatically reload because the `loadNotes` useEffect only depends on `currentFolder?.id`. Since the folder doesn't change on login, the notes from the database aren't fetched.
 
 ---
 
-### Changes to `handleImageSelect` (Lines 2608-2702)
+### Change in `src/pages/Index.tsx`
 
-**Location:** `src/pages/Note.tsx`
+**Location:** Line 1048
 
-The function needs 4 additions:
-
-#### Addition 1: Sync ref after cursor-position insert (after line 2666)
+**Before:**
 ```typescript
-setContentBlocks(newBlocks);
-contentBlocksRef.current = newBlocks; // FIX: Sync ref immediately
+    loadNotes();
+  }, [currentFolder?.id]);
 ```
 
-#### Addition 2: Save after cursor-position insert (after textarea resize, before return)
+**After:**
 ```typescript
-// FIX: Explicitly save after image is added
-setTimeout(() => {
-  saveNoteRef.current?.();
-}, 100);
-```
-
-#### Addition 3: Change fallback block creation and sync ref (lines 2684-2689)
-Replace the functional state update with direct assignment + ref sync:
-```typescript
-// Fallback: add to end if no cursor position
-const newBlocks = [
-  ...contentBlocks,
-  { type: 'image' as const, id: imageId, url, width: 100 },
-  { type: 'text' as const, id: newTextId, content: '' }
-];
-setContentBlocks(newBlocks);
-contentBlocksRef.current = newBlocks; // FIX: Sync ref immediately
-```
-
-#### Addition 4: Save after fallback insert (after textarea resize at end)
-```typescript
-// FIX: Explicitly save after image is added
-setTimeout(() => {
-  saveNoteRef.current?.();
-}, 100);
+    loadNotes();
+  }, [currentFolder?.id, user]);
 ```
 
 ---
 
-### Summary of Fixes
+### Why This Works
 
-| Location | Current Issue | Fix |
-|----------|---------------|-----|
-| Line 2666 | State set but ref not synced | Add `contentBlocksRef.current = newBlocks;` |
-| After line 2678 | No save triggered | Add `saveNoteRef.current?.()` call |
-| Lines 2685-2689 | Functional update doesn't sync ref | Use direct assignment + ref sync |
-| End of function | No save triggered | Add `saveNoteRef.current?.()` call |
+| Trigger | Before | After |
+|---------|--------|-------|
+| Folder changes | Reloads notes | Reloads notes |
+| User logs in | Does nothing | Reloads notes |
+| User logs out | Does nothing | Reloads notes |
 
-This follows the established "capture-at-start" and "sync ref immediately" patterns already used elsewhere in Note.tsx.
+Adding `user` to the dependency array ensures that when the authentication state changes (user logs in or out), the `loadNotes` function runs again. This fetches the user's notes from Supabase after login, instead of showing an empty folder.
 
+---
+
+### Summary
+
+| File | Line | Change |
+|------|------|--------|
+| `src/pages/Index.tsx` | 1048 | Add `user` to dependency array |
