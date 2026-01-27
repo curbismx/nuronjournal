@@ -2664,6 +2664,7 @@ const Note = () => {
           ];
 
           setContentBlocks(newBlocks);
+          contentBlocksRef.current = newBlocks; // FIX: Sync ref immediately
           e.target.value = '';
           activeTextBlockRef.current = null;
 
@@ -2676,17 +2677,24 @@ const Note = () => {
               el.style.height = Math.max(24, el.scrollHeight) + 'px';
             });
           }, 50);
+
+          // FIX: Explicitly save after image is added
+          setTimeout(() => {
+            saveNoteRef.current?.();
+          }, 100);
           return;
         }
       }
     }
 
     // Fallback: add to end if no cursor position
-    setContentBlocks(prev => [
-      ...prev,
-      { type: 'image', id: imageId, url, width: 100 },
-      { type: 'text', id: newTextId, content: '' }
-    ]);
+    const newBlocks = [
+      ...contentBlocks,
+      { type: 'image' as const, id: imageId, url, width: 100 },
+      { type: 'text' as const, id: newTextId, content: '' }
+    ];
+    setContentBlocks(newBlocks);
+    contentBlocksRef.current = newBlocks; // FIX: Sync ref immediately
 
     e.target.value = '';
 
@@ -2699,6 +2707,11 @@ const Note = () => {
         el.style.height = Math.max(24, el.scrollHeight) + 'px';
       });
     }, 50);
+
+    // FIX: Explicitly save after image is added
+    setTimeout(() => {
+      saveNoteRef.current?.();
+    }, 100);
   };
 
   const startResize = (e: React.MouseEvent, id: string) => {
