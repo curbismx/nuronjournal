@@ -75,6 +75,7 @@ import { Capacitor } from '@capacitor/core';
 import { restorePurchases, isTrialExpired } from '@/lib/purchases';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import { useDesktop } from '@/hooks/use-desktop';
+import { runIntegrityCheck, getDebugLogs } from '@/lib/dataPersistence';
 
 
 interface SavedNote {
@@ -602,6 +603,34 @@ const Index = () => {
       localStorage.setItem('nuron-last-rate-prompt', newUsageCount.toString());
     }
   }, []); // Run once on mount
+
+  // Integrity check on startup - recover orphaned backups
+  useEffect(() => {
+    const checkIntegrity = async () => {
+      if (!user) return;
+      
+      try {
+        const { recovered } = await runIntegrityCheck();
+        
+        if (recovered > 0) {
+          toast.success(`Recovered ${recovered} note(s) from backup`);
+          // Reload notes to show recovered content
+          const stored = localStorage.getItem('nuron-notes-cache');
+          if (stored) {
+            try {
+              setSavedNotes(JSON.parse(stored));
+            } catch (e) {
+              console.error('[Index] Failed to parse cache after recovery:', e);
+            }
+          }
+        }
+      } catch (e) {
+        console.error('[Index] Integrity check failed:', e);
+      }
+    };
+    
+    checkIntegrity();
+  }, [user]);
 
   // Load folders when user is authenticated
   useEffect(() => {
@@ -3792,6 +3821,26 @@ const Index = () => {
               >
                 <span>View Website</span>
                 <img src={accountArrow} alt="" className="w-[20px] h-[20px] opacity-60" />
+              </button>
+
+              {/* Debug Log Viewer */}
+              <button
+                onClick={() => {
+                  const logs = getDebugLogs();
+                  console.log('=== NURON DEBUG LOGS ===');
+                  logs.forEach((log: any) => console.log(log));
+                  toast.info(`${logs.length} log entries printed to console`);
+                }}
+                className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[20px] font-light"
+              >
+                <span>View Debug Logs</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
               </button>
             </div>
           ) : showSignUp ? (
