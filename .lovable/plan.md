@@ -1,43 +1,133 @@
 
-## Fix: Default Folder Empty on Login
 
-### Problem
-When a user logs in, the notes list doesn't automatically reload because the `loadNotes` useEffect only depends on `currentFolder?.id`. Since the folder doesn't change on login, the notes from the database aren't fetched.
+## NURON Bug Fixes - 3 Critical Changes
+
+### Fix 1: Save note when app goes to background (mobile)
+**File:** `src/pages/Note.tsx`  
+**Location:** Lines 423-437
+
+**Current Code:**
+```typescript
+// Handle audio playback interruption (e.g., phone call, switching apps)
+useEffect(() => {
+  const handleVisibilityChange = () => {
+    if (document.hidden && playingAudioIndex !== null) {
+      // Pause audio when tab/app becomes hidden
+      audioPlayerRefs.current[playingAudioIndex]?.pause();
+      setPlayingAudioIndex(null);
+    }
+  };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  return () => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  };
+}, [playingAudioIndex]);
+```
+
+**Updated Code:**
+```typescript
+// Handle audio playback interruption AND save when app goes to background
+useEffect(() => {
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      // Pause audio when tab/app becomes hidden
+      if (playingAudioIndex !== null) {
+        audioPlayerRefs.current[playingAudioIndex]?.pause();
+        setPlayingAudioIndex(null);
+      }
+      // SAVE note when app goes to background (prevents data loss)
+      saveNoteRef.current?.();
+    }
+  };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  return () => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+  };
+}, [playingAudioIndex]);
+```
 
 ---
 
-### Change in `src/pages/Index.tsx`
+### Fix 2: Add error handling when creating default folder fails
+**File:** `src/pages/Index.tsx`  
+**Location:** Lines 652-662
 
-**Location:** Line 1048
-
-**Before:**
+**Current Code:**
 ```typescript
-    loadNotes();
-  }, [currentFolder?.id]);
+if (newFolder && !createError) {
+  const typedFolder: Folder = {
+    ...newFolder,
+    default_view: (newFolder.default_view || 'collapsed') as 'collapsed' | 'compact',
+    notes_sort_order: (newFolder.notes_sort_order || 'desc') as 'asc' | 'desc'
+  };
+  setFolders([typedFolder]);
+  setCurrentFolder(typedFolder);
+  setViewMode(typedFolder.default_view);
+  localStorage.setItem('nuron-current-folder-id', typedFolder.id);
+}
 ```
 
-**After:**
+**Updated Code:**
 ```typescript
-    loadNotes();
-  }, [currentFolder?.id, user]);
+if (newFolder && !createError) {
+  const typedFolder: Folder = {
+    ...newFolder,
+    default_view: (newFolder.default_view || 'collapsed') as 'collapsed' | 'compact',
+    notes_sort_order: (newFolder.notes_sort_order || 'desc') as 'asc' | 'desc'
+  };
+  setFolders([typedFolder]);
+  setCurrentFolder(typedFolder);
+  setViewMode(typedFolder.default_view);
+  localStorage.setItem('nuron-current-folder-id', typedFolder.id);
+} else if (createError) {
+  console.error('Failed to create default folder:', createError);
+  toast.error('Failed to create folder. Please try again.');
+}
 ```
 
 ---
 
-### Why This Works
+### Fix 3: Prevent potential crash when contentBlocks is empty
+**File:** `src/pages/Note.tsx`  
+**Location:** Before line 2332
 
-| Trigger | Before | After |
-|---------|--------|-------|
-| Folder changes | Reloads notes | Reloads notes |
-| User logs in | Does nothing | Reloads notes |
-| User logs out | Does nothing | Reloads notes |
+**Current Code:**
+```typescript
+// Use refs to get the most up-to-date state (fixes stale closure issue)
+const currentContentBlocks = contentBlocksRef.current;
+const currentAudioUrls = audioUrlsRef.current;
 
-Adding `user` to the dependency array ensures that when the authentication state changes (user logs in or out), the `loadNotes` function runs again. This fetches the user's notes from Supabase after login, instead of showing an empty folder.
+// Get note content from the current content blocks
+const noteContent = currentContentBlocks
+  .filter(b => {
+```
+
+**Updated Code:**
+```typescript
+// Use refs to get the most up-to-date state (fixes stale closure issue)
+const currentContentBlocks = contentBlocksRef.current;
+const currentAudioUrls = audioUrlsRef.current;
+
+// Safety check for empty contentBlocks
+if (!currentContentBlocks || currentContentBlocks.length === 0) {
+  console.log('No content blocks, returning early');
+  return;
+}
+
+// Get note content from the current content blocks
+const noteContent = currentContentBlocks
+  .filter(b => {
+```
 
 ---
 
 ### Summary
 
-| File | Line | Change |
-|------|------|--------|
-| `src/pages/Index.tsx` | 1048 | Add `user` to dependency array |
+| Fix | File | Issue Addressed |
+|-----|------|-----------------|
+| 1 | Note.tsx (L423-437) | Data loss when app goes to background on mobile |
+| 2 | Index.tsx (L652-662) | Silent failure when creating default folder |
+| 3 | Note.tsx (before L2332) | Potential crash with empty content blocks |
+
