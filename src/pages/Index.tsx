@@ -75,7 +75,8 @@ import { Capacitor } from '@capacitor/core';
 import { restorePurchases, isTrialExpired } from '@/lib/purchases';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import { useDesktop } from '@/hooks/use-desktop';
-import { runIntegrityCheck, getDebugLogs, clearDebugLogs } from '@/lib/dataPersistence';
+import { runIntegrityCheck } from '@/lib/dataPersistence';
+import DebugLogViewer from '@/components/DebugLogViewer';
 
 
 interface SavedNote {
@@ -380,7 +381,6 @@ const Index = () => {
   const [loading, setLoading] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showDebugLogs, setShowDebugLogs] = useState(false);
-  const [debugLogs, setDebugLogs] = useState<any[]>([]);
   const [newPassword, setNewPassword] = useState("");
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
@@ -3631,65 +3631,14 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Debug Logs panel */}
-      <div 
-        className={`absolute inset-x-0 top-[150px] bottom-0 px-8 pt-[80px] transition-opacity duration-200 overflow-hidden flex flex-col ${showDebugLogs ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
-        style={{ backgroundColor: themeColors[theme] }}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-white/60 text-[14px] font-outfit">
-            {debugLogs.length} log entries
-          </span>
-          <button
-            onClick={() => {
-              clearDebugLogs();
-              setDebugLogs([]);
-              toast.success('Debug logs cleared');
-            }}
-            className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-[10px] text-[14px] font-outfit transition-colors"
-          >
-            Clear All
-          </button>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto pb-[100px]">
-          {debugLogs.length === 0 ? (
-            <div className="text-white/40 text-center py-8 font-outfit">
-              No debug logs yet
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {debugLogs.map((log, index) => (
-                <div 
-                  key={index} 
-                  className="bg-white/5 border border-white/10 rounded-[10px] p-4 font-mono text-[12px]"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <span className="text-white/90 font-semibold">
-                      {log.operation}
-                    </span>
-                    <span className="text-white/40 text-[10px]">
-                      {new Date(log.timestamp).toLocaleTimeString()}
-                    </span>
-                  </div>
-                  <pre className="text-white/60 whitespace-pre-wrap break-all overflow-x-auto">
-                    {JSON.stringify(
-                      Object.fromEntries(
-                        Object.entries(log).filter(([key]) => key !== 'operation' && key !== 'timestamp')
-                      ),
-                      null,
-                      2
-                    )}
-                  </pre>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Debug Log Viewer (new full-screen component) */}
+      <DebugLogViewer 
+        isOpen={showDebugLogs} 
+        onClose={() => setShowDebugLogs(false)} 
+      />
 
       {/* Settings panel - sits behind the card */}
-      <div className={`absolute inset-x-0 top-[150px] bottom-0 px-8 pt-[80px] transition-opacity duration-200 overflow-y-auto ${(showSettings || showAccountDetails || showChangePassword) && !showDebugLogs ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} style={{ backgroundColor: themeColors[theme] }}>
+      <div className={`absolute inset-x-0 top-[150px] bottom-0 px-8 pt-[80px] transition-opacity duration-200 overflow-y-auto ${showSettings || showAccountDetails || showChangePassword ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} style={{ backgroundColor: themeColors[theme] }}>
         <div className="text-white font-outfit space-y-6">
           {showChangePassword ? (
             /* Change Password Form */
@@ -3886,10 +3835,7 @@ const Index = () => {
 
               {/* Debug Log Viewer */}
               <button
-                onClick={() => {
-                  setDebugLogs(getDebugLogs());
-                  setShowDebugLogs(true);
-                }}
+                onClick={() => setShowDebugLogs(true)}
                 className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[20px] font-light"
               >
                 <span>View Debug Logs</span>
