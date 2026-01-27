@@ -75,7 +75,7 @@ import { Capacitor } from '@capacitor/core';
 import { restorePurchases, isTrialExpired } from '@/lib/purchases';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import { useDesktop } from '@/hooks/use-desktop';
-import { runIntegrityCheck, getDebugLogs } from '@/lib/dataPersistence';
+import { runIntegrityCheck, getDebugLogs, clearDebugLogs } from '@/lib/dataPersistence';
 
 
 interface SavedNote {
@@ -379,6 +379,8 @@ const Index = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showDebugLogs, setShowDebugLogs] = useState(false);
+  const [debugLogs, setDebugLogs] = useState<any[]>([]);
   const [newPassword, setNewPassword] = useState("");
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
@@ -3459,7 +3461,9 @@ const Index = () => {
           <div className="relative">
             <button
               onClick={() => {
-                if (showChangePassword) {
+                if (showDebugLogs) {
+                  setShowDebugLogs(false);
+                } else if (showChangePassword) {
                   setShowChangePassword(false);
                 } else if (showAccountDetails) {
                   setShowAccountDetails(false);
@@ -3473,7 +3477,7 @@ const Index = () => {
               }}
               className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
             >
-              {showSettings || showAccountDetails || showChangePassword || showFolders ? (
+              {showDebugLogs || showSettings || showAccountDetails || showChangePassword || showFolders ? (
                 <img
                   src={backIcon}
                   alt="Back"
@@ -3488,7 +3492,7 @@ const Index = () => {
         </div>
         <div className="relative mt-[41px]">
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
-            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : showFolders ? 'FOLDERS' : currentFolder?.name?.toUpperCase() || ''}
+            {showDebugLogs ? 'DEBUG LOGS' : showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : showFolders ? 'FOLDERS' : currentFolder?.name?.toUpperCase() || ''}
           </h1>
           {!showSettings && !showAccountDetails && !showChangePassword && (
             <div
@@ -3624,6 +3628,63 @@ const Index = () => {
             <img src={settingsIcon} alt="Settings" className="h-[24px] w-auto opacity-70" />
             <span className="text-white text-[18px] font-outfit font-light">Settings</span>
           </button>
+        </div>
+      </div>
+
+      {/* Debug Logs panel */}
+      <div 
+        className={`absolute inset-x-0 top-[150px] bottom-0 px-8 pt-[80px] transition-opacity duration-200 overflow-hidden flex flex-col ${showDebugLogs ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+        style={{ backgroundColor: themeColors[theme] }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-white/60 text-[14px] font-outfit">
+            {debugLogs.length} log entries
+          </span>
+          <button
+            onClick={() => {
+              clearDebugLogs();
+              setDebugLogs([]);
+              toast.success('Debug logs cleared');
+            }}
+            className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-[10px] text-[14px] font-outfit transition-colors"
+          >
+            Clear All
+          </button>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto pb-[100px]">
+          {debugLogs.length === 0 ? (
+            <div className="text-white/40 text-center py-8 font-outfit">
+              No debug logs yet
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {debugLogs.map((log, index) => (
+                <div 
+                  key={index} 
+                  className="bg-white/5 border border-white/10 rounded-[10px] p-4 font-mono text-[12px]"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="text-white/90 font-semibold">
+                      {log.operation}
+                    </span>
+                    <span className="text-white/40 text-[10px]">
+                      {new Date(log.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <pre className="text-white/60 whitespace-pre-wrap break-all overflow-x-auto">
+                    {JSON.stringify(
+                      Object.fromEntries(
+                        Object.entries(log).filter(([key]) => key !== 'operation' && key !== 'timestamp')
+                      ),
+                      null,
+                      2
+                    )}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -3826,21 +3887,13 @@ const Index = () => {
               {/* Debug Log Viewer */}
               <button
                 onClick={() => {
-                  const logs = getDebugLogs();
-                  console.log('=== NURON DEBUG LOGS ===');
-                  logs.forEach((log: any) => console.log(log));
-                  toast.info(`${logs.length} log entries printed to console`);
+                  setDebugLogs(getDebugLogs());
+                  setShowDebugLogs(true);
                 }}
                 className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[20px] font-light"
               >
                 <span>View Debug Logs</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
+                <img src={accountArrow} alt="" className="w-[20px] h-[20px] opacity-60" />
               </button>
             </div>
           ) : showSignUp ? (
