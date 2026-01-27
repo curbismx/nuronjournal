@@ -6,7 +6,6 @@ import { Geolocation } from '@capacitor/geolocation';
 import { SpeechRecognition } from '@capacitor-community/speech-recognition';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import DatePicker from '@/components/DatePicker';
-import { runIntegrityCheck, getDebugLogs } from '@/lib/dataPersistence';
 
 interface SavedNote {
   id: string;
@@ -480,24 +479,6 @@ const Note = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Integrity check on startup - recover orphaned backups (standalone mode only)
-  useEffect(() => {
-    const checkIntegrity = async () => {
-      try {
-        const { recovered } = await runIntegrityCheck();
-        if (recovered > 0) {
-          toast.success(`Recovered ${recovered} note(s) from backup`);
-        }
-      } catch (e) {
-        console.error('[Note] Integrity check failed:', e);
-      }
-    };
-    
-    if (!isEmbedded && user) {
-      checkIntegrity();
-    }
-  }, [isEmbedded, user]);
-
   // Load note from Supabase if not found in cache
   useEffect(() => {
     const loadNoteFromSupabase = async () => {
@@ -831,15 +812,11 @@ const Note = () => {
           // Replace all text blocks with the rewritten content as a single text block
           const rewrittenTextBlock = { type: 'text' as const, id: crypto.randomUUID(), content: data.rewrittenText };
           // Combine: rewritten text first, then images, then empty text block for typing below
-          let newBlocks: ContentBlock[];
           if (imageBlocks.length > 0) {
             const trailingTextBlock = { type: 'text' as const, id: crypto.randomUUID(), content: '' };
-            newBlocks = [rewrittenTextBlock, ...imageBlocks, trailingTextBlock];
-          } else {
-            newBlocks = [rewrittenTextBlock, ...imageBlocks];
+            return [rewrittenTextBlock, ...imageBlocks, trailingTextBlock];
           }
-          contentBlocksRef.current = newBlocks; // Sync ref immediately
-          return newBlocks;
+          return [rewrittenTextBlock, ...imageBlocks];
         });
 
         // Resize textarea after content updates
@@ -1258,16 +1235,12 @@ const Note = () => {
                     const withoutPlaceholder = prev.filter(b => b.id !== transcriptionPlaceholderId);
                     // Add transcribed text
                     const lastBlock = withoutPlaceholder[withoutPlaceholder.length - 1];
-                    let newBlocks: ContentBlock[];
                     if (lastBlock && lastBlock.type === 'text') {
                       const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
                       const newContent = currentContent ? currentContent + ' ' + data.text : data.text;
-                      newBlocks = [...withoutPlaceholder.slice(0, -1), { ...lastBlock, content: newContent }];
-                    } else {
-                      newBlocks = [...withoutPlaceholder, { type: 'text', id: crypto.randomUUID(), content: data.text }];
+                      return [...withoutPlaceholder.slice(0, -1), { ...lastBlock, content: newContent }];
                     }
-                    contentBlocksRef.current = newBlocks; // Sync ref immediately
-                    return newBlocks;
+                    return [...withoutPlaceholder, { type: 'text', id: crypto.randomUUID(), content: data.text }];
                   });
 
                   // Resize textarea after content updates
@@ -2691,7 +2664,6 @@ const Note = () => {
           ];
 
           setContentBlocks(newBlocks);
-          contentBlocksRef.current = newBlocks; // Sync ref immediately
           e.target.value = '';
           activeTextBlockRef.current = null;
 
@@ -2710,15 +2682,11 @@ const Note = () => {
     }
 
     // Fallback: add to end if no cursor position
-    setContentBlocks(prev => {
-      const newBlocks = [
-        ...prev,
-        { type: 'image' as const, id: imageId, url, width: 100 },
-        { type: 'text' as const, id: newTextId, content: '' }
-      ];
-      contentBlocksRef.current = newBlocks; // Sync ref immediately
-      return newBlocks;
-    });
+    setContentBlocks(prev => [
+      ...prev,
+      { type: 'image', id: imageId, url, width: 100 },
+      { type: 'text', id: newTextId, content: '' }
+    ]);
 
     e.target.value = '';
 
@@ -2731,12 +2699,6 @@ const Note = () => {
         el.style.height = Math.max(24, el.scrollHeight) + 'px';
       });
     }, 50);
-
-    // EXPLICIT SAVE after image is added
-    setTimeout(() => {
-      console.log('[Note] Explicit save after image add');
-      saveNoteRef.current?.();
-    }, 200);
   };
 
   const startResize = (e: React.MouseEvent, id: string) => {

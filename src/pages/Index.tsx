@@ -75,8 +75,6 @@ import { Capacitor } from '@capacitor/core';
 import { restorePurchases, isTrialExpired } from '@/lib/purchases';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import { useDesktop } from '@/hooks/use-desktop';
-import { runIntegrityCheck } from '@/lib/dataPersistence';
-import DebugLogViewer from '@/components/DebugLogViewer';
 
 
 interface SavedNote {
@@ -380,7 +378,6 @@ const Index = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
-  const [showDebugLogs, setShowDebugLogs] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
@@ -605,34 +602,6 @@ const Index = () => {
       localStorage.setItem('nuron-last-rate-prompt', newUsageCount.toString());
     }
   }, []); // Run once on mount
-
-  // Integrity check on startup - recover orphaned backups
-  useEffect(() => {
-    const checkIntegrity = async () => {
-      if (!user) return;
-      
-      try {
-        const { recovered } = await runIntegrityCheck();
-        
-        if (recovered > 0) {
-          toast.success(`Recovered ${recovered} note(s) from backup`);
-          // Reload notes to show recovered content
-          const stored = localStorage.getItem('nuron-notes-cache');
-          if (stored) {
-            try {
-              setSavedNotes(JSON.parse(stored));
-            } catch (e) {
-              console.error('[Index] Failed to parse cache after recovery:', e);
-            }
-          }
-        }
-      } catch (e) {
-        console.error('[Index] Integrity check failed:', e);
-      }
-    };
-    
-    checkIntegrity();
-  }, [user]);
 
   // Load folders when user is authenticated
   useEffect(() => {
@@ -3461,9 +3430,7 @@ const Index = () => {
           <div className="relative">
             <button
               onClick={() => {
-                if (showDebugLogs) {
-                  setShowDebugLogs(false);
-                } else if (showChangePassword) {
+                if (showChangePassword) {
                   setShowChangePassword(false);
                 } else if (showAccountDetails) {
                   setShowAccountDetails(false);
@@ -3477,7 +3444,7 @@ const Index = () => {
               }}
               className="p-0 m-0 border-0 bg-transparent hover:opacity-80 transition-opacity"
             >
-              {showDebugLogs || showSettings || showAccountDetails || showChangePassword || showFolders ? (
+              {showSettings || showAccountDetails || showChangePassword || showFolders ? (
                 <img
                   src={backIcon}
                   alt="Back"
@@ -3492,7 +3459,7 @@ const Index = () => {
         </div>
         <div className="relative mt-[41px]">
           <h1 className="text-journal-header-foreground text-[24px] font-outfit font-light tracking-wider leading-none pr-[26px]">
-            {showDebugLogs ? 'DEBUG LOGS' : showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : showFolders ? 'FOLDERS' : currentFolder?.name?.toUpperCase() || ''}
+            {showChangePassword ? 'CHANGE PASSWORD' : showAccountDetails ? 'ACCOUNT DETAILS' : showSettings ? 'SETTINGS' : showFolders ? 'FOLDERS' : currentFolder?.name?.toUpperCase() || ''}
           </h1>
           {!showSettings && !showAccountDetails && !showChangePassword && (
             <div
@@ -3630,12 +3597,6 @@ const Index = () => {
           </button>
         </div>
       </div>
-
-      {/* Debug Log Viewer (new full-screen component) */}
-      <DebugLogViewer 
-        isOpen={showDebugLogs} 
-        onClose={() => setShowDebugLogs(false)} 
-      />
 
       {/* Settings panel - sits behind the card */}
       <div className={`absolute inset-x-0 top-[150px] bottom-0 px-8 pt-[80px] transition-opacity duration-200 overflow-y-auto ${showSettings || showAccountDetails || showChangePassword ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} style={{ backgroundColor: themeColors[theme] }}>
@@ -3830,15 +3791,6 @@ const Index = () => {
                 className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[20px] font-light"
               >
                 <span>View Website</span>
-                <img src={accountArrow} alt="" className="w-[20px] h-[20px] opacity-60" />
-              </button>
-
-              {/* Debug Log Viewer */}
-              <button
-                onClick={() => setShowDebugLogs(true)}
-                className="w-full bg-white/5 border border-white/20 hover:bg-white/10 text-white rounded-[10px] px-4 py-4 flex items-center justify-between transition-colors text-[20px] font-light"
-              >
-                <span>View Debug Logs</span>
                 <img src={accountArrow} alt="" className="w-[20px] h-[20px] opacity-60" />
               </button>
             </div>
