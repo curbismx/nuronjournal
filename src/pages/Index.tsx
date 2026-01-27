@@ -1045,7 +1045,7 @@ const Index = () => {
     };
 
     loadNotes();
-  }, [currentFolder?.id]);
+  }, [currentFolder?.id, user]);
 
   const loadUserProfile = async (userId: string) => {
     const { data } = await supabase
