@@ -328,7 +328,7 @@ const Note = () => {
   const audioUrlsRef = useRef<string[]>([]);
   const contentBlocksRef = useRef<ContentBlock[]>([]);
   const isSavingRef = useRef(false);
-  
+
   // Refs to always have the latest functions (avoids stale closure in event handlers with [] deps)
   const saveNoteRef = useRef<() => Promise<void>>();
   const handleMenuActionRef = useRef<(action: string) => void>();
@@ -349,6 +349,7 @@ const Note = () => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const [audioLevel, setAudioLevel] = useState(0); // 0-100
+  const [waveAnimationFrame, setWaveAnimationFrame] = useState(0); // For animated waveform
 
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -439,6 +440,18 @@ const Note = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [playingAudioIndex]);
+
+  // Animate waveform when recording is active (fallback for when audio level monitoring doesn't work)
+  useEffect(() => {
+    if (isRecording && !isPaused) {
+      const interval = setInterval(() => {
+        setWaveAnimationFrame(prev => (prev + 1) % 1000);
+      }, 45); // Update every 45ms
+      return () => clearInterval(interval);
+    } else {
+      setWaveAnimationFrame(0);
+    }
+  }, [isRecording, isPaused]);
 
   // Smooth fade-in for embedded view
   useEffect(() => {
@@ -702,10 +715,10 @@ const Note = () => {
   // This allows parent to request immediate sync of current content before saving
   useEffect(() => {
     if (!embeddedMode) return;
-    
+
     const handleContentSyncRequest = (event: MessageEvent) => {
       if (event.data?.type !== 'request-content-sync') return;
-      
+
       // Immediately send current content to parent (no debounce)
       window.parent.postMessage({
         type: 'note-content-update',
@@ -716,7 +729,7 @@ const Note = () => {
         createdAt: existingCreatedAt.current || noteDate.toISOString()
       }, '*');
     };
-    
+
     window.addEventListener('message', handleContentSyncRequest);
     return () => window.removeEventListener('message', handleContentSyncRequest);
   }, [embeddedMode, noteTitle, currentPlaceholderId, placeholderId, noteDate]);
@@ -1041,28 +1054,38 @@ const Note = () => {
             }
 
             try {
+              // Use time domain data for better amplitude detection (measures actual waveform)
               const dataArray = new Uint8Array(analyser.fftSize);
-              analyser.getByteFrequencyData(dataArray);
+              analyser.getByteTimeDomainData(dataArray);
 
-              // Calculate average and max volume
-              let sum = 0;
-              let maxValue = 0;
+              // Calculate amplitude: find deviation from center (128 is silence)
+              let maxAmplitude = 0;
+              let sumAmplitude = 0;
               for (let i = 0; i < dataArray.length; i++) {
-                sum += dataArray[i];
-                if (dataArray[i] > maxValue) {
-                  maxValue = dataArray[i];
+                const amplitude = Math.abs(dataArray[i] - 128);
+                sumAmplitude += amplitude;
+                if (amplitude > maxAmplitude) {
+                  maxAmplitude = amplitude;
                 }
               }
-              const average = sum / dataArray.length;
-              // Use a combination of max and average for smoother, more accurate feedback
-              const combinedLevel = (maxValue * 0.6 + average * 0.4) / 255;
-              const normalizedLevel = Math.min(100, combinedLevel * 100 * 2.5);
+              const avgAmplitude = sumAmplitude / dataArray.length;
+
+              // Combine max and average for responsive yet stable reading
+              // Max amplitude can be 0-128, normalize to 0-1
+              const combinedAmplitude = (maxAmplitude * 0.7 + avgAmplitude * 0.3) / 128;
+
+              // Apply slight boost for better sensitivity
+              const boostedLevel = Math.min(1, combinedAmplitude * 1.5);
+              const normalizedLevel = boostedLevel * 100;
 
               // Smooth interpolation for better visual feedback
               setAudioLevel(prev => {
-                // Smooth interpolation: 90% new value, 10% previous (faster response)
-                const newLevel = prev * 0.1 + normalizedLevel * 0.9;
-                return newLevel;
+                // Faster rise (85%), slower fall (50%) for more responsive feel
+                if (normalizedLevel > prev) {
+                  return prev * 0.15 + normalizedLevel * 0.85;
+                } else {
+                  return prev * 0.5 + normalizedLevel * 0.5;
+                }
               });
 
               // Continue monitoring (will stop when animationFrameRef is cancelled)
@@ -1401,28 +1424,38 @@ const Note = () => {
           }
 
           try {
+            // Use time domain data for better amplitude detection (measures actual waveform)
             const dataArray = new Uint8Array(analyser.fftSize);
-            analyser.getByteFrequencyData(dataArray);
+            analyser.getByteTimeDomainData(dataArray);
 
-            // Calculate average and max volume
-            let sum = 0;
-            let maxValue = 0;
+            // Calculate amplitude: find deviation from center (128 is silence)
+            let maxAmplitude = 0;
+            let sumAmplitude = 0;
             for (let i = 0; i < dataArray.length; i++) {
-              sum += dataArray[i];
-              if (dataArray[i] > maxValue) {
-                maxValue = dataArray[i];
+              const amplitude = Math.abs(dataArray[i] - 128);
+              sumAmplitude += amplitude;
+              if (amplitude > maxAmplitude) {
+                maxAmplitude = amplitude;
               }
             }
-            const average = sum / dataArray.length;
-            // Use a combination of max and average for smoother, more accurate feedback
-            const combinedLevel = (maxValue * 0.6 + average * 0.4) / 255;
-            const normalizedLevel = Math.min(100, combinedLevel * 100 * 2.5);
+            const avgAmplitude = sumAmplitude / dataArray.length;
+
+            // Combine max and average for responsive yet stable reading
+            // Max amplitude can be 0-128, normalize to 0-1
+            const combinedAmplitude = (maxAmplitude * 0.7 + avgAmplitude * 0.3) / 128;
+
+            // Apply slight boost for better sensitivity
+            const boostedLevel = Math.min(1, combinedAmplitude * 1.5);
+            const normalizedLevel = boostedLevel * 100;
 
             // Smooth interpolation for better visual feedback
             setAudioLevel(prev => {
-              // Smooth interpolation: 90% new value, 10% previous (faster response)
-              const newLevel = prev * 0.1 + normalizedLevel * 0.9;
-              return newLevel;
+              // Faster rise (85%), slower fall (50%) for more responsive feel
+              if (normalizedLevel > prev) {
+                return prev * 0.15 + normalizedLevel * 0.85;
+              } else {
+                return prev * 0.5 + normalizedLevel * 0.5;
+              }
             });
 
             // Continue monitoring (will stop when animationFrameRef is cancelled)
@@ -1794,28 +1827,38 @@ const Note = () => {
         }
 
         try {
+          // Use time domain data for better amplitude detection (measures actual waveform)
           const dataArray = new Uint8Array(analyserRef.current.fftSize);
-          analyserRef.current.getByteFrequencyData(dataArray);
+          analyserRef.current.getByteTimeDomainData(dataArray);
 
-          // Calculate average and max volume
-          let sum = 0;
-          let maxValue = 0;
+          // Calculate amplitude: find deviation from center (128 is silence)
+          let maxAmplitude = 0;
+          let sumAmplitude = 0;
           for (let i = 0; i < dataArray.length; i++) {
-            sum += dataArray[i];
-            if (dataArray[i] > maxValue) {
-              maxValue = dataArray[i];
+            const amplitude = Math.abs(dataArray[i] - 128);
+            sumAmplitude += amplitude;
+            if (amplitude > maxAmplitude) {
+              maxAmplitude = amplitude;
             }
           }
-          const average = sum / dataArray.length;
-          // Use a combination of max and average for smoother, more accurate feedback
-          const combinedLevel = (maxValue * 0.6 + average * 0.4) / 255;
-          const normalizedLevel = Math.min(100, combinedLevel * 100 * 2.5);
+          const avgAmplitude = sumAmplitude / dataArray.length;
+
+          // Combine max and average for responsive yet stable reading
+          // Max amplitude can be 0-128, normalize to 0-1
+          const combinedAmplitude = (maxAmplitude * 0.7 + avgAmplitude * 0.3) / 128;
+
+          // Apply slight boost for better sensitivity
+          const boostedLevel = Math.min(1, combinedAmplitude * 1.5);
+          const normalizedLevel = boostedLevel * 100;
 
           // Smooth interpolation for better visual feedback
           setAudioLevel(prev => {
-            // Smooth interpolation: 90% new value, 10% previous (faster response)
-            const newLevel = prev * 0.1 + normalizedLevel * 0.9;
-            return newLevel;
+            // Faster rise (85%), slower fall (50%) for more responsive feel
+            if (normalizedLevel > prev) {
+              return prev * 0.15 + normalizedLevel * 0.85;
+            } else {
+              return prev * 0.5 + normalizedLevel * 0.5;
+            }
           });
 
           // Continue monitoring (will stop when animationFrameRef is cancelled)
@@ -3703,18 +3746,30 @@ const Note = () => {
                     minWidth: '72px'
                   }}
                 >
-                  {[...Array(12)].map((_, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        width: '2.4px',
-                        height: `${7.2 + (isPaused ? 0 : Math.random() * 14.4 + audioLevel * 0.3)}px`,
-                        backgroundColor: 'white',
-                        borderRadius: '1px',
-                        transition: 'height 0.05s ease-out'
-                      }}
-                    />
-                  ))}
+                  {[...Array(12)].map((_, i) => {
+                    // Bar multipliers for visual variety across bars
+                    const barMultipliers = [0.6, 0.9, 0.75, 1.0, 0.85, 0.95, 0.7, 0.9, 1.0, 0.7, 0.85, 0.65];
+                    const baseHeight = 4;
+                    const maxAdditionalHeight = 22;
+
+                    // Animated wave pattern
+                    const phase = (waveAnimationFrame * 0.26) + i * 0.5;
+                    const sineValue = (Math.sin(phase) + 1) / 2; // 0 to 1
+                    const levelHeight = isPaused ? 0 : sineValue * maxAdditionalHeight * barMultipliers[i];
+
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          width: '2.4px',
+                          height: `${baseHeight + levelHeight}px`,
+                          backgroundColor: 'white',
+                          borderRadius: '1px',
+                          transition: 'height 0.03s ease-out'
+                        }}
+                      />
+                    );
+                  })}
                 </div>
 
                 {/* Timer */}
