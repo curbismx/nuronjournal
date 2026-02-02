@@ -822,19 +822,18 @@ const Note = () => {
       if (error) throw error;
 
       if (data.rewrittenText) {
-        // Replace all text blocks with the rewritten content, but preserve image blocks
-        setContentBlocks(prev => {
-          // Keep all image blocks
-          const imageBlocks = prev.filter(b => b.type === 'image');
-          // Replace all text blocks with the rewritten content as a single text block
+        const newBlocks = (() => {
+          const imageBlocks = contentBlocks.filter(b => b.type === 'image');
           const rewrittenTextBlock = { type: 'text' as const, id: crypto.randomUUID(), content: data.rewrittenText };
-          // Combine: rewritten text first, then images, then empty text block for typing below
           if (imageBlocks.length > 0) {
             const trailingTextBlock = { type: 'text' as const, id: crypto.randomUUID(), content: '' };
             return [rewrittenTextBlock, ...imageBlocks, trailingTextBlock];
           }
           return [rewrittenTextBlock, ...imageBlocks];
-        });
+        })();
+        
+        setContentBlocks(newBlocks);
+        contentBlocksRef.current = newBlocks;
 
         // Resize textarea after content updates
         setTimeout(() => {
@@ -2585,8 +2584,13 @@ const Note = () => {
         audioUrls.length > 0;
 
       if (hasContent) {
+        const capturedContentBlocks = contentBlocks;
+        const capturedAudioUrls = audioUrls;
+        
         const timer = setTimeout(() => {
           if (!isTransitioningRef.current) {
+            contentBlocksRef.current = capturedContentBlocks;
+            audioUrlsRef.current = capturedAudioUrls;
             saveNote();
           }
         }, 500);
@@ -3225,6 +3229,7 @@ const Note = () => {
                           if (originalIndex !== -1) {
                             newBlocks[originalIndex] = { ...textBlock, content: e.target.value };
                             setContentBlocks(newBlocks);
+                            contentBlocksRef.current = newBlocks;
                           }
                           e.target.style.height = 'auto';
                           e.target.style.height = Math.max(24, e.target.scrollHeight) + 'px';
@@ -3246,7 +3251,9 @@ const Note = () => {
                                 const prevBlock = contentBlocks[index - 1];
                                 if (prevBlock.type === 'image') {
                                   e.preventDefault();
-                                  setContentBlocks(prev => prev.filter(b => b.id !== prevBlock.id));
+                                  const newBlocks = contentBlocks.filter(b => b.id !== prevBlock.id);
+                                  setContentBlocks(newBlocks);
+                                  contentBlocksRef.current = newBlocks;
                                 } else if (prevBlock.type === 'text') {
                                   e.preventDefault();
                                   const prevTextBlock = prevBlock as { type: 'text'; id: string; content: string };
@@ -3255,10 +3262,11 @@ const Note = () => {
                                   const mergedContent = prevContent + currentContent;
                                   const cursorPosition = prevContent.length;
 
-                                  setContentBlocks(prev => prev
+                                  const newBlocks = contentBlocks
                                     .filter(b => b.id !== block.id)
-                                    .map(b => b.id === prevBlock.id ? { ...b, content: mergedContent } : b)
-                                  );
+                                    .map(b => b.id === prevBlock.id ? { ...b, content: mergedContent } : b);
+                                  setContentBlocks(newBlocks);
+                                  contentBlocksRef.current = newBlocks;
 
                                   setTimeout(() => {
                                     const textareas = document.querySelectorAll('.note-textarea');
