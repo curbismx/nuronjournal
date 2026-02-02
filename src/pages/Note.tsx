@@ -1256,18 +1256,18 @@ const Note = () => {
                     clearTimeout(transcriptionTimeoutRef.current);
                     transcriptionTimeoutRef.current = null;
                   }
-                  setContentBlocks(prev => {
-                    // Remove placeholder
-                    const withoutPlaceholder = prev.filter(b => b.id !== transcriptionPlaceholderId);
-                    // Add transcribed text
+                  const newBlocks = (() => {
+                    const withoutPlaceholder = contentBlocks.filter(b => b.id !== transcriptionPlaceholderId);
                     const lastBlock = withoutPlaceholder[withoutPlaceholder.length - 1];
                     if (lastBlock && lastBlock.type === 'text') {
                       const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
                       const newContent = currentContent ? currentContent + ' ' + data.text : data.text;
                       return [...withoutPlaceholder.slice(0, -1), { ...lastBlock, content: newContent }];
                     }
-                    return [...withoutPlaceholder, { type: 'text', id: crypto.randomUUID(), content: data.text }];
-                  });
+                    return [...withoutPlaceholder, { type: 'text' as const, id: crypto.randomUUID(), content: data.text }];
+                  })();
+                  setContentBlocks(newBlocks);
+                  contentBlocksRef.current = newBlocks;
 
                   // Resize textarea after content updates
                   setTimeout(() => {
@@ -1937,16 +1937,17 @@ const Note = () => {
     }
 
     // Convert interim markers to final text (keep the text, just remove ||)
-    setContentBlocks(prev => {
-      const lastBlock = prev[prev.length - 1];
+    const newBlocks = (() => {
+      const lastBlock = contentBlocks[contentBlocks.length - 1];
       if (lastBlock && lastBlock.type === 'text') {
         const content = (lastBlock as { type: 'text'; id: string; content: string }).content;
-        // Replace || with space and trim - this keeps the interim text as final
         const cleanContent = content.replace(/\|\|/g, ' ').trim();
-        return [...prev.slice(0, -1), { ...lastBlock, content: cleanContent }];
+        return [...contentBlocks.slice(0, -1), { ...lastBlock, content: cleanContent }];
       }
-      return prev;
-    });
+      return contentBlocks;
+    })();
+    setContentBlocks(newBlocks);
+    contentBlocksRef.current = newBlocks;
 
     if (recordingIntervalRef.current) {
       clearInterval(recordingIntervalRef.current);
@@ -2785,9 +2786,11 @@ const Note = () => {
       const deltaPercent = (deltaX / containerWidth) * 100;
       const newWidth = Math.min(100, Math.max(30, startWidth + deltaPercent));
 
-      setContentBlocks(prev => prev.map(b =>
+      const newBlocks = contentBlocks.map(b =>
         b.type === 'image' && b.id === id ? { ...b, width: newWidth } : b
-      ));
+      );
+      setContentBlocks(newBlocks);
+      contentBlocksRef.current = newBlocks;
     };
 
     const handleMouseUp = () => {
@@ -2816,9 +2819,11 @@ const Note = () => {
       const deltaPercent = (deltaX / containerWidth) * 100;
       const newWidth = Math.min(100, Math.max(30, startWidth + deltaPercent));
 
-      setContentBlocks(prev => prev.map(b =>
+      const newBlocks = contentBlocks.map(b =>
         b.type === 'image' && b.id === id ? { ...b, width: newWidth } : b
-      ));
+      );
+      setContentBlocks(newBlocks);
+      contentBlocksRef.current = newBlocks;
     };
 
     const handleTouchEnd = () => {
