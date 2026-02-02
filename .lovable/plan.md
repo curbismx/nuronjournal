@@ -1,114 +1,121 @@
 
 
-## Fix: Desktop-Only Save Race Condition in Note.tsx
+## Fix: Sync contentBlocksRef in 4 Additional Locations
 
 ### Problem
-There's a race condition on desktop where `contentBlocksRef` is synced via `useEffect` (runs AFTER render) but auto-save reads from it, causing stale data to be saved when typing fast. Mobile is NOT affected because it uses a different save flow.
+Same race condition as previously fixed - `setContentBlocks` is called but `contentBlocksRef` is not immediately synced, which can cause stale data to be saved during auto-save.
 
 ---
 
-### Change 1: Auto-save useEffect (Lines 2577-2597)
-**Issue:** The auto-save timer fires 500ms after content changes, but reads from `contentBlocksRef` which may not be updated yet.
+### Change 1: Transcription Result Handler (Lines 1259-1270)
+**Location:** Inside the transcription success callback
 
-**Fix:** Capture `contentBlocks` and `audioUrls` at the moment the effect runs, then sync them to refs just before calling `saveNote()`.
-
+**Current Code:**
 ```typescript
-// Before (line 2588-2591)
-const timer = setTimeout(() => {
-  if (!isTransitioningRef.current) {
-    saveNote();
-  }
-}, 500);
-
-// After
-const capturedContentBlocks = contentBlocks;
-const capturedAudioUrls = audioUrls;
-
-const timer = setTimeout(() => {
-  if (!isTransitioningRef.current) {
-    contentBlocksRef.current = capturedContentBlocks;
-    audioUrlsRef.current = capturedAudioUrls;
-    saveNote();
-  }
-}, 500);
-```
-
----
-
-### Change 2: Textarea onChange Handler (Lines 3222-3231)
-**Issue:** When typing, `setContentBlocks` is called but `contentBlocksRef` is not updated immediately.
-
-**Fix:** Sync ref immediately after state update.
-
-```typescript
-// Before (line 3227)
-setContentBlocks(newBlocks);
-
-// After
-setContentBlocks(newBlocks);
-contentBlocksRef.current = newBlocks;
-```
-
----
-
-### Change 3: Backspace onKeyDown Handler (Lines 3241-3277)
-**Issue:** When deleting images or merging text blocks via backspace, the ref is not synced.
-
-**Fix:** Use direct block manipulation instead of functional updates and sync ref immediately.
-
-```typescript
-// Before (line 3249)
-setContentBlocks(prev => prev.filter(b => b.id !== prevBlock.id));
-
-// After
-const newBlocks = contentBlocks.filter(b => b.id !== prevBlock.id);
-setContentBlocks(newBlocks);
-contentBlocksRef.current = newBlocks;
-
-// Before (lines 3258-3261)
-setContentBlocks(prev => prev
-  .filter(b => b.id !== block.id)
-  .map(b => b.id === prevBlock.id ? { ...b, content: mergedContent } : b)
-);
-
-// After
-const newBlocks = contentBlocks
-  .filter(b => b.id !== block.id)
-  .map(b => b.id === prevBlock.id ? { ...b, content: mergedContent } : b);
-setContentBlocks(newBlocks);
-contentBlocksRef.current = newBlocks;
-```
-
----
-
-### Change 4: rewriteText Function (Lines 824-848)
-**Issue:** After rewriting text, the ref is not synced with the new blocks.
-
-**Fix:** Compute new blocks first, then set both state and ref.
-
-```typescript
-// Before (lines 826-837)
 setContentBlocks(prev => {
-  const imageBlocks = prev.filter(b => b.type === 'image');
-  const rewrittenTextBlock = { ... };
-  if (imageBlocks.length > 0) {
-    const trailingTextBlock = { ... };
-    return [rewrittenTextBlock, ...imageBlocks, trailingTextBlock];
+  // Remove placeholder
+  const withoutPlaceholder = prev.filter(b => b.id !== transcriptionPlaceholderId);
+  // Add transcribed text
+  const lastBlock = withoutPlaceholder[withoutPlaceholder.length - 1];
+  if (lastBlock && lastBlock.type === 'text') {
+    const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
+    const newContent = currentContent ? currentContent + ' ' + data.text : data.text;
+    return [...withoutPlaceholder.slice(0, -1), { ...lastBlock, content: newContent }];
   }
-  return [rewrittenTextBlock, ...imageBlocks];
+  return [...withoutPlaceholder, { type: 'text', id: crypto.randomUUID(), content: data.text }];
 });
+```
 
-// After
+**Updated Code:**
+```typescript
 const newBlocks = (() => {
-  const imageBlocks = contentBlocks.filter(b => b.type === 'image');
-  const rewrittenTextBlock = { ... };
-  if (imageBlocks.length > 0) {
-    const trailingTextBlock = { ... };
-    return [rewrittenTextBlock, ...imageBlocks, trailingTextBlock];
+  const withoutPlaceholder = contentBlocks.filter(b => b.id !== transcriptionPlaceholderId);
+  const lastBlock = withoutPlaceholder[withoutPlaceholder.length - 1];
+  if (lastBlock && lastBlock.type === 'text') {
+    const currentContent = (lastBlock as { type: 'text'; id: string; content: string }).content;
+    const newContent = currentContent ? currentContent + ' ' + data.text : data.text;
+    return [...withoutPlaceholder.slice(0, -1), { ...lastBlock, content: newContent }];
   }
-  return [rewrittenTextBlock, ...imageBlocks];
+  return [...withoutPlaceholder, { type: 'text', id: crypto.randomUUID(), content: data.text }];
 })();
+setContentBlocks(newBlocks);
+contentBlocksRef.current = newBlocks;
+```
 
+---
+
+### Change 2: Web Speech Stop Recording Cleanup (Lines 1939-1949)
+**Location:** Inside the stopWebSpeechRecording cleanup logic
+
+**Current Code:**
+```typescript
+// Convert interim markers to final text (keep the text, just remove ||)
+setContentBlocks(prev => {
+  const lastBlock = prev[prev.length - 1];
+  if (lastBlock && lastBlock.type === 'text') {
+    const content = (lastBlock as { type: 'text'; id: string; content: string }).content;
+    // Replace || with space and trim - this keeps the interim text as final
+    const cleanContent = content.replace(/\|\|/g, ' ').trim();
+    return [...prev.slice(0, -1), { ...lastBlock, content: cleanContent }];
+  }
+  return prev;
+});
+```
+
+**Updated Code:**
+```typescript
+// Convert interim markers to final text (keep the text, just remove ||)
+const newBlocks = (() => {
+  const lastBlock = contentBlocks[contentBlocks.length - 1];
+  if (lastBlock && lastBlock.type === 'text') {
+    const content = (lastBlock as { type: 'text'; id: string; content: string }).content;
+    const cleanContent = content.replace(/\|\|/g, ' ').trim();
+    return [...contentBlocks.slice(0, -1), { ...lastBlock, content: cleanContent }];
+  }
+  return contentBlocks;
+})();
+setContentBlocks(newBlocks);
+contentBlocksRef.current = newBlocks;
+```
+
+---
+
+### Change 3: Mouse Image Resize Handler (Lines 2788-2790)
+**Location:** Inside `handleMouseMove` in `startResizeMouse`
+
+**Current Code:**
+```typescript
+setContentBlocks(prev => prev.map(b =>
+  b.type === 'image' && b.id === id ? { ...b, width: newWidth } : b
+));
+```
+
+**Updated Code:**
+```typescript
+const newBlocks = contentBlocks.map(b =>
+  b.type === 'image' && b.id === id ? { ...b, width: newWidth } : b
+);
+setContentBlocks(newBlocks);
+contentBlocksRef.current = newBlocks;
+```
+
+---
+
+### Change 4: Touch Image Resize Handler (Lines 2819-2821)
+**Location:** Inside `handleTouchMove` in `startResizeTouch`
+
+**Current Code:**
+```typescript
+setContentBlocks(prev => prev.map(b =>
+  b.type === 'image' && b.id === id ? { ...b, width: newWidth } : b
+));
+```
+
+**Updated Code:**
+```typescript
+const newBlocks = contentBlocks.map(b =>
+  b.type === 'image' && b.id === id ? { ...b, width: newWidth } : b
+);
 setContentBlocks(newBlocks);
 contentBlocksRef.current = newBlocks;
 ```
@@ -117,12 +124,12 @@ contentBlocksRef.current = newBlocks;
 
 ### Summary
 
-| Change | Location | Fix |
-|--------|----------|-----|
-| 1 | Lines 2577-2597 | Capture content at effect time, sync to ref before save |
-| 2 | Lines 3222-3231 | Sync ref immediately on textarea change |
-| 3 | Lines 3241-3277 | Sync ref on backspace delete/merge |
-| 4 | Lines 824-848 | Sync ref after rewrite completes |
+| Change | Location | Context |
+|--------|----------|---------|
+| 1 | Lines 1259-1270 | Transcription result handler |
+| 2 | Lines 1939-1949 | Web speech stop recording cleanup |
+| 3 | Lines 2788-2790 | Mouse image resize handler |
+| 4 | Lines 2819-2821 | Touch image resize handler |
 
-This follows the established "sync ref immediately" pattern already used in `handleImageSelect` and other handlers in Note.tsx.
+All four changes follow the established "sync ref immediately" pattern to prevent stale data during auto-save.
 
