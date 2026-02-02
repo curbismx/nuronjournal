@@ -1,133 +1,128 @@
 
 
-## NURON Bug Fixes - 3 Critical Changes
+## Fix: Desktop-Only Save Race Condition in Note.tsx
 
-### Fix 1: Save note when app goes to background (mobile)
-**File:** `src/pages/Note.tsx`  
-**Location:** Lines 423-437
+### Problem
+There's a race condition on desktop where `contentBlocksRef` is synced via `useEffect` (runs AFTER render) but auto-save reads from it, causing stale data to be saved when typing fast. Mobile is NOT affected because it uses a different save flow.
 
-**Current Code:**
+---
+
+### Change 1: Auto-save useEffect (Lines 2577-2597)
+**Issue:** The auto-save timer fires 500ms after content changes, but reads from `contentBlocksRef` which may not be updated yet.
+
+**Fix:** Capture `contentBlocks` and `audioUrls` at the moment the effect runs, then sync them to refs just before calling `saveNote()`.
+
 ```typescript
-// Handle audio playback interruption (e.g., phone call, switching apps)
-useEffect(() => {
-  const handleVisibilityChange = () => {
-    if (document.hidden && playingAudioIndex !== null) {
-      // Pause audio when tab/app becomes hidden
-      audioPlayerRefs.current[playingAudioIndex]?.pause();
-      setPlayingAudioIndex(null);
-    }
-  };
+// Before (line 2588-2591)
+const timer = setTimeout(() => {
+  if (!isTransitioningRef.current) {
+    saveNote();
+  }
+}, 500);
 
-  document.addEventListener('visibilitychange', handleVisibilityChange);
-  return () => {
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-  };
-}, [playingAudioIndex]);
-```
+// After
+const capturedContentBlocks = contentBlocks;
+const capturedAudioUrls = audioUrls;
 
-**Updated Code:**
-```typescript
-// Handle audio playback interruption AND save when app goes to background
-useEffect(() => {
-  const handleVisibilityChange = () => {
-    if (document.hidden) {
-      // Pause audio when tab/app becomes hidden
-      if (playingAudioIndex !== null) {
-        audioPlayerRefs.current[playingAudioIndex]?.pause();
-        setPlayingAudioIndex(null);
-      }
-      // SAVE note when app goes to background (prevents data loss)
-      saveNoteRef.current?.();
-    }
-  };
-
-  document.addEventListener('visibilitychange', handleVisibilityChange);
-  return () => {
-    document.removeEventListener('visibilitychange', handleVisibilityChange);
-  };
-}, [playingAudioIndex]);
+const timer = setTimeout(() => {
+  if (!isTransitioningRef.current) {
+    contentBlocksRef.current = capturedContentBlocks;
+    audioUrlsRef.current = capturedAudioUrls;
+    saveNote();
+  }
+}, 500);
 ```
 
 ---
 
-### Fix 2: Add error handling when creating default folder fails
-**File:** `src/pages/Index.tsx`  
-**Location:** Lines 652-662
+### Change 2: Textarea onChange Handler (Lines 3222-3231)
+**Issue:** When typing, `setContentBlocks` is called but `contentBlocksRef` is not updated immediately.
 
-**Current Code:**
-```typescript
-if (newFolder && !createError) {
-  const typedFolder: Folder = {
-    ...newFolder,
-    default_view: (newFolder.default_view || 'collapsed') as 'collapsed' | 'compact',
-    notes_sort_order: (newFolder.notes_sort_order || 'desc') as 'asc' | 'desc'
-  };
-  setFolders([typedFolder]);
-  setCurrentFolder(typedFolder);
-  setViewMode(typedFolder.default_view);
-  localStorage.setItem('nuron-current-folder-id', typedFolder.id);
-}
-```
+**Fix:** Sync ref immediately after state update.
 
-**Updated Code:**
 ```typescript
-if (newFolder && !createError) {
-  const typedFolder: Folder = {
-    ...newFolder,
-    default_view: (newFolder.default_view || 'collapsed') as 'collapsed' | 'compact',
-    notes_sort_order: (newFolder.notes_sort_order || 'desc') as 'asc' | 'desc'
-  };
-  setFolders([typedFolder]);
-  setCurrentFolder(typedFolder);
-  setViewMode(typedFolder.default_view);
-  localStorage.setItem('nuron-current-folder-id', typedFolder.id);
-} else if (createError) {
-  console.error('Failed to create default folder:', createError);
-  toast.error('Failed to create folder. Please try again.');
-}
+// Before (line 3227)
+setContentBlocks(newBlocks);
+
+// After
+setContentBlocks(newBlocks);
+contentBlocksRef.current = newBlocks;
 ```
 
 ---
 
-### Fix 3: Prevent potential crash when contentBlocks is empty
-**File:** `src/pages/Note.tsx`  
-**Location:** Before line 2332
+### Change 3: Backspace onKeyDown Handler (Lines 3241-3277)
+**Issue:** When deleting images or merging text blocks via backspace, the ref is not synced.
 
-**Current Code:**
+**Fix:** Use direct block manipulation instead of functional updates and sync ref immediately.
+
 ```typescript
-// Use refs to get the most up-to-date state (fixes stale closure issue)
-const currentContentBlocks = contentBlocksRef.current;
-const currentAudioUrls = audioUrlsRef.current;
+// Before (line 3249)
+setContentBlocks(prev => prev.filter(b => b.id !== prevBlock.id));
 
-// Get note content from the current content blocks
-const noteContent = currentContentBlocks
-  .filter(b => {
+// After
+const newBlocks = contentBlocks.filter(b => b.id !== prevBlock.id);
+setContentBlocks(newBlocks);
+contentBlocksRef.current = newBlocks;
+
+// Before (lines 3258-3261)
+setContentBlocks(prev => prev
+  .filter(b => b.id !== block.id)
+  .map(b => b.id === prevBlock.id ? { ...b, content: mergedContent } : b)
+);
+
+// After
+const newBlocks = contentBlocks
+  .filter(b => b.id !== block.id)
+  .map(b => b.id === prevBlock.id ? { ...b, content: mergedContent } : b);
+setContentBlocks(newBlocks);
+contentBlocksRef.current = newBlocks;
 ```
 
-**Updated Code:**
+---
+
+### Change 4: rewriteText Function (Lines 824-848)
+**Issue:** After rewriting text, the ref is not synced with the new blocks.
+
+**Fix:** Compute new blocks first, then set both state and ref.
+
 ```typescript
-// Use refs to get the most up-to-date state (fixes stale closure issue)
-const currentContentBlocks = contentBlocksRef.current;
-const currentAudioUrls = audioUrlsRef.current;
+// Before (lines 826-837)
+setContentBlocks(prev => {
+  const imageBlocks = prev.filter(b => b.type === 'image');
+  const rewrittenTextBlock = { ... };
+  if (imageBlocks.length > 0) {
+    const trailingTextBlock = { ... };
+    return [rewrittenTextBlock, ...imageBlocks, trailingTextBlock];
+  }
+  return [rewrittenTextBlock, ...imageBlocks];
+});
 
-// Safety check for empty contentBlocks
-if (!currentContentBlocks || currentContentBlocks.length === 0) {
-  console.log('No content blocks, returning early');
-  return;
-}
+// After
+const newBlocks = (() => {
+  const imageBlocks = contentBlocks.filter(b => b.type === 'image');
+  const rewrittenTextBlock = { ... };
+  if (imageBlocks.length > 0) {
+    const trailingTextBlock = { ... };
+    return [rewrittenTextBlock, ...imageBlocks, trailingTextBlock];
+  }
+  return [rewrittenTextBlock, ...imageBlocks];
+})();
 
-// Get note content from the current content blocks
-const noteContent = currentContentBlocks
-  .filter(b => {
+setContentBlocks(newBlocks);
+contentBlocksRef.current = newBlocks;
 ```
 
 ---
 
 ### Summary
 
-| Fix | File | Issue Addressed |
-|-----|------|-----------------|
-| 1 | Note.tsx (L423-437) | Data loss when app goes to background on mobile |
-| 2 | Index.tsx (L652-662) | Silent failure when creating default folder |
-| 3 | Note.tsx (before L2332) | Potential crash with empty content blocks |
+| Change | Location | Fix |
+|--------|----------|-----|
+| 1 | Lines 2577-2597 | Capture content at effect time, sync to ref before save |
+| 2 | Lines 3222-3231 | Sync ref immediately on textarea change |
+| 3 | Lines 3241-3277 | Sync ref on backspace delete/merge |
+| 4 | Lines 824-848 | Sync ref after rewrite completes |
+
+This follows the established "sync ref immediately" pattern already used in `handleImageSelect` and other handlers in Note.tsx.
 
