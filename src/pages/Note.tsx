@@ -275,7 +275,7 @@ const Note = () => {
   const [isRecordingOpen, setIsRecordingOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const recordingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const recognitionRef = useRef<any>(null);
   const isRecordingRef = useRef(false);
