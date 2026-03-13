@@ -3520,7 +3520,7 @@ const Index = () => {
 
       {/* Folders panel - sits behind the card */}
       <div
-        className={`absolute inset-x-0 bottom-0 transition-opacity duration-200 overflow-y-auto ${showFolders && !showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`absolute inset-x-0 bottom-0 flex flex-col transition-opacity duration-200 ${showFolders && !showSettings ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         style={{
           backgroundColor: themeColors[theme],
           top: `calc(60px + env(safe-area-inset-top))`,
@@ -3529,7 +3529,8 @@ const Index = () => {
           paddingTop: '30px'
         }}
       >
-        {/* Folders list */}
+        {/* Folders list - scrollable, stops above settings button */}
+        <div className="flex-1 overflow-y-auto" style={{ paddingBottom: '20px' }}>
         <div className="space-y-1 pt-[70px]">
           <DndContext
             sensors={sensors}
@@ -3581,9 +3582,10 @@ const Index = () => {
             </DragOverlay>
           </DndContext>
         </div>
+        </div>
 
         {/* Settings link at bottom */}
-        <div className="absolute left-8" style={{ bottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
+        <div style={{ paddingLeft: '2px', paddingTop: '16px', paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
           <button
             onClick={() => {
               setShowFolders(false);
