@@ -1995,7 +1995,7 @@ function SortableFolderItem({
                         <div
                           key={`month-${groupMonthYear}-${groupIndex}`}
                           className={`sticky top-0 z-10 px-[22px] ${useMobileColorScheme ? 'bg-[#CACAC2]' : 'bg-[#E8E8E5]'}`}
-                          style={{ height: '22px', display: 'flex', alignItems: 'center' }}
+                          style={{ height: '34px', display: 'flex', alignItems: 'center', paddingLeft: '10px' }}
                         >
                           <span className={`text-[18px] font-outfit font-light tracking-wider leading-none ${useMobileColorScheme ? 'text-white' : 'text-[hsl(60,1%,50%)]'}`}>
                             {groupMonthYear}
