@@ -1783,213 +1783,76 @@ function SortableFolderItem({
 
             {/* Folders list - below the header */}
             <div className="flex-1 px-[20px] pt-[30px] overflow-y-auto relative">
-              <div className="relative">
-                {folders.map((folder, folderIndex) => {
-                  const isDragging = draggedFolder?.id === folder.id;
-                  const showLineBefore = dropLineIndex === folderIndex && !isDragging;
-                  const showLineAfter = dropLineIndex === folderIndex + 1 && folderIndex === folders.length - 1 && !isDragging;
-
-                  return (
-                    <div
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={folders.map(f => f.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {folders.map((folder) => (
+                    <SortableFolderItem
                       key={folder.id}
-                      draggable
-                      onDragStart={(e) => {
-                        setDraggedFolder(folder);
-                        e.dataTransfer.effectAllowed = 'move';
-                        setTimeout(() => {
-                          (e.target as HTMLElement).style.opacity = '0.3';
-                        }, 0);
-                      }}
-                      onDragEnd={(e) => {
-                        (e.target as HTMLElement).style.opacity = '';
-                        setDraggedFolder(null);
-                        setDropLineIndex(null);
-                      }}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-
-                        // Handle note drops (keep existing behavior)
-                        if (draggedNote && draggedNote.folder_id !== folder.id) {
-                          setDragOverFolder(folder.id);
-                        }
-
-                        // Handle folder reordering with line position
-                        if (!draggedFolder || draggedFolder.id === folder.id) return;
-
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const midpoint = rect.top + rect.height / 2;
-
-                        if (e.clientY < midpoint) {
-                          if (dropLineIndex !== folderIndex) {
-                            setDropLineIndex(folderIndex);
+                      folder={folder}
+                      isActive={currentFolder?.id === folder.id}
+                      currentFolderId={currentFolder?.id}
+                      folderDropFlash={folderDropFlash}
+                      dragOverFolder={dragOverFolder}
+                      onFolderClick={async (folder) => {
+                        if (desktopSelectedNoteId?.startsWith('new-')) {
+                          const iframe = document.getElementById('note-editor-iframe') as HTMLIFrameElement;
+                          if (iframe?.contentWindow) {
+                            iframe.contentWindow.postMessage({ type: 'force-save' }, '*');
                           }
+                        }
+                        setIsCreatingNewNote(false);
+                        setSavedNotes(prev => prev.filter(n => !n.id.startsWith('new-')));
+                        setCurrentFolder(folder);
+                        localStorage.setItem('nuron-current-folder-id', folder.id);
+                        setDesktopSelectedNoteId(null);
+                        lastSentNoteIdRef.current = null;
+                        setViewMode(folder.default_view || 'collapsed');
+                        setSortOrder(folder.notes_sort_order || 'desc');
+                        setUserChangedView(false);
+                      }}
+                      onFolderOptionsClick={(e, folder) => {
+                        e.stopPropagation();
+                        if (desktopShowFolderOptions && desktopEditingFolder?.id === folder.id) {
+                          setDesktopShowFolderOptions(false);
+                          setDesktopEditingFolder(null);
                         } else {
-                          if (dropLineIndex !== folderIndex + 1) {
-                            setDropLineIndex(folderIndex + 1);
-                          }
+                          setDesktopEditingFolder(folder);
+                          setNewFolderName(folder.name);
+                          setNewFolderDefaultView(folder.default_view || 'collapsed');
+                          setNewFolderSortOrder(folder.notes_sort_order || 'desc');
+                          setNewFolderIsBlog(folder.is_blog || false);
+                          setNewFolderBlogSlug(folder.blog_slug || '');
+                          setNewFolderBlogName(folder.blog_name || '');
+                          setNewFolderBlogPassword(folder.blog_password || '');
+                          setNewFolderBlogSubheading(folder.blog_subheading || '');
+                          setNewFolderBlogHeaderImage(folder.blog_header_image || '');
+                          setBlogSlugAvailable(null);
+                          setDesktopShowFolderOptions(true);
                         }
                       }}
-                      onDrop={async (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
+                      folderIconSrc={folderIcon}
+                      threeDotsIconSrc={threeDotsIcon}
+                    />
+                  ))}
+                </SortableContext>
 
-                        // Handle note drops (existing logic)
-                        if (draggedNote && draggedNote.folder_id !== folder.id) {
-                          const { error } = await supabase
-                            .from('notes')
-                            .update({ folder_id: folder.id })
-                            .eq('id', draggedNote.id);
-
-                          if (!error) {
-                            setFolderDropFlash(folder.id);
-                            setTimeout(() => setFolderDropFlash(null), 500);
-                            setSavedNotes(prev => prev.filter(n => n.id !== draggedNote.id));
-                            if (desktopSelectedNoteId === draggedNote.id) {
-                              setDesktopSelectedNoteId(null);
-                            }
-                          } else {
-                            toast.error('Failed to move note');
-                          }
-                          setDraggedNote(null);
-                        }
-
-                        // Handle folder reordering
-                        if (!draggedFolder || dropLineIndex === null) {
-                          setDraggedFolder(null);
-                          setDropLineIndex(null);
-                          return;
-                        }
-
-                        const oldIndex = folders.findIndex(f => f.id === draggedFolder.id);
-                        let newIndex = dropLineIndex;
-
-                        // Don't do anything if dropping in same position
-                        if (newIndex === oldIndex || newIndex === oldIndex + 1) {
-                          setDraggedFolder(null);
-                          setDropLineIndex(null);
-                          return;
-                        }
-
-                        // Adjust index if moving down
-                        if (oldIndex < newIndex) {
-                          newIndex--;
-                        }
-
-                        // Reorder locally first for instant feedback
-                        const newFolders = [...folders];
-                        const [movedFolder] = newFolders.splice(oldIndex, 1);
-                        newFolders.splice(newIndex, 0, movedFolder);
-                        setFolders(newFolders);
-
-                        // Update database
-                        for (let i = 0; i < newFolders.length; i++) {
-                          await supabase
-                            .from('folders')
-                            .update({ sort_order: i })
-                            .eq('id', newFolders[i].id);
-                        }
-
-                        setDraggedFolder(null);
-                        setDropLineIndex(null);
-                      }}
-                      className={`relative flex items-center justify-between w-full py-2 transition-all duration-200 ${currentFolder?.id === folder.id ? 'opacity-100' : 'opacity-50 hover:opacity-70'
-                        } ${draggedFolder?.id === folder.id ? 'opacity-30' : ''
-                        }`}
-                      style={{ cursor: 'grab' }}
-                    >
-                      {/* Full-width highlight overlay for note drop */}
-                      {dragOverFolder === folder.id && (
-                        <div
-                          className="absolute inset-y-0 bg-white/20 rounded-[8px] pointer-events-none"
-                          style={{ left: '-20px', right: '-20px' }}
-                        />
-                      )}
-
-                      {/* Flash overlay */}
-                      {folderDropFlash === folder.id && (
-                        <div
-                          className="absolute inset-y-0 bg-white/40 rounded-[8px] pointer-events-none"
-                          style={{ left: '-20px', right: '-20px' }}
-                        />
-                      )}
-
-                      {/* Drop line for folder reordering */}
-                      {dropLineIndex === folderIndex && draggedFolder && draggedFolder.id !== folder.id && (
-                        <div
-                          className="absolute left-[-20px] right-[-20px] h-[2px] bg-white rounded-full"
-                          style={{ top: '-4px' }}
-                        />
-                      )}
-
-                      <button
-                        onClick={async () => {
-                          // Save any new note before switching folders
-                          if (desktopSelectedNoteId?.startsWith('new-')) {
-                            // Tell iframe to save immediately
-                            const iframe = document.getElementById('note-editor-iframe') as HTMLIFrameElement;
-                            if (iframe?.contentWindow) {
-                              iframe.contentWindow.postMessage({ type: 'force-save' }, '*');
-                            }
-                          }
-
-                          // CRITICAL: Reset creating state FIRST to allow loadNotes to run
-                          setIsCreatingNewNote(false);
-                          setSavedNotes(prev => prev.filter(n => !n.id.startsWith('new-')));
-
-                          setCurrentFolder(folder);
-                          localStorage.setItem('nuron-current-folder-id', folder.id);
-                          setDesktopSelectedNoteId(null);
-                          // Clear the sent ref so first note click in new folder works
-                          lastSentNoteIdRef.current = null;
-                          setViewMode(folder.default_view || 'collapsed');
-                          setSortOrder(folder.notes_sort_order || 'desc');
-                          setUserChangedView(false);
-                        }}
-                        className="flex items-center gap-3 flex-1 text-left relative z-10"
-                      >
-                        <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
-                        <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (desktopShowFolderOptions && desktopEditingFolder?.id === folder.id) {
-                            setDesktopShowFolderOptions(false);
-                            setDesktopEditingFolder(null);
-                          } else {
-                            setDesktopEditingFolder(folder);
-                            setNewFolderName(folder.name);
-                            setNewFolderDefaultView(folder.default_view || 'collapsed');
-                            setNewFolderSortOrder(folder.notes_sort_order || 'desc');
-                            setNewFolderIsBlog(folder.is_blog || false);
-                            setNewFolderBlogSlug(folder.blog_slug || '');
-                            setNewFolderBlogName(folder.blog_name || '');
-                            setNewFolderBlogPassword(folder.blog_password || '');
-                            setNewFolderBlogSubheading(folder.blog_subheading || '');
-                            setNewFolderBlogHeaderImage(folder.blog_header_image || '');
-                            setBlogSlugAvailable(null);
-                            setDesktopShowFolderOptions(true);
-                          }
-                        }}
-                        className="mr-[10px] p-0 m-0 border-0 bg-transparent relative z-10"
-                      >
-                        <img
-                          src={threeDotsIcon}
-                          alt="Options"
-                          style={{ width: '4px', height: '18px' }}
-                          className="opacity-70"
-                        />
-                      </button>
+                <DragOverlay>
+                  {activeDragFolder ? (
+                    <div className="flex items-center gap-3 py-2 px-4 rounded-[10px] bg-white/20 backdrop-blur-md shadow-lg border border-white/30">
+                      <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
+                      <span className="text-white text-[18px] font-outfit font-light">{activeDragFolder.name}</span>
                     </div>
-                  );
-                })}
-
-                {/* Drop line at very end of list */}
-                {dropLineIndex === folders.length && draggedFolder && (
-                  <div className="h-[2px] bg-white rounded-full mt-1" />
-                )}
-              </div>
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
             </div>
 
             {/* Settings at bottom */}
