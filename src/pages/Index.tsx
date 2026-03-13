@@ -487,7 +487,7 @@ const Index = () => {
   const [desktopShowDeleteFolderConfirm, setDesktopShowDeleteFolderConfirm] = useState(false);
   const [draggedFolder, setDraggedFolder] = useState<Folder | null>(null);
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
-  const [dropLineIndex, setDropLineIndex] = useState<number | null>(null);
+  const [activeDragFolder, setActiveDragFolder] = useState<Folder | null>(null);
 
   // Blog settings states
   const [newFolderIsBlog, setNewFolderIsBlog] = useState(false);
