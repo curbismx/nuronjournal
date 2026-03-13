@@ -141,7 +141,8 @@ interface SortableFolderItemProps {
   onFolderClick: (folder: Folder) => void;
   onFolderOptionsClick: (e: React.MouseEvent, folder: Folder) => void;
   folderIconSrc: string;
-  threeDotsIconSrc: string;
+  folderSettingsIcon: string;
+  folderArrow: string;
 }
 
 function SortableFolderItem({
@@ -153,7 +154,8 @@ function SortableFolderItem({
   onFolderClick,
   onFolderOptionsClick,
   folderIconSrc,
-  threeDotsIconSrc,
+  folderSettingsIcon,
+  folderArrow,
 }: SortableFolderItemProps) {
   const {
     attributes,
@@ -201,16 +203,20 @@ function SortableFolderItem({
         <img src={folderIconSrc} alt="" className="w-[18px] h-[18px]" />
         <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
       </button>
+      {folder.id !== 'local-notes' && (
+        <button
+          onClick={(e) => onFolderOptionsClick(e, folder)}
+          className="p-2 m-0 mr-[20px] border-0 bg-transparent relative z-10"
+          aria-label="Folder options"
+        >
+          <img src={folderSettingsIcon} alt="Options" className="w-[20px] h-auto opacity-70" />
+        </button>
+      )}
       <button
-        onClick={(e) => onFolderOptionsClick(e, folder)}
-        className="mr-[10px] p-0 m-0 border-0 bg-transparent relative z-10"
+        onClick={(e) => { e.stopPropagation(); onFolderClick(folder); }}
+        className="p-2 m-0 border-0 bg-transparent relative z-10"
       >
-        <img
-          src={threeDotsIconSrc}
-          alt="Options"
-          style={{ width: '4px', height: '18px' }}
-          className="opacity-70"
-        />
+        <img src={folderArrow} alt="Select" className="h-[16px] w-auto opacity-70" />
       </button>
     </div>
   );
