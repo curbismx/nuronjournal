@@ -135,6 +135,90 @@ const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const isDesktop = useDesktop();
 
+interface SortableFolderItemProps {
+  folder: Folder;
+  isActive: boolean;
+  currentFolderId: string | undefined;
+  folderDropFlash: string | null;
+  dragOverFolder: string | null;
+  onFolderClick: (folder: Folder) => void;
+  onFolderOptionsClick: (e: React.MouseEvent, folder: Folder) => void;
+  folderIconSrc: string;
+  threeDotsIconSrc: string;
+}
+
+function SortableFolderItem({
+  folder,
+  isActive,
+  currentFolderId,
+  folderDropFlash,
+  dragOverFolder,
+  onFolderClick,
+  onFolderOptionsClick,
+  folderIconSrc,
+  threeDotsIconSrc,
+}: SortableFolderItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: folder.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: transition || 'transform 250ms cubic-bezier(0.25, 1, 0.5, 1)',
+    opacity: isDragging ? 0 : 1,
+    zIndex: isDragging ? 999 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`relative flex items-center justify-between w-full py-2 transition-all duration-200 ${
+        currentFolderId === folder.id ? 'opacity-100' : 'opacity-50 hover:opacity-70'
+      }`}
+    >
+      {folderDropFlash === folder.id && (
+        <div
+          className="absolute inset-y-0 bg-white/40 rounded-[8px] pointer-events-none"
+          style={{ left: '-20px', right: '-20px' }}
+        />
+      )}
+      {dragOverFolder === folder.id && (
+        <div
+          className="absolute inset-y-0 bg-white/20 rounded-[8px] pointer-events-none"
+          style={{ left: '-20px', right: '-20px' }}
+        />
+      )}
+
+      <button
+        onClick={() => onFolderClick(folder)}
+        className="flex items-center gap-3 flex-1 text-left relative z-10"
+      >
+        <img src={folderIconSrc} alt="" className="w-[18px] h-[18px]" />
+        <span className="text-white text-[18px] font-outfit font-light">{folder.name}</span>
+      </button>
+      <button
+        onClick={(e) => onFolderOptionsClick(e, folder)}
+        className="mr-[10px] p-0 m-0 border-0 bg-transparent relative z-10"
+      >
+        <img
+          src={threeDotsIconSrc}
+          alt="Options"
+          style={{ width: '4px', height: '18px' }}
+          className="opacity-70"
+        />
+      </button>
+    </div>
+  );
+}
+
 
   const [desktopSelectedNoteId, setDesktopSelectedNoteId] = useState<string | null>(null);
   const [desktopShowSettings, setDesktopShowSettings] = useState(false);
