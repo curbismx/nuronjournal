@@ -281,8 +281,8 @@ const Note = () => {
   const isRecordingRef = useRef(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcriptionDots, setTranscriptionDots] = useState(0);
-  const transcriptionDotsIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const transcriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const transcriptionDotsIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const transcriptionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showTranscriptionNearlyThere, setShowTranscriptionNearlyThere] = useState(false);
   const recordingPlaceholderIdRef = useRef<string | null>(null);
   const [recordingDots, setRecordingDots] = useState(0);
