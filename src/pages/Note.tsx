@@ -288,7 +288,7 @@ const Note = () => {
   const [recordingDots, setRecordingDots] = useState(0);
   const recordingDotsIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [recordingMessageIndex, setRecordingMessageIndex] = useState(0);
-  const recordingMessageIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const recordingMessageIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const recordingMessages = [
     'listening',
