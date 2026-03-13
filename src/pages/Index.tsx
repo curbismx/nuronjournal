@@ -1852,7 +1852,8 @@ const Index = () => {
                         }
                       }}
                       folderIconSrc={folderIcon}
-                      threeDotsIconSrc={threeDotsIcon}
+                      folderSettingsIcon={folderSettingsIcon}
+                      folderArrow={folderArrow}
                     />
                   ))}
                 </SortableContext>
