@@ -3565,7 +3565,8 @@ const Index = () => {
                     setShowFolderPopup(true);
                   }}
                   folderIconSrc={folderIcon}
-                  threeDotsIconSrc={folderSettingsIcon}
+                  folderSettingsIcon={folderSettingsIcon}
+                  folderArrow={folderArrow}
                 />
               ))}
             </SortableContext>
