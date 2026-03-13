@@ -131,10 +131,6 @@ interface Folder {
   blog_password?: string;
 }
 
-const Index = () => {
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const isDesktop = useDesktop();
 
 interface SortableFolderItemProps {
   folder: Folder;
@@ -220,7 +216,7 @@ function SortableFolderItem({
   );
 }
 
-
+const Index = () => {
   const [desktopSelectedNoteId, setDesktopSelectedNoteId] = useState<string | null>(null);
   const [desktopShowSettings, setDesktopShowSettings] = useState(false);
   const [draggedNote, setDraggedNote] = useState<SavedNote | null>(null);
