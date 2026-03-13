@@ -3999,7 +3999,7 @@ function SortableFolderItem({
               return (
                 <React.Fragment key={group.date}>
                   {showMonthHeader && (
-                    <div className="sticky top-0 z-10 bg-[#CACAC2] px-[22px]" style={{ height: '22px', display: 'flex', alignItems: 'center' }}>
+                    <div className="sticky top-0 z-10 bg-[#CACAC2] px-[22px]" style={{ height: '34px', display: 'flex', alignItems: 'center', paddingLeft: '32px' }}>
                       <span className="text-white text-[18px] font-outfit font-light tracking-wider leading-none">
                         {groupMonthYear}
                       </span>
