@@ -275,20 +275,20 @@ const Note = () => {
   const [isRecordingOpen, setIsRecordingOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const recordingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const recognitionRef = useRef<any>(null);
   const isRecordingRef = useRef(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcriptionDots, setTranscriptionDots] = useState(0);
-  const transcriptionDotsIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const transcriptionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const transcriptionDotsIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const transcriptionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showTranscriptionNearlyThere, setShowTranscriptionNearlyThere] = useState(false);
   const recordingPlaceholderIdRef = useRef<string | null>(null);
   const [recordingDots, setRecordingDots] = useState(0);
-  const recordingDotsIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const recordingDotsIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [recordingMessageIndex, setRecordingMessageIndex] = useState(0);
-  const recordingMessageIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const recordingMessageIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const recordingMessages = [
     'listening',
@@ -3017,6 +3017,18 @@ const Note = () => {
               <p className="text-red-500 text-[16px] font-outfit font-light mt-[10px]">
                 Please choose which folder to move the note to
               </p>
+            )}
+            {showMoveNote && (
+              <button
+                onClick={() => setShowMoveNote(false)}
+                aria-label="Cancel move"
+                className="absolute top-0 md:hidden"
+                style={{
+                  right: `calc(30px + env(safe-area-inset-right))`
+                }}
+              >
+                <span className="text-white text-[28px] font-light leading-none">✕</span>
+              </button>
             )}
             {!showMoveNote && (
               <button
