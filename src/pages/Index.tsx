@@ -131,10 +131,6 @@ interface Folder {
   blog_password?: string;
 }
 
-const Index = () => {
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const isDesktop = useDesktop();
 
 interface SortableFolderItemProps {
   folder: Folder;
@@ -220,6 +216,10 @@ function SortableFolderItem({
   );
 }
 
+const Index = () => {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isDesktop = useDesktop();
 
   const [desktopSelectedNoteId, setDesktopSelectedNoteId] = useState<string | null>(null);
   const [desktopShowSettings, setDesktopShowSettings] = useState(false);
@@ -3524,69 +3524,54 @@ function SortableFolderItem({
       >
         {/* Folders list */}
         <div className="space-y-1 pt-[70px]">
-          {folders.map((folder) => (
-            <div
-              key={folder.id}
-              draggable
-              onDragStart={(e) => {
-                setDraggedFolder(folder);
-                e.dataTransfer.effectAllowed = 'move';
-              }}
-              onDragEnd={() => {
-                setDraggedFolder(null);
-                setDragOverFolder(null);
-              }}
-              onDragOver={(e) => {
-                e.preventDefault();
-                if (draggedFolder && draggedFolder.id !== folder.id) {
-                  setDragOverFolder(folder.id);
-                }
-              }}
-              onDragLeave={() => {
-                setDragOverFolder(null);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                if (draggedFolder && draggedFolder.id !== folder.id) {
-                  const newIndex = folders.findIndex(f => f.id === folder.id);
-                  updateFolderOrder(draggedFolder.id, newIndex);
-                }
-                setDraggedFolder(null);
-                setDragOverFolder(null);
-              }}
-              className={`flex items-center gap-3 py-2 transition-all duration-500 ease-out ${currentFolder?.id === folder.id ? 'bg-white/10 mx-[-32px] px-[32px]' : 'px-0'
-                } ${draggedFolder?.id === folder.id ? 'opacity-50 scale-[0.98]' : ''
-                } ${dragOverFolder === folder.id ? 'border-t-2 border-white/50' : ''
-                }`}
-              style={{
-                cursor: 'grab',
-                transition: 'transform 0.5s ease-out, opacity 0.3s ease-out'
-              }}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={folders.map(f => f.id)}
+              strategy={verticalListSortingStrategy}
             >
-              <img src={folderIcon} alt="Folder" className="w-[20px] h-[20px] mr-4 opacity-70" />
-              <button
-                onClick={() => selectFolder(folder)}
-                className="flex-1 text-left text-white text-[24px] font-outfit font-light"
-              >
-                {folder.name}
-              </button>
-              {user && folder.id !== 'local-notes' && (
-                <button
-                  onClick={() => openEditFolder(folder)}
-                  className="p-2 m-0 mr-[20px] border-0 bg-transparent"
-                  aria-label="Folder options"
-                >
-                  <img src={folderSettingsIcon} alt="Options" className="w-[20px] h-auto opacity-70" />
-                </button>
-              )}
-              <button
-                onClick={() => selectFolder(folder)}
-                className="p-2 m-0 border-0 bg-transparent"
-              >
-                <img src={folderArrow} alt="Select" className="h-[16px] w-auto opacity-70" />
-              </button>
-            </div>
-          ))}
+              {folders.map((folder) => (
+                <SortableFolderItem
+                  key={folder.id}
+                  folder={folder}
+                  isActive={currentFolder?.id === folder.id}
+                  currentFolderId={currentFolder?.id}
+                  folderDropFlash={folderDropFlash}
+                  dragOverFolder={dragOverFolder}
+                  onFolderClick={(folder) => {
+                    setCurrentFolder(folder);
+                    localStorage.setItem('nuron-current-folder-id', folder.id);
+                    setViewMode(folder.default_view || 'collapsed');
+                    setSortOrder(folder.notes_sort_order || 'desc');
+                    setShowFolders(false);
+                  }}
+                  onFolderOptionsClick={(e, folder) => {
+                    e.stopPropagation();
+                    setEditingFolder(folder);
+                    setNewFolderName(folder.name);
+                    setNewFolderDefaultView(folder.default_view || 'collapsed');
+                    setNewFolderSortOrder(folder.notes_sort_order || 'desc');
+                    setShowFolderPopup(true);
+                  }}
+                  folderIconSrc={folderIcon}
+                  threeDotsIconSrc={folderSettingsIcon}
+                />
+              ))}
+            </SortableContext>
+
+            <DragOverlay>
+              {activeDragFolder ? (
+                <div className="flex items-center gap-3 py-2 px-4 rounded-[10px] bg-white/20 backdrop-blur-md shadow-lg border border-white/30">
+                  <img src={folderIcon} alt="" className="w-[18px] h-[18px]" />
+                  <span className="text-white text-[18px] font-outfit font-light">{activeDragFolder.name}</span>
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         </div>
 
         {/* Settings link at bottom */}
