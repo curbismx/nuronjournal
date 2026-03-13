@@ -3018,6 +3018,18 @@ const Note = () => {
                 Please choose which folder to move the note to
               </p>
             )}
+            {showMoveNote && (
+              <button
+                onClick={() => setShowMoveNote(false)}
+                aria-label="Cancel move"
+                className="absolute top-0 md:hidden"
+                style={{
+                  right: `calc(30px + env(safe-area-inset-right))`
+                }}
+              >
+                <span className="text-white text-[28px] font-light leading-none">✕</span>
+              </button>
+            )}
             {!showMoveNote && (
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
