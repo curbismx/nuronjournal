@@ -3582,9 +3582,10 @@ const Index = () => {
             </DragOverlay>
           </DndContext>
         </div>
+        </div>
 
         {/* Settings link at bottom */}
-        <div className="absolute left-8" style={{ bottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
+        <div style={{ paddingLeft: '2px', paddingTop: '16px', paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
           <button
             onClick={() => {
               setShowFolders(false);
