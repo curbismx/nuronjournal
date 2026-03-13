@@ -71,6 +71,7 @@ import {
   DndContext,
   closestCenter,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -1644,6 +1645,12 @@ function SortableFolderItem({
       activationConstraint: {
         delay: 200,
         tolerance: 5,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 8,
       },
     })
   );
