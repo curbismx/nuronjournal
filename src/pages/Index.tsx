@@ -1638,6 +1638,39 @@ function SortableFolderItem({
   //   return <Navigate to="/welcome" replace />;
   // }
 
+  // @dnd-kit sensors for folder reordering
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 5,
+      },
+    })
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const folder = folders.find(f => f.id === event.active.id);
+    if (folder) setActiveDragFolder(folder);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    setActiveDragFolder(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = folders.findIndex(f => f.id === active.id);
+    const newIndex = folders.findIndex(f => f.id === over.id);
+    const newFolders = arrayMove(folders, oldIndex, newIndex);
+    setFolders(newFolders);
+
+    for (let i = 0; i < newFolders.length; i++) {
+      await supabase
+        .from('folders')
+        .update({ sort_order: i })
+        .eq('id', newFolders[i].id);
+    }
+  };
+
   // DESKTOP LAYOUT - 3 columns side by side
   if (isDesktop) {
 
